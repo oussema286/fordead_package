@@ -56,7 +56,7 @@ def getPercNuage(DatePath,DataSource):
 def formattedDate(date):
     return date[:4]+"-"+date[4:6]+"-"+date[6:8]
 
-def getDirDates(tuile,DataSource):
+def getDirDates(InputDirectory,tuile,DataSource):
     """
     A partir de la tuile et de la source des données, renvoie un dictionnaire où les clés sont les dates au format "YYYY-MM-JJ" et les valeurs sont les chemins des dossiers de données SENTINEL-2 correspondants
 
@@ -73,15 +73,15 @@ def getDirDates(tuile,DataSource):
         Dictionnaire où les clés sont les dates au format "YYYY-MM-JJ" et les valeurs sont les chemins des dossiers de données SENTINEL-2 correspondants
     """
     if DataSource=="THEIA":
-        DirDates = glob(os.getcwd()+"/Data/SENTINEL/"+tuile+"/SEN*")
+        DirDates = glob(os.path.join(InputDirectory,"SENTINEL",tuile)+"/SEN*")
         def getDateFromPath(dirdate):
             return dirdate.split('_')[-5].split('-')[0]
     elif DataSource=="Scihub":
-        DirDates = glob(os.getcwd()+"/Data/SENTINEL/"+tuile+"/S2*")
+        DirDates = glob(os.path.join(InputDirectory,"SENTINEL",tuile)+"/S2*")
         def getDateFromPath(dirdate):
             return dirdate.split('_')[-5][:8]
     elif DataSource=="PEPS":
-        DirDates = glob(os.getcwd()+"/Data/SENTINEL/"+tuile+"/L2*")
+        DirDates = glob(os.path.join(InputDirectory,"SENTINEL",tuile)+"/L2*")
         def getDateFromPath(dirdate):
             return dirdate.split('_')[-1][:8]
     else:
@@ -93,8 +93,8 @@ def getDirDates(tuile,DataSource):
 
     return dict(zip(Dates, DirDates))
     
-def getSentinelPaths(tuile,DataSource):
-    DictDirDates=getDirDates(tuile,DataSource)
+def getSentinelPaths(InputDirectory, tuile,DataSource):
+    DictDirDates=getDirDates(InputDirectory, tuile,DataSource)
     DictSentinelPaths={}
     for date in DictDirDates:
         AllPaths=glob(DictDirDates[date]+"/**",recursive=True)
@@ -151,14 +151,15 @@ def getValidDates(DictSentinelPaths,tuile, PercNuageLim,DataSource):
         Array des dates valides au format "AAAA-MM-JJ"
     """
    
-    
+    DirSentinelData = os.path.dirname(os.path.dirname(os.path.dirname(list(list(DictSentinelPaths.values())[0].values())[0])))
+
     RecalculateEnnuagement=True
     PercNuageDates = {}
-    if os.path.exists(os.getcwd()+"/Data/SENTINEL/"+tuile+"/Ennuagement.csv"):
+    if os.path.exists(os.path.join(DirSentinelData,tuile,"Ennuagement.csv")):
         RecalculateEnnuagement=False
         
         #Formation du dictionnaire à partir du csv
-        PercNuageDatesPanda=pd.read_csv(os.getcwd()+"/Data/SENTINEL/"+tuile+"/Ennuagement.csv")
+        PercNuageDatesPanda=pd.read_csv(os.path.join(DirSentinelData,tuile,"Ennuagement.csv"))
         for row in range(PercNuageDatesPanda.shape[0]):
             PercNuageDates[PercNuageDatesPanda.iloc[row][0]]=PercNuageDatesPanda.iloc[row][1]
             
@@ -178,7 +179,7 @@ def getValidDates(DictSentinelPaths,tuile, PercNuageLim,DataSource):
                 PercNuageDates[date] = getPercNuage(DictSentinelPaths[date],DataSource)
                 
         PercNuageDatesPanda=pd.DataFrame.from_dict(PercNuageDates, orient='index')
-        PercNuageDatesPanda.to_csv(os.getcwd()+"/Data/SENTINEL/"+tuile+"/Ennuagement.csv")
+        PercNuageDatesPanda.to_csv(os.path.join(DirSentinelData,tuile,"Ennuagement.csv"))
     else:
         print("Ennuagement déjà calculé")
     

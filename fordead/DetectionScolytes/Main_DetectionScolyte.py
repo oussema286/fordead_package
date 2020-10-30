@@ -45,7 +45,7 @@ if Processeur=="VM":
     
 else:
     #["T31UFQ","T31UGP","T31UGQ"]
-    Tuiles= ["ZoneFaucheUnique"]
+    Tuiles= ["ZoneTest1"]
     SeuilMin=0.04
     CoeffAnomalie=4
     RemoveOutliers=True

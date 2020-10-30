@@ -13,7 +13,7 @@ import json
 from scipy import ndimage
 from shapely.geometry import Polygon
 
-def getRasterizedBDForet(DataDirectory,tuile):
+def getRasterizedBDForet(PathExampleBand,InputDirectory,ForestMaskSource,tuile):
     
     """
     Importe le raster de BDFORET, ou le rasterize à partir des vecteurs de la BDFORET et le sauvegarde.
@@ -35,23 +35,22 @@ def getRasterizedBDForet(DataDirectory,tuile):
         Système de projection de la tuile (Numéro de l'EPSG)
     """
     
-    if os.path.exists(os.getcwd()+"/Data/Rasters/"+tuile+"/BDForet_"+tuile+".tif"):
-        with rasterio.open(os.getcwd()+"/Data/Rasters/"+tuile+"/BDForet_"+tuile+".tif") as BDFORET: 
+    if ForestMaskSource=="LastComputed":
+        with rasterio.open(os.path.join(InputDirectory,"Rasters",tuile,"MaskForet_"+tuile+".tif")) as BDFORET: 
             RasterizedBDFORET = BDFORET.read(1).astype("bool")
             profile = BDFORET.profile
             CRS_Tuile = int(str(profile["crs"])[5:])
         print("Import du raster BDFORET")
-    else:
-        
-        if not(os.path.exists(os.getcwd()+"/Data/Rasters")):
-            os.mkdir(os.getcwd()+"/Data/Rasters")
-        if not(os.path.exists(os.getcwd()+"/Data/Rasters/"+tuile)):
-            os.mkdir(os.getcwd()+"/Data/Rasters/"+tuile)
+    elif ForestMaskSource=="BDFORET":
+        if not(os.path.exists(os.path.join(InputDirectory,"Rasters"))):
+            os.mkdir(os.path.join(InputDirectory,"Rasters"))
+        if not(os.path.exists(os.path.join(InputDirectory,"Rasters",tuile))):
+            os.mkdir(os.path.join(InputDirectory,"Rasters",tuile))
             
-        BD_ForetPath=glob(os.getcwd()+"/Data/Vecteurs/BDFORET/BD_Foret*/BD*.shp")
-        DepPath=os.getcwd()+"/Data/Vecteurs/Departements/departements-20140306-100m.shp"
-#        TuilePath=os.getcwd()+"/Data/Vecteurs/TilesSentinel.shp"
-        with rasterio.open(glob(DataDirectory+"/VegetationIndex/"+tuile+"/*.tif")[0]) as exampleRaster:
+        BD_ForetPath=glob(os.path.join(InputDirectory,"Vecteurs/BDFORET/BD_Foret*/BD*.shp"))
+        DepPath=os.path.join(InputDirectory,"Vecteurs/Departements/departements-20140306-100m.shp")
+#       TuilePath=os.getcwd()+"/Data/Vecteurs/TilesSentinel.shp"
+        with rasterio.open(PathExampleBand) as exampleRaster:
             CRS_Tuile=int(str(exampleRaster.profile["crs"])[5:])
 
 #            Tuile=gp.read_file(TuilePath)
@@ -59,8 +58,8 @@ def getRasterizedBDForet(DataDirectory,tuile):
 #            Tuile=Tuile[Tuile['Name']==tuile[1:]]
 #            
 
-            lon_point_list = [B2.profile["transform"][2], B2.profile["transform"][2]+B2.profile["width"]*10, B2.profile["transform"][2]+B2.profile["width"]*10, B2.profile["transform"][2], B2.profile["transform"][2]]
-            lat_point_list = [B2.profile["transform"][5], B2.profile["transform"][5], B2.profile["transform"][5]-10*B2.profile["height"], B2.profile["transform"][5]-10*B2.profile["height"],B2.profile["transform"][5]]
+            lon_point_list = [exampleRaster.profile["transform"][2], exampleRaster.profile["transform"][2]+exampleRaster.profile["width"]*10, exampleRaster.profile["transform"][2]+exampleRaster.profile["width"]*10, exampleRaster.profile["transform"][2], exampleRaster.profile["transform"][2]]
+            lat_point_list = [exampleRaster.profile["transform"][5], exampleRaster.profile["transform"][5], exampleRaster.profile["transform"][5]-10*exampleRaster.profile["height"], exampleRaster.profile["transform"][5]-10*exampleRaster.profile["height"],exampleRaster.profile["transform"][5]]
             
             polygon_geom = Polygon(zip(lon_point_list, lat_point_list))
             crs = {'init': 'epsg:'+str(CRS_Tuile)}
@@ -95,16 +94,19 @@ def getRasterizedBDForet(DataDirectory,tuile):
             
             #Rasterisation de la BDFORET pour créer le masque
         
-            RasterizedBDFORET=rasterio.features.rasterize(BD_Foret_jsonMask,out_shape =B2.read(1).shape,default_value =1,fill=0,transform =B2.profile["transform"])
+            RasterizedBDFORET=rasterio.features.rasterize(BD_Foret_jsonMask,out_shape =exampleRaster.read(1).shape,default_value =1,fill=0,transform =exampleRaster.profile["transform"])
             RasterizedBDFORET=RasterizedBDFORET.astype("bool")
-            profile=B2.profile
+            profile=exampleRaster.profile
             
             profile["dtype"]=np.uint8
-            with rasterio.open(os.getcwd()+"/Data/Rasters/"+tuile+"/BDForet_"+tuile+".tif", 'w', nbits=1, **profile) as dst:
+            with rasterio.open(os.getcwd()+"/Data/Rasters/"+tuile+"/MaskForet_"+tuile+".tif", 'w', nbits=1, **profile) as dst:
                 dst.write(RasterizedBDFORET.astype("uint8"),indexes=1)
                 
-            profile=B2.profile
+            profile=exampleRaster.profile
             print("Rasterisation et écriture de la BDFORET")
+    else:
+        print("Source du masque foret inconnu")
+        
     return RasterizedBDFORET,profile,CRS_Tuile
 
 

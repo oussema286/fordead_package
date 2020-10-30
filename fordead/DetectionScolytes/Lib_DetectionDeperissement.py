@@ -340,9 +340,10 @@ def getListCRSWIRmedian(DictSentinelPaths,Dates,tuile,MaskForet):
     1D ndarray
         Liste des CRSWIR médians à l'échelle de la tuile'
     """
+    DirSentinelData = os.path.dirname(os.path.dirname(os.path.dirname(list(list(DictSentinelPaths.values())[0].values())[0])))
     
-    if os.path.exists(os.getcwd()+"/Data/SENTINEL/"+tuile+"/CRSWIRmedian"):
-        with open(os.getcwd()+"/Data/SENTINEL/"+tuile+"/CRSWIRmedian", 'rb') as f:
+    if os.path.exists(os.path.join(DirSentinelData,tuile,"CRSWIRmedian")):
+        with open(os.path.join(DirSentinelData,tuile,"CRSWIRmedian"), 'rb') as f:
             CRSWIRmedian = pickle.load(f)
     else:
         CRSWIRmedian={}
@@ -353,7 +354,7 @@ def getListCRSWIRmedian(DictSentinelPaths,Dates,tuile,MaskForet):
             CRSWIRmedian[date] = CorrectCRSWIR(DictSentinelPaths,date,MaskForet)
     CRSWIRmedian=dict(sorted(CRSWIRmedian.items()))
     
-    with open(os.getcwd()+"/Data/SENTINEL/"+tuile+"/CRSWIRmedian", 'wb') as f:
+    with open(os.path.join(DirSentinelData,tuile,"CRSWIRmedian"), 'wb') as f:
         pickle.dump(CRSWIRmedian, f)
     # print(list(CRSWIRmedian.values()))
     return np.array(list(CRSWIRmedian.values()))
