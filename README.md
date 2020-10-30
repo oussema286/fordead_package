@@ -18,10 +18,7 @@ conda install geopandas
 conda install rasterio
 conda install scipy
 ```
-Installer le package ForDead_package : 
-```bash
-pip install git+https://gitlab.com/jbferet/fordead_package.git
-```
+
 
 ## Utilisation
 La détection du déperissement se fait en trois étapes.
