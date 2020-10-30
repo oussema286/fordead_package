@@ -49,10 +49,17 @@ Le script correspondant est __Main_ComputeMaskedVegetationIndex__ dans __Detecti
 
 Il est donc possible de tester ce programme par la commande suivante :
 ```bash
-python Main_ComputeMaskedVegetationIndex.py --InputDirectory _CHEMINPERSO_/tests/Data/ --OutputDirectory _CHEMINPERSO_/tests/OutputFordead
+python Main_ComputeMaskedVegetationIndex.py --InputDirectory CHEMINPERSO/tests/Data/ --OutputDirectory CHEMINPERSO/tests/OutputFordead
 ```
 Il est possible de mettre n'importe quel dossier en sortie. Le dossier OutputFordead dans __tests__ est le résultat de ce script.
 
 ### Etape 2 : Main_TrainForDead
-L'étape d'apprentissage prend en entrée un dossier avec les sous-dossiers __VegetationIndex__ et __Mask__ contenant respectivement les indices de végétations sous la forme __VegetationIndex_YYYY-MM-JJ.tif__ et les masques associées sous la forme __Mask_YYYY_MM_JJ__.tif.
+L'étape d'apprentissage prend en entrée un dossier avec l'arborescence suivante:
+* VegetationIndex 
+    * VegetationIndex_YYYY_MM_JJ.tif
+    * ...
+* Mask
+    * Mask_YYYY_MM_JJ.tif
+    * ...
 
+Un tel dossier est disponible dans __tests__ sous le nom __OutputFordead__
