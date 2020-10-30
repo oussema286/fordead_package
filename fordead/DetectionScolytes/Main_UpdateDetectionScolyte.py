@@ -103,7 +103,6 @@ for tuile in Tuiles:
     MaskForet,MetaProfile,CRS_Tuile = getRasterizedBDForet(DataDirectory,tuile)
   
     #INITIALISATION
-    
     StackP,rasterSigma,EtatChange,DateFirstScolyte,CompteurScolyte = ImportForUpdate(tuile,DataDirectory)
     rasterSigma[rasterSigma<SeuilMin]=SeuilMin
     

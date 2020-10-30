@@ -109,7 +109,13 @@ def getRasterizedBDForet(PathExampleBand,InputDirectory,ForestMaskSource,tuile):
         
     return RasterizedBDFORET,profile,CRS_Tuile
 
-
+def getMaskForet(DataDirectory,tuile):
+    with rasterio.open(os.path.join(DataDirectory,"MaskForet",tuile+"_MaskForet.tif")) as BDFORET: 
+        RasterizedBDFORET = BDFORET.read(1).astype("bool")
+        profile = BDFORET.profile
+        CRS_Tuile = int(str(profile["crs"])[5:])
+    return RasterizedBDFORET,profile,CRS_Tuile
+        
 # def getNuages(stackBands,stackAtteint,HorsFauche):
 #     """
 #     Deprecated, use getNuages2
