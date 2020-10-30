@@ -21,7 +21,7 @@ import argparse
 
 from Lib_ImportValidSentinelData import readInputDataDateByDate, getDates
 from Lib_ComputeMasks import getMaskForet
-from Lib_DetectionDeperissement import ModelForAnomalies
+from Lib_DetectionDeperissement import ModelCRSWIR
 from Lib_WritingResults import CreateDirectories
 from Lib_SaveForUpdate import SaveDataModel
 
@@ -60,14 +60,14 @@ def TrainForDead(
         start_time_debut = time.time()
         
         Dates=getDates(tuile,DataDirectory)
-        MaskForet,MetaProfile,CRS_Tuile = getMaskForet(DataDirectory,tuile)
+        MaskForet,MetaProfile,CRS_Tuile = getMaskForet(os.path.join(DataDirectory,"MaskForet",tuile+"_MaskForet.tif"))
     
         # TimeInitialisation=time.time() - start_time_debut ; start_time = time.time()
         StackVegetationIndex, StackMask = readInputDataDateByDate(DataDirectory, Dates[Dates<DateFinApprentissage],tuile)
         # TimeReadInput=time.time() - start_time; start_time = time.time()
         print("Import des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
         StackVegetationIndex = np.ma.masked_array(StackVegetationIndex, mask=StackMask) #Application du masque
-        rasterP, rasterSigma = ModelForAnomalies(np.where(MaskForet),Dates[Dates<DateFinApprentissage],StackVegetationIndex,RemoveOutliers, SeuilMin, CoeffAnomalie)
+        rasterP, rasterSigma = ModelCRSWIR(np.where(MaskForet),Dates[Dates<DateFinApprentissage],StackVegetationIndex,RemoveOutliers, SeuilMin, CoeffAnomalie)
         # TimeModelCRSWIR=time.time() - start_time ; start_time = time.time()
         
         print("Modélisation du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))

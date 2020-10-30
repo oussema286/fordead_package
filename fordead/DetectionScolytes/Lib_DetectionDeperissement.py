@@ -44,7 +44,7 @@ def getDateLim(DateFirstTested,CRSWIRMask):
     
     
 
-def ModelCRSWIR(stackCRSWIR,DateLim, X, Y, Days, ValidEarlier, RemoveOutliers, SeuilMin, CoeffAnomalie):
+def ModelPixelCRSWIR(VegetationIndexSeries,DateLim, Days, ValidEarlier, RemoveOutliers, SeuilMin, CoeffAnomalie):
     
     """
     Calcule les coefficients pour la prédiction de CRSWIR à partir de premières dates ainsi que le seuil utilisé pour la détection d'anomalies et la différence entre entre le CRSWIR prédit et réel des premières dates 
@@ -80,19 +80,17 @@ def ModelCRSWIR(stackCRSWIR,DateLim, X, Y, Days, ValidEarlier, RemoveOutliers, S
         Liste des différences entre entre le CRSWIR prédit et réel des premières dates. Utilisé pour export au niveau des données d'observations 
     
     """
-    
-    stackCRSWIRValidEarlier=stackCRSWIR[:DateLim,X,Y].compressed()
-    
+        
     M=Days[:DateLim,np.newaxis]**[0,1.0,1.0,1.0,1.0]
     M=M[ValidEarlier]
     M[:,1]=np.sin(2*math.pi*M[:,1]/365.25)
     M[:,2]=np.cos(2*math.pi*M[:,2]/365.25)
     M[:,3]=np.sin(2*2*math.pi*M[:,3]/365.25)
     M[:,4]=np.cos(2*2*math.pi*M[:,4]/365.25)
-    p, _, _, _ = lstsq(M, stackCRSWIRValidEarlier)
+    p, _, _, _ = lstsq(M, VegetationIndexSeries)
 
     predictEarlier=functionToFit(Days[:DateLim][ValidEarlier],p) #Prédiction
-    diffEarlier=np.abs(stackCRSWIRValidEarlier-predictEarlier)
+    diffEarlier=np.abs(VegetationIndexSeries-predictEarlier)
     # sigma=max(SeuilMin,np.std(diffEarlier))
     sigma=np.std(diffEarlier)
     
@@ -100,55 +98,18 @@ def ModelCRSWIR(stackCRSWIR,DateLim, X, Y, Days, ValidEarlier, RemoveOutliers, S
     if RemoveOutliers:
         Outliers=diffEarlier<CoeffAnomalie*max(SeuilMin,sigma)
         M=M[Outliers,:]
-        p, _, _, _ = lstsq(M, stackCRSWIRValidEarlier[Outliers])
+        p, _, _, _ = lstsq(M, VegetationIndexSeries[Outliers])
         predictEarlier=functionToFit(np.array(Days[:DateLim])[ValidEarlier][Outliers],p)
-        diffEarlier=np.abs(stackCRSWIRValidEarlier[Outliers]-predictEarlier)
+        diffEarlier=np.abs(VegetationIndexSeries[Outliers]-predictEarlier)
         sigma=np.std(diffEarlier)
     
     return p, sigma
 
 
-def DetectAnomalies(stackCRSWIR,DateLim, p, sigma,CoeffAnomalie, X, Y, Days, ValidLater):
-    
-    """
-    Détecte les anomalies en comparant le CRSWIR prédit sur les dates testées et le CRSWIR réel 
-
-    Parameters
-    ----------
-    stackCRSWIR: (Dates,X,Y) masked ndarray
-        CRSWIR pour chaque date et chaque pixel avec données invalides masques
-    DateLim: int
-        Indice de la première date qui sera testée. Permet d'identifier les dates utilisées pour la modélisation du CRSWIR normal.
-    p: (5,) ndarray
-        Liste des coefficients pour la prédiction de CRSWIR
-    sigma: float
-        Seuil utilisé pour la détection d'anomalies
-    CoeffAnomalie: float
-        Coefficient multiplicateur du seuil de détection d'anomalies
-    X: int
-        Coordonnées du pixel en X
-    Y: int
-        Coordonnées du pixel en Y
-    Days: 1D ndarray
-        Liste de numéros de jours (Nombre de jours entre le lancement du premier satellite et la date voulue)
-    ValidLater: 1D ndarray de type bool
-        ndarray, True si donnée valide à cette date
-    
-    Returns
-    -------
-    1D ndarray de type bool
-        True si anomalie détectée (CRSWIR réel > CRSWIR prédit + sigma*CoeffAnomalie)
-    """
-    
-    stackCRSWIRValidLater=stackCRSWIR[DateLim:,X,Y].compressed()
-    predictLater=functionToFit(Days[DateLim:][ValidLater],p)
-    diffLater=stackCRSWIRValidLater-predictLater
-    Etat=diffLater>CoeffAnomalie*sigma #Indice avec augmentation de l'indice quand atteint
-    # Etat=diffLater<-CoeffAnomalie*sigma #Indice avec baisse de l'indice quand atteint
-    return Etat
 
 
-def ModelForAnomalies(PixelsToTest,Dates,VegetationIndex,RemoveOutliers, SeuilMin, CoeffAnomalie):
+
+def ModelCRSWIR(PixelsToTest,Dates,VegetationIndex,RemoveOutliers, SeuilMin, CoeffAnomalie):
     
     #Initialisation stack résultats
     rasterP=np.zeros((5,VegetationIndex.shape[-2],VegetationIndex.shape[-1]), dtype='float')
@@ -166,9 +127,9 @@ def ModelForAnomalies(PixelsToTest,Dates,VegetationIndex,RemoveOutliers, SeuilMi
             continue
         DateLim = getDateLim(DateFirstTested,VegetationIndex.mask[:,X,Y])
         ValidEarlier=~VegetationIndex[:DateLim,X,Y].mask # ; ValidLater=~VegetationIndex[DateLim:,X,Y].mask
-  
+
         #MODELISATION DU CRSWIR SUR LES PREMIERES DATES
-        p, sigma = ModelCRSWIR(VegetationIndex,DateLim, X, Y, Days, ValidEarlier, RemoveOutliers, SeuilMin, CoeffAnomalie)
+        p, sigma = ModelPixelCRSWIR(VegetationIndex[:DateLim,X,Y].compressed(),DateLim, Days, ValidEarlier, RemoveOutliers, SeuilMin, CoeffAnomalie)
         rasterP[:,X,Y]=p
         rasterSigma[X,Y]=sigma
         
@@ -179,80 +140,6 @@ def ModelForAnomalies(PixelsToTest,Dates,VegetationIndex,RemoveOutliers, SeuilMi
     return rasterP,rasterSigma
 
 
-# def DetectScolytes(stackAtteint, Etat, DateLim,ValidLater, X, Y):
-#     """
-#     Deprecated, use DetectScolytes2
-#     """
-#     stackStress=np.zeros((stackAtteint.shape[0],stackAtteint.shape[1],stackAtteint.shape[2]), dtype='bool')
-    
-#     IndexRef=np.array(range(0,ValidLater.shape[0]))[ValidLater]
-#     EtatFinal=False
-#     SearchingBoolList=np.array([True,True,True])
-
-#     for i in range(1,len(Etat)-1):
-#         if stackAtteint[DateLim:,X,Y][ValidLater][i+1]==2: #Si sol nu à partir de cette date, arret de la recherche
-#             stackStress[DateLim:,X,Y][IndexRef[i-2:i+1]]=EtatFinal #Extraire Infos Stress
-#             break
-#         if np.array_equal(Etat[i-1:i+2],SearchingBoolList):
-#             SearchingBoolList=SearchingBoolList==False #On change la série cherchée
-#             EtatFinal=not(EtatFinal)
-#             saveIndex=IndexRef[i-1]
-#         stackStress[DateLim:,X,Y][IndexRef[i-1]]=EtatFinal
-#     stackStress[DateLim:,X,Y][IndexRef[len(Etat)-2:len(Etat)+1]]=EtatFinal
-  
-#     if EtatFinal:
-#         stackAtteint[DateLim:,X,Y][saveIndex:][stackAtteint[DateLim:,X,Y][saveIndex:]!=2]=1
-#         if 2 in stackAtteint[DateLim:,X,Y][saveIndex:]:
-#             stackAtteint[DateLim:,X,Y][saveIndex:][stackAtteint[DateLim:,X,Y][saveIndex:]==2]=3
-#     return stackAtteint, stackStress
-
-
-def DetectScolytes2(StackEtat, CRSWIRMask):
-    """
-    Détecte les déperissements, lorsqu'il y a trois dates valides successives avec des anomalies 
-
-    Parameters
-    ----------
-    StackEtat: (Dates,X,Y) ndarray de type bool
-        Si True, anomalie détectée à cette date
-    CRSWIRMask: (Dates,X,Y) ndarray de type bool
-        Si True, pixel invalide à cette date
-    
-    Returns
-    -------
-    stackDetected: (Dates,X,Y) ndarray de type bool
-        Si True, pixel détecté comme atteint à cette date
-    DateFirstScolyte: (x,y) ndarray
-        ndarray avec comme valeur la première date de la dernière série d'anomalies. Utile pour la mise à jour à partir de nouvelles dates
-    CompteurScolyte: (x,y) ndarray
-        Compteur du nombre de dates succesives d'anomalies au moment de la dernière date SENTINEL-2. Utile pour la mise à jour à partir de nouvelles dates 
-    """
-    # CRSWIRMask=stackCRSWIR.mask
-    DateFirstTested=CRSWIRMask.shape[0]-StackEtat.shape[0]
-    
-    structScolyte=np.zeros((3,3,3),dtype='bool')
-    structScolyte[1:3,1,1]=True
-    
-    stackDetected=np.zeros((CRSWIRMask.shape[0],CRSWIRMask.shape[1],CRSWIRMask.shape[2]), dtype='bool')
-    
-    CompteurScolyte= np.zeros((CRSWIRMask.shape[1],CRSWIRMask.shape[2]),dtype=np.uint8) #np.int8 possible ?
-    DateFirstScolyte=np.zeros((CRSWIRMask.shape[1],CRSWIRMask.shape[2]),dtype=np.uint16) #np.int8 possible ?
-    EtatChange=np.zeros((CRSWIRMask.shape[1],CRSWIRMask.shape[2]),dtype=bool)
-      
-    for date in range(StackEtat.shape[0]):
-
-        CompteurScolyte[np.logical_and(StackEtat[date,:,:]!=EtatChange,~CRSWIRMask[DateFirstTested+date,:,:])]+=1
-        CompteurScolyte[np.logical_and(StackEtat[date,:,:]==EtatChange,~CRSWIRMask[DateFirstTested+date,:,:])]=0
-        
-        EtatChange[np.logical_and(CompteurScolyte==3,~CRSWIRMask[DateFirstTested+date,:,:])]=~EtatChange[np.logical_and(CompteurScolyte==3,~CRSWIRMask[DateFirstTested+date,:,:])] #Changement d'état si CompteurScolyte = 3 et date valide
-        CompteurScolyte[CompteurScolyte==3]=0
-        DateFirstScolyte[np.logical_and(np.logical_and(CompteurScolyte==1,~EtatChange),~CRSWIRMask[DateFirstTested+date,:,:])]=DateFirstTested+date #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
-
-    stackDetected[DateFirstScolyte,np.arange(stackDetected.shape[1])[:,None],np.arange(stackDetected.shape[1])[None,:]]=True #Met True à la date de détection comme scolyte
-    stackDetected[:,~EtatChange]=False #Remet à 0 tous les pixels dont le compteur n'est pas arrivé à 3
-    stackDetected=ndimage.binary_dilation(stackDetected,iterations=-1,structure=structScolyte) #Itération pour mettre des TRUE à partir du premier TRUE
-    
-    return stackDetected, DateFirstScolyte, CompteurScolyte
 
 
 
@@ -396,50 +283,139 @@ def getCRSWIRCorrection(DictSentinelPaths,Dates,tuile,MaskForet):
     
     return diffCRSWIR 
 
+# def DetectAnomalies(stackCRSWIR,DateLim, p, sigma,CoeffAnomalie, X, Y, Days, ValidLater):
+    
+#     """
+#     Détecte les anomalies en comparant le CRSWIR prédit sur les dates testées et le CRSWIR réel 
 
-def ModelCRSWIRAlongAxis(SerieCRSWIR,Days,DateFirstTested,RemoveOutliers,SeuilMin,CoeffAnomalie):
-    # SerieCRSWIR=stackCRSWIR[:,50,80]
-    # if np.sum(~SerieCRSWIR.mask)<12:
-    #     return np.zeros((SerieCRSWIR.shape[0]), dtype='bool')
-    if np.sum(~SerieCRSWIR.mask)<12:
-        return np.zeros((5), dtype='float'), 0, 0
-        #DETERMINATION DE LA PREMIERE DATE AVEC 10 DATES VALIDES PRECEDENTES
-    # DateFirstTested=np.where(Dates==Dates[Dates>="2018-01-01"][0])[0][0]
+#     Parameters
+#     ----------
+#     stackCRSWIR: (Dates,X,Y) masked ndarray
+#         CRSWIR pour chaque date et chaque pixel avec données invalides masques
+#     DateLim: int
+#         Indice de la première date qui sera testée. Permet d'identifier les dates utilisées pour la modélisation du CRSWIR normal.
+#     p: (5,) ndarray
+#         Liste des coefficients pour la prédiction de CRSWIR
+#     sigma: float
+#         Seuil utilisé pour la détection d'anomalies
+#     CoeffAnomalie: float
+#         Coefficient multiplicateur du seuil de détection d'anomalies
+#     X: int
+#         Coordonnées du pixel en X
+#     Y: int
+#         Coordonnées du pixel en Y
+#     Days: 1D ndarray
+#         Liste de numéros de jours (Nombre de jours entre le lancement du premier satellite et la date voulue)
+#     ValidLater: 1D ndarray de type bool
+#         ndarray, True si donnée valide à cette date
     
-    DateLim=DateFirstTested
-    AddedDates=0
-    if np.sum(~SerieCRSWIR.mask[:DateLim])<10:
-        DateLim2=np.where(np.cumsum(~SerieCRSWIR.mask)==10)[0][0]
-        AddedDates=DateLim2-DateLim-np.sum(SerieCRSWIR.mask[DateLim:DateLim2+1])
-        DateLim=DateLim2
+#     Returns
+#     -------
+#     1D ndarray de type bool
+#         True si anomalie détectée (CRSWIR réel > CRSWIR prédit + sigma*CoeffAnomalie)
+#     """
     
-    ValidEarlier=~SerieCRSWIR.mask[:DateLim] ; ValidLater=~SerieCRSWIR.mask[DateLim:] ; Valid=np.append(ValidEarlier,ValidLater) #Dates valides
+#     stackCRSWIRValidLater=stackCRSWIR[DateLim:,X,Y].compressed()
+#     predictLater=functionToFit(Days[DateLim:][ValidLater],p)
+#     diffLater=stackCRSWIRValidLater-predictLater
+#     Etat=diffLater>CoeffAnomalie*sigma #Indice avec augmentation de l'indice quand atteint
+#     # Etat=diffLater<-CoeffAnomalie*sigma #Indice avec baisse de l'indice quand atteint
+#     return Etat
+    
+
+
+# def ModelCRSWIRAlongAxis(SerieCRSWIR,Days,DateFirstTested,RemoveOutliers,SeuilMin,CoeffAnomalie):
+#     # SerieCRSWIR=stackCRSWIR[:,50,80]
+#     # if np.sum(~SerieCRSWIR.mask)<12:
+#     #     return np.zeros((SerieCRSWIR.shape[0]), dtype='bool')
+#     if np.sum(~SerieCRSWIR.mask)<12:
+#         return np.zeros((5), dtype='float'), 0, 0
+#         #DETERMINATION DE LA PREMIERE DATE AVEC 10 DATES VALIDES PRECEDENTES
+#     # DateFirstTested=np.where(Dates==Dates[Dates>="2018-01-01"][0])[0][0]
+    
+#     DateLim=DateFirstTested
+#     AddedDates=0
+#     if np.sum(~SerieCRSWIR.mask[:DateLim])<10:
+#         DateLim2=np.where(np.cumsum(~SerieCRSWIR.mask)==10)[0][0]
+#         AddedDates=DateLim2-DateLim-np.sum(SerieCRSWIR.mask[DateLim:DateLim2+1])
+#         DateLim=DateLim2
+    
+#     ValidEarlier=~SerieCRSWIR.mask[:DateLim] ; ValidLater=~SerieCRSWIR.mask[DateLim:] ; Valid=np.append(ValidEarlier,ValidLater) #Dates valides
         
-    stackCRSWIRValidEarlier=SerieCRSWIR[:DateLim].compressed()
+#     stackCRSWIRValidEarlier=SerieCRSWIR[:DateLim].compressed()
     
-    # print(stackCRSWIRValidEarlier.shape)
+#     # print(stackCRSWIRValidEarlier.shape)
     
-    M=Days[:DateLim,np.newaxis]**[0,1.0,1.0,1.0,1.0]
-    # print(M.shape)
-    M=M[ValidEarlier]
-    # print(M.shape)
-    M[:,1]=np.sin(2*math.pi*M[:,1]/365.25)
-    M[:,2]=np.cos(2*math.pi*M[:,2]/365.25)
-    M[:,3]=np.sin(2*2*math.pi*M[:,3]/365.25)
-    M[:,4]=np.cos(2*2*math.pi*M[:,4]/365.25)
-    p, _, _, _ = lstsq(M, stackCRSWIRValidEarlier)
+#     M=Days[:DateLim,np.newaxis]**[0,1.0,1.0,1.0,1.0]
+#     # print(M.shape)
+#     M=M[ValidEarlier]
+#     # print(M.shape)
+#     M[:,1]=np.sin(2*math.pi*M[:,1]/365.25)
+#     M[:,2]=np.cos(2*math.pi*M[:,2]/365.25)
+#     M[:,3]=np.sin(2*2*math.pi*M[:,3]/365.25)
+#     M[:,4]=np.cos(2*2*math.pi*M[:,4]/365.25)
+#     p, _, _, _ = lstsq(M, stackCRSWIRValidEarlier)
 
-    predictEarlier=functionToFit(Days[:DateLim][ValidEarlier],p) #Prédiction
-    diffEarlier=np.abs(stackCRSWIRValidEarlier-predictEarlier)
-    sigma=max(SeuilMin,np.std(diffEarlier))
+#     predictEarlier=functionToFit(Days[:DateLim][ValidEarlier],p) #Prédiction
+#     diffEarlier=np.abs(stackCRSWIRValidEarlier-predictEarlier)
+#     sigma=max(SeuilMin,np.std(diffEarlier))
     
-    #POUR RETIRER OUTLIERS
-    if RemoveOutliers:
-        Outliers=diffEarlier<CoeffAnomalie*sigma
-        M=M[Outliers,:]
-        p, _, _, _ = lstsq(M, stackCRSWIRValidEarlier[Outliers])
-        predictEarlier=functionToFit(np.array(Days[:DateLim])[ValidEarlier][Outliers],p)
-        diffEarlier=np.abs(stackCRSWIRValidEarlier[Outliers]-predictEarlier)
-        sigma=max(SeuilMin,np.std(diffEarlier))
+#     #POUR RETIRER OUTLIERS
+#     if RemoveOutliers:
+#         Outliers=diffEarlier<CoeffAnomalie*sigma
+#         M=M[Outliers,:]
+#         p, _, _, _ = lstsq(M, stackCRSWIRValidEarlier[Outliers])
+#         predictEarlier=functionToFit(np.array(Days[:DateLim])[ValidEarlier][Outliers],p)
+#         diffEarlier=np.abs(stackCRSWIRValidEarlier[Outliers]-predictEarlier)
+#         sigma=max(SeuilMin,np.std(diffEarlier))
     
-    return p, sigma, diffEarlier
+#     return p, sigma, diffEarlier
+
+
+# def DetectScolytesFromStack(StackEtat, CRSWIRMask):
+#     """
+#     Détecte les déperissements, lorsqu'il y a trois dates valides successives avec des anomalies 
+
+#     Parameters
+#     ----------
+#     StackEtat: (Dates,X,Y) ndarray de type bool
+#         Si True, anomalie détectée à cette date
+#     CRSWIRMask: (Dates,X,Y) ndarray de type bool
+#         Si True, pixel invalide à cette date
+    
+#     Returns
+#     -------
+#     stackDetected: (Dates,X,Y) ndarray de type bool
+#         Si True, pixel détecté comme atteint à cette date
+#     DateFirstScolyte: (x,y) ndarray
+#         ndarray avec comme valeur la première date de la dernière série d'anomalies. Utile pour la mise à jour à partir de nouvelles dates
+#     CompteurScolyte: (x,y) ndarray
+#         Compteur du nombre de dates succesives d'anomalies au moment de la dernière date SENTINEL-2. Utile pour la mise à jour à partir de nouvelles dates 
+#     """
+#     # CRSWIRMask=stackCRSWIR.mask
+#     DateFirstTested=CRSWIRMask.shape[0]-StackEtat.shape[0]
+    
+#     structScolyte=np.zeros((3,3,3),dtype='bool')
+#     structScolyte[1:3,1,1]=True
+    
+#     stackDetected=np.zeros((CRSWIRMask.shape[0],CRSWIRMask.shape[1],CRSWIRMask.shape[2]), dtype='bool')
+    
+#     CompteurScolyte= np.zeros((CRSWIRMask.shape[1],CRSWIRMask.shape[2]),dtype=np.uint8) #np.int8 possible ?
+#     DateFirstScolyte=np.zeros((CRSWIRMask.shape[1],CRSWIRMask.shape[2]),dtype=np.uint16) #np.int8 possible ?
+#     EtatChange=np.zeros((CRSWIRMask.shape[1],CRSWIRMask.shape[2]),dtype=bool)
+      
+#     for date in range(StackEtat.shape[0]):
+
+#         CompteurScolyte[np.logical_and(StackEtat[date,:,:]!=EtatChange,~CRSWIRMask[DateFirstTested+date,:,:])]+=1
+#         CompteurScolyte[np.logical_and(StackEtat[date,:,:]==EtatChange,~CRSWIRMask[DateFirstTested+date,:,:])]=0
+        
+#         EtatChange[np.logical_and(CompteurScolyte==3,~CRSWIRMask[DateFirstTested+date,:,:])]=~EtatChange[np.logical_and(CompteurScolyte==3,~CRSWIRMask[DateFirstTested+date,:,:])] #Changement d'état si CompteurScolyte = 3 et date valide
+#         CompteurScolyte[CompteurScolyte==3]=0
+#         DateFirstScolyte[np.logical_and(np.logical_and(CompteurScolyte==1,~EtatChange),~CRSWIRMask[DateFirstTested+date,:,:])]=DateFirstTested+date #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+
+#     stackDetected[DateFirstScolyte,np.arange(stackDetected.shape[1])[:,None],np.arange(stackDetected.shape[1])[None,:]]=True #Met True à la date de détection comme scolyte
+#     stackDetected[:,~EtatChange]=False #Remet à 0 tous les pixels dont le compteur n'est pas arrivé à 3
+#     stackDetected=ndimage.binary_dilation(stackDetected,iterations=-1,structure=structScolyte) #Itération pour mettre des TRUE à partir du premier TRUE
+    
+#     return stackDetected, DateFirstScolyte, CompteurScolyte
+

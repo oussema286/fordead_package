@@ -159,26 +159,37 @@ def writeRasters(Atteint, OutputDirectory,tuile,date,MetaProfile):
         dst.write(Atteint, indexes=1)
     return True
 
-def writeMaskForet(MaskForet,MetaProfile,OutputDirectory,tuile):
+def writeBinaryRaster(DataArray,Path, MetaProfile):
     
     ProfileSave=MetaProfile.copy()
     ProfileSave["dtype"]=np.uint8
     ProfileSave["tiled"]=True
-    with rasterio.open(os.path.join(OutputDirectory,"MaskForet",tuile+"_MaskForet.tif"), "w", nbits=1, **ProfileSave) as dst:
-        dst.write(MaskForet.astype(np.uint8), indexes=1)
+
+    with rasterio.open(Path, "w", nbits=1, **ProfileSave) as dst:
+        dst.write(DataArray.astype(np.uint8), indexes=1)
         
-def writeInputDataDateByDate(stackCRSWIR,Invalid2,MetaProfile,date,OutputDirectory,tuile):
+def writeInputDataDateByDate(VegetationIndex,Mask,MetaProfile,date,OutputDirectory,tuile):
     ProfileSave=MetaProfile.copy()
     ProfileSave["dtype"]=np.float32
     ProfileSave["tiled"]=True
     with rasterio.open(OutputDirectory+"/VegetationIndex/"+tuile+"/VegetationIndex_"+date+".tif", "w", nbits=8, **ProfileSave) as dst:
+        dst.write(VegetationIndex.astype(np.float32), indexes=1)
+    
+    writeBinaryRaster(Mask,OutputDirectory+"/Mask/"+tuile+"/Mask_"+date+".tif", MetaProfile)
+
+def writeModel(StackEtat, rasterP, rasterSigma,MetaProfile,Dates,Version,tuile):
+    ProfileSave=MetaProfile.copy()
+    ProfileSave["dtype"]=np.float32
+    ProfileSave["tiled"]=True
+    with rasterio.open(os.getcwd()+"/Out/Results/"+"V"+Version+"/VegetationIndex/"+tuile+"/VegetationIndex_"+date+".tif", "w", nbits=8, **ProfileSave) as dst:
         dst.write(stackCRSWIR.astype(np.float32), indexes=1)
         
     ProfileSave["dtype"]=np.uint8
     ProfileSave["tiled"]=True
-    with rasterio.open(OutputDirectory+"/Mask/"+tuile+"/Mask_"+date+".tif", "w", nbits=1, **ProfileSave) as dst:
+    with rasterio.open(os.getcwd()+"/Out/Results/"+"V"+Version+"/Mask/"+tuile+"/Mask_"+date+".tif", "w", nbits=1, **ProfileSave) as dst:
         dst.write(Invalid2.astype(np.uint8), indexes=1)
-        
+
+  
 # def writeInputDataStack(stackCRSWIR,Invalid2,MetaProfile,DateIndex,Version,tuile,Dates):
 #     ProfileSave=MetaProfile.copy()
 #     ProfileSave["dtype"]=np.float32
@@ -205,14 +216,3 @@ def writeInputDataDateByDate(stackCRSWIR,Invalid2,MetaProfile,date,OutputDirecto
     #     with rasterio.open(os.getcwd()+"/Out/Results/"+"V"+Version+"/Mask/"+tuile+"/Mask.tif", "r+", **ProfileSave) as dst:
     #         dst.write(Invalid2.astype(np.uint8),indexes=DateIndex+1)
 
-def writeModel(StackEtat, rasterP, rasterSigma,MetaProfile,Dates,Version,tuile):
-    ProfileSave=MetaProfile.copy()
-    ProfileSave["dtype"]=np.float32
-    ProfileSave["tiled"]=True
-    with rasterio.open(os.getcwd()+"/Out/Results/"+"V"+Version+"/VegetationIndex/"+tuile+"/VegetationIndex_"+date+".tif", "w", nbits=8, **ProfileSave) as dst:
-        dst.write(stackCRSWIR.astype(np.float32), indexes=1)
-        
-    ProfileSave["dtype"]=np.uint8
-    ProfileSave["tiled"]=True
-    with rasterio.open(os.getcwd()+"/Out/Results/"+"V"+Version+"/Mask/"+tuile+"/Mask_"+date+".tif", "w", nbits=1, **ProfileSave) as dst:
-        dst.write(Invalid2.astype(np.uint8), indexes=1)

@@ -37,7 +37,7 @@ Pour créer le masque forêt à partir de la BD FORET, assigner "BDFORET" au par
 #   LIBRAIRIES
 # =============================================================================
 
-import time
+import time, os
 import numpy as np
 import argparse
 
@@ -46,9 +46,9 @@ import argparse
 # =============================================================================
 
 from Lib_ImportValidSentinelData import getSentinelPaths, getValidDates, ComputeDate
-from Lib_ComputeMasks import getRasterizedBDForet
+from Lib_ComputeMasks import ComputeMaskForet
 from Lib_DetectionDeperissement import getCRSWIRCorrection
-from Lib_WritingResults import CreateDirectories, writeInputDataDateByDate,writeMaskForet
+from Lib_WritingResults import CreateDirectories, writeInputDataDateByDate,writeBinaryRaster
     
 #%% =============================================================================
 #   FONCTIONS
@@ -65,7 +65,7 @@ def parse_command_line():
     parser.add_argument("-d", "--DataSource", dest = "DataSource",type = str,default = "THEIA", help = "Source des données parmi THEIA et Scihub et PEPS")
     parser.add_argument("-i", "--InputDirectory", dest = "InputDirectory",type = str,default = "G:/Deperissement/Data/", help = "Chemin des données en entrée")
     parser.add_argument("-o", "--OutputDirectory", dest = "OutputDirectory",type = str,default = "G:/Deperissement/Out/PackageVersion", help = "Chemin du dossier où sauvegarder les résultats")
-    parser.add_argument("-f", "--ForestMaskSource", dest = "ForestMaskSource",type = str,default = "LastComputed", help = "Source du masque forêt, accepte pour le moment 'LastComputed' et 'BDFORET'")
+    parser.add_argument("-f", "--ForestMaskSource", dest = "ForestMaskSource",type = str,default = "BDFORET", help = "Source du masque forêt, accepte pour le moment 'LastComputed' et 'BDFORET'")
     
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
@@ -97,8 +97,8 @@ def ComputeMaskedVI(
         Dates = getValidDates(DictSentinelPaths,tuile, PercNuageLim,DataSource)
         
         #RASTERIZE MASQUE FORET
-        MaskForet,MetaProfile,CRS_Tuile = getRasterizedBDForet(DictSentinelPaths[Dates[0]]["B2"],InputDirectory,ForestMaskSource,tuile)
-        writeMaskForet(MaskForet,MetaProfile,OutputDirectory,tuile)
+        MaskForet,MetaProfile,CRS_Tuile = ComputeMaskForet(DictSentinelPaths[Dates[0]]["B2"],InputDirectory,ForestMaskSource,tuile)
+        writeBinaryRaster(MaskForet,os.path.join(OutputDirectory,"MaskForet",tuile+"_MaskForet.tif"),MetaProfile)
         
         #COMPUTE CRSWIR MEDIAN
         listDiffCRSWIRmedian = getCRSWIRCorrection(DictSentinelPaths,getValidDates(getSentinelPaths(InputDirectory,tuile,DataSource),tuile, PercNuageLim,DataSource),tuile,MaskForet)[:Dates.shape[0]] if CorrectCRSWIR else []
