@@ -19,6 +19,12 @@ conda install rasterio
 conda install scipy
 ```
 
+Depuis l'invité de commande, placer vous dans le répertoire de votre choix et lancez les commandes suivantes :
+```bash
+git clone https://gitlab.com/jbferet/fordead_package.git
+cd fordead_package
+pip install .
+```
 
 ## Utilisation
 La détection du déperissement se fait en trois étapes.
