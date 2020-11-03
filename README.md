@@ -19,6 +19,10 @@ conda install rasterio
 conda install scipy
 ```
 
+Cloner le projet puis dans _fordead_package_ utiliser la commande suivante :
+```bash
+pip install .
+```
 
 ## Utilisation
 La détection du déperissement se fait en trois étapes.
