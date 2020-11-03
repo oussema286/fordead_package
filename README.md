@@ -19,8 +19,10 @@ conda install rasterio
 conda install scipy
 ```
 
-Cloner le projet puis dans _fordead_package_ utiliser la commande suivante :
+Depuis l'invité de commande, placer vous dans le répertoire de votre choix et lancez les commandes suivantes :
 ```bash
+git clone https://gitlab.com/jbferet/fordead_package.git
+cd fordead_package
 pip install .
 ```
 
