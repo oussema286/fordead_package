@@ -11,29 +11,23 @@ import os
 import numpy as np
 import xarray as xr
 
-
 def getDates(DirectoryPath):
     """
     Prend en entrée un dossier avec des fichiers nommés sur le modèle ???????_YYYY-MM-JJ.???
     Renvoie un array contenant l'ensemble des dates
     """
-
     AllPaths=glob(os.path.join(DirectoryPath,"*"))
     Dates=[Path[-14:-4] for Path in AllPaths]
     return np.array(Dates)
-
 
 def ImportMaskedVI(DataDirectory,tuile,date):
     VegetationIndex = xr.open_rasterio(DataDirectory+"/VegetationIndex/"+tuile+"/VegetationIndex_"+date+".tif")
     Mask=xr.open_rasterio(DataDirectory+"/Mask/"+tuile+"/Mask_"+date+".tif").astype(bool)
     return VegetationIndex, Mask
     
-    
-    return VegetationIndex, Mask
 def ImportModel(tuile,DataDirectory):
     StackP = xr.open_rasterio(DataDirectory+"/DataModel/"+tuile+"/StackP.tif")
     rasterSigma = xr.open_rasterio(DataDirectory+"/DataModel/"+tuile+"/rasterSigma.tif")
-    
     return StackP,rasterSigma
 
 def ImportDataScolytes(tuile,DataDirectory):

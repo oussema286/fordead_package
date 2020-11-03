@@ -2,7 +2,7 @@
 """
 Created on Mon Nov  2 09:25:23 2020
 
-@author: admin
+@author: Raphaël Dutrieux
 """
 
 
@@ -10,8 +10,8 @@ Created on Mon Nov  2 09:25:23 2020
 import os
 import argparse
 
-from DetectionDeperissement import DetectAnomalies,PredictVegetationIndex
-from ImportData import getDates, ImportMaskedVI, ImportMaskForet, ImportModel, ImportDataScolytes, InitializeDataScolytes
+from fordead.DetectionDeperissement import DetectAnomalies,PredictVegetationIndex
+from fordead.ImportData import getDates, ImportMaskedVI, ImportMaskForet, ImportModel, ImportDataScolytes, InitializeDataScolytes
 
 
 def parse_command_line():
@@ -33,7 +33,7 @@ def DetectionScolytes(
     SeuilMin=0.04,
     CoeffAnomalie=4,
     ExportAsShapefile = False,
-    DataDirectory = "G:/Deperissement/Out/PackageVersion",
+    DataDirectory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead",
     Overwrite=False
     ):
 
@@ -41,7 +41,7 @@ def DetectionScolytes(
         # start_time_debut=time.time()
         print("Tuile : " + tuile)
     
-        if Overwrite: OverwriteUpdate(tuile,DataDirectory)
+        # if Overwrite: OverwriteUpdate(tuile,DataDirectory)
         
         Dates=getDates(os.path.join(DataDirectory,"VegetationIndex",tuile))
         OldDates=getDates(os.path.join(DataDirectory,"DataAnomalies",tuile))
@@ -56,7 +56,6 @@ def DetectionScolytes(
         #RASTERIZE MASQUE FORET
         MaskForet = ImportMaskForet(os.path.join(DataDirectory,"MaskForet",tuile+"_MaskForet.tif"))
 
-        # VegetationIndex.where(MaskForet)
         #INITIALISATION
         StackP,rasterSigma = ImportModel(tuile,DataDirectory)
         rasterSigma=rasterSigma.where(~((rasterSigma < SeuilMin) & (rasterSigma != 0)),SeuilMin)
