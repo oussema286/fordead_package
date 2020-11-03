@@ -19,15 +19,17 @@ def PredictVegetationIndex(StackP,date):
     return PredictedVegetationIndex
 
 
-def DetectAnomalies(VegetationIndex, PredictedVegetationIndex, rasterSigma, CoeffAnomalie):
+def DetectAnomalies(VegetationIndex, PredictedVegetationIndex, Mask, rasterSigma, CoeffAnomalie):
     """
     Détecte les anomalies par comparaison entre l'indice de végétation réel et l'indice prédit.
 
     """
     
-    DiffVegetationIndex = VegetationIndex-PredictedVegetationIndex
-    Anomalies = DiffVegetationIndex > CoeffAnomalie*rasterSigma
+    DiffVegetationIndex = VegetationIndex.where(~Mask)-PredictedVegetationIndex.where(~Mask)
+    Anomalies = DiffVegetationIndex.where(~Mask) > CoeffAnomalie*rasterSigma.where(~Mask)
     
-    Anomalies[rasterSigma==0]=False #Retire les zones invalides (sans modèle)
-
+    
+    Anomalies.where(~(rasterSigma==0),False)#Retire les zones invalides (sans modèle)
+    
     return Anomalies
+
