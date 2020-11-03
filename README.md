@@ -26,37 +26,18 @@ La détection du déperissement se fait en trois étapes.
 - L'apprentissage par modélisation de l'indice de végétation pixel par pixel à partir des premières dates
 - La détection du déperissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel.
 
-### Etape 1 : Main_ComputeMaskedVegetationIndex
-L'arborescence nécessaire pour le calcul des indices de végétation et des masques est la suivante :
-
-* Data
-    * SENTINEL
-        * Tuile1
-            * Date1
-            * Date2
-            * ...
-        * Tuile2
-        * ...
-    * Rasters
-        * Tuile1
-            * MaskForet_Tuile1.tif (raster binaire (1 pour la foret, en dehors) dont l'extent, la résolution et le CRS correspondent aux bandes SENTINEL à 10m)
-        * ...
-
-Le script correspondant est __Main_ComputeMaskedVegetationIndex__ dans __DetectionScolyte__. Une telle arborescence est disponible dans __test__, avec le jeu de donnée test __ZoneTest__.
-
-Il est donc possible de tester ce programme par la commande suivante :
-```bash
-python Main_ComputeMaskedVegetationIndex.py --InputDirectory CHEMINPERSO/tests/Data/ --OutputDirectory CHEMINPERSO/tests/OutputFordead
-```
-Il est possible de mettre n'importe quel dossier en sortie. Le dossier OutputFordead dans __tests__ est le résultat de ce script.
-
-### Etape 2 : Main_TrainForDead
-L'étape d'apprentissage prend en entrée un dossier avec l'arborescence suivante:
+### Etape 3 : Main_DetectionForDead
+L'étape de détectio prend en entrée un dossier avec l'arborescence suivante:
 * VegetationIndex 
     * VegetationIndex_YYYY_MM_JJ.tif
     * ...
 * Mask
     * Mask_YYYY_MM_JJ.tif
     * ...
+* DataModel
+    * stackP
+    * rasterSigma
+* DataAnomalies
 
-Un tel dossier est disponible dans __tests__ sous le nom __OutputFordead__
+Un tel dossier est disponible dans le package ForDead_data.
+La chaîne de traitement s'arrête pour le moment au calcul des anomalies.
