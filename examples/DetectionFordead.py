@@ -7,11 +7,11 @@ Created on Mon Nov  2 09:25:23 2020
 
 
 
-import os
+# import os
 import argparse
 
-from fordead.DetectionDeperissement import DetectAnomalies,PredictVegetationIndex
-from fordead.ImportData import getDates, ImportMaskedVI, ImportMaskForet, ImportModel, ImportDataScolytes, InitializeDataScolytes
+# from fordead.DetectionDeperissement import DetectAnomalies,PredictVegetationIndex
+# from fordead.ImportData import getDates, ImportMaskedVI, ImportMaskForet, ImportModel, ImportDataScolytes, InitializeDataScolytes
 
 
 def parse_command_line():
@@ -43,38 +43,38 @@ def DetectionScolytes(
     
         # if Overwrite: OverwriteUpdate(tuile,DataDirectory)
         
-        Dates=getDates(os.path.join(DataDirectory,"VegetationIndex",tuile))
-        OldDates=getDates(os.path.join(DataDirectory,"DataAnomalies",tuile))
+        # Dates=getDates(os.path.join(DataDirectory,"VegetationIndex",tuile))
+        # OldDates=getDates(os.path.join(DataDirectory,"DataAnomalies",tuile))
         
-        NbNewDates = Dates[Dates>"2018-01-01"].shape[0] - OldDates.shape[0]
-        if NbNewDates == 0:
-            print("Pas de nouvelles dates SENTINEL-2")
-            continue
-        else:
-            print(str(NbNewDates)+ " nouvelles dates")
+        # NbNewDates = Dates[Dates>"2018-01-01"].shape[0] - OldDates.shape[0]
+        # if NbNewDates == 0:
+        #     print("Pas de nouvelles dates SENTINEL-2")
+        #     continue
+        # else:
+        #     print(str(NbNewDates)+ " nouvelles dates")
         
-        #RASTERIZE MASQUE FORET
-        MaskForet = ImportMaskForet(os.path.join(DataDirectory,"MaskForet",tuile+"_MaskForet.tif"))
+        # #RASTERIZE MASQUE FORET
+        # MaskForet = ImportMaskForet(os.path.join(DataDirectory,"MaskForet",tuile+"_MaskForet.tif"))
 
-        #INITIALISATION
-        StackP,rasterSigma = ImportModel(tuile,DataDirectory)
-        rasterSigma=rasterSigma.where(~((rasterSigma < SeuilMin) & (rasterSigma != 0)),SeuilMin)
+        # #INITIALISATION
+        # StackP,rasterSigma = ImportModel(tuile,DataDirectory)
+        # rasterSigma=rasterSigma.where(~((rasterSigma < SeuilMin) & (rasterSigma != 0)),SeuilMin)
                 
         
-        if os.path.exists(os.path.join(DataDirectory,"DataUpdate",tuile,"EtatChange.tif")):
-            EtatChange,DateFirstScolyte,CompteurScolyte = ImportDataScolytes(tuile,DataDirectory)
-        else:
-            EtatChange,DateFirstScolyte,CompteurScolyte = InitializeDataScolytes(tuile,DataDirectory,MaskForet.shape)
+        # if os.path.exists(os.path.join(DataDirectory,"DataUpdate",tuile,"EtatChange.tif")):
+        #     EtatChange,DateFirstScolyte,CompteurScolyte = ImportDataScolytes(tuile,DataDirectory)
+        # else:
+        #     EtatChange,DateFirstScolyte,CompteurScolyte = InitializeDataScolytes(tuile,DataDirectory,MaskForet.shape)
             
-        print("Détection du déperissement")
+        # print("Détection du déperissement")
         
-        for DateIndex,date in enumerate(Dates):
-            if date < "2018-01-01" or os.path.exists(os.path.join(DataDirectory,"DataAnomalies",tuile,"Anomalies_"+date+".tif")): #Si anomalies pas encore écrites, ou avant la date de début de détection
-                continue
-            else:
-                VegetationIndex, Mask = ImportMaskedVI(DataDirectory,tuile,date)
+        # for DateIndex,date in enumerate(Dates):
+        #     if date < "2018-01-01" or os.path.exists(os.path.join(DataDirectory,"DataAnomalies",tuile,"Anomalies_"+date+".tif")): #Si anomalies pas encore écrites, ou avant la date de début de détection
+        #         continue
+        #     else:
+        #         VegetationIndex, Mask = ImportMaskedVI(DataDirectory,tuile,date)
             
-            Anomalies = DetectAnomalies(VegetationIndex, PredictVegetationIndex(StackP,date),Mask, rasterSigma, CoeffAnomalie)
+        #     Anomalies = DetectAnomalies(VegetationIndex, PredictVegetationIndex(StackP,date),Mask, rasterSigma, CoeffAnomalie)
 
 
 
