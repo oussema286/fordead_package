@@ -10,6 +10,69 @@ from glob import glob
 import os
 import numpy as np
 import xarray as xr
+import re
+from pathlib import Path
+
+def getdict_paths(path_vi,path_masks,path_forestmask):
+    DictPaths={"VegetationIndex" : getdict_datepaths(path_vi),
+               "Masks" : getdict_datepaths(path_masks),
+               "ForestMask" : path_forestmask
+               }
+    
+    return DictPaths
+
+def retrieve_date_from_string(string):
+    """
+    From a string containing a date in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY, retrieves the date in the format YYYY-MM-DD.
+    Works only for 20th and 21st centuries (years beginning with 19 or 20)
+
+    Parameters
+    ----------
+    string : str
+        String containing a date
+
+    Returns
+    -------
+    formatted_date : str
+        Date in the format YYYY-MM-DD
+
+    """
+    matchDMY = re.search(r'[0-3]\d-[0-1]\d-(19|20)\d{2}|[0-3]\d_[0-1]\d_(19|20)\d{2}|[0-3]\d[0-1]\d(19|20)\d{2}', string)
+    matchYMD = re.search(r'(19|20)\d{2}-[0-1]\d-[0-3]\d|(19|20)\d{2}_[0-1]\d_[0-3]\d|(19|20)\d{2}[0-1]\d[0-3]\d', string)
+    if matchDMY!=None:
+        raw_date=matchDMY.group()
+        if len(raw_date)==10:
+            formatted_date=raw_date[-4:]+"-"+raw_date[3:5]+"-"+raw_date[:2]
+        elif len(raw_date)==8:
+            formatted_date=raw_date[-4:]+"-"+raw_date[2:4]+"-"+raw_date[:2]
+    elif matchYMD!=None:
+        raw_date=matchYMD.group()
+        if len(raw_date)==10:
+            formatted_date=raw_date[:4]+"-"+raw_date[5:7]+"-"+raw_date[-2:]
+        elif len(raw_date)==8:
+            formatted_date=raw_date[:4]+"-"+raw_date[4:6]+"-"+raw_date[-2:]
+            
+    return formatted_date
+
+def getdict_datepaths(path_dir):
+    """
+    Parameters
+    ----------
+    path_dir : pathlib.WindowsPath
+        Directory containing files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
+
+    Returns
+    -------
+    dict_datepaths : dict
+        Dictionnary linking formatted dates with the paths of the files from which the dates where extracted
+
+    """
+    dict_datepaths={}
+    for path in path_dir.glob("*"):
+        dict_datepaths[retrieve_date_from_string(path.stem)] = path
+    
+    return dict_datepaths
+
 
 def getDates(DirectoryPath):
     """
