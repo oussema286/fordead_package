@@ -11,15 +11,8 @@ import os
 import numpy as np
 import xarray as xr
 import re
-from pathlib import Path
 
-def getdict_paths(path_vi,path_masks,path_forestmask):
-    DictPaths={"VegetationIndex" : getdict_datepaths(path_vi),
-               "Masks" : getdict_datepaths(path_masks),
-               "ForestMask" : path_forestmask
-               }
-    
-    return DictPaths
+
 
 def retrieve_date_from_string(string):
     """
@@ -73,6 +66,13 @@ def getdict_datepaths(path_dir):
     
     return dict_datepaths
 
+def getdict_paths(path_vi,path_masks,path_forestmask):
+    DictPaths={"VegetationIndex" : getdict_datepaths(path_vi),
+               "Masks" : getdict_datepaths(path_masks),
+               "ForestMask" : path_forestmask
+               }
+    
+    return DictPaths
 
 def getDates(DirectoryPath):
     """
@@ -82,6 +82,31 @@ def getDates(DirectoryPath):
     AllPaths=glob(os.path.join(DirectoryPath,"*"))
     Dates=[Path[-14:-4] for Path in AllPaths]
     return np.array(Dates)
+
+def import_stackedmaskedVI(dict_paths):
+    """
+
+    Parameters
+    ----------
+    dict_paths : dict
+        Dictionnary containing paths of vegetation index and masks for each date
+
+    Returns
+    -------
+    stack_vi : xarray.DataArray
+        DataArray containing vegetation index value with dimension Time, x and y
+    stack_masks : xarray.DataArray
+        DataArray containing mask value with dimension Time, x and y
+
+    """
+    list_vi=[xr.open_rasterio(dict_paths["VegetationIndex"][date]) for date in dict_paths["VegetationIndex"]]
+    stack_vi=xr.concat(list_vi,dim="Time")
+    stack_vi=stack_vi.assign_coords(Time=list(dict_paths["VegetationIndex"].keys()))
+    
+    list_mask=[xr.open_rasterio(dict_paths["Masks"][date]) for date in dict_paths["Masks"]]
+    stack_masks=xr.concat(list_mask,dim="Time")
+    stack_masks=stack_masks.assign_coords(Time=list(dict_paths["Masks"].keys())).astype(bool)
+    return stack_vi, stack_masks
 
 def ImportMaskedVI(DataDirectory,tuile,date):
     VegetationIndex = xr.open_rasterio(DataDirectory+"/VegetationIndex/"+tuile+"/VegetationIndex_"+date+".tif")
@@ -110,6 +135,8 @@ def InitializeDataScolytes(tuile,DataDirectory,Shape):
 def ImportMaskForet(PathMaskForet):
     MaskForet = xr.open_rasterio(PathMaskForet)
     return MaskForet.astype(bool)
+
+
 
 # def ImportMaskForet(PathMaskForet):
 #     MaskForet = xr.open_rasterio(PathMaskForet)

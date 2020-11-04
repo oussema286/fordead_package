@@ -10,7 +10,7 @@ Created on Tue Nov  3 16:21:15 2020
 
 import argparse
 from pathlib import Path
-from fordead.ImportData import getdict_paths, ImportMaskForet
+from fordead.ImportData import getdict_paths, ImportMaskForet, import_stackedmaskedVI
 
 def parse_command_line():
     # execute only if run as a script
@@ -42,13 +42,24 @@ def TrainForDead(
     # Mask
         #Date : filepath
     # Masque Foret : filepath
-        
-    DictPaths=getdict_paths(path_vi = DataDirectory / "VegetationIndex",
+    
+    dict_paths=getdict_paths(path_vi = DataDirectory / "VegetationIndex",
                             path_masks = DataDirectory / "Mask",
                             path_forestmask = list((DataDirectory / "MaskForet").glob("*.tif"))[0])
+    
+    #Import du masque forêt
+    forest_mask = ImportMaskForet(dict_paths["ForestMask"])
 
-    forest_mask = ImportMaskForet(DictPaths["ForestMask"])
-
+    # Import des index de végétations et des masques
+    stack_vi, stack_masks = import_stackedmaskedVI(dict_paths)
+    
+    # Pour chaque pixel dans le masque forêt :
+        # Déterminer la date à partir de laquelle il y a suffisamment de données valides (si elle existe)    
+        # Retirer les outliers (optionnel)
+        # Modéliser le CRSWIR
+        # Mettre dans des rasters l'index de la dernière date utilisée, les coefficients, l'écart type
+    #Ecrire ces rasters 
+    
 if __name__ == '__main__':
     dictArgs=parse_command_line()
     print(dictArgs)
@@ -58,13 +69,7 @@ if __name__ == '__main__':
 
 
 
-#Import du masque forêt
 
-# Import des index de végétations et des masques
 
-# Pour chaque pixel dans le masque forêt :
-    # Déterminer la date à partir de laquelle il y a suffisamment de données valides (si elle existe)
-    # Retirer les outliers (optionnel)
-    # Modéliser le CRSWIR
-    # Mettre dans des rasters l'index de la dernière date utilisée, les coefficients, l'écart type
-#Ecrire ces rasters 
+
+
