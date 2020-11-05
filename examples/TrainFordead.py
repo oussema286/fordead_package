@@ -11,15 +11,16 @@ Created on Tue Nov  3 16:21:15 2020
 import argparse
 from pathlib import Path
 from fordead.ImportData import getdict_paths, ImportMaskForet, import_stackedmaskedVI
-
+from fordead.ModelVegetationIndex import get_last_learning_date
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--SeuilMin", dest = "SeuilMin",type = float,default = 0.04, help = "Seuil minimum pour détection d'anomalies")
-    parser.add_argument("-a", "--CoeffAnomalie", dest = "CoeffAnomalie",type = float,default = 4, help = "Coefficient multiplicateur du seuil de détection d'anomalies")
-    parser.add_argument("-k", "--RemoveOutliers", dest = "RemoveOutliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
-    parser.add_argument("-g", "--DateFinApprentissage", dest = "DateFinApprentissage",type = str,default = "2018-06-01", help = "Uniquement les dates antérieures à la date indiquée seront utilisées")
-    parser.add_argument("-o", "--DataDirectory", dest = "DataDirectory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest", help = "Dossier avec les indices de végétations et les masques")
+    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest", help = "Dossier avec les indices de végétations et les masques")
+    parser.add_argument("-s", "--threshold_min", dest = "threshold_min",type = float,default = 0.04, help = "Seuil minimum pour détection d'anomalies")
+    parser.add_argument("-a", "--coeff_anomaly", dest = "coeff_anomaly",type = float,default = 4, help = "Coefficient multiplicateur du seuil de détection d'anomalies")
+    parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
+    parser.add_argument("-g", "--date_lim_training", dest = "date_lim_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
+    parser.add_argument("-d", "--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -27,15 +28,16 @@ def parse_command_line():
         
     return dictArgs
 
-def TrainForDead(    
-    SeuilMin=0.04,
-    CoeffAnomalie=4,
-    RemoveOutliers=True,
-    DateFinApprentissage="2018-06-01",
-    DataDirectory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest"
+def trainfordead(
+    data_directory,
+    threshold_min=0.04,
+    coeff_anomaly=4,
+    remove_outliers=True,
+    date_lim_training="2018-06-01",
+    min_last_date_training="2018-01-01"
     ):
-    
-    DataDirectory=Path(DataDirectory)
+    data_directory="C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest"
+    data_directory=Path(data_directory)
     #Creates a dictionnary containing all paths to vegetation index, masks and forest mask data :
     # VegetationIndex
         #Date : filepath
@@ -43,18 +45,23 @@ def TrainForDead(
         #Date : filepath
     # Masque Foret : filepath
     
-    dict_paths=getdict_paths(path_vi = DataDirectory / "VegetationIndex",
-                            path_masks = DataDirectory / "Mask",
-                            path_forestmask = list((DataDirectory / "MaskForet").glob("*.tif"))[0])
+    dict_paths=getdict_paths(path_vi = data_directory / "VegetationIndex",
+                            path_masks = data_directory / "Mask",
+                            path_forestmask = list((data_directory / "MaskForet").glob("*.tif"))[0])
     
     #Import du masque forêt
     forest_mask = ImportMaskForet(dict_paths["ForestMask"])
-
+    # forest_mask=forest_mask.expand_dims("mask")
+    
     # Import des index de végétations et des masques
-    stack_vi, stack_masks = import_stackedmaskedVI(dict_paths)
+    stack_vi, stack_masks = import_stackedmaskedVI(dict_paths,date_lim_learning="2018-06-01")
     
     # Pour chaque pixel dans le masque forêt :
-        # Déterminer la date à partir de laquelle il y a suffisamment de données valides (si elle existe)    
+        # Déterminer la date à partir de laquelle il y a suffisamment de données valides (si elle existe)  
+    last_learning_date=get_last_learning_date(stack_masks, 
+                                              min_last_date_training = min_last_date_training,
+                                              nb_min_date = 10)
+
         # Retirer les outliers (optionnel)
         # Modéliser le CRSWIR
         # Mettre dans des rasters l'index de la dernière date utilisée, les coefficients, l'écart type
@@ -63,11 +70,11 @@ def TrainForDead(
 if __name__ == '__main__':
     dictArgs=parse_command_line()
     print(dictArgs)
-    TrainForDead(**dictArgs)
+    trainfordead(**dictArgs)
     
 
 
-
+# %timeit get_last_learning_date(stack_masks,min_last_date_training = min_last_date_training, nb_min_date = 10)
 
 
 

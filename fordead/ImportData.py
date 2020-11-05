@@ -87,7 +87,7 @@ def ImportMaskForet(PathMaskForet):
     return MaskForet.astype(bool)
 
 
-def import_stackedmaskedVI(dict_paths):
+def import_stackedmaskedVI(dict_paths,date_lim_learning=None):
     """
 
     Parameters
@@ -103,13 +103,22 @@ def import_stackedmaskedVI(dict_paths):
         DataArray containing mask value with dimension Time, x and y
 
     """
-    list_vi=[xr.open_rasterio(dict_paths["VegetationIndex"][date]) for date in dict_paths["VegetationIndex"]]
+    if date_lim_learning==None:
+        filter_dates=False
+        date_lim_learning=""
+    else:
+        filter_dates=True
+        
+    list_vi=[xr.open_rasterio(dict_paths["VegetationIndex"][date],chunks =1000) for date in dict_paths["VegetationIndex"] if date <= date_lim_learning or not(filter_dates)]
     stack_vi=xr.concat(list_vi,dim="Time")
-    stack_vi=stack_vi.assign_coords(Time=list(dict_paths["VegetationIndex"].keys()))
+    stack_vi=stack_vi.assign_coords(Time=[date for date in dict_paths["VegetationIndex"].keys() if date <= date_lim_learning or not(filter_dates)])
+    stack_vi=stack_vi.chunk({"Time": -1,"x" : 1000,"y" : 1000})    
     
-    list_mask=[xr.open_rasterio(dict_paths["Masks"][date]) for date in dict_paths["Masks"]]
+    
+    list_mask=[xr.open_rasterio(dict_paths["Masks"][date],chunks =1000) for date in dict_paths["Masks"] if date <= date_lim_learning or not(filter_dates)]
     stack_masks=xr.concat(list_mask,dim="Time")
-    stack_masks=stack_masks.assign_coords(Time=list(dict_paths["Masks"].keys())).astype(bool)
+    stack_masks=stack_masks.assign_coords(Time=[date for date in dict_paths["VegetationIndex"].keys() if date <= date_lim_learning or not(filter_dates)]).astype(bool)
+    stack_masks=stack_masks.chunk({"Time": -1,"x" : 1000,"y" : 1000})
     return stack_vi, stack_masks
 
 
