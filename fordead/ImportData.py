@@ -83,8 +83,9 @@ def getdict_paths(path_vi,path_masks,path_forestmask):
 #     Dates=[Path[-14:-4] for Path in AllPaths]
 #     return np.array(Dates)
 def ImportMaskForet(PathMaskForet):
-    MaskForet = xr.open_rasterio(PathMaskForet)
-    return MaskForet.astype(bool)
+    forest_mask = xr.open_rasterio(PathMaskForet,chunks =1000)
+    forest_mask=forest_mask.rename({"band" : "Mask"})
+    return forest_mask.astype(bool)
 
 
 def import_stackedmaskedVI(dict_paths,date_lim_learning=None):
@@ -112,12 +113,14 @@ def import_stackedmaskedVI(dict_paths,date_lim_learning=None):
     list_vi=[xr.open_rasterio(dict_paths["VegetationIndex"][date],chunks =1000) for date in dict_paths["VegetationIndex"] if date <= date_lim_learning or not(filter_dates)]
     stack_vi=xr.concat(list_vi,dim="Time")
     stack_vi=stack_vi.assign_coords(Time=[date for date in dict_paths["VegetationIndex"].keys() if date <= date_lim_learning or not(filter_dates)])
+    stack_vi=stack_vi.sel(band=1)
     stack_vi=stack_vi.chunk({"Time": -1,"x" : 1000,"y" : 1000})    
     
     
     list_mask=[xr.open_rasterio(dict_paths["Masks"][date],chunks =1000) for date in dict_paths["Masks"] if date <= date_lim_learning or not(filter_dates)]
     stack_masks=xr.concat(list_mask,dim="Time")
     stack_masks=stack_masks.assign_coords(Time=[date for date in dict_paths["VegetationIndex"].keys() if date <= date_lim_learning or not(filter_dates)]).astype(bool)
+    stack_masks=stack_masks.sel(band=1)
     stack_masks=stack_masks.chunk({"Time": -1,"x" : 1000,"y" : 1000})
     return stack_vi, stack_masks
 

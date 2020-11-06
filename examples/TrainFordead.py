@@ -11,7 +11,9 @@ Created on Tue Nov  3 16:21:15 2020
 import argparse
 from pathlib import Path
 from fordead.ImportData import getdict_paths, ImportMaskForet, import_stackedmaskedVI
-from fordead.ModelVegetationIndex import get_last_learning_date
+from fordead.ModelVegetationIndex import get_last_training_date
+import time
+
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
@@ -36,32 +38,30 @@ def trainfordead(
     date_lim_training="2018-06-01",
     min_last_date_training="2018-01-01"
     ):
-    data_directory="C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest"
-    data_directory=Path(data_directory)
-    #Creates a dictionnary containing all paths to vegetation index, masks and forest mask data :
-    # VegetationIndex
-        #Date : filepath
-    # Mask
-        #Date : filepath
-    # Masque Foret : filepath
     
+    start_time = time.time()
+    # data_directory="G:/Deperissement/Out/PackageVersion/T31UFQ"
+    data_directory=Path(data_directory)
+
+    #Creates a dictionnary containing all paths to vegetation index, masks and forest mask data :    
     dict_paths=getdict_paths(path_vi = data_directory / "VegetationIndex",
                             path_masks = data_directory / "Mask",
                             path_forestmask = list((data_directory / "MaskForet").glob("*.tif"))[0])
     
     #Import du masque forêt
     forest_mask = ImportMaskForet(dict_paths["ForestMask"])
-    # forest_mask=forest_mask.expand_dims("mask")
     
+
     # Import des index de végétations et des masques
     stack_vi, stack_masks = import_stackedmaskedVI(dict_paths,date_lim_learning="2018-06-01")
     
     # Pour chaque pixel dans le masque forêt :
         # Déterminer la date à partir de laquelle il y a suffisamment de données valides (si elle existe)  
-    last_learning_date=get_last_learning_date(stack_masks, 
+    last_training_date=get_last_training_date(stack_masks, forest_mask,
                                               min_last_date_training = min_last_date_training,
                                               nb_min_date = 10)
-
+    
+    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
         # Retirer les outliers (optionnel)
         # Modéliser le CRSWIR
         # Mettre dans des rasters l'index de la dernière date utilisée, les coefficients, l'écart type
