@@ -16,10 +16,11 @@ Installer les packages numpy, geopandas, rasterio et scipy avec les commandes su
 conda install numpy
 conda install geopandas
 conda install rasterio
+conda install xarray
 conda install scipy
 ```
 
-Depuis l'invité de commande, placer vous dans le répertoire de votre choix et lancez les commandes suivantes :
+Depuis l'invite de commande, placer vous dans le répertoire de votre choix et lancez les commandes suivantes :
 ```bash
 git clone https://gitlab.com/jbferet/fordead_package.git
 cd fordead_package
@@ -28,12 +29,12 @@ pip install .
 
 ## Utilisation
 La détection du déperissement se fait en trois étapes.
-- Le calcul des indices de végétations et des masques
+- Le calcul des indices de végétation et des masques
 - L'apprentissage par modélisation de l'indice de végétation pixel par pixel à partir des premières dates
 - La détection du déperissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel.
 
 ### Etape 3 : Main_DetectionForDead
-L'étape de détectio prend en entrée un dossier avec l'arborescence suivante:
+L'étape de détection prend en entrée un dossier avec l'arborescence suivante:
 * VegetationIndex 
     * VegetationIndex_YYYY_MM_JJ.tif
     * ...
