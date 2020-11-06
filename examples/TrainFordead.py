@@ -11,7 +11,7 @@ Created on Tue Nov  3 16:21:15 2020
 import argparse
 from pathlib import Path
 from fordead.ImportData import getdict_paths, ImportMaskForet, import_stackedmaskedVI
-from fordead.ModelVegetationIndex import get_last_training_date
+from fordead.ModelVegetationIndex import get_last_training_date, model_vi
 import time
 
 def parse_command_line():
@@ -38,9 +38,10 @@ def trainfordead(
     date_lim_training="2018-06-01",
     min_last_date_training="2018-01-01"
     ):
-    
+
     start_time = time.time()
     # data_directory="G:/Deperissement/Out/PackageVersion/T31UFQ"
+    data_directory="C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest"
     data_directory=Path(data_directory)
 
     #Creates a dictionnary containing all paths to vegetation index, masks and forest mask data :    
@@ -61,11 +62,17 @@ def trainfordead(
                                               min_last_date_training = min_last_date_training,
                                               nb_min_date = 10)
     
+    used_area_mask = forest_mask.where(last_training_date!=0,False)
+    
+    # forest_mask.plot()
+    # used_area_mask.plot()
     print("Temps d execution : %s secondes ---" % (time.time() - start_time))
         # Retirer les outliers (optionnel)
         # Modéliser le CRSWIR
-        # Mettre dans des rasters l'index de la dernière date utilisée, les coefficients, l'écart type
-    #Ecrire ces rasters 
+    coeff_model =model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
+                          threshold_min=0.04, coeff_anomaly=4, remove_outliers=True)
+    #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, l'écart type
+
     
 if __name__ == '__main__':
     dictArgs=parse_command_line()

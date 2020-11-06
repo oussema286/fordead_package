@@ -8,10 +8,10 @@ Created on Mon Nov  2 09:42:31 2020
 # import rasterio
 # from glob import glob
 # import os
-# import numpy as np
+import numpy as np
 import xarray as xr
 import re
-
+import datetime
 
 
 def retrieve_date_from_string(string):
@@ -67,12 +67,15 @@ def getdict_datepaths(path_dir):
     return dict_datepaths
 
 def getdict_paths(path_vi,path_masks,path_forestmask):
-    DictPaths={"VegetationIndex" : getdict_datepaths(path_vi),
+    dict_paths={"VegetationIndex" : getdict_datepaths(path_vi),
                "Masks" : getdict_datepaths(path_masks),
                "ForestMask" : path_forestmask
                }
     
-    return DictPaths
+    dict_paths["Dates"]=np.array(list(dict_paths["VegetationIndex"].keys()))
+    dict_paths["DatesAsNumber"]=np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in dict_paths["Dates"]]) #Numéro des jours
+    
+    return dict_paths
 
 # def getDates(DirectoryPath):
 #     """
@@ -84,7 +87,8 @@ def getdict_paths(path_vi,path_masks,path_forestmask):
 #     return np.array(Dates)
 def ImportMaskForet(PathMaskForet):
     forest_mask = xr.open_rasterio(PathMaskForet,chunks =1000)
-    forest_mask=forest_mask.rename({"band" : "Mask"})
+    forest_mask=forest_mask[0,:,:]
+    # forest_mask=forest_mask.rename({"band" : "Mask"})
     return forest_mask.astype(bool)
 
 
@@ -115,13 +119,15 @@ def import_stackedmaskedVI(dict_paths,date_lim_learning=None):
     stack_vi=stack_vi.assign_coords(Time=[date for date in dict_paths["VegetationIndex"].keys() if date <= date_lim_learning or not(filter_dates)])
     stack_vi=stack_vi.sel(band=1)
     stack_vi=stack_vi.chunk({"Time": -1,"x" : 1000,"y" : 1000})    
-    
+    stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
+
     
     list_mask=[xr.open_rasterio(dict_paths["Masks"][date],chunks =1000) for date in dict_paths["Masks"] if date <= date_lim_learning or not(filter_dates)]
     stack_masks=xr.concat(list_mask,dim="Time")
     stack_masks=stack_masks.assign_coords(Time=[date for date in dict_paths["VegetationIndex"].keys() if date <= date_lim_learning or not(filter_dates)]).astype(bool)
     stack_masks=stack_masks.sel(band=1)
     stack_masks=stack_masks.chunk({"Time": -1,"x" : 1000,"y" : 1000})
+    stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
     return stack_vi, stack_masks
 
 
