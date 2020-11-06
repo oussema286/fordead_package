@@ -12,7 +12,9 @@ import argparse
 from pathlib import Path
 from fordead.ImportData import getdict_paths, ImportMaskForet, import_stackedmaskedVI
 from fordead.ModelVegetationIndex import get_last_training_date, model_vi
+from fordead.writing_data import write_coeffmodel
 import time
+# import rioxarray
 
 def parse_command_line():
     # execute only if run as a script
@@ -41,7 +43,7 @@ def trainfordead(
 
     start_time = time.time()
     # data_directory="G:/Deperissement/Out/PackageVersion/T31UFQ"
-    data_directory="C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest"
+    # data_directory="C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest"
     data_directory=Path(data_directory)
 
     #Creates a dictionnary containing all paths to vegetation index, masks and forest mask data :    
@@ -52,27 +54,30 @@ def trainfordead(
     #Import du masque forêt
     forest_mask = ImportMaskForet(dict_paths["ForestMask"])
     
-
     # Import des index de végétations et des masques
     stack_vi, stack_masks = import_stackedmaskedVI(dict_paths,date_lim_learning="2018-06-01")
     
-    # Pour chaque pixel dans le masque forêt :
-        # Déterminer la date à partir de laquelle il y a suffisamment de données valides (si elle existe)  
+    # Déterminer la date à partir de laquelle il y a suffisamment de données valides (si elle existe)  
     last_training_date=get_last_training_date(stack_masks, forest_mask,
                                               min_last_date_training = min_last_date_training,
                                               nb_min_date = 10)
     
+    #Fusion du masque forêt et des zones non utilisables par manque de données
     used_area_mask = forest_mask.where(last_training_date!=0,False)
     
     # forest_mask.plot()
     # used_area_mask.plot()
-    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
-        # Retirer les outliers (optionnel)
-        # Modéliser le CRSWIR
+
+    # Retirer les outliers (optionnel)
+    # Modéliser le CRSWIR
     coeff_model =model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
                           threshold_min=0.04, coeff_anomaly=4, remove_outliers=True)
+    
     #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, l'écart type
+    write_coeffmodel(coeff_model,stack_vi.attrs, data_directory / "Coeff_model.tif")
 
+    
+    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
     
 if __name__ == '__main__':
     dictArgs=parse_command_line()

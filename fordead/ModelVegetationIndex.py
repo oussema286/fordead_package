@@ -7,7 +7,9 @@ Created on Tue Nov  3 16:21:35 2020
 import xarray as xr
 import numpy as np
 from scipy.linalg import lstsq
+from numba import jit
 
+@jit
 def get_pixel_lastlearningdate(maskarray,forestmask,nb_min_date,min_date_index):
     if forestmask:
         S=0
