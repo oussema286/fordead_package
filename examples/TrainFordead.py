@@ -33,7 +33,6 @@ def parse_command_line():
 def trainfordead(
     data_directory,
     threshold_min=0.04,
-    coeff_anomaly=4,
     remove_outliers=True,
     date_lim_training="2018-06-01",
     min_last_date_training="2018-01-01"
