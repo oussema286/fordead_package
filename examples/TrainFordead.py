@@ -12,16 +12,14 @@ import argparse
 from pathlib import Path
 from fordead.ImportData import getdict_paths, ImportMaskForet, import_stackedmaskedVI
 from fordead.ModelVegetationIndex import get_last_training_date, model_vi
-from fordead.writing_data import write_coeffmodel
+from fordead.writing_data import write_tif
 import time
-# import rioxarray
 
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest", help = "Dossier avec les indices de végétations et les masques")
-    parser.add_argument("-s", "--threshold_min", dest = "threshold_min",type = float,default = 0.04, help = "Seuil minimum pour détection d'anomalies")
-    parser.add_argument("-a", "--coeff_anomaly", dest = "coeff_anomaly",type = float,default = 4, help = "Coefficient multiplicateur du seuil de détection d'anomalies")
+    parser.add_argument("-s", "--threshold_min", dest = "threshold_min",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
     parser.add_argument("-g", "--date_lim_training", dest = "date_lim_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
     parser.add_argument("-d", "--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
@@ -42,8 +40,7 @@ def trainfordead(
     ):
 
     start_time = time.time()
-    # data_directory="G:/Deperissement/Out/PackageVersion/T31UFQ"
-    # data_directory="C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest"
+
     data_directory=Path(data_directory)
 
     #Creates a dictionnary containing all paths to vegetation index, masks and forest mask data :    
@@ -64,19 +61,16 @@ def trainfordead(
     
     #Fusion du masque forêt et des zones non utilisables par manque de données
     used_area_mask = forest_mask.where(last_training_date!=0,False)
-    
-    # forest_mask.plot()
-    # used_area_mask.plot()
 
-    # Retirer les outliers (optionnel)
-    # Modéliser le CRSWIR
+    # Modéliser le CRSWIR tout en retirant outliers
     coeff_model =model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
-                          threshold_min=0.04, coeff_anomaly=4, remove_outliers=True)
-    
-    #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, l'écart type
-    write_coeffmodel(coeff_model,stack_vi.attrs, data_directory / "Coeff_model.tif")
+                          threshold_min=0.16, remove_outliers=True)
 
+    #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, l'écart type
+    write_tif(last_training_date,stack_vi.attrs, data_directory / "last_training_date.tif",nodata=0)
+    write_tif(coeff_model,stack_vi.attrs, data_directory / "Coeff_model.tif")
     
+
     print("Temps d execution : %s secondes ---" % (time.time() - start_time))
     
 if __name__ == '__main__':
@@ -84,11 +78,4 @@ if __name__ == '__main__':
     print(dictArgs)
     trainfordead(**dictArgs)
     
-
-
-# %timeit get_last_learning_date(stack_masks,min_last_date_training = min_last_date_training, nb_min_date = 10)
-
-
-
-
 

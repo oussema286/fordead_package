@@ -77,14 +77,7 @@ def getdict_paths(path_vi,path_masks,path_forestmask):
     
     return dict_paths
 
-# def getDates(DirectoryPath):
-#     """
-#     Prend en entrée un dossier avec des fichiers nommés sur le modèle ???????_YYYY-MM-JJ.???
-#     Renvoie un array contenant l'ensemble des dates
-#     """
-#     AllPaths=glob(os.path.join(DirectoryPath,"*"))
-#     Dates=[Path[-14:-4] for Path in AllPaths]
-#     return np.array(Dates)
+
 def ImportMaskForet(PathMaskForet):
     forest_mask = xr.open_rasterio(PathMaskForet,chunks =1000)
     forest_mask=forest_mask[0,:,:]
