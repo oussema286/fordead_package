@@ -5,7 +5,10 @@ Created on Fri Nov  6 17:32:26 2020
 @author: admin
 """
 import rioxarray
+
+
     
+
 def write_tif(data_array, attributes, path, nodata = None):
     data_array.attrs=attributes
     

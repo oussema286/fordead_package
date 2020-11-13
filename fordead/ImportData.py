@@ -12,6 +12,12 @@ import numpy as np
 import xarray as xr
 import re
 import datetime
+from pathlib import Path
+import pickle
+
+
+    
+
 
 
 def retrieve_date_from_string(string):
@@ -66,17 +72,48 @@ def getdict_datepaths(path_dir):
     
     return dict_datepaths
 
-def getdict_paths(path_vi,path_masks,path_forestmask):
-    dict_paths={"VegetationIndex" : getdict_datepaths(path_vi),
-               "Masks" : getdict_datepaths(path_masks),
-               "ForestMask" : path_forestmask
-               }
+class TileInfo:
+    def __init__(self, data_directory):
+        self.data_directory = Path(data_directory)
+        
+    def getdict_paths(self,
+                      path_vi, path_masks, path_forestmask = None, 
+                      path_data_directory = None):
+        self.paths={}
+        self.paths["VegetationIndex"]=getdict_datepaths(path_vi)
+        self.paths["Masks"]=getdict_datepaths(path_masks)
+        self.paths["ForestMask"]=path_forestmask
+        
+        # self.Dates = np.array(list(self.path_vegetationindex.keys()))
+        # dict_paths["DatesAsNumber"]=np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in dict_paths["Dates"]]) #Numéro des jours
     
-    dict_paths["Dates"]=np.array(list(dict_paths["VegetationIndex"].keys()))
-    dict_paths["DatesAsNumber"]=np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in dict_paths["Dates"]]) #Numéro des jours
+    def add_path(self, key, path):
+        #Transform to WindowsPath if not done already
+        path=Path(path)
+        #Creates missing directories
+        path.parent.mkdir(parents=True, exist_ok=True)    
+        #Saves paths in the object
+        self.paths[key] = path
+        
+    def save_info(self, path= None):
+        if path==None:
+            path=self.data_directory / "PathsInfo"
+        with open(path, 'wb') as f:
+            pickle.dump(self, f)
+        
+# def getdict_paths(path_vi, path_masks, path_forestmask = None, 
+#                   path_data_directory = None):
     
-    return dict_paths
-
+#     dict_paths={"VegetationIndex" : getdict_datepaths(path_vi),
+#                "Masks" : getdict_datepaths(path_masks),
+#                "ForestMask" : path_forestmask
+#                }
+    
+#     dict_paths["Dates"]=np.array(list(dict_paths["VegetationIndex"].keys()))
+#     dict_paths["path_data_directory"]=path_data_directory
+#     # dict_paths["DatesAsNumber"]=np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in dict_paths["Dates"]]) #Numéro des jours
+    
+#     return dict_paths
 
 def ImportMaskForet(PathMaskForet):
     forest_mask = xr.open_rasterio(PathMaskForet,chunks =1000)
@@ -85,13 +122,13 @@ def ImportMaskForet(PathMaskForet):
     return forest_mask.astype(bool)
 
 
-def import_stackedmaskedVI(dict_paths,date_lim_learning=None):
+def import_stackedmaskedVI(tuile,date_lim_learning=None):
     """
 
     Parameters
     ----------
-    dict_paths : dict
-        Dictionnary containing paths of vegetation index and masks for each date
+    tuile : Object of class TileInfo
+        Object containing paths of vegetation index and masks for each date
 
     Returns
     -------
@@ -107,17 +144,17 @@ def import_stackedmaskedVI(dict_paths,date_lim_learning=None):
     else:
         filter_dates=True
         
-    list_vi=[xr.open_rasterio(dict_paths["VegetationIndex"][date],chunks =1000) for date in dict_paths["VegetationIndex"] if date <= date_lim_learning or not(filter_dates)]
+    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =1000) for date in tuile.paths["VegetationIndex"] if date <= date_lim_learning or not(filter_dates)]
     stack_vi=xr.concat(list_vi,dim="Time")
-    stack_vi=stack_vi.assign_coords(Time=[date for date in dict_paths["VegetationIndex"].keys() if date <= date_lim_learning or not(filter_dates)])
+    stack_vi=stack_vi.assign_coords(Time=[date for date in tuile.paths["VegetationIndex"].keys() if date <= date_lim_learning or not(filter_dates)])
     stack_vi=stack_vi.sel(band=1)
     stack_vi=stack_vi.chunk({"Time": -1,"x" : 1000,"y" : 1000})    
     stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
 
     
-    list_mask=[xr.open_rasterio(dict_paths["Masks"][date],chunks =1000) for date in dict_paths["Masks"] if date <= date_lim_learning or not(filter_dates)]
+    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =1000) for date in tuile.paths["Masks"] if date <= date_lim_learning or not(filter_dates)]
     stack_masks=xr.concat(list_mask,dim="Time")
-    stack_masks=stack_masks.assign_coords(Time=[date for date in dict_paths["VegetationIndex"].keys() if date <= date_lim_learning or not(filter_dates)]).astype(bool)
+    stack_masks=stack_masks.assign_coords(Time=[date for date in tuile.paths["Masks"].keys() if date <= date_lim_learning or not(filter_dates)]).astype(bool)
     stack_masks=stack_masks.sel(band=1)
     stack_masks=stack_masks.chunk({"Time": -1,"x" : 1000,"y" : 1000})
     stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
