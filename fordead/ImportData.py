@@ -53,40 +53,41 @@ def retrieve_date_from_string(string):
             
     return formatted_date
 
-def getdict_datepaths(path_dir):
-    """
-    Parameters
-    ----------
-    path_dir : pathlib.WindowsPath
-        Directory containing files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
 
-    Returns
-    -------
-    dict_datepaths : dict
-        Dictionnary linking formatted dates with the paths of the files from which the dates where extracted
-
-    """
-    dict_datepaths={}
-    for path in path_dir.glob("*"):
-        dict_datepaths[retrieve_date_from_string(path.stem)] = path
-    
-    return dict_datepaths
 
 class TileInfo:
     def __init__(self, data_directory):
         self.data_directory = Path(data_directory)
         
+        
+    def getdict_datepaths(self, key, path_dir):
+        """
+        Parameters
+        ----------
+        path_dir : pathlib.WindowsPath
+            Directory containing files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
+    
+        Returns
+        -------
+        dict_datepaths : dict
+            Dictionnary linking formatted dates with the paths of the files from which the dates where extracted
+    
+        """
+        dict_datepaths={}
+        for path in path_dir.glob("*"):
+            dict_datepaths[retrieve_date_from_string(path.stem)] = path
+        
+        self.paths[key] = dict_datepaths
+        
     def getdict_paths(self,
                       path_vi, path_masks, path_forestmask = None, 
                       path_data_directory = None):
         self.paths={}
-        self.paths["VegetationIndex"]=getdict_datepaths(path_vi)
-        self.paths["Masks"]=getdict_datepaths(path_masks)
+        self.getdict_datepaths("VegetationIndex",path_vi)
+        self.getdict_datepaths("Masks",path_masks)
         self.paths["ForestMask"]=path_forestmask
-        
-        # self.Dates = np.array(list(self.path_vegetationindex.keys()))
-        # dict_paths["DatesAsNumber"]=np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in dict_paths["Dates"]]) #Numéro des jours
-    
+        self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
+            
     def add_path(self, key, path):
         #Transform to WindowsPath if not done already
         path=Path(path)
@@ -100,22 +101,17 @@ class TileInfo:
             path=self.data_directory / "PathsInfo"
         with open(path, 'wb') as f:
             pickle.dump(self, f)
+    
+    def search_new_dates(self):
+        path_vi=self.paths["VegetationIndex"][self.dates[0]].parent
+        path_masks=self.paths["Masks"][self.dates[0]].parent
+        self.getdict_datepaths("VegetationIndex",path_vi)
+        self.getdict_datepaths("Masks",path_masks)
+        self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
         
-# def getdict_paths(path_vi, path_masks, path_forestmask = None, 
-#                   path_data_directory = None):
-    
-#     dict_paths={"VegetationIndex" : getdict_datepaths(path_vi),
-#                "Masks" : getdict_datepaths(path_masks),
-#                "ForestMask" : path_forestmask
-#                }
-    
-#     dict_paths["Dates"]=np.array(list(dict_paths["VegetationIndex"].keys()))
-#     dict_paths["path_data_directory"]=path_data_directory
-#     # dict_paths["DatesAsNumber"]=np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in dict_paths["Dates"]]) #Numéro des jours
-    
-#     return dict_paths
 
-def ImportMaskForet(PathMaskForet):
+
+def import_forest_mask(PathMaskForet):
     forest_mask = xr.open_rasterio(PathMaskForet,chunks =1000)
     forest_mask=forest_mask[0,:,:]
     # forest_mask=forest_mask.rename({"band" : "Mask"})
@@ -168,24 +164,34 @@ def import_stackedmaskedVI(tuile,date_lim_learning=None):
 #     Mask=xr.open_rasterio(DataDirectory+"/Mask/"+tuile+"/Mask_"+date+".tif").astype(bool)
 #     return VegetationIndex, Mask
     
-# def ImportModel(tuile,DataDirectory):
-#     StackP = xr.open_rasterio(DataDirectory+"/DataModel/"+tuile+"/StackP.tif")
-#     rasterSigma = xr.open_rasterio(DataDirectory+"/DataModel/"+tuile+"/rasterSigma.tif")
-#     return StackP,rasterSigma
+def import_coeff_model(path):
+    coeff_model = xr.open_rasterio(path,chunks = 1000)
+    return coeff_model
 
-# def ImportDataScolytes(tuile,DataDirectory):
-#     BoolEtat = xr.open_rasterio(DataDirectory+"/DataUpdate/"+tuile+"/EtatChange.tif")
-#     DateFirstScolyte = xr.open_rasterio(DataDirectory+"/DataUpdate/"+tuile+"/DateFirstScolyte.tif")
-#     CompteurScolyte = xr.open_rasterio(DataDirectory+"/DataUpdate/"+tuile+"/CompteurScolyte.tif")
+def import_decline_data(tuile):
+    state_decline = xr.open_rasterio(tuile.paths["state_decline"])
+    first_date_decline = xr.open_rasterio(tuile.paths["first_date_decline"])
+    count_decline = xr.open_rasterio(tuile.paths["count_decline"])
     
-#     return BoolEtat, DateFirstScolyte, CompteurScolyte
+    decline_data=xr.Dataset({"state": state_decline,
+                     "first_date": first_date_decline,
+                     "count" : count_decline})
+    return decline_data
         
-# def InitializeDataScolytes(tuile,DataDirectory,Shape):
-#     CompteurScolyte= np.zeros(Shape,dtype=np.uint8) #np.int8 possible ?
-#     DateFirstScolyte=np.zeros(Shape,dtype=np.uint16) #np.int8 possible ?
-#     EtatChange=np.zeros(Shape,dtype=bool)
+def initialize_decline_data(shape,coords):
     
-#     return EtatChange,DateFirstScolyte,CompteurScolyte
+    
+    count_decline= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
+    first_date_decline=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
+    state_decline=np.zeros(shape,dtype=bool)
+    
+    decline_data=xr.Dataset({"state": xr.DataArray(state_decline, coords=coords),
+                         "first_date": xr.DataArray(first_date_decline, coords=coords),
+                         "count" : xr.DataArray(count_decline, coords=coords)})
+            
+    
+    
+    return decline_data
 
 
 

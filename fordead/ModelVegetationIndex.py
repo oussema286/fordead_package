@@ -51,7 +51,7 @@ def compute_HarmonicTerms(DateAsNumber):
     return np.array([1,np.sin(2*np.pi*DateAsNumber/365.25), np.cos(2*np.pi*DateAsNumber/365.25),np.sin(2*2*np.pi*DateAsNumber/365.25),np.cos(2*2*np.pi*DateAsNumber/365.25)])
 
 def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date, 
-                    HarmonicTerms,threshold_min, remove_outliers):
+                    HarmonicTerms,threshold_anomaly, remove_outliers):
     """
     
 
@@ -67,10 +67,10 @@ def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date,
         Index of the last date used for training
     HarmonicTerms : 1-D array
         Terms of the harmonic function used for the model, calculated from the dates.
-    threshold_min : float
+    threshold_anomaly : float
         Threshold used for removing outliers if remove_outliers==True
     remove_outliers : bool
-        If True, outliers are removed if the difference between the predicted vegetation index and the real vegetation index is greater than threshold_min
+        If True, outliers are removed if the difference between the predicted vegetation index and the real vegetation index is greater than threshold_anomaly
 
     Returns
     -------
@@ -88,7 +88,7 @@ def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date,
         
         #POUR RETIRER OUTLIERS
         if remove_outliers:
-            Inliers=diff<threshold_min
+            Inliers=diff<threshold_anomaly
             Valid_HarmonicTerms=Valid_HarmonicTerms[Inliers,:]
             p, _, _, _ = lstsq(Valid_HarmonicTerms, valid_vi[Inliers],
                            overwrite_a=True, overwrite_b = True, check_finite= False)
@@ -100,7 +100,7 @@ def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date,
 
         
 def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
-              threshold_min=0.16,
+              threshold_anomaly=0.16,
               remove_outliers=True):
     """
     Models periodic vegetation index for each pixel.  
@@ -115,11 +115,11 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
         Array (boolean), if pixel is True, model for the vegetation index will be calculated 
     last_training_date : array (x,y)
         Array (int) containing the index of the last date used for training
-    threshold_min : float, optional
+    threshold_anomaly : float, optional
         Threshold used to identify and remove outliers if remove_outliers==True
     remove_outliers : bool, optional
         If True, outliers are removed.
-        Outliers are dates where the difference between the predicted vegetation index and the real vegetation index is greater than threshold_min. The default is True.
+        Outliers are dates where the difference between the predicted vegetation index and the real vegetation index is greater than threshold_anomaly. The default is True.
 
     Returns
     -------
@@ -132,7 +132,7 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
 
     coeff_model=xr.apply_ufunc(model_pixel_vi, stack_vi,stack_masks,used_area_mask,last_training_date,
-                                  kwargs={"HarmonicTerms" : HarmonicTerms, "threshold_min" : threshold_min, "remove_outliers" : remove_outliers},
+                                  kwargs={"HarmonicTerms" : HarmonicTerms, "threshold_anomaly" : threshold_anomaly, "remove_outliers" : remove_outliers},
                                   input_core_dims=[["Time"],["Time"],[],[]],vectorize=True,dask="parallelized",
                                   output_dtypes=[float], output_core_dims=[['coeff']], output_sizes = {"coeff" : 5})
     
@@ -165,7 +165,7 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
 
 
 # def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date, 
-#                    HarmonicTerms,threshold_min, coeff_anomaly, remove_outliers):
+#                    HarmonicTerms,threshold_anomaly, coeff_anomaly, remove_outliers):
 #     if bool_usedarea:
 #         valid_vi = vi_array[:index_last_training_date+1][~mask_array[:index_last_training_date+1]]
 #         Valid_HarmonicTerms = HarmonicTerms[:index_last_training_date+1][~mask_array[:index_last_training_date+1]]
@@ -176,7 +176,7 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
         
 #         #POUR RETIRER OUTLIERS
 #         if remove_outliers:
-#             Outliers=diffEarlier<coeff_anomaly*max(threshold_min,sigma)
+#             Outliers=diffEarlier<coeff_anomaly*max(threshold_anomaly,sigma)
 #             Valid_HarmonicTerms=Valid_HarmonicTerms[Outliers,:]
 #             p, _, _, _ = lstsq(Valid_HarmonicTerms, valid_vi[Outliers])
 
@@ -192,7 +192,7 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
 
 
 # def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
-#              threshold_min=0.04,
+#              threshold_anomaly=0.04,
 #              coeff_anomaly=4,
 #              remove_outliers=True):
     
@@ -200,7 +200,7 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
 #     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
 
 #     coeff_model=xr.apply_ufunc(model_pixel_vi, stack_vi,stack_masks,used_area_mask,last_training_date,
-#                                   kwargs={"HarmonicTerms" : HarmonicTerms, "threshold_min" : threshold_min, "coeff_anomaly" : coeff_anomaly, "remove_outliers" : remove_outliers},
+#                                   kwargs={"HarmonicTerms" : HarmonicTerms, "threshold_anomaly" : threshold_anomaly, "coeff_anomaly" : coeff_anomaly, "remove_outliers" : remove_outliers},
 #                                   input_core_dims=[["Time"],["Time"],[],[]],dask="parallelized",
 #                                   output_dtypes=[float], output_core_dims=[['coeff'], ["sigma"]], output_sizes = {"coeff" : 5,"sigma": 1})
     
