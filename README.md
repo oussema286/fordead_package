@@ -20,6 +20,8 @@ conda install xarray
 conda install scipy
 ```
 
+Install rioxarray : https://corteva.github.io/rioxarray/stable/installation.html
+
 Depuis l'invite de commande, placer vous dans le répertoire de votre choix et lancez les commandes suivantes :
 ```bash
 git clone https://gitlab.com/jbferet/fordead_package.git
