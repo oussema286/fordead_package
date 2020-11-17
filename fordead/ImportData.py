@@ -14,7 +14,7 @@ import re
 import datetime
 from pathlib import Path
 import pickle
-
+import shutil
 
     
 
@@ -53,13 +53,25 @@ def retrieve_date_from_string(string):
             
     return formatted_date
 
-
-
 class TileInfo:
     def __init__(self, data_directory):
         self.data_directory = Path(data_directory)
         
-        
+        if (self.data_directory / "PathsInfo").exists():
+            with open(self.data_directory / "PathsInfo", 'rb') as f:
+                tuile2 = pickle.load(f)
+            for key_path in tuile2.paths:
+                if not(key_path in ["VegetationIndex","Masks","ForestMask", "used_area_mask"]):
+                    tuile2.delete_dir(key_path)
+            print("Previous training detected and deleted")
+                
+    def delete_dir(self,key_path):
+        if key_path in self.paths:
+            if self.paths[key_path].is_dir():
+                shutil.rmtree(self.paths[key_path])
+            else:
+                shutil.rmtree(self.paths[key_path].parent)
+            
     def getdict_datepaths(self, key, path_dir):
         """
         Parameters
@@ -80,8 +92,7 @@ class TileInfo:
         self.paths[key] = dict_datepaths
         
     def getdict_paths(self,
-                      path_vi, path_masks, path_forestmask = None, 
-                      path_data_directory = None):
+                      path_vi, path_masks, path_forestmask = None):
         self.paths={}
         self.getdict_datepaths("VegetationIndex",path_vi)
         self.getdict_datepaths("Masks",path_masks)

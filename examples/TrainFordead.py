@@ -31,7 +31,7 @@ def parse_command_line():
     return dictArgs
 
 
-def trainfordead(
+def train_model(
     data_directory,
     threshold_anomaly=0.16,
     remove_outliers=True,
@@ -42,6 +42,7 @@ def trainfordead(
     start_time = time.time()
     
     tuile = TileInfo(data_directory)
+        
     tuile.getdict_paths(path_vi = tuile.data_directory / "VegetationIndex",
                             path_masks = tuile.data_directory / "Mask",
                             path_forestmask = list((tuile.data_directory / "MaskForet").glob("*.tif"))[0])
@@ -81,6 +82,6 @@ def trainfordead(
 if __name__ == '__main__':
     dictArgs=parse_command_line()
     print(dictArgs)
-    trainfordead(**dictArgs)
+    train_model(**dictArgs)
     
 

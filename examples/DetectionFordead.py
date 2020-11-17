@@ -11,7 +11,7 @@ import pickle
 from pathlib import Path
 import numpy as np
 from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi
-from fordead.writing_data import write_tif, overwrite_results
+from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 
 
@@ -19,7 +19,7 @@ def parse_command_line():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest", help = "Dossier avec les données")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
-    parser.add_argument("-x", "--ExportAsShapefile", dest = "ExportAsShapefile", action="store_true",default = False, help = "Si activé, exporte les résultats sous la forme de shapefiles plutôt que de rasters")
+    # parser.add_argument("-x", "--ExportAsShapefile", dest = "ExportAsShapefile", action="store_true",default = False, help = "Si activé, exporte les résultats sous la forme de shapefiles plutôt que de rasters")
     parser.add_argument("-o", "--Overwrite", dest = "Overwrite", action="store_false",default = True, help = "Si vrai, recommence la détection du début. Sinon, reprends de la dernière date analysée")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
@@ -27,17 +27,22 @@ def parse_command_line():
     return dictArgs
 
 
-def DetectionScolytes(
+def decline_detection(
     data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest",
     threshold_anomaly=0.16,
-    ExportAsShapefile = False,
+    # ExportAsShapefile = False,
     Overwrite=True
     ):
     
+    
     with open(Path(data_directory) / "PathsInfo", 'rb') as f:
         tuile = pickle.load(f)
-    
-    if Overwrite: overwrite_results(tuile.paths)
+
+    # print(tuile.paths)
+    # print(Overwrite)
+    if Overwrite:
+        tuile.delete_dir("AnomaliesDir")
+        tuile.delete_dir("state_decline")
     
     tuile.add_dirpath("AnomaliesDir", tuile.data_directory / "DataAnomalies")
     tuile.getdict_datepaths("Anomalies",tuile.paths["AnomaliesDir"])
@@ -76,19 +81,19 @@ def DetectionScolytes(
                 decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
                                
                 # Writing anomalies
-                write_tif(anomalies, forest_mask.attrs, tuile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"))
+                write_tif(anomalies, forest_mask.attrs, tuile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
         
         #Writing decline data to rasters        
-        write_tif(decline_data["state"], forest_mask.attrs,tuile.paths["state_decline"])
-        write_tif(decline_data["first_date"], forest_mask.attrs,tuile.paths["first_date_decline"])
-        write_tif(decline_data["count"], forest_mask.attrs,tuile.paths["count_decline"])
+        write_tif(decline_data["state"], forest_mask.attrs,tuile.paths["state_decline"],nodata=0)
+        write_tif(decline_data["first_date"], forest_mask.attrs,tuile.paths["first_date_decline"],nodata=0)
+        write_tif(decline_data["count"], forest_mask.attrs,tuile.paths["count_decline"],nodata=0)
                 
         # print("Détection du déperissement")
-        tuile.save_info()
+    tuile.save_info()
 
 
 
 if __name__ == '__main__':
     dictArgs=parse_command_line()
     print(dictArgs)
-    DetectionScolytes(**dictArgs)
+    decline_detection(**dictArgs)
