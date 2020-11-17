@@ -95,7 +95,15 @@ class TileInfo:
         path.parent.mkdir(parents=True, exist_ok=True)    
         #Saves paths in the object
         self.paths[key] = path
-        
+
+    def add_dirpath(self, key, path):
+        #Transform to WindowsPath if not done already
+        path=Path(path)
+        #Creates missing directories
+        path.mkdir(parents=True, exist_ok=True)    
+        #Saves paths in the object
+        self.paths[key] = path
+
     def save_info(self, path= None):
         if path==None:
             path=self.data_directory / "PathsInfo"
@@ -156,30 +164,24 @@ def import_stackedmaskedVI(tuile,date_lim_learning=None):
     stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
     return stack_vi, stack_masks
 
-
-
-
-# def ImportMaskedVI(DataDirectory,tuile,date):
-#     VegetationIndex = xr.open_rasterio(DataDirectory+"/VegetationIndex/"+tuile+"/VegetationIndex_"+date+".tif")
-#     Mask=xr.open_rasterio(DataDirectory+"/Mask/"+tuile+"/Mask_"+date+".tif").astype(bool)
-#     return VegetationIndex, Mask
     
 def import_coeff_model(path):
     coeff_model = xr.open_rasterio(path,chunks = 1000)
     return coeff_model
 
-def import_decline_data(tuile):
-    state_decline = xr.open_rasterio(tuile.paths["state_decline"])
-    first_date_decline = xr.open_rasterio(tuile.paths["first_date_decline"])
-    count_decline = xr.open_rasterio(tuile.paths["count_decline"])
+def import_decline_data(dict_paths):
+    state_decline = xr.open_rasterio(dict_paths["state_decline"],chunks = 1000).astype(bool)
+    first_date_decline = xr.open_rasterio(dict_paths["first_date_decline"],chunks = 1000)
+    count_decline = xr.open_rasterio(dict_paths["count_decline"],chunks = 1000)
     
     decline_data=xr.Dataset({"state": state_decline,
                      "first_date": first_date_decline,
                      "count" : count_decline})
+    decline_data=decline_data.sel(band=1)
+
     return decline_data
         
 def initialize_decline_data(shape,coords):
-    
     
     count_decline= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
     first_date_decline=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
@@ -193,7 +195,15 @@ def initialize_decline_data(shape,coords):
     
     return decline_data
 
+def import_masked_vi(dict_paths, date):
+    vegetation_index = xr.open_rasterio(dict_paths["VegetationIndex"][date],chunks = 1000)
+    mask=xr.open_rasterio(dict_paths["Masks"][date],chunks = 1000).astype(bool)
+    
+    masked_vi=xr.Dataset({"vegetation_index": vegetation_index,
+                             "mask": mask})
+    masked_vi=masked_vi.sel(band=1)
 
+    return masked_vi
 
 
 
