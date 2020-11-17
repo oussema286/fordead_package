@@ -38,8 +38,7 @@ def decline_detection(
     with open(Path(data_directory) / "PathsInfo", 'rb') as f:
         tuile = pickle.load(f)
 
-    # print(tuile.paths)
-    # print(Overwrite)
+
     if Overwrite:
         tuile.delete_dir("AnomaliesDir")
         tuile.delete_dir("state_decline")

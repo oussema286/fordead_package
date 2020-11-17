@@ -60,16 +60,18 @@ class TileInfo:
         if (self.data_directory / "PathsInfo").exists():
             with open(self.data_directory / "PathsInfo", 'rb') as f:
                 tuile2 = pickle.load(f)
+                
             for key_path in tuile2.paths:
                 if not(key_path in ["VegetationIndex","Masks","ForestMask", "used_area_mask"]):
-                    tuile2.delete_dir(key_path)
+                    if isinstance(tuile2.paths[key_path],type(self.data_directory)): #Check if value is a path
+                        tuile2.delete_dir(key_path)
             print("Previous training detected and deleted")
                 
     def delete_dir(self,key_path):
         if key_path in self.paths:
             if self.paths[key_path].is_dir():
                 shutil.rmtree(self.paths[key_path])
-            else:
+            elif self.paths[key_path].is_file():
                 shutil.rmtree(self.paths[key_path].parent)
             
     def getdict_datepaths(self, key, path_dir):

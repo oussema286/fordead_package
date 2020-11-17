@@ -26,21 +26,3 @@ def write_tif(data_array, attributes, path, nodata = None):
 
     data_array.rio.to_raster(path, **args)
 
-
-
-
-def overwrite_results(dict_paths):
-    
-    # if "AnomaliesDir" in dict_paths:
-    #     if dict_paths["AnomaliesDir"].exists():
-    #         shutil.rmtree(dict_paths["AnomaliesDir"])
-    # if "state_decline" in dict_paths:
-    #     if dict_paths["state_decline"].parent.exists():
-    #         shutil.rmtree(dict_paths["state_decline"].parent)
-    
-    files = dict_paths["AnomaliesDir"].glob("*")
-    for file in files:
-        os.remove(file)
-    files = dict_paths["state_decline"].parent.glob("*")
-    for file in files:
-        os.remove(file)
