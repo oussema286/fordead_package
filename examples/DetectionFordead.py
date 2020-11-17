@@ -6,20 +6,21 @@ Created on Mon Nov  2 09:25:23 2020
 """
 
 
-
-# import os
 import argparse
 import pickle
-# from fordead.DetectionDeperissement import DetectAnomalies,PredictVegetationIndex
-# from fordead.ImportData import getDates, ImportMaskedVI, ImportMaskForet, ImportModel, ImportDataScolytes, InitializeDataScolytes
+from pathlib import Path
+import numpy as np
+from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi
+from fordead.writing_data import write_tif, overwrite_results
+from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 
 
 def parse_command_line():
     parser = argparse.ArgumentParser()
-    # parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest", help = "Dossier avec les données")
-    parser.add_argument("-s", "--threshold_min", dest = "threshold_min",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
+    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest", help = "Dossier avec les données")
+    parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     parser.add_argument("-x", "--ExportAsShapefile", dest = "ExportAsShapefile", action="store_true",default = False, help = "Si activé, exporte les résultats sous la forme de shapefiles plutôt que de rasters")
-    parser.add_argument("-o", "--Overwrite", dest = "Overwrite", action="store_true",default = False, help = "Si vrai, recommence la détection du début. Sinon, reprends de la dernière date analysée")
+    parser.add_argument("-o", "--Overwrite", dest = "Overwrite", action="store_false",default = True, help = "Si vrai, recommence la détection du début. Sinon, reprends de la dernière date analysée")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -27,51 +28,63 @@ def parse_command_line():
 
 
 def DetectionScolytes(
-    # data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest",
-    SeuilMin=0.16,
+    data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest",
+    threshold_anomaly=0.16,
     ExportAsShapefile = False,
-    Overwrite=False
+    Overwrite=True
     ):
     
-    with open(data_directory / "dict_paths", 'rb') as f:
-        dict_paths = pickle.load(f)
+    with open(Path(data_directory) / "PathsInfo", 'rb') as f:
+        tuile = pickle.load(f)
     
+    if Overwrite: overwrite_results(tuile.paths)
     
+    tuile.add_dirpath("AnomaliesDir", tuile.data_directory / "DataAnomalies")
+    tuile.getdict_datepaths("Anomalies",tuile.paths["AnomaliesDir"])
+    tuile.search_new_dates()
     
-    # if Overwrite: OverwriteUpdate(tuile,DataDirectory)
+    #Verify if there are new SENTINEL dates
+    NbNewDates=np.sum(tuile.dates>"2018-01-01") - len(tuile.paths["Anomalies"])
+    if  NbNewDates == 0:
+        print("Pas de nouvelles dates SENTINEL-2")
+    else:
+        print(str(NbNewDates)+ " nouvelles dates")
+               
+        forest_mask = import_forest_mask(tuile.paths["ForestMask"])
     
-    # Dates=getDates(os.path.join(DataDirectory,"VegetationIndex",tuile))
-    # OldDates=getDates(os.path.join(DataDirectory,"DataAnomalies",tuile))
-    
-    # NbNewDates = Dates[Dates>"2018-01-01"].shape[0] - OldDates.shape[0]
-    # if NbNewDates == 0:
-    #     print("Pas de nouvelles dates SENTINEL-2")
-    #     continue
-    # else:
-    #     print(str(NbNewDates)+ " nouvelles dates")
-    
-    # #RASTERIZE MASQUE FORET
-    # MaskForet = ImportMaskForet(os.path.join(DataDirectory,"MaskForet",tuile+"_MaskForet.tif"))
-
-    # #INITIALISATION
-    # StackP,rasterSigma = ImportModel(tuile,DataDirectory)
-    # rasterSigma=rasterSigma.where(~((rasterSigma < SeuilMin) & (rasterSigma != 0)),SeuilMin)
+        coeff_model = import_coeff_model(tuile.paths["coeff_model"])
+        
+        if "state_decline" in tuile.paths and not(Overwrite):
+            decline_data = import_decline_data(tuile.paths)
+        else:
+            decline_data = initialize_decline_data(forest_mask.shape,forest_mask.coords)
             
-    
-    # if os.path.exists(os.path.join(DataDirectory,"DataUpdate",tuile,"EtatChange.tif")):
-    #     EtatChange,DateFirstScolyte,CompteurScolyte = ImportDataScolytes(tuile,DataDirectory)
-    # else:
-    #     EtatChange,DateFirstScolyte,CompteurScolyte = InitializeDataScolytes(tuile,DataDirectory,MaskForet.shape)
+            tuile.add_path("state_decline", tuile.data_directory / "DataDecline" / "state_decline.tif")
+            tuile.add_path("first_date_decline", tuile.data_directory / "DataDecline" / "first_date_decline.tif")
+            tuile.add_path("count_decline", tuile.data_directory / "DataDecline" / "count_decline.tif")
         
-    # print("Détection du déperissement")
-    
-    # for DateIndex,date in enumerate(Dates):
-    #     if date < "2018-01-01" or os.path.exists(os.path.join(DataDirectory,"DataAnomalies",tuile,"Anomalies_"+date+".tif")): #Si anomalies pas encore écrites, ou avant la date de début de détection
-    #         continue
-    #     else:
-    #         VegetationIndex, Mask = ImportMaskedVI(DataDirectory,tuile,date)
+        for date_index, date in enumerate(tuile.dates):
+            print(date)
+            if date < "2018-01-01" or date in tuile.paths["Anomalies"]: #Si anomalies pas encore écrites, ou avant la date de début de détection
+                continue
+            else:
+                masked_vi = import_masked_vi(tuile.paths,date)
+            
+                predicted_vi=prediction_vegetation_index(coeff_model,date)
+                anomalies = detection_anomalies(masked_vi, predicted_vi, threshold_anomaly)
+                                
+                decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
+                               
+                # Writing anomalies
+                write_tif(anomalies, forest_mask.attrs, tuile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"))
         
-    #     Anomalies = DetectAnomalies(VegetationIndex, PredictVegetationIndex(StackP,date),Mask, rasterSigma, CoeffAnomalie)
+        #Writing decline data to rasters        
+        write_tif(decline_data["state"], forest_mask.attrs,tuile.paths["state_decline"])
+        write_tif(decline_data["first_date"], forest_mask.attrs,tuile.paths["first_date_decline"])
+        write_tif(decline_data["count"], forest_mask.attrs,tuile.paths["count_decline"])
+                
+        # print("Détection du déperissement")
+        tuile.save_info()
 
 
 
