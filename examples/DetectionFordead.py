@@ -10,7 +10,7 @@ import argparse
 import pickle
 from pathlib import Path
 import numpy as np
-from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi
+from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_last_training_date
 from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 
@@ -53,7 +53,7 @@ def decline_detection(
         print(str(NbNewDates)+ " nouvelles dates")
                
         forest_mask = import_forest_mask(tuile.paths["ForestMask"])
-    
+        last_training_date = import_last_training_date(tuile.paths["last_training_date"])
         coeff_model = import_coeff_model(tuile.paths["coeff_model"])
         
         if "state_decline" in tuile.paths and not(Overwrite):
@@ -71,7 +71,8 @@ def decline_detection(
                 continue
             else:
                 masked_vi = import_masked_vi(tuile.paths,date)
-            
+                masked_vi["mask"] = masked_vi["mask"] & (date_index <= last_training_date) #Masking pixels where date was used for training
+                
                 predicted_vi=prediction_vegetation_index(coeff_model,date)
                 anomalies = detection_anomalies(masked_vi, predicted_vi, threshold_anomaly)
                                 

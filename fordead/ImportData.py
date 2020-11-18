@@ -200,6 +200,11 @@ def import_coeff_model(path):
     coeff_model = xr.open_rasterio(path,chunks = 1000)
     return coeff_model
 
+def import_last_training_date(path):
+    last_training_date=xr.open_rasterio(path,chunks = 1000)
+    last_training_date=last_training_date.sel(band=1)
+    return last_training_date
+
 def import_decline_data(dict_paths):
     state_decline = xr.open_rasterio(dict_paths["state_decline"],chunks = 1000).astype(bool)
     first_date_decline = xr.open_rasterio(dict_paths["first_date_decline"],chunks = 1000)
