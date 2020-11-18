@@ -34,10 +34,8 @@ def decline_detection(
     Overwrite=True
     ):
     
-    
     with open(Path(data_directory) / "PathsInfo", 'rb') as f:
         tuile = pickle.load(f)
-
 
     if Overwrite:
         tuile.delete_dir("AnomaliesDir")

@@ -6,7 +6,7 @@ Created on Fri Nov  6 17:32:26 2020
 """
 import rioxarray
 from numpy import int8
-import os
+
 
 
 def write_tif(data_array, attributes, path, nodata = None):

@@ -5,9 +5,6 @@ Created on Mon Nov  2 09:42:31 2020
 @author: admin
 """
 
-# import rasterio
-# from glob import glob
-# import os
 import numpy as np
 import xarray as xr
 import re
@@ -55,8 +52,12 @@ def retrieve_date_from_string(string):
 
 class TileInfo:
     def __init__(self, data_directory):
+        """
+        Initialize TileInfo object, deletes previous results if they exist.
+        """
         self.data_directory = Path(data_directory)
         
+        #Deletes previous results if object already exists
         if (self.data_directory / "PathsInfo").exists():
             with open(self.data_directory / "PathsInfo", 'rb') as f:
                 tuile2 = pickle.load(f)
@@ -65,9 +66,22 @@ class TileInfo:
                 if not(key_path in ["VegetationIndex","Masks","ForestMask", "used_area_mask"]):
                     if isinstance(tuile2.paths[key_path],type(self.data_directory)): #Check if value is a path
                         tuile2.delete_dir(key_path)
-            print("Previous training detected and deleted")
+            print("Previous results detected and deleted")
                 
     def delete_dir(self,key_path):
+        """
+        Using keys to paths (usually added through add_path or add_dirpath), deletes directory containing the file, or the directory if the path already links to a directory. 
+
+        Parameters
+        ----------
+        key_path : str
+            Key in the dictionnary containing paths
+
+        Returns
+        -------
+        None.
+
+        """
         if key_path in self.paths:
             if self.paths[key_path].is_dir():
                 shutil.rmtree(self.paths[key_path])
@@ -90,8 +104,9 @@ class TileInfo:
         dict_datepaths={}
         for path in path_dir.glob("*"):
             dict_datepaths[retrieve_date_from_string(path.stem)] = path
-        
-        self.paths[key] = dict_datepaths
+            
+        sorted_dict_datepaths = dict(sorted(dict_datepaths.items(), key=lambda key_value: key_value[0]))
+        self.paths[key] = sorted_dict_datepaths
         
     def getdict_paths(self,
                       path_vi, path_masks, path_forestmask = None):
@@ -118,6 +133,9 @@ class TileInfo:
         self.paths[key] = path
 
     def save_info(self, path= None):
+        """
+        Saves the TileInfo object in its data_directory by default or in specified location
+        """
         if path==None:
             path=self.data_directory / "PathsInfo"
         with open(path, 'wb') as f:
@@ -203,8 +221,6 @@ def initialize_decline_data(shape,coords):
     decline_data=xr.Dataset({"state": xr.DataArray(state_decline, coords=coords),
                          "first_date": xr.DataArray(first_date_decline, coords=coords),
                          "count" : xr.DataArray(count_decline, coords=coords)})
-            
-    
     
     return decline_data
 
