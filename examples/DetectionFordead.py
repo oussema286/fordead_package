@@ -13,6 +13,7 @@ import numpy as np
 from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_last_training_date
 from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
+import time
 
 
 def parse_command_line():
@@ -34,6 +35,9 @@ def decline_detection(
     Overwrite=True
     ):
     
+    data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTestLarge"
+    # data_directory = "G:/Deperissement/Out/PackageVersion/T31UFQ"
+    
     with open(Path(data_directory) / "PathsInfo", 'rb') as f:
         tuile = pickle.load(f)
 
@@ -51,7 +55,8 @@ def decline_detection(
         print("Pas de nouvelles dates SENTINEL-2")
     else:
         print(str(NbNewDates)+ " nouvelles dates")
-               
+        
+        #IMPORTING DATA
         forest_mask = import_forest_mask(tuile.paths["ForestMask"])
         last_training_date = import_last_training_date(tuile.paths["last_training_date"])
         coeff_model = import_coeff_model(tuile.paths["coeff_model"])
@@ -65,11 +70,12 @@ def decline_detection(
             tuile.add_path("first_date_decline", tuile.data_directory / "DataDecline" / "first_date_decline.tif")
             tuile.add_path("count_decline", tuile.data_directory / "DataDecline" / "count_decline.tif")
         
+        #DECLINE DETECTION
         for date_index, date in enumerate(tuile.dates):
-            print(date)
-            if date < "2018-01-01" or date in tuile.paths["Anomalies"]: #Si anomalies pas encore écrites, ou avant la date de début de détection
+            if date < "2018-01-01" or date in tuile.paths["Anomalies"]: #Ignoring dates used for training and dates already used
                 continue
             else:
+                print(date)
                 masked_vi = import_masked_vi(tuile.paths,date)
                 masked_vi["mask"] = masked_vi["mask"] & (date_index <= last_training_date) #Masking pixels where date was used for training
                 
@@ -78,7 +84,6 @@ def decline_detection(
                                 
                 decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
                                
-                # Writing anomalies
                 write_tif(anomalies, forest_mask.attrs, tuile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
         
         #Writing decline data to rasters        
@@ -94,4 +99,6 @@ def decline_detection(
 if __name__ == '__main__':
     dictArgs=parse_command_line()
     print(dictArgs)
+    start_time = time.time()
     decline_detection(**dictArgs)
+    print("Temps d execution : %s secondes ---" % (time.time() - start_time))

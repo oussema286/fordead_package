@@ -5,16 +5,14 @@ Created on Fri Nov  6 17:32:26 2020
 @author: admin
 """
 import rioxarray
-from numpy import int8
-
-
+from numpy import uint8
 
 def write_tif(data_array, attributes, path, nodata = None):
     data_array.attrs=attributes
     
     args={}
     if data_array.dtype==bool: #Bool rasters can't be written, so they have to be converted to int8, but they can still be written in one bit with the argument nbits = 1
-        data_array=data_array.astype(int8)
+        data_array=data_array.astype(uint8)
         args["nbits"] = 1
     if nodata != None:
         data_array.attrs["nodata"]=nodata

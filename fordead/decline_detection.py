@@ -56,10 +56,9 @@ def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly):
 
 
     """
-    
-    diff_vi = masked_vi["vegetation_index"].where(~masked_vi["mask"])-predicted_vi.where(~masked_vi["mask"])
-    anomalies = diff_vi.where(~masked_vi["mask"]) > threshold_anomaly
-        
+    diff_vi = masked_vi["vegetation_index"]-predicted_vi
+    anomalies = diff_vi > threshold_anomaly
+            
     return anomalies
 
 def detection_decline(decline_data, anomalies, mask, date_index):
@@ -94,7 +93,6 @@ def detection_decline(decline_data, anomalies, mask, date_index):
     decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
     decline_data["first_date"]=xr.where(~mask & decline_data["count"]==1 & ~decline_data["state"], date_index,decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
    
-
     return decline_data
 
 # def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly):

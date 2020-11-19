@@ -56,7 +56,7 @@ class TileInfo:
         Initialize TileInfo object, deletes previous results if they exist.
         """
         self.data_directory = Path(data_directory)
-        
+        # print(globals())
         #Deletes previous results if object already exists
         if (self.data_directory / "PathsInfo").exists():
             with open(self.data_directory / "PathsInfo", 'rb') as f:
@@ -67,7 +67,12 @@ class TileInfo:
                     if isinstance(tuile2.paths[key_path],type(self.data_directory)): #Check if value is a path
                         tuile2.delete_dir(key_path)
             print("Previous results detected and deleted")
-                
+            
+    # def add_parameters(self,dict_param):
+    #     if hasattr(self, 'property'):
+    #         a.property
+        
+        
     def delete_dir(self,key_path):
         """
         Using keys to paths (usually added through add_path or add_dirpath), deletes directory containing the file, or the directory if the path already links to a directory. 
