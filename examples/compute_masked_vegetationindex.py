@@ -36,13 +36,13 @@ Pour créer le masque forêt à partir de la BD FORET, assigner "BDFORET" au par
 import time
 # import numpy as np
 import argparse
-from pathlib import Path
-# from path import Path
+# from pathlib import Path
+from path import Path
 #%% ===========================================================================
 #   IMPORT LIBRAIRIES PERSO
 # =============================================================================
 
-from fordead.ImportData import TileInfo, get_band_paths
+from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness
 
 #%% =============================================================================
 #   FONCTIONS
@@ -52,7 +52,7 @@ def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str,default = "G:/Deperissement/Data/SENTINEL/ZoneTest", help = "Path of the directory with Sentinel dates")
-    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "G:/Deperissement/Out/PackageVersion", help = "Path of the output directory")
+    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "G:/Deperissement/Out/PackageVersion/ZoneTest", help = "Path of the output directory")
     # parser.add_argument("-t", "--tuile", dest = "tuile",type = str,default = "ZoneTest", help = "Chemin du dossier où sauvegarder les résultats")
     parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     # parser.add_argument("-s", "--InterpolationOrder", dest = "InterpolationOrder",type = int,default = 0, help ="interpolation order : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique")
@@ -75,7 +75,7 @@ def ComputeMaskedVI(
     # InterpolationOrder=0,
     # CorrectCRSWIR=False,
     input_directory = "G:/Deperissement/Data/",
-    data_directory = "G:/Deperissement/Out/PackageVersion",
+    data_directory = "G:/Deperissement/Out/PackageVersion/ZoneTest",
     lim_perc_cloud=0.3,
     forestmask_source = "LastComputed",
     sentinel_source = "THEIA",
@@ -83,20 +83,38 @@ def ComputeMaskedVI(
     ):
     #############################
     
-    input_directory="G:/Deperissement/Data/SENTINEL/ZoneTest"
+    # input_directory="G:/Deperissement/Data/SENTINEL/ZoneTest"
+    # input_directory=Path(input_directory)
     input_directory=Path(input_directory)
     
-    tuile = TileInfo(input_directory)
+    tuile = TileInfo(data_directory)
 
-    tuile.getdict_datepaths("Sentinel",Path(input_directory)) #adds a dictionnary to tuile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+    tuile.getdict_datepaths("Sentinel",input_directory) #adds a dictionnary to tuile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
     tuile.paths["Sentinel"] = get_band_paths(tuile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are thair paths
     
+    #Compute forest mask
+    
+    #Computing cloudiness percentage for each date
+    cloudiness = get_cloudiness(input_directory / "cloudiness", tuile.paths["Sentinel"], sentinel_source)
+    
+    #Adding directories for ouput
+    tuile.add_dirpath("VegetationIndexDir", tuile.data_directory / "VegetationIndex")
+    tuile.add_dirpath("MaskDir", tuile.data_directory / "Mask")
+    tuile.add_dirpath("ForestMask", tuile.data_directory / "ForestMask")
+    
+    tuile.getdict_datepaths("VegetationIndex",tuile.paths["VegetationIndexDir"])
+    
+    
+
+    for date in tuile.paths["Sentinel"]:
+        if cloudiness.perc_cloud[date] <= lim_perc_cloud and not(date in tuile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
+            print(date)
+            
+
     #Filter dates with source cloud mask
     #Check what dates are already computed in the output directory
-    #Compute forest mask
     #Compute masks and vegetation index
     
-    # Dates = getValidDates(DictSentinelPaths,tuile, PercNuageLim,DataSource)
     
     # #RASTERIZE MASQUE FORET
     # MaskForet,MetaProfile,CRS_Tuile = ComputeMaskForet(DictSentinelPaths[Dates[0]]["B2"],InputDirectory,ForestMaskSource,tuile)

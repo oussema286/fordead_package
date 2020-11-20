@@ -10,8 +10,6 @@ import xarray as xr
 import re
 import datetime
 from pathlib import Path
-# from path import Path
-
 import pickle
 import shutil
 
@@ -19,7 +17,6 @@ import shutil
 def get_band_paths(dict_sen_paths):
     DictSentinelPaths={}
     for date in dict_sen_paths:
-        # AllPaths=glob(dict_sen_paths[date]+"/**",recursive=True)
         AllPaths = dict_sen_paths[date].glob("**/*")
         DictSentinelPaths[date]={}
         for path in AllPaths:
@@ -96,22 +93,42 @@ class TileInfo:
         self.paths={}
         
         # print(globals())
-        #Deletes previous results if object already exists
-        if (self.data_directory / "PathsInfo").exists():
-            with open(self.data_directory / "PathsInfo", 'rb') as f:
-                tuile2 = pickle.load(f)
-                
-            for key_path in tuile2.paths:
-                if not(key_path in ["VegetationIndex","Masks","ForestMask", "used_area_mask"]):
-                    if isinstance(tuile2.paths[key_path],type(self.data_directory)): #Check if value is a path
-                        tuile2.delete_dir(key_path)
-            print("Previous results detected and deleted")
+
             
     # def add_parameters(self,dict_param):
     #     if hasattr(self, 'property'):
     #         a.property
+    def import_info(self, path= None):
+        """ Imports TileInfo object in the data_directory, or the one at path if the parameter is given"""
         
-        
+        if path == None:
+            path = self.data_directory
+        with open(path, 'rb') as f:
+            tuile = pickle.load(f)
+        return tuile
+
+    
+    def save_info(self, path= None):
+        """
+        Saves the TileInfo object in its data_directory by default or in specified location
+        """
+        if path==None:
+            path=self.data_directory / "PathsInfo"
+        with open(path, 'wb') as f:
+            pickle.dump(self, f)
+    
+    def delete_results(self):
+        # Deletes previous results
+        if (self.data_directory / "PathsInfo").exists():
+            prev_tuile = self.import_info()
+                
+            for key_path in prev_tuile.paths:
+                if not(key_path in ["VegetationIndex","Masks","ForestMask", "used_area_mask"]):
+                    if isinstance(prev_tuile.paths[key_path],type(self.data_directory)): #Check if value is a path
+                        prev_tuile.delete_dir(key_path)
+            print("Previous results detected and deleted")
+            self.save_info()
+            
     def delete_dir(self,key_path):
         """
         Using keys to paths (usually added through add_path or add_dirpath), deletes directory containing the file, or the directory if the path already links to a directory. 
@@ -145,6 +162,7 @@ class TileInfo:
             Dictionnary linking formatted dates with the paths of the files from which the dates where extracted
     
         """
+        path_dir=Path(path_dir)
         dict_datepaths={}
         for path in path_dir.glob("*"):
             formatted_date=retrieve_date_from_string(path.stem)
@@ -178,15 +196,7 @@ class TileInfo:
         #Saves paths in the object
         self.paths[key] = path
 
-    def save_info(self, path= None):
-        """
-        Saves the TileInfo object in its data_directory by default or in specified location
-        """
-        if path==None:
-            path=self.data_directory / "PathsInfo"
-        with open(path, 'wb') as f:
-            pickle.dump(self, f)
-    
+
     def search_new_dates(self):
         path_vi=self.paths["VegetationIndex"][self.dates[0]].parent
         path_masks=self.paths["Masks"][self.dates[0]].parent
@@ -285,6 +295,46 @@ def import_masked_vi(dict_paths, date):
 
     return masked_vi
 
+def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
+    """
+    For every date in dict_path_bands (which is meant to contain each date available in the sentinel data directory), computes the cloudiness percentage from the mask at path dict_path_bands[date]["Mask"] if it was not already computed and stored at path_cloudiness in a TileInfo object.
+    Returns a dictionnary where the key is the date and the value is the cloudiness percentage.
+
+    """
+    path_cloudiness= Path(path_cloudiness)
+    cloudiness = TileInfo(path_cloudiness.parent)
+    if path_cloudiness.exists():
+        cloudiness=cloudiness.import_info(path_cloudiness)
+    if not(hasattr(cloudiness, 'perc_cloud')):
+        cloudiness.perc_cloud={}
+    for date in dict_path_bands:
+        if not(date in cloudiness.perc_cloud):
+            cloudiness.perc_cloud[date] = get_date_cloudiness_perc(dict_path_bands[date], sentinel_source)
+            
+    cloudiness.save_info(path_cloudiness)
+    return cloudiness
+
+
+def get_date_cloudiness_perc(date_paths, sentinel_source):
+    """
+    Computes cloudiness percentage of a Sentinel-2 date from the source mask (THEIA CLM or PEPS, scihub SCL)
+    """
+
+    if sentinel_source=="THEIA":
+        tile_mask_info = xr.Dataset({"mask": xr.open_rasterio(date_paths["Mask"]),
+                                     "swath_cover": xr.open_rasterio(date_paths["B11"])})
+        NbPixels = (tile_mask_info["swath_cover"]!=-10000).sum()
+        NbCloudyPixels = (tile_mask_info["mask"]>0).sum()
+
+    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
+        cloud_mask = xr.open_rasterio(date_paths["Mask"])
+        NbPixels = (cloud_mask!=0).sum()
+        NbCloudyPixels = (~cloud_mask.isin([4,5])).sum()
+    
+    if NbPixels==0: #If outside of satellite swath
+        return 2.0
+    else:
+        return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
 
 
 # def ImportMaskForet(PathMaskForet):

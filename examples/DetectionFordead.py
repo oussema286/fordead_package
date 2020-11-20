@@ -10,7 +10,7 @@ import argparse
 import pickle
 from pathlib import Path
 import numpy as np
-from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_last_training_date
+from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_last_training_date, TileInfo
 from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 import time
@@ -35,12 +35,12 @@ def decline_detection(
     Overwrite=True
     ):
     
-    data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTestLarge"
+    # data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTestLarge"
     # data_directory = "G:/Deperissement/Out/PackageVersion/T31UFQ"
     
-    with open(Path(data_directory) / "PathsInfo", 'rb') as f:
-        tuile = pickle.load(f)
-
+    tuile = TileInfo(data_directory)
+    tuile = tuile.import_info()
+    
     if Overwrite:
         tuile.delete_dir("AnomaliesDir")
         tuile.delete_dir("state_decline")
