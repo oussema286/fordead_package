@@ -10,11 +10,45 @@ import xarray as xr
 import re
 import datetime
 from pathlib import Path
+# from path import Path
+
 import pickle
 import shutil
 
     
-
+def get_band_paths(dict_sen_paths):
+    DictSentinelPaths={}
+    for date in dict_sen_paths:
+        # AllPaths=glob(dict_sen_paths[date]+"/**",recursive=True)
+        AllPaths = dict_sen_paths[date].glob("**/*")
+        DictSentinelPaths[date]={}
+        for path in AllPaths:
+            path=str(path)
+            if "B2" in path or "B02" in path:
+                DictSentinelPaths[date]["B2"]=Path(path)
+            if "B3" in path or "B03" in path:
+                DictSentinelPaths[date]["B3"]=Path(path)
+            if "B4" in path or "B04" in path:
+                DictSentinelPaths[date]["B4"]=Path(path)
+            if "B5" in path or "B05" in path:
+                DictSentinelPaths[date]["B5"]=Path(path)
+            if "B6" in path or "B06" in path:
+                DictSentinelPaths[date]["B6"]=Path(path)
+            if "B7" in path or "B07" in path:
+                DictSentinelPaths[date]["B7"]=Path(path)
+            if ("_B8" in path or "_B08" in path) and not("_B8A" in path):
+                DictSentinelPaths[date]["B8"]=Path(path)
+            if "B8A" in path:
+                DictSentinelPaths[date]["B8A"]=Path(path)
+            if "B11" in path:
+                DictSentinelPaths[date]["B11"]=Path(path)
+            if "B12" in path:
+                DictSentinelPaths[date]["B12"]=Path(path)
+                
+            if "_CLM_" in path or "SCL" in path:
+                DictSentinelPaths[date]["Mask"]=Path(path)
+   
+    return DictSentinelPaths
 
 
 def retrieve_date_from_string(string):
@@ -47,6 +81,8 @@ def retrieve_date_from_string(string):
             formatted_date=raw_date[:4]+"-"+raw_date[5:7]+"-"+raw_date[-2:]
         elif len(raw_date)==8:
             formatted_date=raw_date[:4]+"-"+raw_date[4:6]+"-"+raw_date[-2:]
+    else:
+        return None
             
     return formatted_date
 
@@ -56,6 +92,9 @@ class TileInfo:
         Initialize TileInfo object, deletes previous results if they exist.
         """
         self.data_directory = Path(data_directory)
+        self.data_directory.mkdir(parents=True, exist_ok=True)   
+        self.paths={}
+        
         # print(globals())
         #Deletes previous results if object already exists
         if (self.data_directory / "PathsInfo").exists():
@@ -108,14 +147,16 @@ class TileInfo:
         """
         dict_datepaths={}
         for path in path_dir.glob("*"):
-            dict_datepaths[retrieve_date_from_string(path.stem)] = path
+            formatted_date=retrieve_date_from_string(path.stem)
+            if formatted_date != None: #To ignore files or directories with no dates which might be in the same directory
+                dict_datepaths[formatted_date] = path
             
         sorted_dict_datepaths = dict(sorted(dict_datepaths.items(), key=lambda key_value: key_value[0]))
         self.paths[key] = sorted_dict_datepaths
         
     def getdict_paths(self,
                       path_vi, path_masks, path_forestmask = None):
-        self.paths={}
+        
         self.getdict_datepaths("VegetationIndex",path_vi)
         self.getdict_datepaths("Masks",path_masks)
         self.paths["ForestMask"]=path_forestmask
