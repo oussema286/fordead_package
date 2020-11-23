@@ -17,7 +17,7 @@ import shutil
 def get_band_paths(dict_sen_paths):
     DictSentinelPaths={}
     for date in dict_sen_paths:
-        AllPaths = dict_sen_paths[date].glob("**/*")
+        AllPaths = dict_sen_paths[date].glob("**/*.tif")
         DictSentinelPaths[date]={}
         for path in AllPaths:
             path=str(path)
@@ -206,8 +206,8 @@ class TileInfo:
         
 
 
-def import_forest_mask(PathMaskForet):
-    forest_mask = xr.open_rasterio(PathMaskForet,chunks =1000)
+def import_forest_mask(forest_mask_path):
+    forest_mask = xr.open_rasterio(forest_mask_path,chunks =1000)
     forest_mask=forest_mask[0,:,:]
     # forest_mask=forest_mask.rename({"band" : "Mask"})
     return forest_mask.astype(bool)

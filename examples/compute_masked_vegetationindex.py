@@ -43,7 +43,7 @@ from path import Path
 # =============================================================================
 
 from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness
-
+from fordead.masking_vi import get_forest_mask
 #%% =============================================================================
 #   FONCTIONS
 # =============================================================================
@@ -57,7 +57,7 @@ def parse_command_line():
     parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     # parser.add_argument("-s", "--InterpolationOrder", dest = "InterpolationOrder",type = int,default = 0, help ="interpolation order : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique")
     # parser.add_argument("-c", "--CorrectCRSWIR", dest = "CorrectCRSWIR", action="store_true",default = False, help = "Si activé, execute la correction du CRSWIR à partir")
-    parser.add_argument("-f", "--forestmask_source", dest = "forestmask_source",type = str,default = "BDFORET", help = "Source of the forest mask")
+    # parser.add_argument("-f", "--forest_mask_source", dest = "forestmask_source",type = str,default = "BDFORET", help = "Source of the forest mask")
     parser.add_argument("-d", "--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi THEIA et Scihub et PEPS")
     parser.add_argument("-m", "--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
     
@@ -74,36 +74,46 @@ def ComputeMaskedVI(
     # Tuiles= ["ZoneTestLarge"],
     # InterpolationOrder=0,
     # CorrectCRSWIR=False,
-    input_directory = "G:/Deperissement/Data/",
+    input_directory = "G:/Deperissement/Data/SENTINEL/ZoneTest",
     data_directory = "G:/Deperissement/Out/PackageVersion/ZoneTest",
     lim_perc_cloud=0.3,
-    forestmask_source = "LastComputed",
+    # forest_mask_source = "LastComputed",
     sentinel_source = "THEIA",
     apply_source_mask = False
     ):
     #############################
     
-    # input_directory="G:/Deperissement/Data/SENTINEL/ZoneTest"
+    input_directory = "G:/Deperissement/Data/SENTINEL/ZoneTestLarge"
+    data_directory = "G:/Deperissement/Out/PackageVersion/ZoneTestLarge"
+
     # input_directory=Path(input_directory)
     input_directory=Path(input_directory)
     
     tuile = TileInfo(data_directory)
 
+
+
     tuile.getdict_datepaths("Sentinel",input_directory) #adds a dictionnary to tuile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
     tuile.paths["Sentinel"] = get_band_paths(tuile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are thair paths
-    
-    #Compute forest mask
-    
-    #Computing cloudiness percentage for each date
-    cloudiness = get_cloudiness(input_directory / "cloudiness", tuile.paths["Sentinel"], sentinel_source)
     
     #Adding directories for ouput
     tuile.add_dirpath("VegetationIndexDir", tuile.data_directory / "VegetationIndex")
     tuile.add_dirpath("MaskDir", tuile.data_directory / "Mask")
-    tuile.add_dirpath("ForestMask", tuile.data_directory / "ForestMask")
+    tuile.add_path("ForestMask", tuile.data_directory / "ForestMask" / "Forest_Mask.tif")
+    
+    
+    #Compute forest mask
+    forest_mask = get_forest_mask(tuile.paths["ForestMask"],
+                                  example_path = tuile.paths["Sentinel"][list(tuile.paths["Sentinel"].keys())[0]]["B2"],
+                                  dep_path = "G:/Deperissement/Data/Vecteurs/Departements/departements-20140306-100m.shp",
+                                  bdforet_dirpath = "G:/Deperissement/Data/Vecteurs/BDFORET")
+    
+    #Computing cloudiness percentage for each date
+    cloudiness = get_cloudiness(input_directory / "cloudiness", tuile.paths["Sentinel"], sentinel_source)
+    
+    
     
     tuile.getdict_datepaths("VegetationIndex",tuile.paths["VegetationIndexDir"])
-    
     
 
     for date in tuile.paths["Sentinel"]:
