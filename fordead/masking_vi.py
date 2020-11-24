@@ -8,6 +8,7 @@ from fordead.ImportData import import_forest_mask
 from fordead.writing_data import write_tif
 import xarray as xr
 import numpy as np
+from scipy import ndimage
 
 from path import Path
 import json
@@ -129,16 +130,30 @@ def get_pre_masks(stack_bands):
     shadows = (stack_bands==0).any(dim = "band")
     outside_swath = stack_bands.sel(band = "B12")<0 
     
-    invalid = shadows or outside_swath or stack_bands.sel(band = "B2") >= 600
+    invalid = shadows | outside_swath | (stack_bands.sel(band = "B2") >= 600)
     
     return soil_anomaly, shadows, outside_swath, invalid
     # if ApplyMaskTheia : Invalid=np.logical_or(np.logical_or(Ombres, Nuages),np.logical_or(MaskTheia,HorsFauche))
     # else : Invalid=np.logical_or(np.logical_or(Ombres, Nuages),HorsFauche)
 
 def detect_soil(soil_data, premask_soil, invalid, date_index):
-    soil_data["count"]=xr.where(~Invalid & premask_soil,soil_data["count"]+1,soil_data["count"])
-    soil_data["count"]=xr.where(~Invalid & ~premask_soil,0,soil_data["count"])
+    soil_data["count"]=xr.where(~invalid & premask_soil,soil_data["count"]+1,soil_data["count"])
+    soil_data["count"]=xr.where(~invalid & ~premask_soil,0,soil_data["count"])
     soil_data["state"] = xr.where(soil_data["count"] == 3, True, soil_data["state"])
-    soil_data["first_date"] = xr.where(~Invalid & soil_data["count"] == 1 & ~soil_data["state"],date_index,soil_data["first_date"]) #Keeps index of first soil detection
+    soil_data["first_date"] = xr.where(~invalid & soil_data["count"] == 1 & ~soil_data["state"],date_index,soil_data["first_date"]) #Keeps index of first soil detection
             
     return soil_data
+
+
+def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
+    NG = stack_bands.sel(band = "B3")/(stack_bands.sel(band = "B8A")+stack_bands.sel(band = "B4")+stack_bands.sel(band = "B3"))
+    cond1 = NG > 0.15
+    cond2 = stack_bands.sel(band = "B2") > 400
+    cond3 = stack_bands.sel(band = "B2") > 700
+    cond4 =  ~(soil_data["state"] | premask_soil) #Not detected as soil
+    
+    clouds = cond4 & (cond3 | (cond1 & cond2))
+    clouds[:,:] = ndimage.binary_dilation(clouds,iterations=3,structure=ndimage.generate_binary_structure(2, 1)) # 3 pixels dilation of cloud mask
+    return clouds
+
+

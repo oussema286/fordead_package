@@ -43,7 +43,9 @@ from path import Path
 # =============================================================================
 
 from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack
-from fordead.masking_vi import get_forest_mask, import_soil_data, initialize_soil_data, get_pre_masks, detect_soil
+from fordead.masking_vi import get_forest_mask, import_soil_data, initialize_soil_data, get_pre_masks, detect_soil, detect_clouds
+from fordead.writing_data import write_tif
+
 #%% =============================================================================
 #   FONCTIONS
 # =============================================================================
@@ -74,8 +76,8 @@ def ComputeMaskedVI(
     # Tuiles= ["ZoneTestLarge"],
     # InterpolationOrder=0,
     # CorrectCRSWIR=False,
-    input_directory = "G:/Deperissement/Data/SENTINEL/ZoneTest",
-    data_directory = "G:/Deperissement/Out/PackageVersion/ZoneTest",
+    input_directory,
+    data_directory,
     lim_perc_cloud=0.3,
     # forest_mask_source = "LastComputed",
     sentinel_source = "THEIA",
@@ -83,10 +85,6 @@ def ComputeMaskedVI(
     ):
     #############################
     
-    input_directory = "G:/Deperissement/Data/SENTINEL/ZoneTestLarge"
-    data_directory = "G:/Deperissement/Out/PackageVersion/ZoneTestLarge"
-
-    # input_directory=Path(input_directory)
     input_directory=Path(input_directory)
     
     tuile = TileInfo(data_directory)
@@ -134,16 +132,17 @@ def ComputeMaskedVI(
             soil_data = detect_soil(soil_data, premask_soil, invalid, date_index)
                         
             # Compute clouds
-            # stackBands=np.ma.array(stackBands, mask = Ombres[:,:,np.newaxis]**[1 for i in range(stackBands.shape[-1])]) #Pas forcément indispensable mais retire erreur
-            # Nuages2=getNuages2(stackBands,DictBandPosition,HorsFauche,BoolSolNu,SolNu)
+            clouds = detect_clouds(stack_bands, outside_swath, soil_data, premask_soil)
             
-            # #Compute vegetation index
-            # VegetationIndex=stackBands[:,:,DictBandPosition["B11"]]/(stackBands[:,:,DictBandPosition["B8A"]]+((stackBands[:,:,DictBandPosition["B12"]]-stackBands[:,:,DictBandPosition["B8A"]])/(2185.7-864))*(1610.4-864)) #Calcul du CRSWIR
-            
-            
-            # stack_bands.sel(band="B2").plot()
-            print("test")
+            # Compute vegetation index
+            vegetation_index = stack_bands.sel(band = "B11")/(stack_bands.sel(band = "B8A")+((stack_bands.sel(band = "B12")-stack_bands.sel(band = "B8A"))/(2185.7-864))*(1610.4-864))
         
+            write_tif(vegetation_index, forest_mask.attrs,tuile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
+            write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil, forest_mask.attrs, tuile.paths["MaskDir"] / ("Mask"+date+".tif"),nodata=0)
+            
+    write_tif(soil_data["state"], forest_mask.attrs,tuile.paths["state_soil"],nodata=0)
+    write_tif(soil_data["first_date"], forest_mask.attrs,tuile.paths["first_date_soil"],nodata=0)
+    write_tif(soil_data["count"], forest_mask.attrs,tuile.paths["count_soil"],nodata=0)
         
 if __name__ == '__main__':
     dictArgs=parse_command_line()
@@ -151,3 +150,5 @@ if __name__ == '__main__':
     start_time_debut = time.time()
     ComputeMaskedVI(**dictArgs)
     print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
+
+

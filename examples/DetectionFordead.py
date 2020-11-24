@@ -18,7 +18,7 @@ import time
 
 def parse_command_line():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest", help = "Dossier avec les données")
+    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "G:/Deperissement/Out/PackageVersion/ZoneTest", help = "Dossier avec les données")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     # parser.add_argument("-x", "--ExportAsShapefile", dest = "ExportAsShapefile", action="store_true",default = False, help = "Si activé, exporte les résultats sous la forme de shapefiles plutôt que de rasters")
     parser.add_argument("-o", "--Overwrite", dest = "Overwrite", action="store_false",default = True, help = "Si vrai, recommence la détection du début. Sinon, reprends de la dernière date analysée")
@@ -34,9 +34,6 @@ def decline_detection(
     # ExportAsShapefile = False,
     Overwrite=True
     ):
-    
-    # data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTestLarge"
-    # data_directory = "G:/Deperissement/Out/PackageVersion/T31UFQ"
     
     tuile = TileInfo(data_directory)
     tuile = tuile.import_info()
