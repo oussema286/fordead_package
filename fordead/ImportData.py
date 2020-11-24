@@ -336,7 +336,17 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     else:
         return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
 
-
+def import_resampled_sen_stack(band_paths,list_bands):
+    stack_bands = [xr.open_rasterio(band_paths[band]) for band in list_bands]
+    resampled_stack_bands = [band if band.attrs["res"]==(10.0,10.0) else band.interp(x = stack_bands[0].coords["x"], y = stack_bands[0].coords["y"],method="nearest") for band in stack_bands ]
+    concatenated_stack_bands= xr.concat(resampled_stack_bands,dim="band")
+    concatenated_stack_bands.coords["band"] = list_bands
+    return concatenated_stack_bands
+    # band="B11"
+    # band_paths = tuile.paths["Sentinel"]["2020-06-24"]
+    # test = xr.open_rasterio(band_paths[band])
+    # test = test.sel(band=1)
+    # test.interp(x = test.coords["x"], y = test.coords["y"],method="nearest")
 # def ImportMaskForet(PathMaskForet):
 #     MaskForet = xr.open_rasterio(PathMaskForet)
 #     with rasterio.open(PathMaskForet) as BDFORET: 

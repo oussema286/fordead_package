@@ -42,8 +42,8 @@ from path import Path
 #   IMPORT LIBRAIRIES PERSO
 # =============================================================================
 
-from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness
-from fordead.masking_vi import get_forest_mask
+from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack
+from fordead.masking_vi import get_forest_mask, import_soil_data, initialize_soil_data, get_pre_masks, detect_soil
 #%% =============================================================================
 #   FONCTIONS
 # =============================================================================
@@ -91,16 +91,13 @@ def ComputeMaskedVI(
     
     tuile = TileInfo(data_directory)
 
-
-
     tuile.getdict_datepaths("Sentinel",input_directory) #adds a dictionnary to tuile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
-    tuile.paths["Sentinel"] = get_band_paths(tuile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are thair paths
+    tuile.paths["Sentinel"] = get_band_paths(tuile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
     
     #Adding directories for ouput
     tuile.add_dirpath("VegetationIndexDir", tuile.data_directory / "VegetationIndex")
     tuile.add_dirpath("MaskDir", tuile.data_directory / "Mask")
     tuile.add_path("ForestMask", tuile.data_directory / "ForestMask" / "Forest_Mask.tif")
-    
     
     #Compute forest mask
     forest_mask = get_forest_mask(tuile.paths["ForestMask"],
@@ -110,39 +107,42 @@ def ComputeMaskedVI(
     
     #Computing cloudiness percentage for each date
     cloudiness = get_cloudiness(input_directory / "cloudiness", tuile.paths["Sentinel"], sentinel_source)
-    
-    
-    
+
+    #Import or initialize data for the soil mask
+    if "state_soil" in tuile.paths:
+        soil_data = import_soil_data(tuile.paths)
+    else:
+        soil_data = initialize_soil_data(forest_mask.shape,forest_mask.coords)
+        
+        tuile.add_path("state_soil", tuile.data_directory / "DataSoil" / "state_soil.tif")
+        tuile.add_path("first_date_soil", tuile.data_directory / "DataSoil" / "first_date_soil.tif")
+        tuile.add_path("count_soil", tuile.data_directory / "DataSoil" / "count_soil.tif")
+
+    #get already computed dates
     tuile.getdict_datepaths("VegetationIndex",tuile.paths["VegetationIndexDir"])
     
-
-    for date in tuile.paths["Sentinel"]:
+    for date_index, date in enumerate(tuile.paths["Sentinel"]):
         if cloudiness.perc_cloud[date] <= lim_perc_cloud and not(date in tuile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
             print(date)
+            # Resample and import SENTINEL data
+            stack_bands = import_resampled_sen_stack(tuile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"])
             
-
-    #Filter dates with source cloud mask
-    #Check what dates are already computed in the output directory
-    #Compute masks and vegetation index
-    
-    
-    # #RASTERIZE MASQUE FORET
-    # MaskForet,MetaProfile,CRS_Tuile = ComputeMaskForet(DictSentinelPaths[Dates[0]]["B2"],InputDirectory,ForestMaskSource,tuile)
-    # writeBinaryRaster(MaskForet,os.path.join(OutputDirectory,"MaskForet",tuile+"_MaskForet.tif"),MetaProfile)
-    
-    # #COMPUTE CRSWIR MEDIAN
-    # listDiffCRSWIRmedian = getCRSWIRCorrection(DictSentinelPaths,getValidDates(getSentinelPaths(InputDirectory,tuile,DataSource),tuile, PercNuageLim,DataSource),tuile,MaskForet)[:Dates.shape[0]] if CorrectCRSWIR else []
-
-    # CompteurSolNu= np.zeros((MaskForet.shape[0],MaskForet.shape[1]),dtype=np.uint8) #np.int8 possible ?
-    # DateFirstSolNu=np.zeros((MaskForet.shape[0],MaskForet.shape[1]),dtype=np.uint16) #np.int8 possible ?
-    # BoolSolNu=np.zeros((MaskForet.shape[0],MaskForet.shape[1]), dtype='bool')
-    
-    # for DateIndex,date in enumerate(Dates):
-    #     print(date)
-    #     VegetationIndex ,Mask, BoolSolNu, CompteurSolNu,DateFirstSolNu = ComputeDate(date,DateIndex,DictSentinelPaths,InterpolationOrder,ApplyMaskTheia,BoolSolNu,CompteurSolNu,DateFirstSolNu,listDiffCRSWIRmedian,CorrectCRSWIR)
-    #     writeInputDataDateByDate(VegetationIndex,Mask,MetaProfile,date,OutputDirectory,tuile)
-        # writeInputDataStack(VegetationIndex,Mask,MetaProfile,DateIndex,Version,tuile,Dates)
+            # Compute pre-masks
+            premask_soil, shadows, outside_swath, invalid = get_pre_masks(stack_bands)
             
+            # Compute soil
+            soil_data = detect_soil(soil_data, premask_soil, invalid, date_index)
+                        
+            # Compute clouds
+            # stackBands=np.ma.array(stackBands, mask = Ombres[:,:,np.newaxis]**[1 for i in range(stackBands.shape[-1])]) #Pas forcément indispensable mais retire erreur
+            # Nuages2=getNuages2(stackBands,DictBandPosition,HorsFauche,BoolSolNu,SolNu)
+            
+            # #Compute vegetation index
+            # VegetationIndex=stackBands[:,:,DictBandPosition["B11"]]/(stackBands[:,:,DictBandPosition["B8A"]]+((stackBands[:,:,DictBandPosition["B12"]]-stackBands[:,:,DictBandPosition["B8A"]])/(2185.7-864))*(1610.4-864)) #Calcul du CRSWIR
+            
+            
+            # stack_bands.sel(band="B2").plot()
+            print("test")
         
         
 if __name__ == '__main__':

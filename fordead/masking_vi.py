@@ -7,6 +7,7 @@ Created on Fri Nov 20 17:29:17 2020
 from fordead.ImportData import import_forest_mask
 from fordead.writing_data import write_tif
 import xarray as xr
+import numpy as np
 
 from path import Path
 import json
@@ -95,3 +96,49 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
     forest_mask.attrs = example_raster.attrs
     
     return forest_mask
+
+
+
+
+def import_soil_data(dict_paths):
+    state_soil = xr.open_rasterio(dict_paths["state_soil"],chunks = 1000).astype(bool)
+    first_date_soil = xr.open_rasterio(dict_paths["first_date_soil"],chunks = 1000)
+    count_soil = xr.open_rasterio(dict_paths["count_soil"],chunks = 1000)
+    
+    soil_data=xr.Dataset({"state": state_soil,
+                     "first_date": first_date_soil,
+                     "count" : count_soil})
+    soil_data=soil_data.sel(band=1)
+
+    return soil_data
+
+def initialize_soil_data(shape,coords):
+    state_soil=np.zeros(shape,dtype=bool)
+    first_date_soil=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
+    count_soil= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
+    
+    soil_data=xr.Dataset({"state": xr.DataArray(state_soil, coords=coords),
+                         "first_date": xr.DataArray(first_date_soil, coords=coords),
+                         "count" : xr.DataArray(count_soil, coords=coords)})
+    
+    return soil_data
+
+
+def get_pre_masks(stack_bands):   
+    soil_anomaly = (stack_bands.sel(band = "B11") > 1250) & (stack_bands.sel(band = "B2")<600) & (stack_bands.sel(band = "B3")+stack_bands.sel(band = "B4") > 800)
+    shadows = (stack_bands==0).any(dim = "band")
+    outside_swath = stack_bands.sel(band = "B12")<0 
+    
+    invalid = shadows or outside_swath or stack_bands.sel(band = "B2") >= 600
+    
+    return soil_anomaly, shadows, outside_swath, invalid
+    # if ApplyMaskTheia : Invalid=np.logical_or(np.logical_or(Ombres, Nuages),np.logical_or(MaskTheia,HorsFauche))
+    # else : Invalid=np.logical_or(np.logical_or(Ombres, Nuages),HorsFauche)
+
+def detect_soil(soil_data, premask_soil, invalid, date_index):
+    soil_data["count"]=xr.where(~Invalid & premask_soil,soil_data["count"]+1,soil_data["count"])
+    soil_data["count"]=xr.where(~Invalid & ~premask_soil,0,soil_data["count"])
+    soil_data["state"] = xr.where(soil_data["count"] == 3, True, soil_data["state"])
+    soil_data["first_date"] = xr.where(~Invalid & soil_data["count"] == 1 & ~soil_data["state"],date_index,soil_data["first_date"]) #Keeps index of first soil detection
+            
+    return soil_data
