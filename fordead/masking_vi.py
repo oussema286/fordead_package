@@ -46,7 +46,6 @@ def get_forest_mask(forest_mask_path,
         forest_mask = import_forest_mask(forest_mask_path)
     else:
         print("Forest mask rasterized from BD Foret")
-
         forest_mask = rasterize_bdforet(example_path, dep_path, bdforet_dirpath)
         write_tif(forest_mask, forest_mask.attrs,nodata = 0, path = forest_mask_path)
     return forest_mask
@@ -72,33 +71,37 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
 
     example_raster = xr.open_rasterio(example_path)
     example_raster=example_raster.sel(band=1)
-    example_raster.attrs["crs"]=example_raster.attrs["crs"].replace("+init=","") #Remove "+init=" which it deprecated
+    example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
         
     bdforet_paths, tile_extent = bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath) #List of paths to relevant BD foret shapefiles. Can be replaced with home-made list if your data structure is different
     
     bd_list=[(gp.read_file(bd_path,bbox=tile_extent)) for bd_path in bdforet_paths]
     bd_foret = gp.GeoDataFrame( pd.concat( bd_list, ignore_index=True), crs=bd_list[0].crs)
-    bd_foret=bd_foret[bd_foret['CODE_TFV'].isin(list_forest_type)]
-    bd_foret=bd_foret.to_crs(crs=example_raster.attrs["crs"]) #Changing crs
-    bd_foret=bd_foret["geometry"]
+    bd_foret=bd_foret[bd_foret['CODE_TFV'].isin(list_forest_type)]    
+    
+    forest_mask = rasterize_polygons(bd_foret, example_raster)
+    return forest_mask
+
+def rasterize_polygons(polygons, example_raster):
+    
+    polygons=polygons.to_crs(crs=example_raster.attrs["crs"]) #Changing crs
+    polygons=polygons["geometry"]
     
     #Transforme le geopanda en json pour rasterisation
-    bd_foret_json_str = bd_foret.to_json()
-    bd_foret_json_dict = json.loads(bd_foret_json_str)
-    bd_foret_json_mask = [feature["geometry"] for feature in bd_foret_json_dict["features"]]
+    polygons_json_str = polygons.to_json()
+    polygons_json_dict = json.loads(polygons_json_str)
+    polygons_json_mask = [feature["geometry"] for feature in polygons_json_dict["features"]]
     
     #Rasterisation de la BDFORET pour créer le masque
-    forest_mask=rasterio.features.rasterize(bd_foret_json_mask,
-                                                  out_shape =example_raster.shape,
-                                                  default_value = 1, fill = 0,
-                                                  transform =example_raster.attrs["transform"])
+    forest_mask=rasterio.features.rasterize(polygons_json_mask,
+                                            out_shape =example_raster.shape,
+                                            default_value = 1, fill = 0,
+                                            transform =example_raster.attrs["transform"])
     forest_mask=forest_mask.astype("bool")
     forest_mask = xr.DataArray(forest_mask, coords=example_raster.coords)
     forest_mask.attrs = example_raster.attrs
     
     return forest_mask
-
-
 
 
 def import_soil_data(dict_paths):
@@ -140,8 +143,8 @@ def detect_soil(soil_data, premask_soil, invalid, date_index):
     soil_data["count"]=xr.where(~invalid & premask_soil,soil_data["count"]+1,soil_data["count"])
     soil_data["count"]=xr.where(~invalid & ~premask_soil,0,soil_data["count"])
     soil_data["state"] = xr.where(soil_data["count"] == 3, True, soil_data["state"])
-    soil_data["first_date"] = xr.where(~invalid & soil_data["count"] == 1 & ~soil_data["state"],date_index,soil_data["first_date"]) #Keeps index of first soil detection
-            
+    soil_data["first_date"] = xr.where(~invalid & (soil_data["count"] == 1) & ~soil_data["state"],date_index,soil_data["first_date"]) #Keeps index of first soil detection
+    
     return soil_data
 
 
@@ -155,5 +158,3 @@ def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
     clouds = cond4 & (cond3 | (cond1 & cond2))
     clouds[:,:] = ndimage.binary_dilation(clouds,iterations=3,structure=ndimage.generate_binary_structure(2, 1)) # 3 pixels dilation of cloud mask
     return clouds
-
-

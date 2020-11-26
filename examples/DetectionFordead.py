@@ -7,8 +7,6 @@ Created on Mon Nov  2 09:25:23 2020
 
 
 import argparse
-import pickle
-from pathlib import Path
 import numpy as np
 from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_last_training_date, TileInfo
 from fordead.writing_data import write_tif
@@ -35,61 +33,61 @@ def decline_detection(
     Overwrite=True
     ):
     
-    tuile = TileInfo(data_directory)
-    tuile = tuile.import_info()
+    tile = TileInfo(data_directory)
+    tile = tile.import_info()
     
     if Overwrite:
-        tuile.delete_dir("AnomaliesDir")
-        tuile.delete_dir("state_decline")
+        tile.delete_dir("AnomaliesDir")
+        tile.delete_dir("state_decline")
     
-    tuile.add_dirpath("AnomaliesDir", tuile.data_directory / "DataAnomalies")
-    tuile.getdict_datepaths("Anomalies",tuile.paths["AnomaliesDir"])
-    tuile.search_new_dates()
+    tile.add_dirpath("AnomaliesDir", tile.data_directory / "DataAnomalies")
+    tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
+    tile.search_new_dates()
     
     #Verify if there are new SENTINEL dates
-    NbNewDates=np.sum(tuile.dates>"2018-01-01") - len(tuile.paths["Anomalies"])
+    NbNewDates=np.sum(tile.dates>"2018-01-01") - len(tile.paths["Anomalies"])
     if  NbNewDates == 0:
         print("Pas de nouvelles dates SENTINEL-2")
     else:
         print(str(NbNewDates)+ " nouvelles dates")
         
         #IMPORTING DATA
-        forest_mask = import_forest_mask(tuile.paths["ForestMask"])
-        last_training_date = import_last_training_date(tuile.paths["last_training_date"])
-        coeff_model = import_coeff_model(tuile.paths["coeff_model"])
+        forest_mask = import_forest_mask(tile.paths["ForestMask"])
+        last_training_date = import_last_training_date(tile.paths["last_training_date"])
+        coeff_model = import_coeff_model(tile.paths["coeff_model"])
         
-        if "state_decline" in tuile.paths and not(Overwrite):
-            decline_data = import_decline_data(tuile.paths)
+        if "state_decline" in tile.paths and not(Overwrite):
+            decline_data = import_decline_data(tile.paths)
         else:
             decline_data = initialize_decline_data(forest_mask.shape,forest_mask.coords)
             
-            tuile.add_path("state_decline", tuile.data_directory / "DataDecline" / "state_decline.tif")
-            tuile.add_path("first_date_decline", tuile.data_directory / "DataDecline" / "first_date_decline.tif")
-            tuile.add_path("count_decline", tuile.data_directory / "DataDecline" / "count_decline.tif")
+            tile.add_path("state_decline", tile.data_directory / "DataDecline" / "state_decline.tif")
+            tile.add_path("first_date_decline", tile.data_directory / "DataDecline" / "first_date_decline.tif")
+            tile.add_path("count_decline", tile.data_directory / "DataDecline" / "count_decline.tif")
         
         #DECLINE DETECTION
-        for date_index, date in enumerate(tuile.dates):
-            if date < "2018-01-01" or date in tuile.paths["Anomalies"]: #Ignoring dates used for training and dates already used
+        for date_index, date in enumerate(tile.dates):
+            if date < "2018-01-01" or date in tile.paths["Anomalies"]: #Ignoring dates used for training and dates already used
                 continue
             else:
                 print(date)
-                masked_vi = import_masked_vi(tuile.paths,date)
-                masked_vi["mask"] = masked_vi["mask"] & (date_index <= last_training_date) #Masking pixels where date was used for training
-                
+                masked_vi = import_masked_vi(tile.paths,date)
+                masked_vi["mask"] = masked_vi["mask"] | (date_index <= last_training_date) #Masking pixels where date was used for training
+
                 predicted_vi=prediction_vegetation_index(coeff_model,date)
                 anomalies = detection_anomalies(masked_vi, predicted_vi, threshold_anomaly)
                                 
                 decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
                                
-                write_tif(anomalies, forest_mask.attrs, tuile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
+                write_tif(anomalies, forest_mask.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
         
         #Writing decline data to rasters        
-        write_tif(decline_data["state"], forest_mask.attrs,tuile.paths["state_decline"],nodata=0)
-        write_tif(decline_data["first_date"], forest_mask.attrs,tuile.paths["first_date_decline"],nodata=0)
-        write_tif(decline_data["count"], forest_mask.attrs,tuile.paths["count_decline"],nodata=0)
+        write_tif(decline_data["state"], forest_mask.attrs,tile.paths["state_decline"],nodata=0)
+        write_tif(decline_data["first_date"], forest_mask.attrs,tile.paths["first_date_decline"],nodata=0)
+        write_tif(decline_data["count"], forest_mask.attrs,tile.paths["count_decline"],nodata=0)
                 
         # print("Détection du déperissement")
-    tuile.save_info()
+    tile.save_info()
 
 
 

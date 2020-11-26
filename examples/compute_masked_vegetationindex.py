@@ -5,27 +5,10 @@ Created on Thu Nov 19 16:06:51 2020
 @author: Raphaël Dutrieux
 
 L'arborescence nécessaire dans le dossier indiqué par le paramètre InputDirectory est la suivante :
-    -Tuile1
+    -tile1
         -Date1
         -Date2
         ...
-    # -Rasters
-    #     - Tuile1
-    #         -MaskForet_Tuile1.tif (raster binaire (1 pour la foret, en dehors) dont l'extent, la résolution et le CRS correspondent aux bandes SENTINEL à 10m)
-
-Pour créer le masque forêt à partir de la BD FORET, assigner "BDFORET" au paramètre ForestMaskSource. De plus, l'arborescence suivante devient nécessaire :
-    - Data
-        -Vecteurs
-            -Departements
-                # departements-20140306-100m.shp
-            -BDFORET
-                -BD_Foret_V2_Dep001
-                -BD_Foret_V2_Dep002
-                ...
-            TilesSentinel.shp
-
-
-
 
 """
 
@@ -55,7 +38,7 @@ def parse_command_line():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str,default = "G:/Deperissement/Data/SENTINEL/ZoneTest", help = "Path of the directory with Sentinel dates")
     parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "G:/Deperissement/Out/PackageVersion/ZoneTest", help = "Path of the output directory")
-    # parser.add_argument("-t", "--tuile", dest = "tuile",type = str,default = "ZoneTest", help = "Chemin du dossier où sauvegarder les résultats")
+    # parser.add_argument("-t", "--tile", dest = "tile",type = str,default = "ZoneTest", help = "Chemin du dossier où sauvegarder les résultats")
     parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     # parser.add_argument("-s", "--InterpolationOrder", dest = "InterpolationOrder",type = int,default = 0, help ="interpolation order : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique")
     # parser.add_argument("-c", "--CorrectCRSWIR", dest = "CorrectCRSWIR", action="store_true",default = False, help = "Si activé, execute la correction du CRSWIR à partir")
@@ -66,10 +49,7 @@ def parse_command_line():
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
-        
     return dictArgs
-
-
 
 
 def ComputeMaskedVI(
@@ -87,43 +67,44 @@ def ComputeMaskedVI(
     
     input_directory=Path(input_directory)
     
-    tuile = TileInfo(data_directory)
+    tile = TileInfo(data_directory)
 
-    tuile.getdict_datepaths("Sentinel",input_directory) #adds a dictionnary to tuile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
-    tuile.paths["Sentinel"] = get_band_paths(tuile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
+    tile.getdict_datepaths("Sentinel",input_directory) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+    tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
     
     #Adding directories for ouput
-    tuile.add_dirpath("VegetationIndexDir", tuile.data_directory / "VegetationIndex")
-    tuile.add_dirpath("MaskDir", tuile.data_directory / "Mask")
-    tuile.add_path("ForestMask", tuile.data_directory / "ForestMask" / "Forest_Mask.tif")
+    tile.add_dirpath("VegetationIndexDir", tile.data_directory / "VegetationIndex")
+    tile.add_dirpath("MaskDir", tile.data_directory / "Mask")
+    tile.add_path("ForestMask", tile.data_directory / "ForestMask" / "Forest_Mask.tif")
     
     #Compute forest mask
-    forest_mask = get_forest_mask(tuile.paths["ForestMask"],
-                                  example_path = tuile.paths["Sentinel"][list(tuile.paths["Sentinel"].keys())[0]]["B2"],
+    forest_mask = get_forest_mask(tile.paths["ForestMask"],
+                                  example_path = tile.paths["Sentinel"][list(tile.paths["Sentinel"].keys())[0]]["B2"],
                                   dep_path = "G:/Deperissement/Data/Vecteurs/Departements/departements-20140306-100m.shp",
                                   bdforet_dirpath = "G:/Deperissement/Data/Vecteurs/BDFORET")
     
     #Computing cloudiness percentage for each date
-    cloudiness = get_cloudiness(input_directory / "cloudiness", tuile.paths["Sentinel"], sentinel_source)
+    cloudiness = get_cloudiness(input_directory / "cloudiness", tile.paths["Sentinel"], sentinel_source)
 
     #Import or initialize data for the soil mask
-    if "state_soil" in tuile.paths:
-        soil_data = import_soil_data(tuile.paths)
+    if "state_soil" in tile.paths:
+        soil_data = import_soil_data(tile.paths)
     else:
         soil_data = initialize_soil_data(forest_mask.shape,forest_mask.coords)
         
-        tuile.add_path("state_soil", tuile.data_directory / "DataSoil" / "state_soil.tif")
-        tuile.add_path("first_date_soil", tuile.data_directory / "DataSoil" / "first_date_soil.tif")
-        tuile.add_path("count_soil", tuile.data_directory / "DataSoil" / "count_soil.tif")
+        tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
+        tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
+        tile.add_path("count_soil", tile.data_directory / "DataSoil" / "count_soil.tif")
 
     #get already computed dates
-    tuile.getdict_datepaths("VegetationIndex",tuile.paths["VegetationIndexDir"])
-    
-    for date_index, date in enumerate(tuile.paths["Sentinel"]):
-        if cloudiness.perc_cloud[date] <= lim_perc_cloud and not(date in tuile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
+    tile.getdict_datepaths("VegetationIndex",tile.paths["VegetationIndexDir"])
+    date_index=0
+    for date in tile.paths["Sentinel"]:
+        if cloudiness.perc_cloud[date] <= lim_perc_cloud and not(date in tile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
             print(date)
+            print(date_index)
             # Resample and import SENTINEL data
-            stack_bands = import_resampled_sen_stack(tuile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"])
+            stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"])
             
             # Compute pre-masks
             premask_soil, shadows, outside_swath, invalid = get_pre_masks(stack_bands)
@@ -136,13 +117,14 @@ def ComputeMaskedVI(
             
             # Compute vegetation index
             vegetation_index = stack_bands.sel(band = "B11")/(stack_bands.sel(band = "B8A")+((stack_bands.sel(band = "B12")-stack_bands.sel(band = "B8A"))/(2185.7-864))*(1610.4-864))
-        
-            write_tif(vegetation_index, forest_mask.attrs,tuile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
-            write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil, forest_mask.attrs, tuile.paths["MaskDir"] / ("Mask"+date+".tif"),nodata=0)
             
-    write_tif(soil_data["state"], forest_mask.attrs,tuile.paths["state_soil"],nodata=0)
-    write_tif(soil_data["first_date"], forest_mask.attrs,tuile.paths["first_date_soil"],nodata=0)
-    write_tif(soil_data["count"], forest_mask.attrs,tuile.paths["count_soil"],nodata=0)
+            write_tif(vegetation_index, forest_mask.attrs,tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
+            write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
+            
+            date_index=date_index+1
+    write_tif(soil_data["state"], forest_mask.attrs,tile.paths["state_soil"],nodata=0)
+    write_tif(soil_data["first_date"], forest_mask.attrs,tile.paths["first_date_soil"],nodata=0)
+    write_tif(soil_data["count"], forest_mask.attrs,tile.paths["count_soil"],nodata=0)
         
 if __name__ == '__main__':
     dictArgs=parse_command_line()

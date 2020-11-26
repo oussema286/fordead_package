@@ -125,7 +125,8 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
     coeff_model=xr.apply_ufunc(model_pixel_vi, stack_vi,stack_masks,used_area_mask,last_training_date,
                                   kwargs={"HarmonicTerms" : HarmonicTerms, "threshold_outliers" : threshold_outliers, "remove_outliers" : remove_outliers},
                                   input_core_dims=[["Time"],["Time"],[],[]],vectorize=True,dask="parallelized",
-                                  output_dtypes=[float], output_core_dims=[['coeff']], output_sizes = {"coeff" : 5})
+                                  output_dtypes=[float], output_core_dims=[['coeff']],
+                                  dask_gufunc_kwargs = {"output_sizes" : {"coeff" : 5}})
     
     return coeff_model
 

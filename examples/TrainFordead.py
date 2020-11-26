@@ -38,17 +38,17 @@ def train_model(
     min_last_date_training="2018-01-01"
     ):
 
-    tuile = TileInfo(data_directory)
-    tuile.delete_results()
-    tuile.getdict_paths(path_vi = tuile.data_directory / "VegetationIndex",
-                        path_masks = tuile.data_directory / "Mask",
-                        path_forestmask = list((tuile.data_directory / "ForestMask").glob("*.tif"))[0])
+    tile = TileInfo(data_directory)
+    tile.delete_results()
+    tile.getdict_paths(path_vi = tile.data_directory / "VegetationIndex",
+                        path_masks = tile.data_directory / "Mask",
+                        path_forestmask = list((tile.data_directory / "ForestMask").glob("*.tif"))[0])
     
-    #Import du masque forêt
-    forest_mask = import_forest_mask(tuile.paths["ForestMask"])
+    # Import du masque forêt
+    forest_mask = import_forest_mask(tile.paths["ForestMask"])
     
     # Import des index de végétations et des masques
-    stack_vi, stack_masks = import_stackedmaskedVI(tuile,date_lim_learning=date_lim_training)
+    stack_vi, stack_masks = import_stackedmaskedVI(tile, date_lim_learning=date_lim_training)
     
     last_training_date=get_last_training_date(stack_masks,
                                           min_last_date_training = min_last_date_training,
@@ -62,16 +62,16 @@ def train_model(
                            threshold_outliers=threshold_outliers, remove_outliers=remove_outliers)
         
     #Create missing directories and add paths to TileInfo object
-    tuile.add_path("coeff_model", tuile.data_directory / "DataModel" / "coeff_model.tif")
-    tuile.add_path("last_training_date", tuile.data_directory / "DataModel" / "Last_training_date.tif")
-    tuile.add_path("used_area_mask", tuile.paths["ForestMask"].parent / "Used_area_mask.tif")
+    tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.tif")
+    tile.add_path("last_training_date", tile.data_directory / "DataModel" / "Last_training_date.tif")
+    tile.add_path("used_area_mask", tile.paths["ForestMask"].parent / "Used_area_mask.tif")
 
     #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, la zone utilisable
-    write_tif(last_training_date,stack_vi.attrs, tuile.paths["last_training_date"],nodata=0)
-    write_tif(coeff_model,stack_vi.attrs, tuile.paths["coeff_model"])
-    write_tif(used_area_mask,stack_vi.attrs, tuile.paths["used_area_mask"],nodata=0)
+    write_tif(last_training_date,stack_vi.attrs, tile.paths["last_training_date"],nodata=0)
+    write_tif(coeff_model,stack_vi.attrs, tile.paths["coeff_model"])
+    write_tif(used_area_mask,stack_vi.attrs, tile.paths["used_area_mask"],nodata=0)
     #Save the TileInfo object
-    tuile.save_info()
+    tile.save_info()
 
     
 if __name__ == '__main__':

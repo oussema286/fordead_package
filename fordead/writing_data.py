@@ -9,7 +9,8 @@ from numpy import uint8
 
 def write_tif(data_array, attributes, path, nodata = None):
     data_array.attrs=attributes
-    
+    data_array.attrs["crs"]=data_array.crs.replace("+init=","") #Remove "+init=" which it deprecated
+
     args={}
     if data_array.dtype==bool: #Bool rasters can't be written, so they have to be converted to int8, but they can still be written in one bit with the argument nbits = 1
         data_array=data_array.astype(uint8)

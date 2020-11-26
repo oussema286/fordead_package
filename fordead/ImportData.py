@@ -165,9 +165,10 @@ class TileInfo:
         path_dir=Path(path_dir)
         dict_datepaths={}
         for path in path_dir.glob("*"):
-            formatted_date=retrieve_date_from_string(path.stem)
-            if formatted_date != None: #To ignore files or directories with no dates which might be in the same directory
-                dict_datepaths[formatted_date] = path
+            if not(".xml" in str(path)): #To ignore temporary files
+                formatted_date=retrieve_date_from_string(path.stem)
+                if formatted_date != None: #To ignore files or directories with no dates which might be in the same directory
+                    dict_datepaths[formatted_date] = path
             
         sorted_dict_datepaths = dict(sorted(dict_datepaths.items(), key=lambda key_value: key_value[0]))
         self.paths[key] = sorted_dict_datepaths
@@ -249,6 +250,7 @@ def import_stackedmaskedVI(tuile,date_lim_learning=None):
     stack_masks=stack_masks.sel(band=1)
     stack_masks=stack_masks.chunk({"Time": -1,"x" : 1000,"y" : 1000})
     stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
+
     return stack_vi, stack_masks
 
     
@@ -351,3 +353,12 @@ def import_resampled_sen_stack(band_paths, list_bands, InterpolationOrder = 0):
     concatenated_stack_bands.coords["band"] = list_bands
     
     return concatenated_stack_bands
+
+def import_stacked_anomalies(paths_anomalies):
+    list_anomalies=[xr.open_rasterio(paths_anomalies[date],chunks =1000) for date in paths_anomalies]
+    stack_anomalies=xr.concat(list_anomalies,dim="Time")
+    stack_anomalies=stack_anomalies.assign_coords(Time=[date for date in paths_anomalies.keys()])
+    stack_anomalies=stack_anomalies.sel(band=1)
+    stack_anomalies=stack_anomalies.chunk({"Time": -1,"x" : 1000,"y" : 1000})
+    # stack_anomalies["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_anomalies["Time"])]))
+    return stack_anomalies.astype(bool)
