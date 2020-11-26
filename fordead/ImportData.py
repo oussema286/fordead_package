@@ -188,7 +188,13 @@ class TileInfo:
         path.parent.mkdir(parents=True, exist_ok=True)    
         #Saves paths in the object
         self.paths[key] = path
-
+        
+    def add_parameters(self, parameters):
+        if not(hasattr(self, 'parameters')):
+            self.parameters = parameters
+        else:
+            self.parameters.update(parameters)
+        
     def add_dirpath(self, key, path):
         #Transform to WindowsPath if not done already
         path=Path(path)

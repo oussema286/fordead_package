@@ -35,17 +35,18 @@ def decline_detection(
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    
-    if Overwrite:
-        tile.delete_dir("AnomaliesDir")
-        tile.delete_dir("state_decline")
+    tile.add_parameters({"threshold_anomaly" : threshold_anomaly})
+
+    # if Overwrite:
+    #     tile.delete_dir("AnomaliesDir")
+    #     tile.delete_dir("state_decline")
     
     tile.add_dirpath("AnomaliesDir", tile.data_directory / "DataAnomalies")
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
     tile.search_new_dates()
     
     #Verify if there are new SENTINEL dates
-    NbNewDates=np.sum(tile.dates>"2018-01-01") - len(tile.paths["Anomalies"])
+    NbNewDates=np.sum(tile.dates>tile.parameters["min_last_date_training"]) - len(tile.paths["Anomalies"])
     if  NbNewDates == 0:
         print("Pas de nouvelles dates SENTINEL-2")
     else:
@@ -67,7 +68,7 @@ def decline_detection(
         
         #DECLINE DETECTION
         for date_index, date in enumerate(tile.dates):
-            if date < "2018-01-01" or date in tile.paths["Anomalies"]: #Ignoring dates used for training and dates already used
+            if date < tile.parameters["min_last_date_training"] or date in tile.paths["Anomalies"]: #Ignoring dates used for training and dates already used
                 continue
             else:
                 print(date)

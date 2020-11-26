@@ -68,7 +68,8 @@ def ComputeMaskedVI(
     input_directory=Path(input_directory)
     
     tile = TileInfo(data_directory)
-
+    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask})
+    
     tile.getdict_datepaths("Sentinel",input_directory) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
     tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
     
@@ -102,7 +103,6 @@ def ComputeMaskedVI(
     for date in tile.paths["Sentinel"]:
         if cloudiness.perc_cloud[date] <= lim_perc_cloud and not(date in tile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
             print(date)
-            print(date_index)
             # Resample and import SENTINEL data
             stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"])
             
@@ -125,7 +125,9 @@ def ComputeMaskedVI(
     write_tif(soil_data["state"], forest_mask.attrs,tile.paths["state_soil"],nodata=0)
     write_tif(soil_data["first_date"], forest_mask.attrs,tile.paths["first_date_soil"],nodata=0)
     write_tif(soil_data["count"], forest_mask.attrs,tile.paths["count_soil"],nodata=0)
-        
+    
+    tile.save_info()
+    
 if __name__ == '__main__':
     dictArgs=parse_command_line()
     print(dictArgs)
