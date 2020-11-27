@@ -36,16 +36,16 @@ from fordead.writing_data import write_tif
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str,default = "G:/Deperissement/Data/SENTINEL/ZoneTest", help = "Path of the directory with Sentinel dates")
-    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "G:/Deperissement/Out/PackageVersion/ZoneTest", help = "Path of the output directory")
+    parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest", help = "Path of the directory with Sentinel dates")
+    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Path of the output directory")
     # parser.add_argument("-t", "--tile", dest = "tile",type = str,default = "ZoneTest", help = "Chemin du dossier où sauvegarder les résultats")
     parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     # parser.add_argument("-s", "--InterpolationOrder", dest = "InterpolationOrder",type = int,default = 0, help ="interpolation order : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique")
     # parser.add_argument("-c", "--CorrectCRSWIR", dest = "CorrectCRSWIR", action="store_true",default = False, help = "Si activé, execute la correction du CRSWIR à partir")
     # parser.add_argument("-f", "--forest_mask_source", dest = "forestmask_source",type = str,default = "BDFORET", help = "Source of the forest mask")
-    parser.add_argument("-d", "--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi THEIA et Scihub et PEPS")
+    parser.add_argument("-d", "--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
     parser.add_argument("-m", "--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
-    
+    parser.add_argument("-v", "--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -61,14 +61,17 @@ def ComputeMaskedVI(
     lim_perc_cloud=0.3,
     # forest_mask_source = "LastComputed",
     sentinel_source = "THEIA",
-    apply_source_mask = False
+    apply_source_mask = False,
+    vi = "CRSWIR"
     ):
     #############################
     
     input_directory=Path(input_directory)
     
     tile = TileInfo(data_directory)
-    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask})
+    tile = tile.import_info()
+    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi})
+    if tile.parameters["Overwrite"] : tile.delete_dirs("VegetationIndexDir", "MaskDir", "ForestMask","coeff_model", "AnomaliesDir","state_decline")
     
     tile.getdict_datepaths("Sentinel",input_directory) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
     tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
@@ -116,21 +119,25 @@ def ComputeMaskedVI(
             clouds = detect_clouds(stack_bands, outside_swath, soil_data, premask_soil)
             
             # Compute vegetation index
-            vegetation_index = compute_vegetation_index(stack_bands, "CRSWIR")
+            vegetation_index = compute_vegetation_index(stack_bands, vi)
             
             write_tif(vegetation_index, forest_mask.attrs,tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
             write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
             
             date_index=date_index+1
-    write_tif(soil_data["state"], forest_mask.attrs,tile.paths["state_soil"],nodata=0)
-    write_tif(soil_data["first_date"], forest_mask.attrs,tile.paths["first_date_soil"],nodata=0)
-    write_tif(soil_data["count"], forest_mask.attrs,tile.paths["count_soil"],nodata=0)
+    
+    print(str(date_index) + " new dates")
+  
+    if date_index!=0: #If there is at least one new date
+        write_tif(soil_data["state"], forest_mask.attrs,tile.paths["state_soil"],nodata=0)
+        write_tif(soil_data["first_date"], forest_mask.attrs,tile.paths["first_date_soil"],nodata=0)
+        write_tif(soil_data["count"], forest_mask.attrs,tile.paths["count_soil"],nodata=0)
     
     tile.save_info()
     
 if __name__ == '__main__':
     dictArgs=parse_command_line()
-    print(dictArgs)
+    # print(dictArgs)
     start_time_debut = time.time()
     ComputeMaskedVI(**dictArgs)
     print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))

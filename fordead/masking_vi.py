@@ -139,7 +139,8 @@ def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
 
 
 def compute_vegetation_index(stack_bands, vegetation_index = "CRSWIR"):
-    dict_vegetation_index = {"CRSWIR" : "B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))"}
+    dict_vegetation_index = {"CRSWIR" : "B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))",
+                             "NDVI" : "(B8−B4)/(B8+B4)"}
     
     simple_formula = dict_vegetation_index[vegetation_index]
     match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"

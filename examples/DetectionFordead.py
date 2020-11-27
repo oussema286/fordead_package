@@ -16,10 +16,10 @@ import time
 
 def parse_command_line():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "G:/Deperissement/Out/PackageVersion/ZoneTest", help = "Dossier avec les données")
+    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les données")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     # parser.add_argument("-x", "--ExportAsShapefile", dest = "ExportAsShapefile", action="store_true",default = False, help = "Si activé, exporte les résultats sous la forme de shapefiles plutôt que de rasters")
-    parser.add_argument("-o", "--Overwrite", dest = "Overwrite", action="store_false",default = True, help = "Si vrai, recommence la détection du début. Sinon, reprends de la dernière date analysée")
+    # parser.add_argument("-o", "--Overwrite", dest = "Overwrite", action="store_false",default = True, help = "Si vrai, recommence la détection du début. Sinon, reprends de la dernière date analysée")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -27,7 +27,7 @@ def parse_command_line():
 
 
 def decline_detection(
-    data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/tests/OutputFordead/ZoneTest",
+    data_directory,
     threshold_anomaly=0.16,
     # ExportAsShapefile = False,
     Overwrite=True
@@ -36,9 +36,7 @@ def decline_detection(
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly})
-
-    if Overwrite:
-        tile.delete_dirs("AnomaliesDir","state_decline") #Deleting previous detection results if they exist
+    if tile.parameters["Overwrite"] : tile.delete_dirs("AnomaliesDir","state_decline") #Deleting previous detection results if they exist
     
     tile.add_dirpath("AnomaliesDir", tile.data_directory / "DataAnomalies") #Choose anomalies directory
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies

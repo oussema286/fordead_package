@@ -101,9 +101,12 @@ class TileInfo:
         
         if path == None:
             path = self.data_directory / "TileInfo"
-        with open(path, 'rb') as f:
-            tuile = pickle.load(f)
-        return tuile
+        if path.exists():
+            with open(path, 'rb') as f:
+                tuile = pickle.load(f)
+                return tuile
+        else:
+            return self
 
     def save_info(self, path= None):
         """
@@ -177,9 +180,27 @@ class TileInfo:
         self.paths[key] = path
         
     def add_parameters(self, parameters):
+        """
+        Adds attribute 'parameters' to TileInfo object which contains dictionnary of parameters and their values.
+        If attribute parameters already exists, checks for conflicts then updates parameters
+        In case of conflicts, the parameter 'Overwrite' is set to True and it is advised to user to remove previous results.
+
+        Parameters
+        ----------
+        parameters : dict
+            Dictionnary containing parameters and their values
+
+
+        """
         if not(hasattr(self, 'parameters')):
             self.parameters = parameters
+            self.parameters["Overwrite"]=False
         else:
+            self.parameters["Overwrite"]=False
+            for parameter in parameters:
+                if parameter in self.parameters:
+                    if self.parameters[parameter]!=parameters[parameter]: #If parameter was changed
+                        self.parameters["Overwrite"]=True
             self.parameters.update(parameters)
         
     def add_dirpath(self, key, path):
@@ -282,9 +303,9 @@ def initialize_decline_data(shape,coords):
 
 
 def import_soil_data(dict_paths):
-    state_soil = xr.open_rasterio(dict_paths["state_soil"],chunks = 1000).astype(bool)
-    first_date_soil = xr.open_rasterio(dict_paths["first_date_soil"],chunks = 1000)
-    count_soil = xr.open_rasterio(dict_paths["count_soil"],chunks = 1000)
+    state_soil = xr.open_rasterio(dict_paths["state_soil"]).astype(bool)
+    first_date_soil = xr.open_rasterio(dict_paths["first_date_soil"])
+    count_soil = xr.open_rasterio(dict_paths["count_soil"])
     
     soil_data=xr.Dataset({"state": state_soil,
                      "first_date": first_date_soil,
