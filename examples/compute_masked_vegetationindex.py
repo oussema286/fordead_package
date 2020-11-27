@@ -87,18 +87,20 @@ def ComputeMaskedVI(
                                   dep_path = "G:/Deperissement/Data/Vecteurs/Departements/departements-20140306-100m.shp",
                                   bdforet_dirpath = "G:/Deperissement/Data/Vecteurs/BDFORET")
     
+    tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
+    tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
+    tile.add_path("count_soil", tile.data_directory / "DataSoil" / "count_soil.tif")
+        
     #Computing cloudiness percentage for each date
     cloudiness = get_cloudiness(input_directory / "cloudiness", tile.paths["Sentinel"], sentinel_source)
 
     #Import or initialize data for the soil mask
-    if "state_soil" in tile.paths:
+    if tile.paths["state_soil"].exists():
         soil_data = import_soil_data(tile.paths)
     else:
         soil_data = initialize_soil_data(forest_mask.shape,forest_mask.coords)
         
-        tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
-        tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
-        tile.add_path("count_soil", tile.data_directory / "DataSoil" / "count_soil.tif")
+
 
     #get already computed dates
     tile.getdict_datepaths("VegetationIndex",tile.paths["VegetationIndexDir"])

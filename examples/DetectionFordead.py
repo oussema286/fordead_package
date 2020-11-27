@@ -42,6 +42,10 @@ def decline_detection(
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies
     tile.search_new_dates() #Get paths and dates to all vegetation index dates
     
+    tile.add_path("state_decline", tile.data_directory / "DataDecline" / "state_decline.tif")
+    tile.add_path("first_date_decline", tile.data_directory / "DataDecline" / "first_date_decline.tif")
+    tile.add_path("count_decline", tile.data_directory / "DataDecline" / "count_decline.tif")
+    
     #Verify if there are new SENTINEL dates
     NbNewDates=np.sum(tile.dates>tile.parameters["min_last_date_training"]) - len(tile.paths["Anomalies"])
     if  NbNewDates == 0:
@@ -54,14 +58,12 @@ def decline_detection(
         last_training_date = import_last_training_date(tile.paths["last_training_date"])
         coeff_model = import_coeff_model(tile.paths["coeff_model"])
         
-        if "state_decline" in tile.paths and not(Overwrite):
+        if tile.paths["state_decline"].exists():
             decline_data = import_decline_data(tile.paths)
         else:
             decline_data = initialize_decline_data(forest_mask.shape,forest_mask.coords)
             
-            tile.add_path("state_decline", tile.data_directory / "DataDecline" / "state_decline.tif")
-            tile.add_path("first_date_decline", tile.data_directory / "DataDecline" / "first_date_decline.tif")
-            tile.add_path("count_decline", tile.data_directory / "DataDecline" / "count_decline.tif")
+
         
         #DECLINE DETECTION
         for date_index, date in enumerate(tile.dates):
@@ -73,11 +75,12 @@ def decline_detection(
                 masked_vi["mask"] = masked_vi["mask"] | (date_index <= last_training_date) #Masking pixels where date was used for training
 
                 predicted_vi=prediction_vegetation_index(coeff_model,date)
-                anomalies = detection_anomalies(masked_vi, predicted_vi, threshold_anomaly)
+                anomalies = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly)
                                 
                 decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
                                
                 write_tif(anomalies, forest_mask.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
+        
         
         #Writing decline data to rasters        
         write_tif(decline_data["state"], forest_mask.attrs,tile.paths["state_decline"],nodata=0)

@@ -36,7 +36,7 @@ def prediction_vegetation_index(coeff_model,date):
     return predicted_vi
 
 
-def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly):
+def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly):
     """
     Detects anomalies by comparison between predicted and calculated vegetation index
     
@@ -56,7 +56,7 @@ def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly):
 
 
     """
-    diff_vi = masked_vi["vegetation_index"]-predicted_vi
+    diff_vi = vegetation_index-predicted_vi
     anomalies = diff_vi > threshold_anomaly
             
     return anomalies
