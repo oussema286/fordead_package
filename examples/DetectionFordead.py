@@ -37,13 +37,12 @@ def decline_detection(
     tile = tile.import_info()
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly})
 
-    # if Overwrite:
-    #     tile.delete_dir("AnomaliesDir")
-    #     tile.delete_dir("state_decline")
+    if Overwrite:
+        tile.delete_dirs("AnomaliesDir","state_decline") #Deleting previous detection results if they exist
     
-    tile.add_dirpath("AnomaliesDir", tile.data_directory / "DataAnomalies")
-    tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
-    tile.search_new_dates()
+    tile.add_dirpath("AnomaliesDir", tile.data_directory / "DataAnomalies") #Choose anomalies directory
+    tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies
+    tile.search_new_dates() #Get paths and dates to all vegetation index dates
     
     #Verify if there are new SENTINEL dates
     NbNewDates=np.sum(tile.dates>tile.parameters["min_last_date_training"]) - len(tile.paths["Anomalies"])

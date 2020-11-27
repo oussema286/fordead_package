@@ -45,7 +45,7 @@ def train_model(
     path_forestmask = None
     ):
 
-    data_directory="G:/Deperissement/Out/PackageVersion/ZoneTest"
+    # data_directory="G:/Deperissement/Out/PackageVersion/ZoneTest"
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     
@@ -54,8 +54,9 @@ def train_model(
     if path_forestmask == None : path_forestmask = tile.paths["ForestMask"] #Paths are imported from previous TileInfo if not given as arguments
     
     tile.add_parameters({"threshold_outliers" : threshold_outliers, "remove_outliers" : remove_outliers, "min_last_date_training" : min_last_date_training, "date_lim_training" : date_lim_training})
-    # tile.delete_results()
-    
+   
+    tile.delete_dirs("coeff_model","AnomaliesDir","state_decline") #Deleting previous training and detection results if they exist
+   
     tile.getdict_paths(path_vi = path_vi,
                         path_masks = path_masks,
                         path_forestmask = path_forestmask)

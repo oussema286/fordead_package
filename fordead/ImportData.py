@@ -95,10 +95,7 @@ class TileInfo:
         
         # print(globals())
 
-            
-    # def add_parameters(self,dict_param):
-    #     if hasattr(self, 'property'):
-    #         a.property
+
     def import_info(self, path= None):
         """ Imports TileInfo object in the data_directory, or the one at path if the parameter is given"""
         
@@ -117,19 +114,8 @@ class TileInfo:
         with open(path, 'wb') as f:
             pickle.dump(self, f)
     
-    def delete_results(self):
-        # Deletes previous results
-        if (self.data_directory / "TileInfo").exists():
-            prev_tuile = self.import_info()
-                
-            for key_path in prev_tuile.paths:
-                if not(key_path in ["VegetationIndex","Masks","ForestMask", "used_area_mask"]):
-                    if isinstance(prev_tuile.paths[key_path],type(self.data_directory)): #Check if value is a path
-                        prev_tuile.delete_dir(key_path)
-            print("Previous results detected and deleted")
-            self.save_info()
-            
-    def delete_dir(self,key_path):
+
+    def delete_dirs(self,*key_paths):
         """
         Using keys to paths (usually added through add_path or add_dirpath), deletes directory containing the file, or the directory if the path already links to a directory. 
 
@@ -143,11 +129,12 @@ class TileInfo:
         None.
 
         """
-        if key_path in self.paths:
-            if self.paths[key_path].is_dir():
-                shutil.rmtree(self.paths[key_path])
-            elif self.paths[key_path].is_file():
-                shutil.rmtree(self.paths[key_path].parent)
+        for key_path in key_paths:
+            if key_path in self.paths:
+                if self.paths[key_path].is_dir():
+                    shutil.rmtree(self.paths[key_path])
+                elif self.paths[key_path].is_file():
+                    shutil.rmtree(self.paths[key_path].parent)
             
     def getdict_datepaths(self, key, path_dir):
         """
@@ -292,6 +279,30 @@ def initialize_decline_data(shape,coords):
                          "count" : xr.DataArray(count_decline, coords=coords)})
     
     return decline_data
+
+
+def import_soil_data(dict_paths):
+    state_soil = xr.open_rasterio(dict_paths["state_soil"],chunks = 1000).astype(bool)
+    first_date_soil = xr.open_rasterio(dict_paths["first_date_soil"],chunks = 1000)
+    count_soil = xr.open_rasterio(dict_paths["count_soil"],chunks = 1000)
+    
+    soil_data=xr.Dataset({"state": state_soil,
+                     "first_date": first_date_soil,
+                     "count" : count_soil})
+    soil_data=soil_data.sel(band=1)
+
+    return soil_data
+
+def initialize_soil_data(shape,coords):
+    state_soil=np.zeros(shape,dtype=bool)
+    first_date_soil=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
+    count_soil= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
+    
+    soil_data=xr.Dataset({"state": xr.DataArray(state_soil, coords=coords),
+                         "first_date": xr.DataArray(first_date_soil, coords=coords),
+                         "count" : xr.DataArray(count_soil, coords=coords)})
+    
+    return soil_data
 
 def import_masked_vi(dict_paths, date):
     vegetation_index = xr.open_rasterio(dict_paths["VegetationIndex"][date],chunks = 1000)

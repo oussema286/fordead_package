@@ -25,8 +25,8 @@ from path import Path
 #   IMPORT LIBRAIRIES PERSO
 # =============================================================================
 
-from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack
-from fordead.masking_vi import get_forest_mask, import_soil_data, initialize_soil_data, get_pre_masks, detect_soil, detect_clouds
+from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data
+from fordead.masking_vi import get_forest_mask, get_pre_masks, detect_soil, detect_clouds, compute_vegetation_index
 from fordead.writing_data import write_tif
 
 #%% =============================================================================
@@ -116,7 +116,7 @@ def ComputeMaskedVI(
             clouds = detect_clouds(stack_bands, outside_swath, soil_data, premask_soil)
             
             # Compute vegetation index
-            vegetation_index = stack_bands.sel(band = "B11")/(stack_bands.sel(band = "B8A")+((stack_bands.sel(band = "B12")-stack_bands.sel(band = "B8A"))/(2185.7-864))*(1610.4-864))
+            vegetation_index = compute_vegetation_index(stack_bands, "CRSWIR")
             
             write_tif(vegetation_index, forest_mask.attrs,tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
             write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)

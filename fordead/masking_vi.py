@@ -9,6 +9,7 @@ from fordead.writing_data import write_tif
 import xarray as xr
 import numpy as np
 from scipy import ndimage
+import re
 
 from path import Path
 import json
@@ -104,30 +105,6 @@ def rasterize_polygons(polygons, example_raster):
     return forest_mask
 
 
-def import_soil_data(dict_paths):
-    state_soil = xr.open_rasterio(dict_paths["state_soil"],chunks = 1000).astype(bool)
-    first_date_soil = xr.open_rasterio(dict_paths["first_date_soil"],chunks = 1000)
-    count_soil = xr.open_rasterio(dict_paths["count_soil"],chunks = 1000)
-    
-    soil_data=xr.Dataset({"state": state_soil,
-                     "first_date": first_date_soil,
-                     "count" : count_soil})
-    soil_data=soil_data.sel(band=1)
-
-    return soil_data
-
-def initialize_soil_data(shape,coords):
-    state_soil=np.zeros(shape,dtype=bool)
-    first_date_soil=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
-    count_soil= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
-    
-    soil_data=xr.Dataset({"state": xr.DataArray(state_soil, coords=coords),
-                         "first_date": xr.DataArray(first_date_soil, coords=coords),
-                         "count" : xr.DataArray(count_soil, coords=coords)})
-    
-    return soil_data
-
-
 def get_pre_masks(stack_bands):   
     soil_anomaly = (stack_bands.sel(band = "B11") > 1250) & (stack_bands.sel(band = "B2")<600) & (stack_bands.sel(band = "B3")+stack_bands.sel(band = "B4") > 800)
     shadows = (stack_bands==0).any(dim = "band")
@@ -158,3 +135,15 @@ def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
     clouds = cond4 & (cond3 | (cond1 & cond2))
     clouds[:,:] = ndimage.binary_dilation(clouds,iterations=3,structure=ndimage.generate_binary_structure(2, 1)) # 3 pixels dilation of cloud mask
     return clouds
+
+
+
+def compute_vegetation_index(stack_bands, vegetation_index = "CRSWIR"):
+    dict_vegetation_index = {"CRSWIR" : "B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))"}
+    
+    simple_formula = dict_vegetation_index[vegetation_index]
+    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"
+    p = re.compile(match_string)
+    code_formula = p.sub(r'stack_bands.sel(band= "B\1")', simple_formula)
+    
+    return eval(code_formula)
