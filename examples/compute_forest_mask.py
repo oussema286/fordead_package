@@ -65,13 +65,14 @@ def compute_forest_mask(data_directory,
                                         maxy=float(reprojected_corner1.y),
                                         )
             reprojected_clipped_OSO = clipped_OSO.rio.reproject(example_raster.crs)
-            forest_mask = reprojected_clipped_OSO.isin(list_code_oso)
-            forest_mask.attrs = example_raster.attrs
+            forest_mask_data = reprojected_clipped_OSO.isin(list_code_oso)
+            forest_mask = example_raster
+            forest_mask.data = forest_mask_data
+            # forest_mask.attrs = example_raster.attrs
             forest_mask=forest_mask.sel(band=1)
             
         elif forest_mask_source==None:
             example_raster = xr.open_rasterio(path_example_raster)
-            example_raster.squeeze
             example_raster=example_raster.sel(band=1)
             example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
             example_raster[:,:]=1

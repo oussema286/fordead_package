@@ -53,7 +53,7 @@ def parse_command_line():
     return dictArgs
 
 
-def ComputeMaskedVI(
+def compute_masked_vegetationindex(
     # Tuiles= ["ZoneTestLarge"],
     # InterpolationOrder=0,
     # CorrectCRSWIR=False,
@@ -120,7 +120,7 @@ def ComputeMaskedVI(
             vegetation_index = compute_vegetation_index(stack_bands, vi)
             
             write_tif(vegetation_index, forest_mask.attrs,tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
-            write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil | forest_mask, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
+            write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil | ~forest_mask, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
             
             date_index=date_index+1
     
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     dictArgs=parse_command_line()
     # print(dictArgs)
     start_time_debut = time.time()
-    ComputeMaskedVI(**dictArgs)
+    compute_masked_vegetationindex(**dictArgs)
     print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
 
 
