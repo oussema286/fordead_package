@@ -18,38 +18,38 @@ import geopandas as gp
 import pandas as pd
 import rasterio
 
-def get_forest_mask(forest_mask_path,
-                    example_path = None, dep_path = None, bdforet_dirpath = None):
-    """
-    If a forest mask already exists at forest_mask_path, imports it.
-    Else optional arguments need to be provided for the forest mask to be computed and written.
+# def get_forest_mask(forest_mask_path,
+#                     example_path = None, dep_path = None, bdforet_dirpath = None):
+#     """
+#     If a forest mask already exists at forest_mask_path, imports it.
+#     Else optional arguments need to be provided for the forest mask to be computed and written.
 
-    Parameters
-    ----------
-    forest_mask_path : Path
-        Path of the forest mask if it exists already, or path where it will be written
-    example_path : Path, optional
-        Path to a raster whose spatial attributes are used to compute the forest mask. Could be the path to a SENTINEL 10m band.
-    dep_path : Path, optional
-        Path to a shapefile containing french departements data, must contain variable code_insee 
-    bdforet_dirpath : Path, optional
-        Path of the directory containg a subdirectory for each departement (ex : BD_Foret_V2_Dep076_2015)
-        Relevant bd foret data is selected base on subdirectories name. Other nomenclatures might cause bugs.
+#     Parameters
+#     ----------
+#     forest_mask_path : Path
+#         Path of the forest mask if it exists already, or path where it will be written
+#     example_path : Path, optional
+#         Path to a raster whose spatial attributes are used to compute the forest mask. Could be the path to a SENTINEL 10m band.
+#     dep_path : Path, optional
+#         Path to a shapefile containing french departements data, must contain variable code_insee 
+#     bdforet_dirpath : Path, optional
+#         Path of the directory containg a subdirectory for each departement (ex : BD_Foret_V2_Dep076_2015)
+#         Relevant bd foret data is selected base on subdirectories name. Other nomenclatures might cause bugs.
 
-    Returns
-    -------
-    forest_mask : Array (x,y) (bool)
-        Array containing True if 
+#     Returns
+#     -------
+#     forest_mask : Array (x,y) (bool)
+#         Array containing True if 
 
-    """
-    if forest_mask_path.exists():
-        print("Forest mask imported")
-        forest_mask = import_forest_mask(forest_mask_path)
-    else:
-        print("Forest mask rasterized from BD Foret")
-        forest_mask = rasterize_bdforet(example_path, dep_path, bdforet_dirpath)
-        write_tif(forest_mask, forest_mask.attrs,nodata = 0, path = forest_mask_path)
-    return forest_mask
+#     """
+#     if forest_mask_path.exists():
+#         print("Forest mask imported")
+#         forest_mask = import_forest_mask(forest_mask_path)
+#     else:
+#         print("Forest mask rasterized from BD Foret")
+#         forest_mask = rasterize_bdforet(example_path, dep_path, bdforet_dirpath)
+#         write_tif(forest_mask, forest_mask.attrs,nodata = 0, path = forest_mask_path)
+#     return forest_mask
         
 
 def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):

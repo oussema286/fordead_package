@@ -183,7 +183,7 @@ class TileInfo:
         """
         Adds attribute 'parameters' to TileInfo object which contains dictionnary of parameters and their values.
         If attribute parameters already exists, checks for conflicts then updates parameters
-        In case of conflicts, the parameter 'Overwrite' is set to True and it is advised to user to remove previous results.
+        In case of conflicts, meaning if parameter was unknown or changed, the parameter 'Overwrite' is set to True and it is advised to remove previous results.
 
         Parameters
         ----------
@@ -201,6 +201,8 @@ class TileInfo:
                 if parameter in self.parameters:
                     if self.parameters[parameter]!=parameters[parameter]: #If parameter was changed
                         self.parameters["Overwrite"]=True
+                else:#If unknown parameters
+                    self.parameters["Overwrite"]=True
             self.parameters.update(parameters)
         
     def add_dirpath(self, key, path):

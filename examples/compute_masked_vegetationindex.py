@@ -26,7 +26,7 @@ from path import Path
 # =============================================================================
 
 from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data
-from fordead.masking_vi import get_forest_mask, get_pre_masks, detect_soil, detect_clouds, compute_vegetation_index
+from fordead.masking_vi import import_forest_mask, get_pre_masks, detect_soil, detect_clouds, compute_vegetation_index
 from fordead.writing_data import write_tif
 
 #%% =============================================================================
@@ -42,10 +42,11 @@ def parse_command_line():
     parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     # parser.add_argument("-s", "--InterpolationOrder", dest = "InterpolationOrder",type = int,default = 0, help ="interpolation order : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique")
     # parser.add_argument("-c", "--CorrectCRSWIR", dest = "CorrectCRSWIR", action="store_true",default = False, help = "Si activé, execute la correction du CRSWIR à partir")
-    # parser.add_argument("-f", "--forest_mask_source", dest = "forestmask_source",type = str,default = "BDFORET", help = "Source of the forest mask")
     parser.add_argument("-d", "--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
     parser.add_argument("-m", "--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
     parser.add_argument("-v", "--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
+    parser.add_argument("-f", "--path_forest_mask", dest = "path_forest_mask",type = str,default = None, help = "Path to the forest mask, if None, there must be a Tileinfo object containing the path")
+
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -62,37 +63,32 @@ def ComputeMaskedVI(
     # forest_mask_source = "LastComputed",
     sentinel_source = "THEIA",
     apply_source_mask = False,
-    vi = "CRSWIR"
+    vi = "CRSWIR",
+    path_forest_mask=None
     ):
     #############################
-    
-    input_directory=Path(input_directory)
-    
+        
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi})
-    if tile.parameters["Overwrite"] : tile.delete_dirs("VegetationIndexDir", "MaskDir", "ForestMask","coeff_model", "AnomaliesDir","state_decline")
+    if tile.parameters["Overwrite"] : tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_decline")
     
-    tile.getdict_datepaths("Sentinel",input_directory) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+    tile.getdict_datepaths("Sentinel",Path(input_directory)) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
     tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
     
     #Adding directories for ouput
     tile.add_dirpath("VegetationIndexDir", tile.data_directory / "VegetationIndex")
     tile.add_dirpath("MaskDir", tile.data_directory / "Mask")
-    tile.add_path("ForestMask", tile.data_directory / "ForestMask" / "Forest_Mask.tif")
+    if path_forest_mask==None : path_forest_mask = tile.paths["ForestMask"]
     
-    #Compute forest mask
-    forest_mask = get_forest_mask(tile.paths["ForestMask"],
-                                  example_path = tile.paths["Sentinel"][list(tile.paths["Sentinel"].keys())[0]]["B2"],
-                                  dep_path = "G:/Deperissement/Data/Vecteurs/Departements/departements-20140306-100m.shp",
-                                  bdforet_dirpath = "G:/Deperissement/Data/Vecteurs/BDFORET")
-    
+    forest_mask = import_forest_mask(tile.paths["ForestMask"])
+
     tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
     tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
     tile.add_path("count_soil", tile.data_directory / "DataSoil" / "count_soil.tif")
         
     #Computing cloudiness percentage for each date
-    cloudiness = get_cloudiness(input_directory / "cloudiness", tile.paths["Sentinel"], sentinel_source)
+    cloudiness = get_cloudiness(Path(input_directory) / "cloudiness", tile.paths["Sentinel"], sentinel_source)
 
     #Import or initialize data for the soil mask
     if tile.paths["state_soil"].exists():
