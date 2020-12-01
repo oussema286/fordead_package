@@ -120,7 +120,7 @@ def ComputeMaskedVI(
             vegetation_index = compute_vegetation_index(stack_bands, vi)
             
             write_tif(vegetation_index, forest_mask.attrs,tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
-            write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
+            write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil | forest_mask, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
             
             date_index=date_index+1
     
