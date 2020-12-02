@@ -30,7 +30,6 @@ def decline_detection(
     data_directory,
     threshold_anomaly=0.16,
     # ExportAsShapefile = False,
-    Overwrite=True
     ):
     
     tile = TileInfo(data_directory)
