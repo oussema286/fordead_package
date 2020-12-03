@@ -27,7 +27,7 @@ from path import Path
 # =============================================================================
 
 from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data
-from fordead.masking_vi import import_forest_mask, get_pre_masks, detect_soil, detect_clouds, compute_vegetation_index
+from fordead.masking_vi import import_forest_mask, compute_masks, compute_vegetation_index
 from fordead.writing_data import write_tif
 
 #%% =============================================================================
@@ -96,8 +96,6 @@ def compute_masked_vegetationindex(
         soil_data = import_soil_data(tile.paths)
     else:
         soil_data = initialize_soil_data(forest_mask.shape,forest_mask.coords)
-        
-
 
     #get already computed dates
     tile.getdict_datepaths("VegetationIndex",tile.paths["VegetationIndexDir"])
@@ -108,20 +106,14 @@ def compute_masked_vegetationindex(
             # Resample and import SENTINEL data
             stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"])
             
-            # Compute pre-masks
-            premask_soil, shadows, outside_swath, invalid = get_pre_masks(stack_bands)
-            
-            # Compute soil
-            soil_data = detect_soil(soil_data, premask_soil, invalid, date_index)
-                        
-            # Compute clouds
-            clouds = detect_clouds(stack_bands, outside_swath, soil_data, premask_soil)
+            # Compute masks
+            mask = compute_masks(stack_bands, soil_data, date_index)
             
             # Compute vegetation index
             vegetation_index = compute_vegetation_index(stack_bands, vi)
             
             write_tif(vegetation_index, forest_mask.attrs,tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
-            write_tif(shadows | clouds | outside_swath | soil_data['state'] | premask_soil | ~forest_mask, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
+            write_tif(mask | ~forest_mask, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
             
             date_index=date_index+1
     

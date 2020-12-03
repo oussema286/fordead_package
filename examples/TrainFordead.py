@@ -19,7 +19,7 @@ def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les indices de végétations et les masques")
-    parser.add_argument("-s", "--threshold_outliers", dest = "threshold_outliers",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
+    parser.add_argument("-s", "--threshold_outliers", dest = "threshold_outliers",type = float,default = 0.161, help = "Seuil minimum pour détection d'anomalies")
     parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
     parser.add_argument("-l", "--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
     parser.add_argument("-g", "--date_lim_training", dest = "date_lim_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
@@ -72,7 +72,7 @@ def train_model(
         forest_mask = import_forest_mask(tile.paths["ForestMask"])
         
         # Import des index de végétations et des masques
-        stack_vi, stack_masks = import_stackedmaskedVI(tile, date_lim_learning=date_lim_training)
+        stack_vi, stack_masks = import_stackedmaskedVI(tile, date_lim_training=date_lim_training)
         
         last_training_date=get_last_training_date(stack_masks,
                                               min_last_date_training = min_last_date_training,

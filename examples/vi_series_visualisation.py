@@ -14,9 +14,8 @@ import random
 # import pickle
 
 import xarray as xr
-from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_last_training_date, import_decline_data
+from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_last_training_date, import_decline_data, import_soil_data
 from fordead.ModelVegetationIndex import compute_HarmonicTerms
-from fordead.masking_vi import import_soil_data
 # PixelsToChoose = np.where(np.logical_and(np.logical_and(MaskForet==1,stackDetected[-1,:,:]),stackSolNu[-1,:,:]))
 # PixelID=random.randint(0,PixelsToChoose[0].shape[0])
 
@@ -26,7 +25,7 @@ from fordead.masking_vi import import_soil_data
 # =============================================================================
 #  IMPORT DES DONNEES CALCULEES
 # =============================================================================
-        
+
 # for DateIndex,date in enumerate(Dates):
 #     with rasterio.open(os.getcwd()+"/Out/Results/"+"V"+Version+"/Out/"+tuile+"/Atteint_"+date+".tif") as Atteint:
 #         if DateIndex==0:
@@ -37,9 +36,11 @@ from fordead.masking_vi import import_soil_data
 #     MaskForet = BDFORET.read(1).astype("bool")
 
 
-data_directory = "G:/Deperissement/Out/PackageVersion/ZoneTest"
+data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest"
 tile = TileInfo(data_directory)
 tile = tile.import_info()
+
+# tile.paths
 
 stack_vi, stack_masks = import_stackedmaskedVI(tile)
 # masked_vi=xr.Dataset({"vegetation_index": stack_vi,
@@ -80,7 +81,7 @@ X=PixelsToChoose[0][PixelID]
 Y=PixelsToChoose[1][PixelID]
 # print(X)
 # print(Y)
-while X!=0 and Y!=0:
+while X!=0 or Y!=0:
     
     Y=input("X ? ")
     if Y=="":
@@ -103,6 +104,8 @@ while X!=0 and Y!=0:
     
     plt.xticks(rotation=30)
     
+    # print(soil_data["state"][X,Y])
+    
     stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
 
     stack_vi = stack_vi.assign_coords(training_date=("Time", [index <= int(last_training_date[X,Y]) for index in range(stack_vi.sizes["Time"])]))
@@ -111,7 +114,6 @@ while X!=0 and Y!=0:
     anomalies_time = anomalies.Time.where(anomalies[:,X,Y],drop=True).astype("datetime64").data.compute()
     stack_vi = stack_vi.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
     stack_vi = stack_vi.assign_coords(mask = ("Time", stack_masks[:,X,Y]))
-    
     
     stack_vi[:,X,Y].where(stack_vi.training_date & ~stack_vi.mask,drop=True).plot.line("bo", label='Apprentissage')
     if (~stack_vi.training_date & ~stack_vi.Anomaly & ~stack_vi.mask).any() : stack_vi[:,X,Y].where(~stack_vi.training_date & ~stack_vi.Anomaly,drop=True).plot.line("o",color = '#1fca3b', label='Dates sans anomalies') 

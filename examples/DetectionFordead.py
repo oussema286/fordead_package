@@ -61,8 +61,6 @@ def decline_detection(
             decline_data = import_decline_data(tile.paths)
         else:
             decline_data = initialize_decline_data(forest_mask.shape,forest_mask.coords)
-            
-
         
         #DECLINE DETECTION
         for date_index, date in enumerate(tile.dates):

@@ -106,9 +106,13 @@ def rasterize_polygons(polygons, example_raster):
 
 
 def get_pre_masks(stack_bands):   
-    soil_anomaly = (stack_bands.sel(band = "B11") > 1250) & (stack_bands.sel(band = "B2")<600) & (stack_bands.sel(band = "B3")+stack_bands.sel(band = "B4") > 800)
+    
+    # soil_anomaly = (stack_bands.sel(band = "B11") > 1250) & (stack_bands.sel(band = "B2")<600) & (stack_bands.sel(band = "B3")+stack_bands.sel(band = "B4") > 800)
+    soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & ((B3 + B4) > 800)")
+    # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B4 + B2 - B3)/(B4 + B2 + B3)") #Bare soil index
+
     shadows = (stack_bands==0).any(dim = "band")
-    outside_swath = stack_bands.sel(band = "B12")<0 
+    outside_swath = stack_bands.sel(band = "B12")<0
     
     invalid = shadows | outside_swath | (stack_bands.sel(band = "B2") >= 600)
     
@@ -126,25 +130,44 @@ def detect_soil(soil_data, premask_soil, invalid, date_index):
 
 
 def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
-    NG = stack_bands.sel(band = "B3")/(stack_bands.sel(band = "B8A")+stack_bands.sel(band = "B4")+stack_bands.sel(band = "B3"))
+    # NG = stack_bands.sel(band = "B3")/(stack_bands.sel(band = "B8A")+stack_bands.sel(band = "B4")+stack_bands.sel(band = "B3"))
+    NG = compute_vegetation_index(stack_bands, formula = "B3/(B8A+B4+B3)")
     cond1 = NG > 0.15
     cond2 = stack_bands.sel(band = "B2") > 400
     cond3 = stack_bands.sel(band = "B2") > 700
     cond4 =  ~(soil_data["state"] | premask_soil) #Not detected as soil
     
-    clouds = cond4 & (cond3 | (cond1 & cond2))
+    clouds = cond4 & (cond3 | (cond1 & cond2))    
     clouds[:,:] = ndimage.binary_dilation(clouds,iterations=3,structure=ndimage.generate_binary_structure(2, 1)) # 3 pixels dilation of cloud mask
     return clouds
 
 
 
-def compute_vegetation_index(stack_bands, vegetation_index = "CRSWIR"):
-    dict_vegetation_index = {"CRSWIR" : "B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))",
-                             "NDVI" : "(B8−B4)/(B8+B4)"}
+def compute_masks(stack_bands, soil_data, date_index):
     
-    simple_formula = dict_vegetation_index[vegetation_index]
-    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"
+    premask_soil, shadows, outside_swath, invalid = get_pre_masks(stack_bands)
+    
+    # Compute soil
+    soil_data = detect_soil(soil_data, premask_soil, invalid, date_index)
+        
+    # Compute clouds
+    clouds = detect_clouds(stack_bands, outside_swath, soil_data, premask_soil)
+    
+    #Combine all masks
+    mask = shadows | clouds | outside_swath | soil_data['state'] | premask_soil
+    
+    return mask
+
+def compute_vegetation_index(stack_bands, vegetation_index = "CRSWIR", formula = None):
+    
+    if formula == None:
+        dict_vegetation_index = {"CRSWIR" : "B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))",
+                                 "NDVI" : "(B8−B4)/(B8+B4)"}
+        formula = dict_vegetation_index[vegetation_index]
+
+    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})" # B + un chiffre + une lettre OU B + deux chiffres OU B + un chiffre
     p = re.compile(match_string)
-    code_formula = p.sub(r'stack_bands.sel(band= "B\1")', simple_formula)
+    code_formula = p.sub(r'stack_bands.sel(band= "B\1")', formula)
     
     return eval(code_formula)
+
