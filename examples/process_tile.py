@@ -16,9 +16,10 @@ import argparse
 import time
 import datetime
 
-# main_directory= "/mnt/fordead/Out"
+# main_directory=  "/mnt/fordead/Out"
 
-# "G:/Deperissement/Out/PackageVersion"
+# main_directory=  "G:/Deperissement/Out/PackageVersion"
+
 # "G:/Deperissement/Data/SENTINEL/T31UFQ/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
 # "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp"
 # "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET"
@@ -47,6 +48,7 @@ def process_tiles(main_directory,
         file.write("Tuile : " + tuile + "\n") ; start_time = time.time()
         start_time = time.time()
         
+        print("develop mode works")
         path_example_raster = "/mnt/fordead/Data/Rasters/"+tuile+"/BDForet_"+tuile+".tif"
         dep_path = "/mnt/fordead/Data/Vecteurs/Departements/departements-20140306-100m.shp"
         bdforet_dirpath = "/mnt/fordead/Data/Vecteurs/BDFORET"
@@ -72,7 +74,7 @@ def process_tiles(main_directory,
 # =====================================================================================================================
         
         print("Training")
-        train_model(data_directory=main_directory / tuile,  threshold_outliers = 0.161)
+        train_model(data_directory=main_directory / tuile,  threshold_outliers = 0.16)
         print(str(time.time() - start_time))
         file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         
