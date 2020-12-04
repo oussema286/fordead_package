@@ -68,7 +68,8 @@ def compute_masked_vegetationindex(
     path_forest_mask=None
     ):
     #############################
-        
+    
+    
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi})
@@ -101,21 +102,18 @@ def compute_masked_vegetationindex(
     tile.getdict_datepaths("VegetationIndex",tile.paths["VegetationIndexDir"])
     date_index=0
     for date in tile.paths["Sentinel"]:
-        if cloudiness.perc_cloud[date] <= lim_perc_cloud and not(date in tile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
-            print(date)
-            # Resample and import SENTINEL data
-            stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"])
-            
-            # Compute masks
-            mask = compute_masks(stack_bands, soil_data, date_index)
-            
-            # Compute vegetation index
-            vegetation_index = compute_vegetation_index(stack_bands, vi)
-            
-            write_tif(vegetation_index, forest_mask.attrs,tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
-            write_tif(mask | ~forest_mask, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
-            
-            date_index=date_index+1
+        if date != "2017-07-07":
+            if cloudiness.perc_cloud[date] <= lim_perc_cloud and not(date in tile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
+                print(date)
+                # Resample and import SENTINEL data
+                stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"])
+                # Compute masks
+                mask = compute_masks(stack_bands, soil_data, date_index)
+                # Compute vegetation index
+                vegetation_index = compute_vegetation_index(stack_bands, vi)
+                write_tif(vegetation_index, forest_mask.attrs,tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
+                write_tif(mask | ~forest_mask, forest_mask.attrs, tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
+                date_index=date_index+1
     
     print(str(date_index) + " new dates")
   

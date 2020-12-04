@@ -7,8 +7,7 @@ Created on Tue Nov  3 16:21:35 2020
 import xarray as xr
 import numpy as np
 from scipy.linalg import lstsq
-
-
+import dask.array as da
 
 def get_last_training_date(stack_masks,min_last_date_training,nb_min_date=10):
     """
@@ -31,7 +30,8 @@ def get_last_training_date(stack_masks,min_last_date_training,nb_min_date=10):
     """
     
     min_date_index=int(sum(stack_masks.Time<min_last_date_training))-1
-    indexes = xr.DataArray(np.ones(stack_masks.shape,dtype=np.uint16), stack_masks.coords) * xr.DataArray(range(stack_masks.sizes["Time"]), coords={"Time" : stack_masks.Time},dims=["Time"])   
+    
+    indexes = xr.DataArray(da.ones(stack_masks.shape,dtype=np.uint16, chunks=stack_masks.chunks), stack_masks.coords) * xr.DataArray(range(stack_masks.sizes["Time"]), coords={"Time" : stack_masks.Time},dims=["Time"])   
     cumsum=(~stack_masks).cumsum(dim="Time",dtype=np.uint16)
     IndexLastDate = ((indexes >= min_date_index) & (cumsum >= nb_min_date)).argmax(dim="Time").astype(np.uint16)
     
@@ -122,7 +122,8 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
     
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
 
-    coeff_model=xr.apply_ufunc(model_pixel_vi, stack_vi,stack_masks,used_area_mask,last_training_date,
+    coeff_model=xr.apply_ufunc(model_pixel_vi, 
+                               stack_vi,stack_masks,used_area_mask,last_training_date,
                                   kwargs={"HarmonicTerms" : HarmonicTerms, "threshold_outliers" : threshold_outliers, "remove_outliers" : remove_outliers},
                                   input_core_dims=[["Time"],["Time"],[],[]],vectorize=True,dask="parallelized",
                                   output_dtypes=[float], output_core_dims=[['coeff']],

@@ -138,7 +138,7 @@ def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
     cond4 =  ~(soil_data["state"] | premask_soil) #Not detected as soil
     
     clouds = cond4 & (cond3 | (cond1 & cond2))    
-    clouds[:,:] = ndimage.binary_dilation(clouds,iterations=3,structure=ndimage.generate_binary_structure(2, 1)) # 3 pixels dilation of cloud mask
+    # clouds[:,:] = ndimage.binary_dilation(clouds,iterations=3,structure=ndimage.generate_binary_structure(2, 1)) # 3 pixels dilation of cloud mask
     return clouds
 
 

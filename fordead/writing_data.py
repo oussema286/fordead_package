@@ -23,5 +23,5 @@ def write_tif(data_array, attributes, path, nodata = None):
         data_array.attrs["scales"]=data_array.attrs["scales"]*data_array.shape[0]
         data_array.attrs["offsets"]=data_array.attrs["offsets"]*data_array.shape[0]
 
-    data_array.rio.to_raster(path, **args)
+    data_array.rio.to_raster(path,windowed = True, **args)
 
