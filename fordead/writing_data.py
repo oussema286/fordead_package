@@ -19,7 +19,7 @@ def write_tif(data_array, attributes, path, nodata = None):
         data_array.attrs["nodata"]=nodata
         
     if len(data_array.dims)==3: #If data_array has several bands
-        data_array=data_array.transpose(data_array.dims[2], 'y', 'x')
+        # data_array=data_array.transpose(data_array.dims[2], 'y', 'x')
         data_array.attrs["scales"]=data_array.attrs["scales"]*data_array.shape[0]
         data_array.attrs["offsets"]=data_array.attrs["offsets"]*data_array.shape[0]
 

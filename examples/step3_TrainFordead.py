@@ -82,9 +82,11 @@ def train_model(
         used_area_mask = forest_mask.where(last_training_date!=0,False)
     
     # Modéliser le CRSWIR tout en retirant outliers
-        coeff_model = model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
-                               threshold_outliers=threshold_outliers, remove_outliers=remove_outliers)
+        # coeff_model = model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
+        #                        threshold_outliers=threshold_outliers, remove_outliers=remove_outliers)
         
+        coeff_model = model_vi(stack_vi, stack_masks)
+
         #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, la zone utilisable
         write_tif(last_training_date,stack_vi.attrs, tile.paths["last_training_date"],nodata=0)
         write_tif(coeff_model,stack_vi.attrs, tile.paths["coeff_model"])

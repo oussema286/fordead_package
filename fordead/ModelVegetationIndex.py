@@ -69,11 +69,12 @@ def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date,
         Returns the 5 coefficients of the model.
 
     """
+    
     if bool_usedarea:
         valid_vi = vi_array[:index_last_training_date+1][~mask_array[:index_last_training_date+1]]
         Valid_HarmonicTerms = HarmonicTerms[:index_last_training_date+1][~mask_array[:index_last_training_date+1]]
         p, _, _, _ = lstsq(Valid_HarmonicTerms, valid_vi,
-                           overwrite_a=True, overwrite_b = True, check_finite= False)
+                            overwrite_a=True, overwrite_b = True, check_finite= False)
         
         diff=np.abs(valid_vi-np.sum(p*Valid_HarmonicTerms,axis=1)) #Différence entre prédiction et valeur réel pour chaque date 
         
@@ -82,8 +83,7 @@ def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date,
             Inliers=diff<threshold_outliers
             Valid_HarmonicTerms=Valid_HarmonicTerms[Inliers,:]
             p, _, _, _ = lstsq(Valid_HarmonicTerms, valid_vi[Inliers],
-                           overwrite_a=True, overwrite_b = True, check_finite= False)
-
+                            overwrite_a=True, overwrite_b = True, check_finite= False)
         return p
     
     return np.array([0,0,0,0,0])
@@ -119,19 +119,64 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
 
     """
     
-    
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
 
     coeff_model=xr.apply_ufunc(model_pixel_vi, 
-                               stack_vi,stack_masks,used_area_mask,last_training_date,
+                                stack_vi,stack_masks,used_area_mask,last_training_date,
                                   kwargs={"HarmonicTerms" : HarmonicTerms, "threshold_outliers" : threshold_outliers, "remove_outliers" : remove_outliers},
                                   input_core_dims=[["Time"],["Time"],[],[]],vectorize=True,dask="parallelized",
                                   output_dtypes=[float], output_core_dims=[['coeff']],
                                   dask_gufunc_kwargs = {"output_sizes" : {"coeff" : 5}})
-    
+
     return coeff_model
 
+# def model_pixel_vi(B, M, A):
+#     """Solves least squares problem subject to missing data.
 
+#     Note: uses a broadcasted solve for speed.
+
+#     Args
+#     ----
+#     A (ndarray) : m x r matrix
+#     B (ndarray) : m x n matrix
+#     M (ndarray) : m x n binary matrix (zeros indicate missing values)
+
+#     Returns
+#     -------
+#     X (ndarray) : r x n matrix that minimizes norm(M*(AX - B))
+#     """
+    
+#     print(B[0].shape)
+#     # print(M.shape)
+#     # print(A.shape)
+    
+#     # Note: we should check A is full rank but we won't bother...
+#     shape = B[0].shape
+#     B = B[0].reshape((shape[0], -1))
+#     print(B[0].shape)
+#     M = M[0].reshape(shape[0], -1)
+#     # if B is a vector, simply drop out corresponding rows in A
+#     if B.ndim == 1 or B.shape[1] == 1:
+#         return np.linalg.lstsq(A[M], B[M])[0]
+#     out = np.empty((A.shape[1], M.shape[1]), dtype=A.dtype)
+#     out[:] = np.nan
+#     valid_index = (M.sum(axis=0) > A.shape[1])
+#     B = B[:, valid_index]
+#     M = M[:, valid_index]
+
+#     # else solve via tensor representation
+#     rhs = np.dot(A.T, M * B).T[:, :, None]  # n x r x 1 tensor
+#     T = np.matmul(A.T[None, :, :], M.T[:, :, None] * A[None, :, :])  # n x r x r tensor
+#     out[:, valid_index] = np.squeeze(np.linalg.solve(T, rhs)).T
+#     out = out.reshape([5]+list(shape[1:]))
+#     # del B, M, rhs, T
+#     return out  # transpose to get r x n
+
+# def model_vi(stack_vi, stack_masks):
+#     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
+#     res = da.blockwise(model_pixel_vi, 'kmn', stack_vi.data, 'tmn',stack_masks.data, 'tmn', new_axes={'k':5}, dtype=HarmonicTerms.dtype, A=HarmonicTerms, meta=np.ndarray(()))
+#     res = xr.DataArray(res, dims=['coeff', stack_vi.dims[1], stack_vi.dims[2]], coords=[('coeff', np.arange(5)), stack_vi.coords[stack_vi.dims[1]], stack_vi.coords[stack_vi.dims[2]]])
+#     return res
 
 # def functionToFit(DateAsNumber,p):
 #     """

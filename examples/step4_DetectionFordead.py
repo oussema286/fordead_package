@@ -78,10 +78,12 @@ def decline_detection(
                                
                 write_tif(anomalies, forest_mask.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
         
-        
+        print("Ecriture state_decline")
         #Writing decline data to rasters        
         write_tif(decline_data["state"], forest_mask.attrs,tile.paths["state_decline"],nodata=0)
+        print("Ecriture first date")
         write_tif(decline_data["first_date"], forest_mask.attrs,tile.paths["first_date_decline"],nodata=0)
+        print("Ecriture count")
         write_tif(decline_data["count"], forest_mask.attrs,tile.paths["count_decline"],nodata=0)
                 
         # print("Détection du déperissement")
