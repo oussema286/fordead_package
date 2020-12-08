@@ -17,7 +17,7 @@ import time
 def parse_command_line():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les données")
-    parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
+    parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.161, help = "Seuil minimum pour détection d'anomalies")
     # parser.add_argument("-x", "--ExportAsShapefile", dest = "ExportAsShapefile", action="store_true",default = False, help = "Si activé, exporte les résultats sous la forme de shapefiles plutôt que de rasters")
     # parser.add_argument("-o", "--Overwrite", dest = "Overwrite", action="store_false",default = True, help = "Si vrai, recommence la détection du début. Sinon, reprends de la dernière date analysée")
     dictArgs={}
@@ -78,12 +78,9 @@ def decline_detection(
                                
                 write_tif(anomalies, forest_mask.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
         
-        print("Ecriture state_decline")
         #Writing decline data to rasters        
         write_tif(decline_data["state"], forest_mask.attrs,tile.paths["state_decline"],nodata=0)
-        print("Ecriture first date")
         write_tif(decline_data["first_date"], forest_mask.attrs,tile.paths["first_date_decline"],nodata=0)
-        print("Ecriture count")
         write_tif(decline_data["count"], forest_mask.attrs,tile.paths["count_decline"],nodata=0)
                 
         # print("Détection du déperissement")
