@@ -155,6 +155,7 @@ def compute_masks(stack_bands, soil_data, date_index):
     
     #Combine all masks
     mask = shadows | clouds | outside_swath | soil_data['state'] | premask_soil
+    # mask.plot()
     
     return mask
 

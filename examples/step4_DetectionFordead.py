@@ -48,7 +48,7 @@ def decline_detection(
     #Verify if there are new SENTINEL dates
     NbNewDates=np.sum(tile.dates>tile.parameters["min_last_date_training"]) - len(tile.paths["Anomalies"])
     if  NbNewDates == 0:
-        print("Pas de nouvelles dates SENTINEL-2")
+        print("Pas de nouvelles dates")
     else:
         print(str(NbNewDates)+ " nouvelles dates")
         
@@ -67,7 +67,7 @@ def decline_detection(
             if date < tile.parameters["min_last_date_training"] or date in tile.paths["Anomalies"]: #Ignoring dates used for training and dates already used
                 continue
             else:
-                print(date)
+                # print(date)
                 masked_vi = import_masked_vi(tile.paths,date)
                 masked_vi["mask"] = masked_vi["mask"] | (date_index <= last_training_date) #Masking pixels where date was used for training
 

@@ -64,6 +64,7 @@ def train_model(
     if tile.paths["coeff_model"].exists():
         print("Model already calculated")
     else:
+        print("Computing model")
         tile.getdict_paths(path_vi = path_vi,
                             path_masks = path_masks,
                             path_forestmask = path_forestmask)
@@ -98,8 +99,8 @@ def train_model(
 if __name__ == '__main__':
     dictArgs=parse_command_line()
     print(dictArgs)
-    start_time = time.time()
+    # start_time = time.time()
     train_model(**dictArgs)
-    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
+    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
 
 
