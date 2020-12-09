@@ -130,6 +130,117 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
 
     return coeff_model
 
+def censored_lstsq(B, M, A):
+    """Solves least squares problem subject to missing data, compatible with numpy, dask and xarray.
+
+    Code inspired from http://alexhwilliams.info/itsneuronalblog/2018/02/26/censored-lstsq
+
+    Parameters
+    ----------
+    B : (N, ...) numpy.ndarray or xarray.DataArray
+    M : (N, ...) boolean numpy.ndarray or xarray.DataArray
+        Mask giving the missing data (when False the data is not used in computation).
+        It must have the same size/chunks as B.
+    A : (N, P) numpy.array
+
+
+    Returns
+    -------
+    X : (P, ...) numpy.ndarray that minimizes norm(M*(AX - B))
+
+    Notes
+    -----
+    If `B` is two-dimensional (e.g. (N, K)), the least-squares solution is calculated for each of column
+    of `B`, returning X with dimension (P, K)
+
+    If B is more than 2D, the computation is made with a reduced to 2D keeping the first dimension to its original size. Same for M.
+
+    It should be used with xr.map_blocks (only full A is needed, B et M can be processed by blocks).
+
+    It uses a broadcasted solve for speed.
+
+        Examples
+    --------
+
+    # with numpy array
+
+    # with xarray
+    import xarray as xr
+    import numpy as np
+    xysize = 1098
+    tsize = 10
+    chunksxy = 100
+    chunks3D = {'x':chunksxy, 'y':chunksxy, 'Time':10}
+    chunks2D = {'x':chunksxy, 'y':chunksxy}
+
+    B = xr.DataArray(np.arange(np.prod([tsize,xysize,xysize])).reshape((tsize,xysize,xysize)), dims=('Time', "x", "y"),
+                            coords=[('Time', np.arange(tsize)), ('x', np.arange(xysize)), ('y', np.arange(xysize))]).chunk(chunks=chunks3D)
+
+    M = xr.DataArray(np.random.rand(tsize,xysize,xysize), dims=('Time', "x", "y"),
+                            coords=[('Time', np.arange(tsize)), ('x', np.arange(xysize)), ('y', np.arange(xysize))]).chunk(chunks=chunks3D)>0.05
+
+    A = np.random.rand(tsize, 5)
+
+    # The following are 3 different ways for the same result
+    ## xarray
+    res = xr.map_blocks(censored_lstsq, B, args=[M], kwargs={'A':A}, template = template_xr)
+
+    ## dask array blockwise
+    res = da.array.blockwise(censored_lstsq, 'kmn', B.data, 'tmn', M.data, 'tmn', new_axes={'k':5}, dtype=A.dtype, A=A, meta=np.ndarray(()))
+    res = xr.DataArray(res, dims=['coeff', B.dims[1], B.dims[2]],
+                       coords=[('coeff', np.arange(A.shape[1])), B.coords[B.dims[1]],
+                               B.coords[B.dims[2]]])
+
+    ## dask map_blockss
+    res = da.array.map_blocks(censored_lstsq, B.data, M.data, A=A,
+                              chunks=((A.shape[1],), B.chunks[1], B.chunks[2]),
+                              meta=np.ndarray(()), dtype=np.float_)
+    res = xr.DataArray(res, dims=['coeff', B.dims[1], B.dims[2]],
+                       coords=[('coeff', np.arange(A.shape[1])), B.coords[B.dims[1]],
+                               B.coords[B.dims[2]]])
+
+    """
+
+    # compatibility with xarray
+    if isinstance(B, xr.DataArray):
+        if np.sum(B.shape) == 0:  # helps xr.map_blocks finding the template on its own
+            res = np.empty((A.shape[1], 0, 0))
+        else:
+            res = censored_lstsq(B.data, M.data, A)
+
+        out = xr.DataArray(res, dims=['coeff', B.dims[1], B.dims[2]],
+                           coords=[('coeff', np.arange(res.shape[0])), B.coords[B.dims[1]],
+                                   B.coords[B.dims[2]]])
+        return out
+
+    # compatibility with dask.array.blockwise
+    if isinstance(B, list):
+        B = B[0]
+        M = M[0]
+
+    # Note: we should check A is full rank but we won't bother...
+    shape = B.shape
+    B = B.reshape((shape[0], -1))
+    M = M.reshape(shape[0], -1)
+
+    # if B is a vector, simply drop out corresponding rows in A
+    if B.ndim == 1 or B.shape[1] == 1:
+        return np.linalg.lstsq(A[M], B[M])[0]
+
+    out = np.empty((A.shape[1], M.shape[1]), dtype=A.dtype)
+    out[:] = np.nan
+    valid_index = (M.sum(axis=0) > A.shape[1])
+    B = B[:, valid_index]
+    M = M[:, valid_index]
+
+    # else solve via tensor representation
+    rhs = np.dot(A.T, M * B).T[:, :, None]  # n x r x 1 tensor
+    T = np.matmul(A.T[None, :, :], M.T[:, :, None] * A[None, :, :])  # n x r x r tensor
+    out[:, valid_index] = np.squeeze(np.linalg.solve(T, rhs)).T  # transpose to get r x n
+    out = out.reshape([A.shape[1]] + list(shape[1:]))
+    # del B, M, rhs, T
+    return out
+
 # def model_pixel_vi(B, M, A):
 #     """Solves least squares problem subject to missing data.
 
