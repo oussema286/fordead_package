@@ -183,7 +183,7 @@ def censored_lstsq(B, M, A):
 
     # The following are 3 different ways for the same result
     ## xarray
-    res = xr.map_blocks(censored_lstsq, B, args=[M], kwargs={'A':A}, template = template_xr)
+    res = xr.map_blocks(censored_lstsq, B, args=[M], kwargs={'A':A})
 
     ## dask array blockwise
     res = da.array.blockwise(censored_lstsq, 'kmn', B.data, 'tmn', M.data, 'tmn', new_axes={'k':5}, dtype=A.dtype, A=A, meta=np.ndarray(()))
