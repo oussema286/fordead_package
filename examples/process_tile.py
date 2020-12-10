@@ -25,7 +25,7 @@ import datetime
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
-   
+
     parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str,default =  "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection", help = "Dossier contenant les dossiers des tuiles")
     parser.add_argument('-t', '--tuiles', nargs='+',default=["ZoneTest"],help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
 
@@ -49,7 +49,7 @@ def parse_command_line():
     parser.add_argument("--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
     parser.add_argument("--date_lim_training", dest = "date_lim_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
     
-    
+
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -60,6 +60,7 @@ def process_tiles(main_directory, tuiles, forest_mask_source,
                   input_directory, lim_perc_cloud, vi, sentinel_source, apply_source_mask, #compute_masked_vegetationindex arguments
                   remove_outliers, threshold_outliers, min_last_date_training, date_lim_training, #Train_model arguments
                   threshold_anomaly): #Decline_detection argument
+
     
     main_directory = Path(main_directory)
     logpath = main_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")

@@ -8,7 +8,7 @@ Created on Mon Nov  2 09:25:23 2020
 
 import argparse
 import numpy as np
-from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_last_training_date, TileInfo
+from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo
 from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 import time
@@ -54,7 +54,7 @@ def decline_detection(
         
         #IMPORTING DATA
         forest_mask = import_forest_mask(tile.paths["ForestMask"])
-        last_training_date = import_last_training_date(tile.paths["last_training_date"])
+        first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"])
         coeff_model = import_coeff_model(tile.paths["coeff_model"])
         
         if tile.paths["state_decline"].exists():
@@ -69,7 +69,7 @@ def decline_detection(
             else:
                 # print(date)
                 masked_vi = import_masked_vi(tile.paths,date)
-                masked_vi["mask"] = masked_vi["mask"] | (date_index <= last_training_date) #Masking pixels where date was used for training
+                masked_vi["mask"] = masked_vi["mask"] | (date_index < first_detection_date_index) #Masking pixels where date was used for training
 
                 predicted_vi=prediction_vegetation_index(coeff_model,date)
                 anomalies = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly)

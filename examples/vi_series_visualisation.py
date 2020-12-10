@@ -11,7 +11,7 @@ import matplotlib.dates as mdates
 import random
 
 import xarray as xr
-from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_last_training_date, import_decline_data, import_soil_data
+from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
 from fordead.ModelVegetationIndex import compute_HarmonicTerms
 
 # =============================================================================
@@ -24,14 +24,14 @@ tile = tile.import_info()
 
 stack_vi, stack_masks = import_stackedmaskedVI(tile)
 coeff_model = import_coeff_model(tile.paths["coeff_model"])
-last_training_date = import_last_training_date(tile.paths["last_training_date"])
+first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"])
 
 tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
 
 anomalies = import_stacked_anomalies(tile.paths["Anomalies"])
 
 used_area_mask = import_forest_mask(tile.paths["used_area_mask"])
-tile.add_dirpath("series", tile.data_directory / "SeriesTemporelles")
+tile.add_dirpath("series", tile.data_directory / "SeriesTemporellesV2")
 
 tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
 tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
@@ -82,7 +82,7 @@ while X!=-1:
     
     stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
 
-    stack_vi = stack_vi.assign_coords(training_date=("Time", [index <= int(last_training_date[X,Y]) for index in range(stack_vi.sizes["Time"])]))
+    stack_vi = stack_vi.assign_coords(training_date=("Time", [index < int(first_detection_date_index[X,Y]) for index in range(stack_vi.sizes["Time"])]))
     stack_vi = stack_vi.assign_coords(Soil = ("Time", [index >= int(soil_data["first_date"][X,Y]) if soil_data["state"][X,Y] else False for index in range(stack_vi.sizes["Time"])]))
     stack_vi = stack_vi.assign_coords(Anomaly = ("Time", [index >= int(soil_data["first_date"][X,Y]) if soil_data["state"][X,Y] else False for index in range(stack_vi.sizes["Time"])]))
     anomalies_time = anomalies.Time.where(anomalies[:,X,Y],drop=True).astype("datetime64").data.compute()
@@ -130,5 +130,6 @@ while X!=-1:
     plt.xlabel("Date",size=15)
     plt.ylabel("CRSWIR",size=15)
         
-    fig.savefig(tile.paths["series"] / ("X"+str(Y)+"_Y"+str(X)+"_"+".png"))
+
+    fig.savefig(tile.paths["series"] / ("X"+str(Y)+"_Y"+str(X)+".png"))
     plt.show()
