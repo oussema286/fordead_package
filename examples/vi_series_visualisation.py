@@ -56,7 +56,7 @@ tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
 anomalies = import_stacked_anomalies(tile.paths["Anomalies"])
 
 used_area_mask = import_forest_mask(tile.paths["used_area_mask"])
-tile.add_dirpath("series", tile.data_directory / "SeriesTemporelles")
+tile.add_dirpath("series", tile.data_directory / "SeriesTemporellesV2")
 
 tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
 tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
@@ -156,5 +156,5 @@ while X!=0 or Y!=0:
     plt.xlabel("Date",size=15)
     plt.ylabel("CRSWIR",size=15)
         
-    # fig.savefig(os.getcwd()+"/Out/Results/V"+Version+"/SeriesTemporelles/X"+str(Y)+"_Y"+str(X)+"_"+"V"+str(Version)+".png")
+    fig.savefig(tile.paths["series"] / ("X"+str(Y)+"_Y"+str(X)+".png"))
     plt.show()

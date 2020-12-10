@@ -33,9 +33,10 @@ def get_last_training_date(stack_masks,min_last_date_training,nb_min_date=10):
     
     indexes = xr.DataArray(da.ones(stack_masks.shape,dtype=np.uint16, chunks=stack_masks.chunks), stack_masks.coords) * xr.DataArray(range(stack_masks.sizes["Time"]), coords={"Time" : stack_masks.Time},dims=["Time"])   
     cumsum=(~stack_masks).cumsum(dim="Time",dtype=np.uint16)
-    IndexLastDate = ((indexes >= min_date_index) & (cumsum >= nb_min_date)).argmax(dim="Time").astype(np.uint16)
+    stack_masks = stack_masks | ((indexes > min_date_index) & (cumsum > nb_min_date))
+    last_training_date = ((indexes >= min_date_index) & (cumsum >= nb_min_date)).argmax(dim="Time").astype(np.uint16)
     
-    return IndexLastDate
+    return stack_masks, last_training_date
 
 
 def compute_HarmonicTerms(DateAsNumber):
@@ -89,10 +90,10 @@ def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date,
     return np.array([0,0,0,0,0])
 
 
-        
-def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
-              threshold_outliers=0.16,
-              remove_outliers=True):
+def model_vi(stack_vi, stack_masks):      
+# def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
+#               threshold_outliers=0.16,
+#               remove_outliers=True):
     """
     Models periodic vegetation index for each pixel.  
 
@@ -121,12 +122,14 @@ def model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
     
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
 
-    coeff_model=xr.apply_ufunc(model_pixel_vi, 
-                                stack_vi,stack_masks,used_area_mask,last_training_date,
-                                  kwargs={"HarmonicTerms" : HarmonicTerms, "threshold_outliers" : threshold_outliers, "remove_outliers" : remove_outliers},
-                                  input_core_dims=[["Time"],["Time"],[],[]],vectorize=True,dask="parallelized",
-                                  output_dtypes=[float], output_core_dims=[['coeff']],
-                                  dask_gufunc_kwargs = {"output_sizes" : {"coeff" : 5}})
+    # coeff_model=xr.apply_ufunc(model_pixel_vi, 
+    #                             stack_vi,stack_masks,used_area_mask,last_training_date,
+    #                               kwargs={"HarmonicTerms" : HarmonicTerms, "threshold_outliers" : threshold_outliers, "remove_outliers" : remove_outliers},
+    #                               input_core_dims=[["Time"],["Time"],[],[]],vectorize=True,dask="parallelized",
+    #                               output_dtypes=[float], output_core_dims=[['coeff']],
+    #                               dask_gufunc_kwargs = {"output_sizes" : {"coeff" : 5}})
+    coeff_model = da.blockwise(censored_lstsq, 'kmn', stack_vi.data, 'tmn',stack_masks.data, 'tmn', new_axes={'k':5}, dtype=HarmonicTerms.dtype, A=HarmonicTerms, meta=np.ndarray(()))
+    coeff_model = xr.DataArray(coeff_model, dims=['coeff', stack_vi.dims[1], stack_vi.dims[2]], coords=[('coeff', np.arange(5)), stack_vi.coords[stack_vi.dims[1]], stack_vi.coords[stack_vi.dims[2]]])
 
     return coeff_model
 
@@ -241,53 +244,8 @@ def censored_lstsq(B, M, A):
     # del B, M, rhs, T
     return out
 
-# def model_pixel_vi(B, M, A):
-#     """Solves least squares problem subject to missing data.
 
-#     Note: uses a broadcasted solve for speed.
 
-#     Args
-#     ----
-#     A (ndarray) : m x r matrix
-#     B (ndarray) : m x n matrix
-#     M (ndarray) : m x n binary matrix (zeros indicate missing values)
-
-#     Returns
-#     -------
-#     X (ndarray) : r x n matrix that minimizes norm(M*(AX - B))
-#     """
-    
-#     print(B[0].shape)
-#     # print(M.shape)
-#     # print(A.shape)
-    
-#     # Note: we should check A is full rank but we won't bother...
-#     shape = B[0].shape
-#     B = B[0].reshape((shape[0], -1))
-#     print(B[0].shape)
-#     M = M[0].reshape(shape[0], -1)
-#     # if B is a vector, simply drop out corresponding rows in A
-#     if B.ndim == 1 or B.shape[1] == 1:
-#         return np.linalg.lstsq(A[M], B[M])[0]
-#     out = np.empty((A.shape[1], M.shape[1]), dtype=A.dtype)
-#     out[:] = np.nan
-#     valid_index = (M.sum(axis=0) > A.shape[1])
-#     B = B[:, valid_index]
-#     M = M[:, valid_index]
-
-#     # else solve via tensor representation
-#     rhs = np.dot(A.T, M * B).T[:, :, None]  # n x r x 1 tensor
-#     T = np.matmul(A.T[None, :, :], M.T[:, :, None] * A[None, :, :])  # n x r x r tensor
-#     out[:, valid_index] = np.squeeze(np.linalg.solve(T, rhs)).T
-#     out = out.reshape([5]+list(shape[1:]))
-#     # del B, M, rhs, T
-#     return out  # transpose to get r x n
-
-# def model_vi(stack_vi, stack_masks):
-#     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
-#     res = da.blockwise(model_pixel_vi, 'kmn', stack_vi.data, 'tmn',stack_masks.data, 'tmn', new_axes={'k':5}, dtype=HarmonicTerms.dtype, A=HarmonicTerms, meta=np.ndarray(()))
-#     res = xr.DataArray(res, dims=['coeff', stack_vi.dims[1], stack_vi.dims[2]], coords=[('coeff', np.arange(5)), stack_vi.coords[stack_vi.dims[1]], stack_vi.coords[stack_vi.dims[2]]])
-#     return res
 
 # def functionToFit(DateAsNumber,p):
 #     """
