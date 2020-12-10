@@ -8,7 +8,7 @@ Created on Mon Nov  2 09:25:23 2020
 
 import argparse
 import numpy as np
-from fordead.ImportData import import_forest_mask, import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo
+from fordead.ImportData import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo
 from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 import time
@@ -53,14 +53,13 @@ def decline_detection(
         print(str(NbNewDates)+ " nouvelles dates")
         
         #IMPORTING DATA
-        forest_mask = import_forest_mask(tile.paths["ForestMask"])
         first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"])
         coeff_model = import_coeff_model(tile.paths["coeff_model"])
         
         if tile.paths["state_decline"].exists():
             decline_data = import_decline_data(tile.paths)
         else:
-            decline_data = initialize_decline_data(forest_mask.shape,forest_mask.coords)
+            decline_data = initialize_decline_data(first_detection_date_index.shape,first_detection_date_index.coords)
         
         #DECLINE DETECTION
         for date_index, date in enumerate(tile.dates):
@@ -76,12 +75,12 @@ def decline_detection(
                                 
                 decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
                                
-                write_tif(anomalies, forest_mask.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
+                write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
         
         #Writing decline data to rasters        
-        write_tif(decline_data["state"], forest_mask.attrs,tile.paths["state_decline"],nodata=0)
-        write_tif(decline_data["first_date"], forest_mask.attrs,tile.paths["first_date_decline"],nodata=0)
-        write_tif(decline_data["count"], forest_mask.attrs,tile.paths["count_decline"],nodata=0)
+        write_tif(decline_data["state"], first_detection_date_index.attrs,tile.paths["state_decline"],nodata=0)
+        write_tif(decline_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_decline"],nodata=0)
+        write_tif(decline_data["count"], first_detection_date_index.attrs,tile.paths["count_decline"],nodata=0)
                 
         # print("Détection du déperissement")
     tile.save_info()

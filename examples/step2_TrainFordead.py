@@ -10,7 +10,7 @@ Created on Tue Nov  3 16:21:15 2020
 
 import argparse
 # from pathlib import Path
-from fordead.ImportData import import_forest_mask, import_stackedmaskedVI, TileInfo
+from fordead.ImportData import import_stackedmaskedVI, TileInfo
 from fordead.ModelVegetationIndex import get_detection_dates, model_vi
 from fordead.writing_data import write_tif
 import time
@@ -26,7 +26,6 @@ def parse_command_line():
 
     parser.add_argument("-v", "--path_vi", dest = "path_vi",type = str,default = None, help = "Première date de la détection")    
     parser.add_argument("-m", "--path_masks", dest = "path_masks",type = str,default = None, help = "Première date de la détection")    
-    parser.add_argument("-f", "--path_forestmask", dest = "path_forestmask",type = str,default = None, help = "Première date de la détection")    
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -42,7 +41,6 @@ def train_model(
     date_lim_training="2018-06-01",
     path_vi=None,
     path_masks = None,
-    path_forestmask = None
     ):
     
     # data_directory="G:/Deperissement/Out/PackageVersion/ZoneTest"
@@ -51,27 +49,22 @@ def train_model(
     
     if path_vi==None : path_vi = tile.paths["VegetationIndexDir"]
     if path_masks==None : path_masks = tile.paths["MaskDir"]
-    if path_forestmask == None : path_forestmask = tile.paths["ForestMask"] #Paths are imported from previous TileInfo if not given as arguments
     
     tile.add_parameters({"threshold_outliers" : threshold_outliers, "remove_outliers" : remove_outliers, "min_last_date_training" : min_last_date_training, "date_lim_training" : date_lim_training})
-    if tile.parameters["Overwrite"] : tile.delete_dirs("coeff_model","AnomaliesDir","state_decline") #Deleting previous training and detection results if they exist
+    if tile.parameters["Overwrite"] : tile.delete_dirs("coeff_model","AnomaliesDir","state_decline", "valid_area_mask") #Deleting previous training and detection results if they exist
    
     #Create missing directories and add paths to TileInfo object
     tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.tif")
     tile.add_path("first_detection_date_index", tile.data_directory / "DataModel" / "first_detection_date_index.tif")
-    tile.add_path("used_area_mask", tile.paths["ForestMask"].parent / "Used_area_mask.tif")
+    tile.add_path("valid_area_mask", tile.data_directory / "ForestMask" / "valid_area_mask.tif")
     
     if tile.paths["coeff_model"].exists():
         print("Model already calculated")
     else:
         print("Computing model")
         tile.getdict_paths(path_vi = path_vi,
-                            path_masks = path_masks,
-                            path_forestmask = path_forestmask)
+                            path_masks = path_masks)
         
-        # Import du masque forêt
-        forest_mask = import_forest_mask(tile.paths["ForestMask"], chunks = 1280)
-
         # Import des index de végétations et des masques
         stack_vi, stack_masks = import_stackedmaskedVI(tile, date_lim_training=date_lim_training, chunks = 1280)
    
@@ -81,10 +74,10 @@ def train_model(
         
         
         #Fusion du masque forêt et des zones non utilisables par manque de données
-        used_area_mask = forest_mask.where(first_detection_date_index!=0,False)
+        valid_area_mask = first_detection_date_index!=0
         
         # Modéliser le CRSWIR tout en retirant outliers
-        # coeff_model = model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
+        # coeff_model = model_vi(stack_vi, stack_masks,valid_area_mask, last_training_date,
         #                         threshold_outliers=threshold_outliers, remove_outliers=remove_outliers)
         stack_masks = stack_masks | detection_dates #Masking data not used in training
         coeff_model = model_vi(stack_vi, stack_masks)
@@ -92,7 +85,7 @@ def train_model(
         #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, la zone utilisable
         write_tif(first_detection_date_index,stack_vi.attrs, tile.paths["first_detection_date_index"],nodata=0)
         write_tif(coeff_model,stack_vi.attrs, tile.paths["coeff_model"])
-        write_tif(used_area_mask,stack_vi.attrs, tile.paths["used_area_mask"],nodata=0)
+        write_tif(valid_area_mask,stack_vi.attrs, tile.paths["valid_area_mask"],nodata=0)
         #Save the TileInfo object
         tile.save_info()
 

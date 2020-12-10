@@ -138,7 +138,26 @@ class TileInfo:
                     shutil.rmtree(self.paths[key_path])
                 elif self.paths[key_path].is_file():
                     shutil.rmtree(self.paths[key_path].parent)
-            
+   
+    def delete_files(self,*key_paths):
+        """
+        Using keys to paths (usually added through add_path), deletes file 
+
+        Parameters
+        ----------
+        key_path : str
+            Key in the dictionnary containing paths
+
+        Returns
+        -------
+        None.
+
+        """
+        for key_path in key_paths:
+            if key_path in self.paths:
+                if self.paths[key_path].is_file():
+                    self.paths[key_path].unlink()
+                    
     def getdict_datepaths(self, key, path_dir):
         """
         Parameters
@@ -221,6 +240,72 @@ class TileInfo:
         self.getdict_datepaths("Masks",path_masks)
         self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
         
+def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
+    """
+    For every date in dict_path_bands (which is meant to contain each date available in the sentinel data directory), computes the cloudiness percentage from the mask at path dict_path_bands[date]["Mask"] if it was not already computed and stored at path_cloudiness in a TileInfo object.
+    Returns a dictionnary where the key is the date and the value is the cloudiness percentage.
+
+    """
+    path_cloudiness= Path(path_cloudiness)
+    cloudiness = TileInfo(path_cloudiness.parent)
+    if path_cloudiness.exists():
+        cloudiness=cloudiness.import_info(path_cloudiness)
+    if not(hasattr(cloudiness, 'perc_cloud')):
+        cloudiness.perc_cloud={}
+    for date in dict_path_bands:
+        if not(date in cloudiness.perc_cloud):
+            cloudiness.perc_cloud[date] = get_date_cloudiness_perc(dict_path_bands[date], sentinel_source)
+            
+    cloudiness.save_info(path_cloudiness)
+    return cloudiness
+
+def get_date_cloudiness_perc(date_paths, sentinel_source):
+    """
+    Computes cloudiness percentage of a Sentinel-2 date from the source mask (THEIA CLM or PEPS, scihub SCL)
+    """
+
+    if sentinel_source=="THEIA":
+        tile_mask_info = xr.Dataset({"mask": xr.open_rasterio(date_paths["Mask"]),
+                                     "swath_cover": xr.open_rasterio(date_paths["B11"])})
+        NbPixels = (tile_mask_info["swath_cover"]!=-10000).sum()
+        NbCloudyPixels = (tile_mask_info["mask"]>0).sum()
+
+    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
+        cloud_mask = xr.open_rasterio(date_paths["Mask"])
+        NbPixels = (cloud_mask!=0).sum()
+        NbCloudyPixels = (~cloud_mask.isin([4,5])).sum()
+    
+    if NbPixels==0: #If outside of satellite swath
+        return 2.0
+    else:
+        return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
+
+def get_raster_metadata(raster_path):
+    raster = xr.open_rasterio(raster_path)
+    raster_meta = {"dims" : raster.dims,
+                   "coords" : raster.coords,
+                   "attrs" : raster.attrs,
+                   "sizes" : raster.sizes,
+                   "shape" : raster.shape}
+    return raster_meta
+    
+def import_resampled_sen_stack(band_paths, list_bands, InterpolationOrder = 0):
+    #Importing data from files
+    stack_bands = [xr.open_rasterio(band_paths[band]) for band in list_bands]
+    
+    #Resampling at 10m resolution
+    for band_index in range(len(stack_bands)):
+        if stack_bands[band_index].attrs["res"]==(20.0,20.0):
+            stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=InterpolationOrder), coords=stack_bands[0].coords)
+        
+    # resampled_stack_bands = [band if band.attrs["res"]==(10.0,10.0) else band.interp(x = stack_bands[0].coords["x"], y = stack_bands[0].coords["y"],method="nearest") for band in stack_bands ] #Resample using xarray interp, but it adds nan at borders
+            
+    concatenated_stack_bands= xr.concat(stack_bands,dim="band")
+    concatenated_stack_bands.coords["band"] = list_bands
+    # concatenated_stack_bands=concatenated_stack_bands.chunk({"band": 1,"x" : -1,"y" : 100})
+    return concatenated_stack_bands
+
+
         
 def import_forest_mask(forest_mask_path,chunks = None):
     forest_mask = xr.open_rasterio(forest_mask_path,chunks = chunks)
@@ -336,62 +421,7 @@ def import_masked_vi(dict_paths, date, chunks = None):
 
     return masked_vi
 
-def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
-    """
-    For every date in dict_path_bands (which is meant to contain each date available in the sentinel data directory), computes the cloudiness percentage from the mask at path dict_path_bands[date]["Mask"] if it was not already computed and stored at path_cloudiness in a TileInfo object.
-    Returns a dictionnary where the key is the date and the value is the cloudiness percentage.
 
-    """
-    path_cloudiness= Path(path_cloudiness)
-    cloudiness = TileInfo(path_cloudiness.parent)
-    if path_cloudiness.exists():
-        cloudiness=cloudiness.import_info(path_cloudiness)
-    if not(hasattr(cloudiness, 'perc_cloud')):
-        cloudiness.perc_cloud={}
-    for date in dict_path_bands:
-        if not(date in cloudiness.perc_cloud):
-            cloudiness.perc_cloud[date] = get_date_cloudiness_perc(dict_path_bands[date], sentinel_source)
-            
-    cloudiness.save_info(path_cloudiness)
-    return cloudiness
-
-
-def get_date_cloudiness_perc(date_paths, sentinel_source):
-    """
-    Computes cloudiness percentage of a Sentinel-2 date from the source mask (THEIA CLM or PEPS, scihub SCL)
-    """
-
-    if sentinel_source=="THEIA":
-        tile_mask_info = xr.Dataset({"mask": xr.open_rasterio(date_paths["Mask"]),
-                                     "swath_cover": xr.open_rasterio(date_paths["B11"])})
-        NbPixels = (tile_mask_info["swath_cover"]!=-10000).sum()
-        NbCloudyPixels = (tile_mask_info["mask"]>0).sum()
-
-    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
-        cloud_mask = xr.open_rasterio(date_paths["Mask"])
-        NbPixels = (cloud_mask!=0).sum()
-        NbCloudyPixels = (~cloud_mask.isin([4,5])).sum()
-    
-    if NbPixels==0: #If outside of satellite swath
-        return 2.0
-    else:
-        return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
-
-def import_resampled_sen_stack(band_paths, list_bands, InterpolationOrder = 0):
-    #Importing data from files
-    stack_bands = [xr.open_rasterio(band_paths[band]) for band in list_bands]
-    
-    #Resampling at 10m resolution
-    for band_index in range(len(stack_bands)):
-        if stack_bands[band_index].attrs["res"]==(20.0,20.0):
-            stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=InterpolationOrder), coords=stack_bands[0].coords)
-        
-    # resampled_stack_bands = [band if band.attrs["res"]==(10.0,10.0) else band.interp(x = stack_bands[0].coords["x"], y = stack_bands[0].coords["y"],method="nearest") for band in stack_bands ] #Resample using xarray interp, but it adds nan at borders
-            
-    concatenated_stack_bands= xr.concat(stack_bands,dim="band")
-    concatenated_stack_bands.coords["band"] = list_bands
-    # concatenated_stack_bands=concatenated_stack_bands.chunk({"band": 1,"x" : -1,"y" : 100})
-    return concatenated_stack_bands
 
 def import_stacked_anomalies(paths_anomalies, chunks = None):
     list_anomalies=[xr.open_rasterio(paths_anomalies[date]) for date in paths_anomalies]

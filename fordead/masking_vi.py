@@ -104,6 +104,32 @@ def rasterize_polygons(polygons, example_raster):
     
     return forest_mask
 
+def clip_oso(path_oso, path_example_raster, list_code_oso):
+    example_raster = xr.open_rasterio(path_example_raster)
+    OSO = xr.open_rasterio(path_oso)
+    example_raster.attrs["nodata"] = 0 #Avoids bug in reproject when nodata = nan and dtype = int
+    reprojected_corner1 = example_raster.isel(x=[0,1],y=[0,1]).rio.reproject(OSO.crs).isel(x=0,y=0)
+    reprojected_corner2 = example_raster.isel(x=[-2,-1],y=[-2,-1]).rio.reproject(OSO.crs).isel(x=-1,y=-1)
+    clipped_OSO = OSO.rio.clip_box(
+                                minx=float(reprojected_corner1.x),
+                                miny=float(reprojected_corner2.y),
+                                maxx=float(reprojected_corner2.x),
+                                maxy=float(reprojected_corner1.y),
+                                )
+    reprojected_clipped_OSO = clipped_OSO.rio.reproject(example_raster.crs)
+    forest_mask_data = reprojected_clipped_OSO.isin(list_code_oso)
+    forest_mask = example_raster
+    forest_mask.data = forest_mask_data
+    # forest_mask.attrs = example_raster.attrs
+    forest_mask=forest_mask.sel(band=1)
+    return forest_mask
+
+def raster_full(path_example_raster, fill_value, dtype = None):
+    filled_raster = xr.open_rasterio(path_example_raster).sel(band=1)
+    filled_raster[:,:]=fill_value
+    filled_raster.attrs["crs"]=filled_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
+    if dtype!= None : filled_raster = filled_raster.astype(dtype)
+    return filled_raster
 
 def get_pre_masks(stack_bands):   
     
