@@ -25,8 +25,6 @@ import datetime
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
-    
-    
    
     parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str,default =  "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection", help = "Dossier contenant les dossiers des tuiles")
     parser.add_argument('-t', '--tuiles', nargs='+',default=["ZoneTest"],help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")

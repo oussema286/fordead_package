@@ -8,46 +8,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import datetime
 import matplotlib.dates as mdates
-import os
 import random
-# import rasterio
-# import pickle
 
 import xarray as xr
 from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_last_training_date, import_decline_data, import_soil_data
 from fordead.ModelVegetationIndex import compute_HarmonicTerms
-# PixelsToChoose = np.where(np.logical_and(np.logical_and(MaskForet==1,stackDetected[-1,:,:]),stackSolNu[-1,:,:]))
-# PixelID=random.randint(0,PixelsToChoose[0].shape[0])
-
-# X=PixelsToChoose[0][PixelID]
-# Y=PixelsToChoose[1][PixelID]
 
 # =============================================================================
 #  IMPORT DES DONNEES CALCULEES
 # =============================================================================
 
-# for DateIndex,date in enumerate(Dates):
-#     with rasterio.open(os.getcwd()+"/Out/Results/"+"V"+Version+"/Out/"+tuile+"/Atteint_"+date+".tif") as Atteint:
-#         if DateIndex==0:
-#             StackAtteint=np.empty((Dates.shape[0],Atteint.profile["width"],Atteint.profile["height"]),dtype=np.uint8)
-#         StackAtteint[DateIndex,:,:]=Atteint.read(1)
-# stackSolNu=StackAtteint>=2
-# with rasterio.open(os.getcwd()+"/Data/Rasters/"+tuile+"/BDForet_"+tuile+".tif") as BDFORET: 
-#     MaskForet = BDFORET.read(1).astype("bool")
-
-
 data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest"
 tile = TileInfo(data_directory)
 tile = tile.import_info()
 
-# tile.paths
-
 stack_vi, stack_masks = import_stackedmaskedVI(tile)
-# masked_vi=xr.Dataset({"vegetation_index": stack_vi,
-#                       "mask": stack_masks})
-# stack_vi=stack_vi.where(~stack_masks)
-
-
 coeff_model = import_coeff_model(tile.paths["coeff_model"])
 last_training_date = import_last_training_date(tile.paths["last_training_date"])
 
@@ -68,7 +43,6 @@ decline_data = import_decline_data(tile.paths)
 xx = np.array(range(int(stack_vi.DateNumber.min()), int(stack_vi.DateNumber.max())))
 xxDate=[np.datetime64(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in xx]
 
-
 harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in xx])
 harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : xxDate, "band" : [1,2,3,4,5]},dims=["Time","band"])
 
@@ -81,7 +55,7 @@ X=PixelsToChoose[0][PixelID]
 Y=PixelsToChoose[1][PixelID]
 # print(X)
 # print(Y)
-while X!=0 or Y!=0:
+while X!=-1:
     
     Y=input("X ? ")
     if Y=="":
@@ -89,7 +63,7 @@ while X!=0 or Y!=0:
         PixelID=random.randint(0,PixelsToChoose[0].shape[0])
         X=PixelsToChoose[0][PixelID]
         Y=PixelsToChoose[1][PixelID]
-    elif Y=="0":
+    elif Y=="-1":
         break
     else:
         Y=int(Y)
@@ -156,5 +130,5 @@ while X!=0 or Y!=0:
     plt.xlabel("Date",size=15)
     plt.ylabel("CRSWIR",size=15)
         
-    # fig.savefig(os.getcwd()+"/Out/Results/V"+Version+"/SeriesTemporelles/X"+str(Y)+"_Y"+str(X)+"_"+"V"+str(Version)+".png")
+    fig.savefig(tile.paths["series"] / ("X"+str(Y)+"_Y"+str(X)+"_"+".png"))
     plt.show()
