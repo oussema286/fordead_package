@@ -26,7 +26,7 @@ def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str,default =  "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection", help = "Dossier contenant les dossiers des tuiles")
+    parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str,default =  "/mnt/fordead/Out", help = "Dossier contenant les dossiers des tuiles")
     parser.add_argument('-t', '--tuiles', nargs='+',default=["ZoneTest"],help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
 
     parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest", help = "Path of the directory with Sentinel dates")
@@ -74,10 +74,10 @@ def process_tiles(main_directory, tuiles, forest_mask_source,
         
         start_time = time.time()
         
-        # path_example_raster = "/mnt/fordead/Data/Rasters/"+tuile+"/BDForet_"+tuile+".tif"
-        # dep_path = "/mnt/fordead/Data/Vecteurs/Departements/departements-20140306-100m.shp"
-        # bdforet_dirpath = "/mnt/fordead/Data/Vecteurs/BDFORET"
-        # input_directory = "/mnt/fordead/Data/SENTINEL/" + tuile
+        path_example_raster = "/mnt/fordead/Data/Rasters/"+tuile+"/BDForet_"+tuile+".tif"
+        dep_path = "/mnt/fordead/Data/Vecteurs/Departements/departements-20140306-100m.shp"
+        bdforet_dirpath = "/mnt/fordead/Data/Vecteurs/BDFORET"
+        input_directory = "/mnt/fordead/Data/SENTINEL/" + tuile
         
         # path_example_raster = "G:/Deperissement/Data/SENTINEL/T31UFQ/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
         # dep_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp"
