@@ -26,17 +26,17 @@ def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str,default =  "/mnt/fordead/Out", help = "Dossier contenant les dossiers des tuiles")
-    parser.add_argument('-t', '--tuiles', nargs='+',default=["ZoneTest"],help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
+    parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str, help = "Dossier contenant les dossiers des tuiles")
+    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ZoneTest"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
 
-    parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest", help = "Path of the directory with Sentinel dates")
-    parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
+    parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
+    parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = None, help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
     parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.161, help = "Seuil minimum pour détection d'anomalies")
     
-    parser.add_argument("--path_example_raster", dest = "path_example_raster",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif", help = "Path to raster from which to copy the extent, resolution, CRS...")
+    parser.add_argument("--path_example_raster", dest = "path_example_raster",type = str, help = "Path to raster from which to copy the extent, resolution, CRS...")
     parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--list_forest_type", dest = "list_forest_type",type = str,default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
@@ -55,13 +55,20 @@ def parse_command_line():
     	dictArgs[key]=value
     return dictArgs
 
-def process_tiles(main_directory, tuiles, forest_mask_source,
+def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source,
                   path_example_raster, dep_path, bdforet_dirpath, list_forest_type, path_oso, list_code_oso, #compute_forest_mask arguments
-                  input_directory, lim_perc_cloud, vi, sentinel_source, apply_source_mask, #compute_masked_vegetationindex arguments
+                  lim_perc_cloud, vi, sentinel_source, apply_source_mask, #compute_masked_vegetationindex arguments
                   remove_outliers, threshold_outliers, min_last_date_training, date_lim_training, #Train_model arguments
                   threshold_anomaly): #Decline_detection argument
 
+    main_directory = "/mnt/fordead/Out"
+    sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
     
+    # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
+    # sentinel_directory = "G:/Deperissement/Data/SENTINEL/T31UFQ/"
+    # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
+    
+    sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
     logpath = main_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")
     file = open(logpath, "w") 
@@ -73,16 +80,16 @@ def process_tiles(main_directory, tuiles, forest_mask_source,
         file.close()
         
         start_time = time.time()
-        
+
         path_example_raster = "/mnt/fordead/Data/Rasters/"+tuile+"/BDForet_"+tuile+".tif"
         dep_path = "/mnt/fordead/Data/Vecteurs/Departements/departements-20140306-100m.shp"
         bdforet_dirpath = "/mnt/fordead/Data/Vecteurs/BDFORET"
-        input_directory = "/mnt/fordead/Data/SENTINEL/" + tuile
         
+        # path_example_raster = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
         # path_example_raster = "G:/Deperissement/Data/SENTINEL/T31UFQ/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
         # dep_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp"
         # bdforet_dirpath = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET"
-        # input_directory = "G:/Deperissement/Data/SENTINEL/T31UFQ/"
+
 # =====================================================================================================================
   
         # print("Computing forest mask")
@@ -97,15 +104,18 @@ def process_tiles(main_directory, tuiles, forest_mask_source,
 # =====================================================================================================================
      
         print("Computing masks and vegetation index")
-        compute_masked_vegetationindex(input_directory = input_directory,
-                                        data_directory = main_directory / tuile)
+        compute_masked_vegetationindex(input_directory = sentinel_directory / tuile,
+                                        data_directory = main_directory / tuile,
+                                        lim_perc_cloud = lim_perc_cloud, vi = vi,
+                                        sentinel_source = sentinel_source, apply_source_mask = apply_source_mask)
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
 # =====================================================================================================================
         
         # print("Training")
-        train_model(data_directory=main_directory / tuile,  threshold_outliers = 0.16)
+        train_model(data_directory=main_directory / tuile,  
+                    threshold_outliers = 0.16, remove_outliers = remove_outliers)
         # print(str(time.time() - start_time))
         file = open(logpath, "a") 
         file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
@@ -113,7 +123,8 @@ def process_tiles(main_directory, tuiles, forest_mask_source,
 # =====================================================================================================================
     
         print("Decline detetion")
-        decline_detection(data_directory=main_directory / tuile)
+        decline_detection(data_directory=main_directory / tuile, 
+                          threshold_anomaly = threshold_anomaly)
         file = open(logpath, "a") 
         file.write("decline_detection : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
         file.close()
