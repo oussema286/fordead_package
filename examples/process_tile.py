@@ -103,7 +103,7 @@ def process_tiles(main_directory, tuiles, forest_mask_source,
 # =====================================================================================================================
         
         print("Training")
-        train_model(data_directory=main_directory / tuile,  threshold_outliers = 0.16, remove_outliers = False)
+        train_model(data_directory=main_directory / tuile,  threshold_outliers = 0.16, remove_outliers = True)
         print(str(time.time() - start_time))
         file = open(logpath, "a") 
         file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
