@@ -11,7 +11,7 @@ Created on Tue Nov  3 16:21:15 2020
 import argparse
 # from pathlib import Path
 from fordead.ImportData import import_forest_mask, import_stackedmaskedVI, TileInfo
-from fordead.ModelVegetationIndex import get_last_training_date, model_vi
+from fordead.ModelVegetationIndex import get_detection_dates, model_vi
 from fordead.writing_data import write_tif
 import time
 
@@ -58,7 +58,7 @@ def train_model(
    
     #Create missing directories and add paths to TileInfo object
     tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.tif")
-    tile.add_path("last_training_date", tile.data_directory / "DataModel" / "Last_training_date.tif")
+    tile.add_path("first_detection_date_index", tile.data_directory / "DataModel" / "first_detection_date_index.tif")
     tile.add_path("used_area_mask", tile.paths["ForestMask"].parent / "Used_area_mask.tif")
     
     if tile.paths["coeff_model"].exists():
@@ -74,21 +74,22 @@ def train_model(
         # Import des index de végétations et des masques
         stack_vi, stack_masks = import_stackedmaskedVI(tile, date_lim_training=date_lim_training, chunks = 1280)
    
-        stack_masks, last_training_date=get_last_training_date(stack_masks,
+        detection_dates, first_detection_date_index = get_detection_dates(stack_masks,
                                               min_last_date_training = min_last_date_training,
                                               nb_min_date = 10)
-     
-     #Fusion du masque forêt et des zones non utilisables par manque de données
-        used_area_mask = forest_mask.where(last_training_date!=0,False)
+        
+        
+        #Fusion du masque forêt et des zones non utilisables par manque de données
+        used_area_mask = forest_mask.where(first_detection_date_index!=0,False)
         
         # Modéliser le CRSWIR tout en retirant outliers
         # coeff_model = model_vi(stack_vi, stack_masks,used_area_mask, last_training_date,
         #                         threshold_outliers=threshold_outliers, remove_outliers=remove_outliers)
-        
+        stack_masks = stack_masks | detection_dates #Masking data not used in training
         coeff_model = model_vi(stack_vi, stack_masks)
 
         #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, la zone utilisable
-        write_tif(last_training_date,stack_vi.attrs, tile.paths["last_training_date"],nodata=0)
+        write_tif(first_detection_date_index,stack_vi.attrs, tile.paths["first_detection_date_index"],nodata=0)
         write_tif(coeff_model,stack_vi.attrs, tile.paths["coeff_model"])
         write_tif(used_area_mask,stack_vi.attrs, tile.paths["used_area_mask"],nodata=0)
         #Save the TileInfo object

@@ -14,7 +14,7 @@ import random
 # import pickle
 
 import xarray as xr
-from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_last_training_date, import_decline_data, import_soil_data
+from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
 from fordead.ModelVegetationIndex import compute_HarmonicTerms
 # PixelsToChoose = np.where(np.logical_and(np.logical_and(MaskForet==1,stackDetected[-1,:,:]),stackSolNu[-1,:,:]))
 # PixelID=random.randint(0,PixelsToChoose[0].shape[0])
@@ -49,7 +49,7 @@ stack_vi, stack_masks = import_stackedmaskedVI(tile)
 
 
 coeff_model = import_coeff_model(tile.paths["coeff_model"])
-last_training_date = import_last_training_date(tile.paths["last_training_date"])
+first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"])
 
 tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
 
@@ -108,7 +108,7 @@ while X!=0 or Y!=0:
     
     stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
 
-    stack_vi = stack_vi.assign_coords(training_date=("Time", [index <= int(last_training_date[X,Y]) for index in range(stack_vi.sizes["Time"])]))
+    stack_vi = stack_vi.assign_coords(training_date=("Time", [index < int(first_detection_date_index[X,Y]) for index in range(stack_vi.sizes["Time"])]))
     stack_vi = stack_vi.assign_coords(Soil = ("Time", [index >= int(soil_data["first_date"][X,Y]) if soil_data["state"][X,Y] else False for index in range(stack_vi.sizes["Time"])]))
     stack_vi = stack_vi.assign_coords(Anomaly = ("Time", [index >= int(soil_data["first_date"][X,Y]) if soil_data["state"][X,Y] else False for index in range(stack_vi.sizes["Time"])]))
     anomalies_time = anomalies.Time.where(anomalies[:,X,Y],drop=True).astype("datetime64").data.compute()

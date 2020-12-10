@@ -273,10 +273,10 @@ def import_coeff_model(path, chunks = None):
     coeff_model = xr.open_rasterio(path,chunks = chunks)
     return coeff_model
 
-def import_last_training_date(path,chunks = None):
-    last_training_date=xr.open_rasterio(path,chunks = chunks)
-    last_training_date=last_training_date.sel(band=1)
-    return last_training_date
+def import_first_detection_date_index(path,chunks = None):
+    first_detection_date_index=xr.open_rasterio(path,chunks = chunks)
+    first_detection_date_index=first_detection_date_index.sel(band=1)
+    return first_detection_date_index
 
 def import_decline_data(dict_paths, chunks = None):
     state_decline = xr.open_rasterio(dict_paths["state_decline"],chunks = chunks).astype(bool)

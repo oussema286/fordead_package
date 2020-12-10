@@ -9,7 +9,7 @@ import numpy as np
 from scipy.linalg import lstsq
 import dask.array as da
 
-def get_last_training_date(stack_masks,min_last_date_training,nb_min_date=10):
+def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
     """
     Returns the index of the last date which will be used for training from the masks.
     
@@ -33,10 +33,11 @@ def get_last_training_date(stack_masks,min_last_date_training,nb_min_date=10):
     
     indexes = xr.DataArray(da.ones(stack_masks.shape,dtype=np.uint16, chunks=stack_masks.chunks), stack_masks.coords) * xr.DataArray(range(stack_masks.sizes["Time"]), coords={"Time" : stack_masks.Time},dims=["Time"])   
     cumsum=(~stack_masks).cumsum(dim="Time",dtype=np.uint16)
-    stack_masks = stack_masks | ((indexes > min_date_index) & (cumsum > nb_min_date))
-    last_training_date = ((indexes >= min_date_index) & (cumsum >= nb_min_date)).argmax(dim="Time").astype(np.uint16)
     
-    return stack_masks, last_training_date
+    detection_dates = ((indexes > min_date_index) & (cumsum > nb_min_date))
+    first_detection_date_index = detection_dates.argmax(dim="Time").astype(np.uint16)
+    
+    return detection_dates, first_detection_date_index
 
 
 def compute_HarmonicTerms(DateAsNumber):
@@ -45,7 +46,6 @@ def compute_HarmonicTerms(DateAsNumber):
 def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date, 
                     HarmonicTerms,threshold_outliers, remove_outliers):
     """
-    
 
     Parameters
     ----------
@@ -119,7 +119,6 @@ def model_vi(stack_vi, stack_masks):
         Array containing the five coefficients of the vegetation index model for each pixel
 
     """
-    
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
 
     # coeff_model=xr.apply_ufunc(model_pixel_vi, 
@@ -128,7 +127,7 @@ def model_vi(stack_vi, stack_masks):
     #                               input_core_dims=[["Time"],["Time"],[],[]],vectorize=True,dask="parallelized",
     #                               output_dtypes=[float], output_core_dims=[['coeff']],
     #                               dask_gufunc_kwargs = {"output_sizes" : {"coeff" : 5}})
-    coeff_model = da.blockwise(censored_lstsq, 'kmn', stack_vi.data, 'tmn',stack_masks.data, 'tmn', new_axes={'k':5}, dtype=HarmonicTerms.dtype, A=HarmonicTerms, meta=np.ndarray(()))
+    coeff_model = da.blockwise(censored_lstsq, 'kmn', stack_vi.data, 'tmn',~stack_masks.data, 'tmn', new_axes={'k':5}, dtype=HarmonicTerms.dtype, A=HarmonicTerms, meta=np.ndarray(()))
     coeff_model = xr.DataArray(coeff_model, dims=['coeff', stack_vi.dims[1], stack_vi.dims[2]], coords=[('coeff', np.arange(5)), stack_vi.coords[stack_vi.dims[1]], stack_vi.coords[stack_vi.dims[2]]])
 
     return coeff_model
