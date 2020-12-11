@@ -62,12 +62,12 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   remove_outliers, threshold_outliers, min_last_date_training, date_lim_training, #Train_model arguments
                   threshold_anomaly): #Decline_detection argument
 
-    main_directory = "/mnt/fordead/Out"
-    sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
+    # main_directory = "/mnt/fordead/Out"
+    # sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
     
-    main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
+    # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
     # sentinel_directory = "G:/Deperissement/Data/SENTINEL/T31UFQ/"
-    sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
+    # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
     
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
@@ -86,10 +86,10 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         # dep_path = "/mnt/fordead/Data/Vecteurs/Departements/departements-20140306-100m.shp"
         # bdforet_dirpath = "/mnt/fordead/Data/Vecteurs/BDFORET"
         
-        path_example_raster = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
-        # path_example_raster = "G:/Deperissement/Data/SENTINEL/T31UFQ/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
-        dep_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp"
-        bdforet_dirpath = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET"
+        # path_example_raster = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
+        # # path_example_raster = "G:/Deperissement/Data/SENTINEL/T31UFQ/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
+        # dep_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp"
+        # bdforet_dirpath = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET"
 
 
 # =====================================================================================================================
