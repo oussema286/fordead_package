@@ -66,9 +66,11 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     # sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
     
     # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
-    # sentinel_directory = "G:/Deperissement/Data/SENTINEL/T31UFQ/"
     # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
     
+    main_directory = "D:/Documents/Deperissement/Output_detection"    
+    sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
+
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
     logpath = main_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")
@@ -87,7 +89,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         # bdforet_dirpath = "/mnt/fordead/Data/Vecteurs/BDFORET"
         
         # path_example_raster = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
-        # # path_example_raster = "G:/Deperissement/Data/SENTINEL/T31UFQ/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
+        # path_example_raster = "G:/Deperissement/Data/SENTINEL/T31UFQ/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
         # dep_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp"
         # bdforet_dirpath = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET"
 
@@ -123,7 +125,6 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
   
         # print("Computing forest mask")
         compute_forest_mask(data_directory = main_directory / tuile,
-                            path_example_raster = path_example_raster,
                             forest_mask_source = forest_mask_source,
                             dep_path = dep_path,
                             bdforet_dirpath = bdforet_dirpath)

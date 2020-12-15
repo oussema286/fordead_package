@@ -80,10 +80,10 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
     bd_foret = gp.GeoDataFrame( pd.concat( bd_list, ignore_index=True), crs=bd_list[0].crs)
     bd_foret=bd_foret[bd_foret['CODE_TFV'].isin(list_forest_type)]    
     
-    forest_mask = rasterize_polygons(bd_foret, example_raster)
+    forest_mask = rasterize_polygons_binary(bd_foret, example_raster)
     return forest_mask
 
-def rasterize_polygons(polygons, example_raster):
+def rasterize_polygons_binary(polygons, example_raster):
     
     polygons=polygons.to_crs(crs=example_raster.attrs["crs"]) #Changing crs
     polygons=polygons["geometry"]

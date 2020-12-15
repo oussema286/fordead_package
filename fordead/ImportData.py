@@ -280,8 +280,9 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     else:
         return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
 
-def get_raster_metadata(raster_path):
-    raster = xr.open_rasterio(raster_path)
+def get_raster_metadata(raster_path = None,raster = None):
+    if raster_path != None:
+        raster = xr.open_rasterio(raster_path)
     raster_meta = {"dims" : raster.dims,
                    "coords" : raster.coords,
                    "attrs" : raster.attrs,

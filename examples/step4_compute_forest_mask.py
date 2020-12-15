@@ -31,9 +31,10 @@ def parse_command_line():
     return dictArgs
 
 def compute_forest_mask(data_directory,
-                        path_example_raster,
                         forest_mask_source,
                         
+                        path_example_raster = None,
+
                         list_forest_type = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"],
                         dep_path = None,
                         bdforet_dirpath = None,
