@@ -15,6 +15,7 @@ import pandas as pd
 # =============================================================================
 # #
 # =============================================================================
+from fordead.writing_data import write_tif
 
 
 def get_rasterized_validation_data(path_shape, raster_metadata, ValidationObs):
@@ -99,8 +100,11 @@ def validation(main_directory,validation_data_directory, tiles):
         raster_id_validation_data=get_rasterized_validation_data(validation_data_directory / ("scolyte"+tile_name[1:]+".shp"), raster_metadata, False)
         raster_binary_validation_data = (raster_id_validation_data!=0) & valid_area_mask.data
         nb_pixels = np.sum(raster_binary_validation_data)
-        
-        
+        # raster_binary_validation_data = (raster_id_validation_data!=0)
+        # nb_pixels = np.sum(raster_binary_validation_data)
+
+        invalid_area_in_obs = (raster_id_validation_data!=0) & ~valid_area_mask
+        write_tif(invalid_area_in_obs, raster_metadata["attrs"],nodata = 0, path = main_directory / 'invalid_area_in_obs.tif')
         
         if np.any(raster_binary_validation_data):
             for dateIndex, date in enumerate(tile.dates):
@@ -108,11 +112,11 @@ def validation(main_directory,validation_data_directory, tiles):
                 masked_vi = import_masked_vi(tile.paths, date)
                 soil_data = import_soil_data(tile.paths)
                 decline_data = import_decline_data(tile.paths)
-                
+                print("imported")
                 detected = (decline_data["first_date"] <= dateIndex) & decline_data["state"]
                 soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
                 affected= (detected+2*soil).data
-                    
+                print("Calculated")
                 d1 = {'IdZone': raster_id_validation_data[raster_binary_validation_data],
                       "IdPixel" : range(nb_pixels),
                       "Date" : [date]*nb_pixels,
@@ -124,8 +128,9 @@ def validation(main_directory,validation_data_directory, tiles):
                       # "EtatStress" : stackStress[dateIndex,:,:][raster_binary_validation_data]}
                 
                 Results = pd.DataFrame(data=d1)
+                print("to dataframe")
                 Results.to_csv(main_directory / 'ResultsTable.csv', mode='a', index=False,header=not((main_directory / 'ResultsTable.csv').exists()))
-           
+                print("written")
             # d2 = {'IdZone': raster_id_validation_data[raster_binary_validation_data],
             #       "IdZoneXY" : [str(x)+str(y)]*nb_pixels,
             #       "IdPixel" : range(nb_pixels),

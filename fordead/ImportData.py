@@ -389,10 +389,10 @@ def initialize_decline_data(shape,coords):
     return decline_data
 
 
-def import_soil_data(dict_paths):
-    state_soil = xr.open_rasterio(dict_paths["state_soil"]).astype(bool)
-    first_date_soil = xr.open_rasterio(dict_paths["first_date_soil"])
-    count_soil = xr.open_rasterio(dict_paths["count_soil"])
+def import_soil_data(dict_paths, chunks = None):
+    state_soil = xr.open_rasterio(dict_paths["state_soil"], chunks = chunks).astype(bool)
+    first_date_soil = xr.open_rasterio(dict_paths["first_date_soil"], chunks = chunks)
+    count_soil = xr.open_rasterio(dict_paths["count_soil"], chunks = chunks)
     
     soil_data=xr.Dataset({"state": state_soil,
                      "first_date": first_date_soil,
@@ -425,7 +425,7 @@ def import_masked_vi(dict_paths, date, chunks = None):
 
 
 def import_stacked_anomalies(paths_anomalies, chunks = None):
-    list_anomalies=[xr.open_rasterio(paths_anomalies[date]) for date in paths_anomalies]
+    list_anomalies=[xr.open_rasterio(paths_anomalies[date], chunks = chunks) for date in paths_anomalies]
     stack_anomalies=xr.concat(list_anomalies,dim="Time")
     stack_anomalies=stack_anomalies.assign_coords(Time=[date for date in paths_anomalies.keys()])
     stack_anomalies=stack_anomalies.sel(band=1)
