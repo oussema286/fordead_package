@@ -56,6 +56,7 @@ def decline_detection(
         first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"])
         coeff_model = import_coeff_model(tile.paths["coeff_model"])
         
+        
         if tile.paths["state_decline"].exists():
             decline_data = import_decline_data(tile.paths)
         else:
@@ -70,8 +71,8 @@ def decline_detection(
                 masked_vi = import_masked_vi(tile.paths,date)
                 masked_vi["mask"] = masked_vi["mask"] | (date_index < first_detection_date_index) #Masking pixels where date was used for training
 
-                predicted_vi=prediction_vegetation_index(coeff_model,date)
-                anomalies = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly)
+                predicted_vi=prediction_vegetation_index(coeff_model,[date])
+                anomalies = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly).sel(Time = date)
                                 
                 decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
                                

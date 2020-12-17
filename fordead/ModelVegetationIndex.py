@@ -43,51 +43,51 @@ def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
 def compute_HarmonicTerms(DateAsNumber):
     return np.array([1,np.sin(2*np.pi*DateAsNumber/365.25), np.cos(2*np.pi*DateAsNumber/365.25),np.sin(2*2*np.pi*DateAsNumber/365.25),np.cos(2*2*np.pi*DateAsNumber/365.25)])
 
-def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date, 
-                    HarmonicTerms,threshold_outliers, remove_outliers):
-    """
+# def model_pixel_vi(vi_array,mask_array,bool_usedarea,index_last_training_date, 
+#                     HarmonicTerms,threshold_outliers, remove_outliers):
+#     """
 
-    Parameters
-    ----------
-    vi_array : 1-D array (float)
-        Array of vegetation index
-    mask_array : 1-D array (bool)
-        Array of mask
-    bool_usedarea : bool
-        Boolean, if True, model is computed for the pixel (pixel is in the forest mask and has enough data to compute the model)
-    index_last_training_date : int
-        Index of the last date used for training
-    HarmonicTerms : 1-D array
-        Terms of the harmonic function used for the model, calculated from the dates.
-    threshold_outliers : float
-        Threshold used for removing outliers if remove_outliers==True
-    remove_outliers : bool
-        If True, outliers are removed if the difference between the predicted vegetation index and the real vegetation index is greater than threshold_outliers
+#     Parameters
+#     ----------
+#     vi_array : 1-D array (float)
+#         Array of vegetation index
+#     mask_array : 1-D array (bool)
+#         Array of mask
+#     bool_usedarea : bool
+#         Boolean, if True, model is computed for the pixel (pixel is in the forest mask and has enough data to compute the model)
+#     index_last_training_date : int
+#         Index of the last date used for training
+#     HarmonicTerms : 1-D array
+#         Terms of the harmonic function used for the model, calculated from the dates.
+#     threshold_outliers : float
+#         Threshold used for removing outliers if remove_outliers==True
+#     remove_outliers : bool
+#         If True, outliers are removed if the difference between the predicted vegetation index and the real vegetation index is greater than threshold_outliers
 
-    Returns
-    -------
-    array (5,)
-        Returns the 5 coefficients of the model.
+#     Returns
+#     -------
+#     array (5,)
+#         Returns the 5 coefficients of the model.
 
-    """
+#     """
     
-    if bool_usedarea:
-        valid_vi = vi_array[:index_last_training_date+1][~mask_array[:index_last_training_date+1]]
-        Valid_HarmonicTerms = HarmonicTerms[:index_last_training_date+1][~mask_array[:index_last_training_date+1]]
-        p, _, _, _ = lstsq(Valid_HarmonicTerms, valid_vi,
-                            overwrite_a=True, overwrite_b = True, check_finite= False)
+#     if bool_usedarea:
+#         valid_vi = vi_array[:index_last_training_date+1][~mask_array[:index_last_training_date+1]]
+#         Valid_HarmonicTerms = HarmonicTerms[:index_last_training_date+1][~mask_array[:index_last_training_date+1]]
+#         p, _, _, _ = lstsq(Valid_HarmonicTerms, valid_vi,
+#                             overwrite_a=True, overwrite_b = True, check_finite= False)
         
-        diff=np.abs(valid_vi-np.sum(p*Valid_HarmonicTerms,axis=1)) #Différence entre prédiction et valeur réel pour chaque date 
+#         diff=np.abs(valid_vi-np.sum(p*Valid_HarmonicTerms,axis=1)) #Différence entre prédiction et valeur réel pour chaque date 
         
-        #POUR RETIRER OUTLIERS
-        if remove_outliers:
-            Inliers=diff<threshold_outliers
-            Valid_HarmonicTerms=Valid_HarmonicTerms[Inliers,:]
-            p, _, _, _ = lstsq(Valid_HarmonicTerms, valid_vi[Inliers],
-                            overwrite_a=True, overwrite_b = True, check_finite= False)
-        return p
+#         #POUR RETIRER OUTLIERS
+#         if remove_outliers:
+#             Inliers=diff<threshold_outliers
+#             Valid_HarmonicTerms=Valid_HarmonicTerms[Inliers,:]
+#             p, _, _, _ = lstsq(Valid_HarmonicTerms, valid_vi[Inliers],
+#                             overwrite_a=True, overwrite_b = True, check_finite= False)
+#         return p
     
-    return np.array([0,0,0,0,0])
+#     return np.array([0,0,0,0,0])
 
 
 def model_vi(stack_vi, stack_masks):      

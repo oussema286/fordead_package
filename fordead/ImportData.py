@@ -154,6 +154,7 @@ class TileInfo:
 
         """
         for key_path in key_paths:
+            print(key_paths)
             if key_path in self.paths:
                 if self.paths[key_path].is_file():
                     self.paths[key_path].unlink()
@@ -183,11 +184,10 @@ class TileInfo:
         self.paths[key] = sorted_dict_datepaths
         
     def getdict_paths(self,
-                      path_vi, path_masks, path_forestmask = None):
+                      path_vi, path_masks):
         
         self.getdict_datepaths("VegetationIndex",path_vi)
         self.getdict_datepaths("Masks",path_masks)
-        self.paths["ForestMask"]=path_forestmask
         self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
             
     def add_path(self, key, path):
@@ -357,6 +357,7 @@ def import_stackedmaskedVI(tuile,date_lim_training=None,chunks = None):
     
 def import_coeff_model(path, chunks = None):
     coeff_model = xr.open_rasterio(path,chunks = chunks)
+    coeff_model = coeff_model.rename({"band": "coeff"})
     return coeff_model
 
 def import_first_detection_date_index(path,chunks = None):
