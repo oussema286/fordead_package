@@ -25,10 +25,15 @@ from fordead.ImportData import import_resampled_sen_stack, import_soil_data, imp
 
 def clip_array_with_shape(shape, array):
     extent = shape.total_bounds
-    clipped_array = array.rio.clip_box(minx=extent[0],
-                               miny=extent[1],
-                               maxx=extent[2],
-                               maxy=extent[3])
+    
+    clipped_array = array.rio.clip_box(minx=min(min(array.x),extent[0]),
+                               miny=min(min(array.y),extent[1]),
+                               maxx=max(max(array.x),extent[2]),
+                               maxy=max(max(array.y),extent[3]))
+    # clipped_array = array.rio.clip_box(minx=extent[0],
+    #                            miny=extent[1],
+    #                            maxx=extent[2],
+    #                            maxy=extent[3])
     clipped_array.attrs = array.attrs
     
     return array
@@ -84,6 +89,10 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
                 detected = (decline_data["first_date"] <= dateIndex) & decline_data["state"]
                 soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
                 affected=detected+2*soil
+                
+                # forest_mask = import_forest_mask(tile.paths["ForestMask"])
+                # valid_area = 
+                # affected.where()
                 
                 results_affected = (
                             {'properties': {'Etat': v}, 'geometry': s}

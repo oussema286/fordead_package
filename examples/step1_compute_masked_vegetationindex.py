@@ -107,6 +107,11 @@ def compute_masked_vegetationindex(
             mask = compute_masks(stack_bands, soil_data, date_index)
             # Compute vegetation index
             vegetation_index = compute_vegetation_index(stack_bands, vi)
+            
+            nan_vi = vegetation_index.isnull()
+            
+            vegetation_index = vegetation_index.where(~nan_vi,0)
+            mask = mask | nan_vi
             write_tif(vegetation_index, raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
             write_tif(mask, raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
             date_index=date_index+1

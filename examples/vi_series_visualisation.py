@@ -94,10 +94,14 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
 
 
 def vi_series_visualisation(data_directory, shape_path):
-
+    
+    
+    data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ROI8"
+    shape_path = None
+    
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    chunks = 1280
+    chunks = None
     
     stack_vi, stack_masks = import_stackedmaskedVI(tile,chunks = chunks)
     coeff_model = import_coeff_model(tile.paths["coeff_model"],chunks = chunks)
@@ -116,7 +120,7 @@ def vi_series_visualisation(data_directory, shape_path):
     xxDate=[np.datetime64(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in xx]
     
     harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in xx])
-    harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : xxDate, "band" : [1,2,3,4,5]},dims=["Time","band"])
+    harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : xxDate, "coeff" : [1,2,3,4,5]},dims=["Time","coeff"])
     stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
 
 
@@ -169,7 +173,7 @@ def vi_series_visualisation(data_directory, shape_path):
                 X=int(X)
                 Y=int(input("Y ? "))
         
-            yy = (harmonic_terms * coeff_model.isel(x = X, y = Y).compute()).sum(dim="band")
+            yy = (harmonic_terms * coeff_model.isel(x = X, y = Y).compute()).sum(dim="coeff")
             
             xy_first_detection_date_index = int(first_detection_date_index.isel(x = X, y = Y))
             xy_soil_data = soil_data.isel(x = X, y = Y)
@@ -193,7 +197,7 @@ def vi_series_visualisation(data_directory, shape_path):
             #ax.axvspan(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(np.array(mydataTested.Day)[IndexStress[k]])),datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(np.array(mydataTested.Day)[IndexStress[k+1]])),color="orange",alpha=0.5)
             
             fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"])
-            fig.savefig(tile.paths["series"] / ("X"+str(Y)+"_Y"+str(X)+".png"))
+            fig.savefig(tile.paths["series"] / ("X"+str(X)+"_Y"+str(Y)+".png"))
     
 if __name__ == '__main__':
     dictArgs=parse_command_line()

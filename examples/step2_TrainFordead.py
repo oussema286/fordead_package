@@ -57,7 +57,7 @@ def train_model(
     
     tile.add_parameters({"threshold_outliers" : threshold_outliers, "remove_outliers" : remove_outliers, "min_last_date_training" : min_last_date_training, "date_lim_training" : date_lim_training})
     if tile.parameters["Overwrite"] : tile.delete_dirs("coeff_model","AnomaliesDir","state_decline", "valid_area_mask") #Deleting previous training and detection results if they exist
-    print( "ForestMask" in tile.paths)
+
     #Create missing directories and add paths to TileInfo object
     tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.tif")
     tile.add_path("first_detection_date_index", tile.data_directory / "DataModel" / "first_detection_date_index.tif")
@@ -89,9 +89,14 @@ def train_model(
         
         # if remove_outliers:
         #     predicted_vi = prediction_vegetation_index(coeff_model, stack_vi.Time.data)
-        #     outliers = detection_anomalies(stack_vi, predicted_vi, threshold_outliers) & ~detection_dates
-        #     stack_masks = stack_masks | outliers #Masking outliers
-        #     coeff_model = model_vi(stack_vi, stack_masks)
+            
+        #     single_date = prediction_vegetation_index(coeff_model, ["2016-05-08"])
+        #     single_date.compute()
+
+            # outliers = detection_anomalies(stack_vi, predicted_vi, threshold_outliers) & ~detection_dates
+            # stack_masks = stack_masks | outliers #Masking outliers
+            # coeff_model = model_vi(stack_vi, stack_masks)
+            
         #Remove outliers
 
         
