@@ -340,7 +340,7 @@ def import_stackedmaskedVI(tuile,date_lim_training=None,chunks = None):
     list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in tuile.paths["VegetationIndex"] if date <= date_lim_training or not(filter_dates)]
     stack_vi=xr.concat(list_vi,dim="Time")
     stack_vi=stack_vi.assign_coords(Time=[date for date in tuile.paths["VegetationIndex"].keys() if date <= date_lim_training or not(filter_dates)])
-    stack_vi=stack_vi.sel(band=1)
+    stack_vi=stack_vi.squeeze("band")
     stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
     stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
 
@@ -348,7 +348,7 @@ def import_stackedmaskedVI(tuile,date_lim_training=None,chunks = None):
     list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in tuile.paths["Masks"] if date <= date_lim_training or not(filter_dates)]
     stack_masks=xr.concat(list_mask,dim="Time")
     stack_masks=stack_masks.assign_coords(Time=[date for date in tuile.paths["Masks"].keys() if date <= date_lim_training or not(filter_dates)]).astype(bool)
-    stack_masks=stack_masks.sel(band=1)
+    stack_masks=stack_masks.squeeze("band")
     stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
     stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
 
@@ -362,7 +362,7 @@ def import_coeff_model(path, chunks = None):
 
 def import_first_detection_date_index(path,chunks = None):
     first_detection_date_index=xr.open_rasterio(path,chunks = chunks)
-    first_detection_date_index=first_detection_date_index.sel(band=1)
+    first_detection_date_index=first_detection_date_index.squeeze("band")
     return first_detection_date_index
 
 def import_decline_data(dict_paths, chunks = None):
@@ -373,7 +373,7 @@ def import_decline_data(dict_paths, chunks = None):
     decline_data=xr.Dataset({"state": state_decline,
                      "first_date": first_date_decline,
                      "count" : count_decline})
-    decline_data=decline_data.sel(band=1)
+    decline_data=decline_data.squeeze("band")
 
     return decline_data
         
@@ -398,7 +398,7 @@ def import_soil_data(dict_paths, chunks = None):
     soil_data=xr.Dataset({"state": state_soil,
                      "first_date": first_date_soil,
                      "count" : count_soil})
-    soil_data=soil_data.sel(band=1)
+    soil_data=soil_data.squeeze("band")
 
     return soil_data
 
@@ -419,7 +419,7 @@ def import_masked_vi(dict_paths, date, chunks = None):
     
     masked_vi=xr.Dataset({"vegetation_index": vegetation_index,
                              "mask": mask})
-    masked_vi=masked_vi.sel(band=1)
+    masked_vi=masked_vi.squeeze("band")
 
     return masked_vi
 
@@ -429,7 +429,7 @@ def import_stacked_anomalies(paths_anomalies, chunks = None):
     list_anomalies=[xr.open_rasterio(paths_anomalies[date], chunks = chunks) for date in paths_anomalies]
     stack_anomalies=xr.concat(list_anomalies,dim="Time")
     stack_anomalies=stack_anomalies.assign_coords(Time=[date for date in paths_anomalies.keys()])
-    stack_anomalies=stack_anomalies.sel(band=1)
+    stack_anomalies=stack_anomalies.squeeze("band")
     stack_anomalies=stack_anomalies.chunk({"Time": -1,"x" : chunks,"y" : chunks})
     # stack_anomalies["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_anomalies["Time"])]))
     return stack_anomalies.astype(bool)

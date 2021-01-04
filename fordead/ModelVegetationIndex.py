@@ -6,7 +6,7 @@ Created on Tue Nov  3 16:21:35 2020
 """
 import xarray as xr
 import numpy as np
-from scipy.linalg import lstsq
+# from scipy.linalg import lstsq
 import dask.array as da
 
 def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
