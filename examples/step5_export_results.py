@@ -8,7 +8,7 @@ Created on Fri Dec 18 11:32:57 2020
 
 
 import argparse
-from fordead.ImportData import import_decline_data, TileInfo, import_forest_mask
+from fordead.ImportData import import_decline_data, TileInfo, import_forest_mask, import_soil_data
 # from fordead.writing_data import write_tif
 # from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 # import time
@@ -26,7 +26,10 @@ def parse_command_line():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les données")
     parser.add_argument("--start_date", dest = "start_date",type = str,default = '2015-06-23', help = "Date de début pour l'export des résultats")
-    parser.add_argument("--end_date", dest = "end_date",type = str,default = "2021-01-04", help = "Date de fin pour l'export des résultats")
+    parser.add_argument("--end_date", dest = "end_date",type = str,default = "2022-01-01", help = "Date de fin pour l'export des résultats")
+    parser.add_argument("--frequency", dest = "frequency",type = str,default = 'M', help = "Frequency used to aggregate results, as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
+    parser.add_argument("--export_cuts", dest = "export_cuts", action="store_true",default = False, help = "If activated, results relating to soil detection are exported. Results of soil detection have to be computed and written in previous steps")
+    parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = True, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -36,14 +39,17 @@ def parse_command_line():
 def export_results(
     data_directory,
     start_date,
-    end_date
+    end_date,
+    frequency,
+    export_cuts,
+    multiple_files
     # ExportAsShapefile = False,
     ):
 
     #global results / several files
-    #Frequency
+    #Frequency (date sentinel / mois / plusieurs mois)
     #Résultats entre la fin du mois de start date et le début du mois de end_date (rajouter des bins ?)
-    
+    #Cut / not cut
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     
@@ -55,77 +61,62 @@ def export_results(
     
     
     array = xr.DataArray(range(tile.dates.size), coords={"Time" : tile.dates},dims=["Time"])   
-    # array = array.assign_coords(year_month = ("Time",[str(day)[:7] for day in tile.dates]))
-    # .strftime('%Y-%m')
+
     first_dateindex_flat = array[decline_data.first_date.data.ravel()]
     first_datenumber_flat = (pd.to_datetime(first_dateindex_flat.Time.data)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
     first_date_number = np.reshape(np.array(first_datenumber_flat),decline_data.first_date.shape)
     
-    bins_as_date=pd.date_range(start=start_date, end = end_date, freq="M")
+    bins_as_date=pd.date_range(start=start_date, end = end_date, freq=frequency)
     bins_as_datenumber = (bins_as_date-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days    
+
     inds = np.digitize(first_date_number, bins_as_datenumber,right = True)
+    
     
     forest_mask = import_forest_mask(tile.paths["ForestMask"])
     valid_area = import_forest_mask(tile.paths["valid_area_mask"])
     
-    geoms_month_index = list(
-                {'properties': {'month_index': v}, 'geometry': s}
-                for i, (s, v) 
-                in enumerate(
-                    rasterio.features.shapes(inds.astype("uint16"), mask = (forest_mask & valid_area & decline_data.state & inds!= 0).data, transform=Affine(*decline_data.state.attrs["transform"]))))
-  
-    gp_results = gp.GeoDataFrame.from_features(geoms_month_index)
-    # [str(bin_end)[:7] for bin_end in bins_as_date[gpd_results.month_index.astype(int)]]
-    gp_results.insert(1,"month",bins_as_date[gp_results.month_index.astype(int)].month)
-    gp_results.insert(1,"year",bins_as_date[gp_results.month_index.astype(int)].year)
+    relevant_area = np.logical_and(np.logical_and((forest_mask & valid_area  & decline_data.state).data,inds!=0),inds!=len(bins_as_date)) #Areas in the forest mask, valid area, in decline within start date and end date
+    
+    # bins_as_date[np.logical_and(bins_as_datenumber >= np.min(first_date_number[relevant_area]),bins_as_datenumber <= np.max(first_date_number[relevant_area]))]
+    
+    # if export_cuts:
+    #     soil_data = import_soil_data(tile.paths)
+    
+    if multiple_files:
         
-    tile.add_path("monthly_results", tile.data_directory / "Results" / "monthly_results.shp")
-    gp_results.crs = decline_data.state.crs.replace("+init=","")
-    gp_results.to_file(tile.paths["monthly_results"])
-    
-    # SchemaAtteint= {'properties': {'month_index': 'int:18'},'geometry': 'Polygon'}
-    # with fiona.open(tile.paths["monthly_results"], "w",crs=decline_data.state.crs,driver='ESRI Shapefile', schema=SchemaAtteint) as output:
-    #     for poly in geoms_month_index:
-    #         print(poly)
-    #         output.write(poly)
+        tile.add_dirpath("result_files", tile.data_directory / "Results")
+        for date_bin_index, date_bin in enumerate(bins_as_date):
+            state_code = first_date_number <= bins_as_datenumber[date_bin_index]
+            geoms_declined = list(
+                        {'properties': {'state': v}, 'geometry': s}
+                        for i, (s, v) 
+                        in enumerate(
+                            rasterio.features.shapes(state_code.astype("uint8"), mask =  relevant_area & (state_code!=0), transform=Affine(*decline_data.state.attrs["transform"]))))
+            gp_results = gp.GeoDataFrame.from_features(geoms_declined)
+            
+            gp_results.crs = decline_data.state.crs.replace("+init=","")
+            if not(gp_results.empty):
+                gp_results.to_file(tile.paths["result_files"] / (date_bin.strftime('%Y-%m-%d')+".shp"))
+    else:
+        geoms_period_index = list(
+                    {'properties': {'period_index': v}, 'geometry': s}
+                    for i, (s, v) 
+                    in enumerate(
+                        rasterio.features.shapes(inds.astype("uint16"), mask =  relevant_area , transform=Affine(*decline_data.state.attrs["transform"]))))
+      
+        gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
+        gp_results.period_index=gp_results.period_index.astype(int)
 
-
-    # for dateIndex in range(FirstDateDiff,stackAtteint.shape[0]):
-    # #SCOLYTES
-    #     if not(os.path.isfile(os.getcwd()+"/Out/Results/"+"V"+Version+"/Atteint/"+tuile+"/Atteint_"+Dates[dateIndex]+".tif")):
-    #         writingMode="w"
-    #     else:
-    #         writingMode="r+"
-    #     write_window=rasterio.windows.Window.from_slices((Bornes[x], Bornes[x+1]), (Bornes[y], Bornes[y+1]))
-    #     ProfileSave=MetaProfile.copy()
-    #     ProfileSave["dtype"]=stackAtteint.dtype
-    #     ProfileSave["tiled"]=True
-    #     ProfileSave["nodata"]=5
-    #     with rasterio.open(os.getcwd()+"/Out/Results/"+"V"+Version+"/Atteint/"+tuile+"/Atteint_"+Dates[dateIndex]+".tif", writingMode, nbits=3, **ProfileSave) as dst:
-    #         dst.write(stackAtteint[dateIndex,:,:], indexes=1, window=write_window)
-
-    
-    # np.reshape(decline_data.first_date,-1)
-    # all_dates_as_number = np.array(range(dates_as_number[0],dates_as_number[-1]+32))
-    # all_dates = [np.datetime64(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in all_dates_as_number]
-    # array = xr.DataArray(all_dates_as_number, coords={"Time" : all_dates},dims=["Time"])   
-    # array = array.assign_coords(year_month = ("Time",[str(day)[:7] for day in all_dates]))
-
-    # bins = array.groupby("year_month").min()
-    # bins = [0, 25, 50,100]
-    # decline_data.first_date.groupby_bins(bins = bins)
-    # array = array.assign_coords(year = ("Time",pd.DatetimeIndex(array.Time.data).year))
-    # array = array.assign_coords(month = ("Time",pd.DatetimeIndex(array.Time.data).month))
-    
-    # all_dates[0].year
-    
-    # stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in tile.dates]))
-    # tile.dates
+        gp_results.insert(1,"period",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d') + " - " + (bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))
+        # gp_results.insert(1,"month",bins_as_date[gp_results.period_index.astype(int)].month)
+        # gp_results.insert(1,"year",bins_as_date[gp_results.month_index.astype(int)].year)
         
-                               
-    # write_tif(decline_data["count"], first_detection_date_index.attrs,tile.paths["count_decline"],nodata=0)
-
-        # print("Détection du déperissement")
+        
+        tile.add_path("periodic_results", tile.data_directory / "Results" / "periodic_results.shp")
+        gp_results.crs = decline_data.state.crs.replace("+init=","")
+        gp_results.to_file(tile.paths["periodic_results"])
+    
+    
     tile.save_info()
 
 
