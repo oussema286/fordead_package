@@ -6,6 +6,8 @@ Created on Fri Nov  6 17:32:26 2020
 """
 import rioxarray
 from numpy import uint8
+import pandas as pd
+import datetime
 
 def write_tif(data_array, attributes, path, nodata = None):
     data_array.attrs=attributes
@@ -27,3 +29,12 @@ def write_tif(data_array, attributes, path, nodata = None):
 
     data_array.rio.to_raster(path,windowed = False, **args, tiled = True)
 
+def get_bins(start_date,end_date,frequency,dates):
+    if frequency == "sentinel":
+        bins_as_date = pd.DatetimeIndex(dates)
+    else:
+        bins_as_date=pd.date_range(start=start_date, end = end_date, freq=frequency)
+    bins_as_date = bins_as_date.insert(0,datetime.datetime.strptime(start_date, '%Y-%m-%d'))
+    bins_as_date = bins_as_date.insert(len(bins_as_date),datetime.datetime.strptime(end_date, '%Y-%m-%d'))
+    bins_as_datenumber = (bins_as_date-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days  
+    return bins_as_date, bins_as_datenumber
