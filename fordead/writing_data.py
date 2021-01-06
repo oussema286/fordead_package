@@ -10,6 +10,9 @@ import pandas as pd
 import datetime
 import numpy as np
 import xarray as xr
+import rasterio
+from affine import Affine
+import geopandas as gp
 
 def write_tif(data_array, attributes, path, nodata = None):
     data_array.attrs=attributes
@@ -48,9 +51,35 @@ def get_bins(start_date,end_date,frequency,dates):
 
     return bins_as_date, bins_as_datenumber
 
-def convert_dateindex_to_datenumber(dates_index, dates):
+def convert_dateindex_to_datenumber(data, dates):
+
     array = xr.DataArray(range(dates.size), coords={"Time" : dates},dims=["Time"])   
-    dateindex_flat = array[dates_index.data.ravel()]
+    dateindex_flat = array[data.first_date.data.ravel()]
     datenumber_flat = (pd.to_datetime(dateindex_flat.Time.data)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
-    date_number = np.reshape(np.array(datenumber_flat),dates_index.shape)
+    date_number = np.reshape(np.array(datenumber_flat),data.first_date.shape)
+    date_number[~data.state.data] = 99999999
     return date_number
+
+
+def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_datenumber, relevant_area, attrs):
+    inds_soil = np.digitize(first_date_number, bins_as_datenumber, right = True)
+    geoms_period_index = list(
+                {'properties': {'period_index': v}, 'geometry': s}
+                for i, (s, v) 
+                in enumerate(
+                    rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).data , transform=Affine(*attrs["transform"]))))
+    gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
+    gp_results.period_index=gp_results.period_index.astype(int)
+    gp_results.insert(1,"period",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d') + " - " + (bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))            
+    gp_results.crs = attrs["crs"].replace("+init=","")
+    return gp_results
+
+def get_state_at_period_end(state_code,relevant_area,attrs):
+    geoms = list(
+                {'properties': {'state': v}, 'geometry': s}
+                for i, (s, v) 
+                in enumerate(
+                    rasterio.features.shapes(state_code.astype("uint8"), mask =  np.logical_and(relevant_area.data,state_code!=0), transform=Affine(*attrs["transform"]))))
+    period_end_results = gp.GeoDataFrame.from_features(geoms)
+    period_end_results.crs = attrs["crs"].replace("+init=","")
+    return period_end_results

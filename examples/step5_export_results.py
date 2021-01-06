@@ -11,16 +11,16 @@ import argparse
 from fordead.ImportData import import_decline_data, TileInfo, import_forest_mask, import_soil_data
 # from fordead.writing_data import write_tif
 # from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
-from fordead.writing_data import get_bins, convert_dateindex_to_datenumber
+from fordead.writing_data import get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date
 
-import numpy as np
-import datetime
-import xarray as xr
-import pandas as pd
-import rasterio
-from affine import Affine
+# import numpy as np
+# import datetime
+# import xarray as xr
+# import pandas as pd
+# import rasterio
+# from affine import Affine
 # import fiona
-import geopandas as gp
+# import geopandas as gp
 
 
 def parse_command_line():
@@ -37,6 +37,10 @@ def parse_command_line():
     return dictArgs
 
 
+
+
+
+#     return gp_results
 def export_results(
     data_directory,
     start_date,
@@ -47,10 +51,6 @@ def export_results(
     # ExportAsShapefile = False,
     ):
 
-    #global results / several files
-    #Frequency (date sentinel / mois / plusieurs mois)
-    #Résultats entre la fin du mois de start date et le début du mois de end_date (rajouter des bins ?)
-    #Cut / not cut
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     decline_data = import_decline_data(tile.paths)
@@ -58,70 +58,35 @@ def export_results(
     if tile.parameters["Overwrite"] : tile.delete_dirs("periodic_results_decline","result_files") #Deleting previous detection results if they exist
     
     bins_as_date, bins_as_datenumber = get_bins(start_date,end_date,frequency,tile.dates)
-
-    first_date_number = convert_dateindex_to_datenumber(decline_data.first_date, tile.dates)
-    first_date_number[~decline_data.state.data] = bins_as_datenumber[-1]+1
-    inds_decline = np.digitize(first_date_number, bins_as_datenumber,right = True)
-    
+    first_date_number = convert_dateindex_to_datenumber(decline_data, tile.dates)
+    if export_soil:
+        soil_data = import_soil_data(tile.paths)
+        first_date_number_soil = convert_dateindex_to_datenumber(soil_data, tile.dates)
+        
     forest_mask = import_forest_mask(tile.paths["ForestMask"])
     valid_area = import_forest_mask(tile.paths["valid_area_mask"])
     relevant_area = forest_mask & valid_area
-                
-    
-    if export_soil:
-        soil_data = import_soil_data(tile.paths)
-        first_date_number_soil = convert_dateindex_to_datenumber(soil_data.first_date, tile.dates)
-        inds_soil = np.digitize(first_date_number_soil, bins_as_datenumber, right = True)
-        first_date_number_soil[~soil_data.state.data] = bins_as_datenumber[-1]+1
         
     if multiple_files:
-        
         tile.add_dirpath("result_files", tile.data_directory / "Results")
         for date_bin_index, date_bin in enumerate(bins_as_date):
             state_code = first_date_number <= bins_as_datenumber[date_bin_index]
             if export_soil:
                 state_code = state_code + 2*(first_date_number_soil <= bins_as_datenumber[date_bin_index])
-            geoms_declined = list(
-                        {'properties': {'state': v}, 'geometry': s}
-                        for i, (s, v) 
-                        in enumerate(
-                            rasterio.features.shapes(state_code.astype("uint8"), mask =  np.logical_and(relevant_area.data,state_code!=0), transform=Affine(*decline_data.state.attrs["transform"]))))
-            gp_results = gp.GeoDataFrame.from_features(geoms_declined)
-            gp_results.crs = decline_data.state.crs.replace("+init=","")
-            if not(gp_results.empty):
-                gp_results.to_file(tile.paths["result_files"] / (date_bin.strftime('%Y-%m-%d')+".shp"))
+            period_end_results = get_state_at_date(state_code,relevant_area,decline_data.state.attrs)
+            if not(period_end_results.empty):
+                period_end_results.to_file(tile.paths["result_files"] / (date_bin.strftime('%Y-%m-%d')+".shp"))
                 
-            
     else:
         # vectorize_periodic_results(inds_decline, mask,transform)
         tile.add_path("periodic_results_decline", tile.data_directory / "Results" / "periodic_results_decline.shp")
-        
-        geoms_period_index = list(
-                    {'properties': {'period_index': v}, 'geometry': s}
-                    for i, (s, v) 
-                    in enumerate(
-                        rasterio.features.shapes(inds_decline.astype("uint16"), mask =  (relevant_area & (inds_decline!=0) &  (inds_decline!=len(bins_as_date))).data, transform=Affine(*decline_data.state.attrs["transform"]))))
-      
-        gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
-        gp_results.period_index=gp_results.period_index.astype(int)
-        gp_results.insert(1,"period",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d') + " - " + (bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))        
-        
-        gp_results.crs = decline_data.state.crs.replace("+init=","")
-        gp_results.to_file(tile.paths["periodic_results_decline"])
+        periodic_results = get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_datenumber, relevant_area, decline_data.state.attrs)
+        periodic_results.to_file(tile.paths["periodic_results_decline"])
         
         if export_soil:
             tile.add_path("periodic_results_soil", tile.data_directory / "Results" / "periodic_results_soil.shp")
-            
-            geoms_period_index = list(
-                        {'properties': {'period_index': v}, 'geometry': s}
-                        for i, (s, v) 
-                        in enumerate(
-                            rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).data , transform=Affine(*decline_data.state.attrs["transform"]))))
-            gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
-            gp_results.period_index=gp_results.period_index.astype(int)
-            gp_results.insert(1,"period",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d') + " - " + (bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))            
-            gp_results.crs = decline_data.state.crs.replace("+init=","")
-            gp_results.to_file(tile.paths["periodic_results_soil"])
+            periodic_results = get_periodic_results_as_shapefile(first_date_number_soil, bins_as_date, bins_as_datenumber, relevant_area, soil_data.state.attrs)
+            periodic_results.to_file(tile.paths["periodic_results_soil"])
     
     tile.save_info()
 
