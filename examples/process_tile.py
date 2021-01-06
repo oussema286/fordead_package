@@ -10,6 +10,7 @@ from examples.step1_compute_masked_vegetationindex import compute_masked_vegetat
 from examples.step2_TrainFordead import train_model
 from examples.step3_DetectionFordead import decline_detection
 from examples.step4_compute_forest_mask import compute_forest_mask
+from examples.step5_export_results import export_results
 from fordead.ImportData import TileInfo
 
 from pathlib import Path
@@ -50,6 +51,8 @@ def parse_command_line():
     parser.add_argument("--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
     parser.add_argument("--date_lim_training", dest = "date_lim_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
     
+    parser.add_argument("--results_frequency", dest = "results_frequency",type = str,default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
+    parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
 
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
@@ -60,7 +63,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   path_example_raster, dep_path, bdforet_dirpath, list_forest_type, path_oso, list_code_oso, #compute_forest_mask arguments
                   lim_perc_cloud, vi, sentinel_source, apply_source_mask, #compute_masked_vegetationindex arguments
                   remove_outliers, threshold_outliers, min_last_date_training, date_lim_training, #Train_model arguments
-                  threshold_anomaly): #Decline_detection argument
+                  threshold_anomaly,
+                  results_frequency, multiple_files): #Decline_detection argument
 
     # main_directory = "/mnt/fordead/Out"
     # sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
@@ -93,7 +97,6 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         # path_example_raster = "G:/Deperissement/Data/SENTINEL/T31UFQ/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1/SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1_FRE_B2.tif"
         # dep_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp"
         # bdforet_dirpath = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET"
-
 
 # =====================================================================================================================
      
@@ -131,6 +134,21 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
+# =====================================================================================================================
+
+        # print("Computing forest mask")
+        export_results(
+            data_directory = main_directory / tuile,
+            start_date = '2015-06-23',
+            end_date = '2030-01-01',
+            frequency= results_frequency,
+            export_soil = True,
+            multiple_files = multiple_files
+            )
+        file = open(logpath, "a") 
+        file.write("Export results : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+        file.close()
+        
         
     tile = TileInfo(main_directory / tuile)
     tile = tile.import_info()

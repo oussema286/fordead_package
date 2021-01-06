@@ -9,18 +9,7 @@ Created on Fri Dec 18 11:32:57 2020
 
 import argparse
 from fordead.ImportData import import_decline_data, TileInfo, import_forest_mask, import_soil_data
-# from fordead.writing_data import write_tif
-# from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 from fordead.writing_data import get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date
-
-# import numpy as np
-# import datetime
-# import xarray as xr
-# import pandas as pd
-# import rasterio
-# from affine import Affine
-# import fiona
-# import geopandas as gp
 
 
 def parse_command_line():
@@ -37,10 +26,6 @@ def parse_command_line():
     return dictArgs
 
 
-
-
-
-#     return gp_results
 def export_results(
     data_directory,
     start_date,
@@ -48,7 +33,6 @@ def export_results(
     frequency,
     export_soil,
     multiple_files
-    # ExportAsShapefile = False,
     ):
 
     tile = TileInfo(data_directory)
@@ -78,7 +62,6 @@ def export_results(
                 period_end_results.to_file(tile.paths["result_files"] / (date_bin.strftime('%Y-%m-%d')+".shp"))
                 
     else:
-        # vectorize_periodic_results(inds_decline, mask,transform)
         tile.add_path("periodic_results_decline", tile.data_directory / "Results" / "periodic_results_decline.shp")
         periodic_results = get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_datenumber, relevant_area, decline_data.state.attrs)
         periodic_results.to_file(tile.paths["periodic_results_decline"])
