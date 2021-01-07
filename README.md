@@ -30,23 +30,24 @@ pip install .
 ```
 
 ## Utilisation
-La détection du déperissement se fait en trois étapes.
-- Le calcul des indices de végétation et des masques
+La détection du déperissement se fait en cinq étapes.
+- Le calcul des indices de végétation et des masques pour chaque date SENTINEL-2
 - L'apprentissage par modélisation de l'indice de végétation pixel par pixel à partir des premières dates
-- La détection du déperissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel.
+- La détection du déperissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel
+- La création du masque forêt, qui définit les zones d'intérêt
+- L'export de sorties permettant de visualiser les résultats au pas de temps souhaité
 
-### Etape 3 : Main_DetectionForDead
-L'étape de détection prend en entrée un dossier avec l'arborescence suivante:
-* VegetationIndex 
-    * VegetationIndex_YYYY_MM_JJ.tif
-    * ...
-* Mask
-    * Mask_YYYY_MM_JJ.tif
-    * ...
-* DataModel
-    * stackP
-    * rasterSigma
-* DataAnomalies
+### Première étape : step1_compute_masked_vegetationindex.py
+Cette étape permet le calcul d'indices de végétation et de masques pour chaque date SENTINEL-2
 
-Un tel dossier est disponible dans le package ForDead_data.
-La chaîne de traitement s'arrête pour le moment au calcul des anomalies.
+Les paramètres en entrée sont :
+- input_directory : le chemin du dossier correspondant à une tuile ou une zone contenant un dossier par date SENTINEL contenant les différentes bandes. Les dossiers doivent contenir la date correspondante dans leur nom sous un des formats suivants : YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY ou DDMMYYYY. Les fichiers des bandes doivent contenir le nom de la bande correspondante (B2 ou B02, B3 ou B03, etc...).
+
+- data_directory : Le chemin du dossier de sortie, dans lequel seront écrit les indices de végétations et masques
+
+- lim_perc_cloud : Le pourcentage maximum de nuages. Si le pourcentage de nuage de la date SENTINEL, calculé à partir de la classification du fournisseur, est supérieur à ce seuil, la date est ignorée.
+
+- sentinel_source : Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'
+
+- apply_source_mask : Si True, le masque du fournisseur est utilisé dans le calcul du masque de la date.
+
