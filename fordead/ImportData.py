@@ -34,7 +34,7 @@ def get_band_paths(dict_sen_paths):
                 DictSentinelPaths[date]["B6"]=Path(path)
             if "B7" in path or "B07" in path:
                 DictSentinelPaths[date]["B7"]=Path(path)
-            if ("_B8" in path or "_B08" in path) and not("_B8A" in path):
+            if ("B8" in path or "B08" in path) and not("B8A" in path):
                 DictSentinelPaths[date]["B8"]=Path(path)
             if "B8A" in path:
                 DictSentinelPaths[date]["B8A"]=Path(path)

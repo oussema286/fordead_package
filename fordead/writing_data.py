@@ -74,7 +74,7 @@ def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_d
     gp_results.crs = attrs["crs"].replace("+init=","")
     return gp_results
 
-def get_state_at_period_end(state_code,relevant_area,attrs):
+def get_state_at_date(state_code,relevant_area,attrs):
     geoms = list(
                 {'properties': {'state': v}, 'geometry': s}
                 for i, (s, v) 
