@@ -304,6 +304,8 @@ def import_resampled_sen_stack(band_paths, list_bands, InterpolationOrder = 0):
     concatenated_stack_bands= xr.concat(stack_bands,dim="band")
     concatenated_stack_bands.coords["band"] = list_bands
     # concatenated_stack_bands=concatenated_stack_bands.chunk({"band": 1,"x" : -1,"y" : 100})
+    concatenated_stack_bands.attrs["nodata"] = 0
+    concatenated_stack_bands.attrs["crs"]=concatenated_stack_bands.crs.replace("+init=","")
     return concatenated_stack_bands
 
 

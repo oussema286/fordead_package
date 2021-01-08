@@ -39,17 +39,21 @@ def clip_array_with_shape(shape, array):
     return array
 
 def get_stack_rgb(shape,tile, bands = ["B4","B3","B2"]):
-    list_rgb = [import_resampled_sen_stack(tile.paths["Sentinel"][date], bands) for date in tile.dates]
+    # date = tile.dates[0]
+    # stack_rgb = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands)
+    # clipped_stack_rgb = clip_array_with_shape(shape, stack_rgb)
+    
+    list_rgb = [clip_array_with_shape(shape, import_resampled_sen_stack(tile.paths["Sentinel"][date], bands)) for date in tile.dates]
     stack_rgb = xr.concat(list_rgb,dim="Time")
     
-    stack_rgb.attrs["nodata"] = 0
-    stack_rgb.attrs["crs"]=stack_rgb.crs.replace("+init=","")
+    
+    
     stack_rgb=stack_rgb.assign_coords(Time=tile.dates)
 
     
-    clipped_stack_rgb = clip_array_with_shape(shape, stack_rgb)
-    clipped_stack_rgb=clipped_stack_rgb.transpose("Time", 'y', 'x',"band")
-    return clipped_stack_rgb
+    # clipped_stack_rgb = clip_array_with_shape(shape, stack_rgb)
+    stack_rgb=stack_rgb.transpose("Time", 'y', 'x',"band")
+    return stack_rgb
 
 
     

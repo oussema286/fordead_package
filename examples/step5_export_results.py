@@ -78,4 +78,4 @@ def export_results(
 if __name__ == '__main__':
     dictArgs=parse_command_line()
     export_results(**dictArgs)
-    print("Results exported")
+    

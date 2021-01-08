@@ -40,10 +40,12 @@ from fordead.ImportData import TileInfo
 #     FilterObs=False
 #     DataSource="THEIA"
 
+#"C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest"
+
 def parse_command_line():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ROI8", help = "Directory with the computed results of decline detection")
-    parser.add_argument("-s", "--shape_path", dest = "shape_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneMontagne1.shp", help = "Path of the shapefile of the area to convert to timelapse")
+    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "D:/Documents/Deperissement/Output_detection/ZoneFaucheUnique", help = "Directory with the computed results of decline detection")
+    parser.add_argument("-s", "--shape_path", dest = "shape_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneFaucheUnique.shp", help = "Path of the shapefile of the area to convert to timelapse")
     parser.add_argument("--obs_terrain_path", dest = "obs_terrain_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/Scolytes.shp", help = "Path of the shapefile with ground observations")
     # parser.add_argument("-t", "--Tuile", dest = "Tuile",type = str,default = "ROI1", help = "Nom du shapefile")
     # parser.add_argument("-v", "--Version", dest = "Version",type = int,default = "V"+str(getVersion()-1), help = "Version utilisée pour le timelapse")
@@ -73,6 +75,7 @@ DictCol={'C' : "white",
 #         3 : "blue"}
 
 def create_timelapse(data_directory,shape_path, obs_terrain_path, Overwrite):
+    
     tile = TileInfo(data_directory)
     tile = tile.import_info()
 
