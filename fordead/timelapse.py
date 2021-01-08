@@ -44,6 +44,15 @@ def get_stack_rgb(shape,tile, bands = ["B4","B3","B2"]):
     # clipped_stack_rgb = clip_array_with_shape(shape, stack_rgb)
     
     list_rgb = [clip_array_with_shape(shape, import_resampled_sen_stack(tile.paths["Sentinel"][date], bands)) for date in tile.dates]
+    # list_rgb=[]
+    # for date in tile.dates:
+    #     rgb = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands)
+    #     print("imported")
+    #     clipped_rgb = clip_array_with_shape(shape, rgb)
+    #     print("clipped")
+    #     list_rgb+=[clipped_rgb]
+    #     print("added")
+        
     stack_rgb = xr.concat(list_rgb,dim="Time")
     
     

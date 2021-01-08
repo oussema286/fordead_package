@@ -44,7 +44,7 @@ from fordead.ImportData import TileInfo
 
 def parse_command_line():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "D:/Documents/Deperissement/Output_detection/ZoneFaucheUnique", help = "Directory with the computed results of decline detection")
+    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "D:/Documents/Deperissement/Output_detection/T31UFQ", help = "Directory with the computed results of decline detection")
     parser.add_argument("-s", "--shape_path", dest = "shape_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneFaucheUnique.shp", help = "Path of the shapefile of the area to convert to timelapse")
     parser.add_argument("--obs_terrain_path", dest = "obs_terrain_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/Scolytes.shp", help = "Path of the shapefile with ground observations")
     # parser.add_argument("-t", "--Tuile", dest = "Tuile",type = str,default = "ROI1", help = "Nom du shapefile")
