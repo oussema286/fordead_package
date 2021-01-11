@@ -17,7 +17,7 @@ L'arborescence nécessaire dans le dossier indiqué par le paramètre InputDirec
 # =============================================================================
 
 import time
-# import numpy as np
+import numpy as np
 import argparse
 # from pathlib import Path
 from path import Path
@@ -66,7 +66,7 @@ def compute_masked_vegetationindex(
     vi = "CRSWIR",
     ):
     #############################
-    
+    extent = np.array([ 669568.21227506, 5459378.22372428,  672703.79416592, 5462513.79780355])
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
@@ -80,7 +80,8 @@ def compute_masked_vegetationindex(
     tile.add_dirpath("VegetationIndexDir", tile.data_directory / "VegetationIndex")
     tile.add_dirpath("MaskDir", tile.data_directory / "Mask")
     
-    raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0]["B2"])
+    raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0]["B2"], extent = extent)
+    # raster_meta["coords"]["x"]
 
     tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
     tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
@@ -102,7 +103,7 @@ def compute_masked_vegetationindex(
         if cloudiness.perc_cloud[date] <= lim_perc_cloud and not(date in tile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
             # print(date)
             # Resample and import SENTINEL data
-            stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"])
+            stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"], extent = extent)
             # Compute masks
             mask = compute_masks(stack_bands, soil_data, date_index)
             # Compute vegetation index

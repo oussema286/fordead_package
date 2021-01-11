@@ -23,44 +23,25 @@ import numpy as np
 from fordead.ImportData import import_resampled_sen_stack, import_soil_data, import_decline_data
 
 
-def clip_array_with_shape(shape, array):
-    extent = shape.total_bounds
+# def clip_array_with_shape(shape, array):
+#     extent = shape.total_bounds
     
-    clipped_array = array.rio.clip_box(minx=min(min(array.x),extent[0]),
-                               miny=min(min(array.y),extent[1]),
-                               maxx=max(max(array.x),extent[2]),
-                               maxy=max(max(array.y),extent[3]))
-    # clipped_array = array.rio.clip_box(minx=extent[0],
-    #                            miny=extent[1],
-    #                            maxx=extent[2],
-    #                            maxy=extent[3])
-    clipped_array.attrs = array.attrs
+#     clipped_array = array.rio.clip_box(minx=min(min(array.x),extent[0]),
+#                                miny=min(min(array.y),extent[1]),
+#                                maxx=max(max(array.x),extent[2]),
+#                                maxy=max(max(array.y),extent[3]))
+#     # clipped_array = array.rio.clip_box(minx=extent[0],
+#     #                            miny=extent[1],
+#     #                            maxx=extent[2],
+#     #                            maxy=extent[3])
+#     clipped_array.attrs = array.attrs
     
-    return array
+#     return array
 
-def get_stack_rgb(shape,tile, bands = ["B4","B3","B2"]):
-    # date = tile.dates[0]
-    # stack_rgb = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands)
-    # clipped_stack_rgb = clip_array_with_shape(shape, stack_rgb)
-    
-    list_rgb = [clip_array_with_shape(shape, import_resampled_sen_stack(tile.paths["Sentinel"][date], bands)) for date in tile.dates]
-    # list_rgb=[]
-    # for date in tile.dates:
-    #     rgb = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands)
-    #     print("imported")
-    #     clipped_rgb = clip_array_with_shape(shape, rgb)
-    #     print("clipped")
-    #     list_rgb+=[clipped_rgb]
-    #     print("added")
-        
+def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"]):
+    list_rgb = [import_resampled_sen_stack(tile.paths["Sentinel"][date], bands,extent = extent) for date in tile.dates]
     stack_rgb = xr.concat(list_rgb,dim="Time")
-    
-    
-    
     stack_rgb=stack_rgb.assign_coords(Time=tile.dates)
-
-    
-    # clipped_stack_rgb = clip_array_with_shape(shape, stack_rgb)
     stack_rgb=stack_rgb.transpose("Time", 'y', 'x',"band")
     return stack_rgb
 
@@ -71,12 +52,15 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
         shape_buffer=shape.geometry.buffer(100)
         fig = go.Figure()
         
+        
         #Récupération des données raster
-        stack_rgb = get_stack_rgb(shape_buffer,tile, bands = ["B4","B3","B2"])
+        extent= shape_buffer.total_bounds
+        stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"])
         soil_data = import_soil_data(tile.paths)
         decline_data = import_decline_data(tile.paths)
-        soil_data = clip_array_with_shape(shape_buffer, soil_data)
-        decline_data = clip_array_with_shape(shape_buffer, decline_data)
+        soil_data = soil_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        decline_data = decline_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+
 
 #         #Récupération des données observations
         ScolytesObs=gp.read_file(obs_terrain_path,bbox=shape_buffer.envelope)

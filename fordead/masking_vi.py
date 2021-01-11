@@ -67,6 +67,7 @@ def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
     bdforet_paths = [shp_path for shp_path in Path(bdforet_dirpath).glob("**/*.shp") if shp_path.split("_")[-2][-2:] in list(dep_in_zone.code_insee)]   
     return bdforet_paths, tile_extent
 
+
 def rasterize_bdforet(example_path, dep_path, bdforet_dirpath, 
                       list_forest_type = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"]):
 

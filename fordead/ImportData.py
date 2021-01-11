@@ -14,7 +14,10 @@ import pickle
 import shutil
 from scipy import ndimage
 
-    
+
+import rioxarray
+import geopandas as gp
+
 def get_band_paths(dict_sen_paths):
     DictSentinelPaths={}
     for date in dict_sen_paths:
@@ -280,9 +283,11 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     else:
         return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
 
-def get_raster_metadata(raster_path = None,raster = None):
+def get_raster_metadata(raster_path = None,raster = None, extent = None):
     if raster_path != None:
         raster = xr.open_rasterio(raster_path)
+    if extent is not None:
+        raster = raster.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
     raster_meta = {"dims" : raster.dims,
                    "coords" : raster.coords,
                    "attrs" : raster.attrs,
@@ -290,17 +295,43 @@ def get_raster_metadata(raster_path = None,raster = None):
                    "shape" : raster.shape}
     return raster_meta
     
-def import_resampled_sen_stack(band_paths, list_bands, InterpolationOrder = 0):
+
+# def get_extent(shape = None, shape_path = None):
+    
+#     if shape_path == None and shape == None:
+#         return None
+#     else:
+#         if shape_path != None:
+#             shape = gp.read_file(shape_path)
+#         extent = shape.total_bounds
+#         extent[2] = extent[2] + 20 - (extent[2]-extent[0]) % 20
+#         extent[1] = extent[1] + 20 - (extent[1]-extent[3]) % 20
+
+#         return extent
+
+
+
+def import_resampled_sen_stack(band_paths, list_bands, InterpolationOrder = 0, extent = None):
     #Importing data from files
-    stack_bands = [xr.open_rasterio(band_paths[band]) for band in list_bands]
+    
+    if extent is None:
+            stack_bands = [xr.open_rasterio(band_paths[band]) for band in list_bands]
+    else:
+        stack_bands = [xr.open_rasterio(band_paths[band],chunks = 1280).loc[dict(x=slice(extent[0]-20, extent[2]+20),y = slice(extent[3]+20,extent[1]-20))].compute() for band in list_bands]
     
     #Resampling at 10m resolution
     for band_index in range(len(stack_bands)):
-        if stack_bands[band_index].attrs["res"]==(20.0,20.0):
-            stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=InterpolationOrder), coords=stack_bands[0].coords)
-        
-    # resampled_stack_bands = [band if band.attrs["res"]==(10.0,10.0) else band.interp(x = stack_bands[0].coords["x"], y = stack_bands[0].coords["y"],method="nearest") for band in stack_bands ] #Resample using xarray interp, but it adds nan at borders
-            
+        if stack_bands[band_index].attrs["res"]==(20.0,20.0):            
+            # stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=InterpolationOrder), 
+            #                                        coords=stack_bands[0].coords)
+            stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=InterpolationOrder), 
+                                                   coords={"band" : [1], 
+                                                           "y" : np.linspace(stack_bands[band_index].isel(x=0,y=0).y+5, stack_bands[band_index].isel(x=0,y=stack_bands[band_index].sizes["y"]-1).y-5, num=stack_bands[band_index].sizes["y"]*2),
+                                                           "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x+5, num=stack_bands[band_index].sizes["x"]*2)},
+                                                   dims=["band","y","x"])
+        if extent is not None:
+            stack_bands[band_index] = stack_bands[band_index].loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+
     concatenated_stack_bands= xr.concat(stack_bands,dim="band")
     concatenated_stack_bands.coords["band"] = list_bands
     # concatenated_stack_bands=concatenated_stack_bands.chunk({"band": 1,"x" : -1,"y" : 100})
