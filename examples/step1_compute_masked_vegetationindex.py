@@ -21,7 +21,7 @@ import numpy as np
 import argparse
 # from pathlib import Path
 from path import Path
-
+import geopandas as gp
 #%% ===========================================================================
 #   IMPORT LIBRAIRIES PERSO
 # =============================================================================
@@ -46,7 +46,8 @@ def parse_command_line():
     parser.add_argument("-d", "--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
     parser.add_argument("-m", "--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
     parser.add_argument("-v", "--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
-
+    parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection")
+    
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -64,13 +65,17 @@ def compute_masked_vegetationindex(
     sentinel_source = "THEIA",
     apply_source_mask = False,
     vi = "CRSWIR",
+    extent_shape_path=None
     ):
     #############################
-    extent = np.array([ 669568.21227506, 5459378.22372428,  672703.79416592, 5462513.79780355])
     
+    if extent_shape_path is not None:
+        extent = gp.read_file(extent_shape_path).total_bounds
+        data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
+        
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi})
+    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi, "extent_shape_path" : extent_shape_path})
     if tile.parameters["Overwrite"] : tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_decline", "state_soil", "valid_area_mask" ,"periodic_results_decline","result_files")
 
     tile.getdict_datepaths("Sentinel",Path(input_directory)) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
