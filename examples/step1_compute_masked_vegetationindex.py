@@ -72,6 +72,8 @@ def compute_masked_vegetationindex(
     if extent_shape_path is not None:
         extent = gp.read_file(extent_shape_path).total_bounds
         data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
+    else:
+        extent = None
         
     tile = TileInfo(data_directory)
     tile = tile.import_info()
