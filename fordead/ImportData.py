@@ -311,7 +311,7 @@ def get_raster_metadata(raster_path = None,raster = None, extent = None):
 
 
 
-def import_resampled_sen_stack(band_paths, list_bands, InterpolationOrder = 0, extent = None):
+def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, extent = None):
     #Importing data from files
     
     if extent is None:
@@ -322,9 +322,9 @@ def import_resampled_sen_stack(band_paths, list_bands, InterpolationOrder = 0, e
     #Resampling at 10m resolution
     for band_index in range(len(stack_bands)):
         if stack_bands[band_index].attrs["res"]==(20.0,20.0):            
-            # stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=InterpolationOrder), 
+            # stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=interpolation_order), 
             #                                        coords=stack_bands[0].coords)
-            stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=InterpolationOrder), 
+            stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=interpolation_order), 
                                                    coords={"band" : [1], 
                                                            "y" : np.linspace(stack_bands[band_index].isel(x=0,y=0).y+5, stack_bands[band_index].isel(x=0,y=stack_bands[band_index].sizes["y"]-1).y-5, num=stack_bands[band_index].sizes["y"]*2),
                                                            "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x+5, num=stack_bands[band_index].sizes["x"]*2)},

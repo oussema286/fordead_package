@@ -18,6 +18,8 @@ conda install geopandas
 conda install rasterio
 conda install xarray
 conda install scipy
+conda install dask
+conda install pathlib
 ```
 
 Install rioxarray : https://corteva.github.io/rioxarray/stable/installation.html

@@ -17,11 +17,10 @@ L'arborescence nécessaire dans le dossier indiqué par le paramètre InputDirec
 # =============================================================================
 
 import time
-import numpy as np
 import argparse
-# from pathlib import Path
-from path import Path
+from pathlib import Path
 import geopandas as gp
+
 #%% ===========================================================================
 #   IMPORT LIBRAIRIES PERSO
 # =============================================================================
@@ -39,13 +38,11 @@ def parse_command_line():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest", help = "Path of the directory with Sentinel dates")
     parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Path of the output directory")
-    # parser.add_argument("-t", "--tile", dest = "tile",type = str,default = "ZoneTest", help = "Chemin du dossier où sauvegarder les résultats")
-    parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
-    # parser.add_argument("-s", "--InterpolationOrder", dest = "InterpolationOrder",type = int,default = 0, help ="interpolation order : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique")
-    # parser.add_argument("-c", "--CorrectCRSWIR", dest = "CorrectCRSWIR", action="store_true",default = False, help = "Si activé, execute la correction du CRSWIR à partir")
-    parser.add_argument("-d", "--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
-    parser.add_argument("-m", "--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
-    parser.add_argument("-v", "--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
+    parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = -1, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness")
+    parser.add_argument("--interpolation_order", dest = "interpolation_order",type = int,default = 0, help ="interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique")
+    parser.add_argument("--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
+    parser.add_argument("--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
+    parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection")
     
     dictArgs={}
@@ -55,19 +52,15 @@ def parse_command_line():
 
 
 def compute_masked_vegetationindex(
-    # Tuiles= ["ZoneTestLarge"],
-    # InterpolationOrder=0,
-    # CorrectCRSWIR=False,
     input_directory,
     data_directory,
     lim_perc_cloud=0.3,
-    # forest_mask_source = "LastComputed",
+    interpolation_order = 0,
     sentinel_source = "THEIA",
     apply_source_mask = False,
     vi = "CRSWIR",
     extent_shape_path=None
     ):
-    #############################
     
     if extent_shape_path is not None:
         extent = gp.read_file(extent_shape_path).total_bounds
@@ -88,38 +81,40 @@ def compute_masked_vegetationindex(
     tile.add_dirpath("MaskDir", tile.data_directory / "Mask")
     
     raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0]["B2"], extent = extent)
-    # raster_meta["coords"]["x"]
 
     tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
     tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
     tile.add_path("count_soil", tile.data_directory / "DataSoil" / "count_soil.tif")
         
     #Computing cloudiness percentage for each date
-    cloudiness = get_cloudiness(Path(input_directory) / "cloudiness", tile.paths["Sentinel"], sentinel_source)
-
+    cloudiness = get_cloudiness(Path(input_directory) / "cloudiness", tile.paths["Sentinel"], sentinel_source).perc_cloud if lim_perc_cloud != -1 else dict(zip(tile.paths["Sentinel"], [-1]*len(tile.paths["Sentinel"])))
+        
     #Import or initialize data for the soil mask
     if tile.paths["state_soil"].exists():
         soil_data = import_soil_data(tile.paths)
     else:
         soil_data = initialize_soil_data(raster_meta["shape"],raster_meta["coords"])
+        
 
     #get already computed dates
     tile.getdict_datepaths("VegetationIndex",tile.paths["VegetationIndexDir"])
     date_index=0
     for date in tile.paths["Sentinel"]:
-        if cloudiness.perc_cloud[date] <= lim_perc_cloud and not(date in tile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
+
+        if cloudiness[date] <= lim_perc_cloud and not(date in tile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
             # print(date)
             # Resample and import SENTINEL data
-            stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"], extent = extent)
+            stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"], interpolation_order = interpolation_order, extent = extent)
             # Compute masks
             mask = compute_masks(stack_bands, soil_data, date_index)
             # Compute vegetation index
             vegetation_index = compute_vegetation_index(stack_bands, vi)
             
+            #Masking invalid values (division by zero)
             nan_vi = vegetation_index.isnull()
-            
             vegetation_index = vegetation_index.where(~nan_vi,0)
             mask = mask | nan_vi
+            
             write_tif(vegetation_index, raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
             write_tif(mask, raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
             date_index=date_index+1
@@ -135,7 +130,6 @@ def compute_masked_vegetationindex(
     
 if __name__ == '__main__':
     dictArgs=parse_command_line()
-    # print(dictArgs)
     start_time_debut = time.time()
     compute_masked_vegetationindex(**dictArgs)
     print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
