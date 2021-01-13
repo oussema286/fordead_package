@@ -17,7 +17,7 @@ import time
 def parse_command_line():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les données")
-    parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.161, help = "Seuil minimum pour détection d'anomalies")
+    parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -68,8 +68,10 @@ def decline_detection(
                 masked_vi["mask"] = masked_vi["mask"] | (date_index < first_detection_date_index) #Masking pixels where date was used for training
 
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
-                anomalies = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly).sel(Time = date)
+                anomalies = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly, 
+                                                vi = tile.parameters["vi"], path_dict_vi = tile.parameters["path_dict_vi"]).sel(Time = date)
                                 
+                # .squeeze("Time")
                 decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
                                
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)

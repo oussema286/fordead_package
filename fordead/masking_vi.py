@@ -148,12 +148,24 @@ def compute_masks(stack_bands, soil_data, date_index):
     
     return mask
 
-def compute_vegetation_index(stack_bands, vegetation_index = "CRSWIR", formula = None):
+def get_dict_vi(path_dict_vi = None):
+    dict_vi = {"CRSWIR" : {'formula': 'B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))', 'decline_change_direction': '+'},
+                "NDVI" : {'formula': '(B8âˆ’B4)/(B8+B4)', 'decline_change_direction': '+'}}
+    if path_dict_vi is not None:
+        d = {}
+        with open(path_dict_vi) as f:
+            for line in f:
+                list_line = line.split()
+                d[list_line[0]]={"formula" : list_line[1], "decline_change_direction" : list_line[2]}
+                
+        dict_vi.update(d)
+    return dict_vi
+
+def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_dict_vi = None):
     
-    if formula == None:
-        dict_vegetation_index = {"CRSWIR" : "B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))",
-                                 "NDVI" : "(B8−B4)/(B8+B4)"}
-        formula = dict_vegetation_index[vegetation_index]
+    if formula is None:
+        dict_vegetation_index = get_dict_vi(path_dict_vi)
+        formula = dict_vegetation_index[vi]["formula"]
 
     match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})" # B + un chiffre + une lettre OU B + deux chiffres OU B + un chiffre
     p = re.compile(match_string)

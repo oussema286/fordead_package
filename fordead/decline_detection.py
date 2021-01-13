@@ -7,6 +7,7 @@ Created on Mon Nov  2 09:34:34 2020
 
 import datetime
 from fordead.ModelVegetationIndex import compute_HarmonicTerms
+from fordead.masking_vi import get_dict_vi
 import xarray as xr
 
 import numpy as np
@@ -68,7 +69,7 @@ def prediction_vegetation_index(coeff_model,date_list):
 #     return predicted_vi
 
 
-def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly):
+def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, path_dict_vi):
     """
     Detects anomalies by comparison between predicted and calculated vegetation index
     
@@ -88,8 +89,16 @@ def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly):
 
 
     """
+    dict_vi = get_dict_vi(path_dict_vi)
+    
     diff_vi = vegetation_index-predicted_vi
-    anomalies = diff_vi > threshold_anomaly
+    
+    if dict_vi[vi]["decline_change_direction"] == "+":
+        anomalies = diff_vi > threshold_anomaly
+    elif dict_vi[vi]["decline_change_direction"] == "-":
+        anomalies = diff_vi < (-1*threshold_anomaly)
+    else:
+        raise Exception("Unrecognized decline_change_direction in " + path_dict_vi + " for vegetation index " + vi)
             
     return anomalies
 
