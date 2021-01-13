@@ -15,11 +15,9 @@ import time
 
 
 def parse_command_line():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les données")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.161, help = "Seuil minimum pour détection d'anomalies")
-    # parser.add_argument("-x", "--ExportAsShapefile", dest = "ExportAsShapefile", action="store_true",default = False, help = "Si activé, exporte les résultats sous la forme de shapefiles plutôt que de rasters")
-    # parser.add_argument("-o", "--Overwrite", dest = "Overwrite", action="store_false",default = True, help = "Si vrai, recommence la détection du début. Sinon, reprends de la dernière date analysée")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -29,7 +27,6 @@ def parse_command_line():
 def decline_detection(
     data_directory,
     threshold_anomaly=0.16,
-    # ExportAsShapefile = False,
     ):
     
     tile = TileInfo(data_directory)
@@ -55,7 +52,6 @@ def decline_detection(
         #IMPORTING DATA
         first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"])
         coeff_model = import_coeff_model(tile.paths["coeff_model"])
-        
         
         if tile.paths["state_decline"].exists():
             decline_data = import_decline_data(tile.paths)
@@ -90,7 +86,7 @@ def decline_detection(
 
 if __name__ == '__main__':
     dictArgs=parse_command_line()
-    print(dictArgs)
+    # print(dictArgs)
     start_time = time.time()
     decline_detection(**dictArgs)
     print("Temps d execution : %s secondes ---" % (time.time() - start_time))

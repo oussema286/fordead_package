@@ -14,10 +14,6 @@ import pickle
 import shutil
 from scipy import ndimage
 
-
-import rioxarray
-import geopandas as gp
-
 def get_band_paths(dict_sen_paths):
     DictSentinelPaths={}
     for date in dict_sen_paths:
@@ -296,20 +292,6 @@ def get_raster_metadata(raster_path = None,raster = None, extent = None):
     return raster_meta
     
 
-# def get_extent(shape = None, shape_path = None):
-    
-#     if shape_path == None and shape == None:
-#         return None
-#     else:
-#         if shape_path != None:
-#             shape = gp.read_file(shape_path)
-#         extent = shape.total_bounds
-#         extent[2] = extent[2] + 20 - (extent[2]-extent[0]) % 20
-#         extent[1] = extent[1] + 20 - (extent[1]-extent[3]) % 20
-
-#         return extent
-
-
 
 def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, extent = None):
     #Importing data from files
@@ -348,7 +330,7 @@ def import_forest_mask(forest_mask_path,chunks = None):
     return forest_mask.astype(bool)
 
 
-def import_stackedmaskedVI(tuile,date_lim_training=None,chunks = None):
+def import_stackedmaskedVI(tuile,max_last_date_training=None,chunks = None):
     """
 
     Parameters
@@ -364,23 +346,23 @@ def import_stackedmaskedVI(tuile,date_lim_training=None,chunks = None):
         DataArray containing mask value with dimension Time, x and y
 
     """
-    if date_lim_training==None:
+    if max_last_date_training==None:
         filter_dates=False
-        date_lim_training=""
+        max_last_date_training=""
     else:
         filter_dates=True
         
-    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in tuile.paths["VegetationIndex"] if date <= date_lim_training or not(filter_dates)]
+    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in tuile.paths["VegetationIndex"] if date <= max_last_date_training or not(filter_dates)]
     stack_vi=xr.concat(list_vi,dim="Time")
-    stack_vi=stack_vi.assign_coords(Time=[date for date in tuile.paths["VegetationIndex"].keys() if date <= date_lim_training or not(filter_dates)])
+    stack_vi=stack_vi.assign_coords(Time=[date for date in tuile.paths["VegetationIndex"].keys() if date <= max_last_date_training or not(filter_dates)])
     stack_vi=stack_vi.squeeze("band")
     stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
     stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
 
     
-    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in tuile.paths["Masks"] if date <= date_lim_training or not(filter_dates)]
+    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in tuile.paths["Masks"] if date <= max_last_date_training or not(filter_dates)]
     stack_masks=xr.concat(list_mask,dim="Time")
-    stack_masks=stack_masks.assign_coords(Time=[date for date in tuile.paths["Masks"].keys() if date <= date_lim_training or not(filter_dates)]).astype(bool)
+    stack_masks=stack_masks.assign_coords(Time=[date for date in tuile.paths["Masks"].keys() if date <= max_last_date_training or not(filter_dates)]).astype(bool)
     stack_masks=stack_masks.squeeze("band")
     stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
     stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))

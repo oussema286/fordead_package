@@ -5,21 +5,18 @@ Created on Fri Dec 18 11:32:57 2020
 @author: Raphaël Dutrieux
 """
 
-
-
 import argparse
 from fordead.ImportData import import_decline_data, TileInfo, import_forest_mask, import_soil_data
 from fordead.writing_data import get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date
 
-
 def parse_command_line():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les données")
     parser.add_argument("--start_date", dest = "start_date",type = str,default = '2015-06-23', help = "Date de début pour l'export des résultats")
-    parser.add_argument("--end_date", dest = "end_date",type = str,default = "2022-01-01", help = "Date de fin pour l'export des résultats")
-    parser.add_argument("--frequency", dest = "frequency",type = str,default = '3M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
-    parser.add_argument("--export_soil", dest = "export_soil", action="store_true",default = False, help = "If activated, results relating to soil detection are exported. Results of soil detection have to be computed and written in previous steps")
-    parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
+    parser.add_argument("--end_date", dest = "end_date",type = str,default = "2022-01-02", help = "Date de fin pour l'export des résultats")
+    parser.add_argument("--frequency", dest = "frequency",type = str,default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
+    parser.add_argument("--export_soil", dest = "export_soil", action="store_true",default = True, help = "If activated, results relating to soil detection are exported. Results of soil detection have to be computed and written in previous steps")
+    parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = True, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -72,8 +69,6 @@ def export_results(
             periodic_results.to_file(tile.paths["periodic_results_soil"])
     
     tile.save_info()
-
-
 
 if __name__ == '__main__':
     dictArgs=parse_command_line()

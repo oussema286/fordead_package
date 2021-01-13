@@ -81,5 +81,8 @@ def get_state_at_date(state_code,relevant_area,attrs):
                 in enumerate(
                     rasterio.features.shapes(state_code.astype("uint8"), mask =  np.logical_and(relevant_area.data,state_code!=0), transform=Affine(*attrs["transform"]))))
     period_end_results = gp.GeoDataFrame.from_features(geoms)
+    
+    period_end_results = period_end_results.replace([1, 2, 3], ["Atteint","Coupe","Coupe sanitaire"])
+    
     period_end_results.crs = attrs["crs"].replace("+init=","")
     return period_end_results

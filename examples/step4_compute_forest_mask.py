@@ -4,17 +4,14 @@ Created on Fri Nov 27 18:20:18 2020
 
 @author: admin
 """
-import rioxarray
 import argparse
-import time
 from fordead.ImportData import TileInfo
 from fordead.masking_vi import rasterize_bdforet, clip_oso, raster_full
 from fordead.writing_data import write_tif
-import xarray as xr
 
 def parse_command_line():
     # execute only if run as a script
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Path of the output directory")
     parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = None, help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
     parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
