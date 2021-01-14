@@ -2,32 +2,13 @@
 
 ## Installation
 ### Conda install (recommended)
-Depuis un terminal, créer un nouvel environnement avec la commande suivante :
-
-```bash
-conda create --name ForDeadEnv python=3.7
-```
-Activer le nouvel environnement :
-```bash
-conda activate ForDeadEnv
-```
-Installer les packages numpy, geopandas, rasterio et scipy avec les commandes suivantes:
-```bash
-conda install numpy
-conda install geopandas
-conda install rasterio
-conda install xarray
-conda install scipy
-conda install dask
-conda install pathlib
-```
-
-Install rioxarray : https://corteva.github.io/rioxarray/stable/installation.html
 
 Depuis l'invite de commande, placer vous dans le répertoire de votre choix et lancez les commandes suivantes :
 ```bash
 git clone https://gitlab.com/jbferet/fordead_package.git
 cd fordead_package
+conda env create --name ForDeadEnv
+conda activate ForDeadEnv
 pip install .
 ```
 

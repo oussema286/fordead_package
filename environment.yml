@@ -1,0 +1,15 @@
+name: ForDeadEnv
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.7
+  - numpy
+  - fiona = 1.8.17
+  - geopandas
+  - rasterio
+  - xarray
+  - scipy
+  - dask
+  - pathlib
+  - rioxarray
+

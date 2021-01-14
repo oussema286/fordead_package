@@ -6,7 +6,7 @@ Created on Fri Nov 20 17:29:17 2020
 """
 import xarray as xr
 import re
-from path import Path
+from pathlib import Path
 import json
 from shapely.geometry import Polygon
 import geopandas as gp
@@ -26,7 +26,7 @@ def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
     dep_in_zone=gp.overlay(tile_extent,departements)
 
     #Charge la BD FORET des départements concernés et filtre selon le peuplement
-    bdforet_paths = [shp_path for shp_path in Path(bdforet_dirpath).glob("**/*.shp") if shp_path.split("_")[-2][-2:] in list(dep_in_zone.code_insee)]   
+    bdforet_paths = [shp_path for shp_path in Path(bdforet_dirpath).glob("**/*.shp") if str(shp_path).split("_")[-2][-2:] in list(dep_in_zone.code_insee)]   
     return bdforet_paths, tile_extent
 
 
@@ -39,7 +39,7 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
         
     bdforet_paths, tile_extent = bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath) #List of paths to relevant BD foret shapefiles. Can be replaced with home-made list if your data structure is different
     
-    bd_list=[(gp.read_file(bd_path,bbox=tile_extent)) for bd_path in bdforet_paths]
+    bd_list=[(gp.read_file(bd_path,bbox=tile_extent)) for bd_path in bdforet_paths] #Warning ?
     bd_foret = gp.GeoDataFrame( pd.concat( bd_list, ignore_index=True), crs=bd_list[0].crs)
     bd_foret=bd_foret[bd_foret['CODE_TFV'].isin(list_forest_type)]    
     

@@ -21,7 +21,7 @@ def parse_command_line():
     parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les indices de végétations et les masques")
     parser.add_argument("--nb_min_date", dest = "nb_min_date",type = int,default = 10, help = "Minimum number of valid dates to compute a vegetation index model for the pixel")
     parser.add_argument("--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
-    parser.add_argument("--threshold_outliers", dest = "threshold_outliers",type = float,default = 0.161, help = "Seuil minimum pour détection d'anomalies")
+    parser.add_argument("--threshold_outliers", dest = "threshold_outliers",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     parser.add_argument("-s", "--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
     parser.add_argument("-e", "--max_last_date_training", dest = "max_last_date_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
 
