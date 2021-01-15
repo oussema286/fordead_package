@@ -7,7 +7,7 @@ Le package `fordead` a été développé pour la détection de changements en fo
 
 Depuis l'invite de commande, placer vous dans le répertoire de votre choix et lancez les commandes suivantes :
 ```bash
-git clone https://gitlab.com/jbferet/fordead_package.git
+git clone https://gitlab.com/raphael.dutrieux/fordead_package.git
 cd fordead_package
 conda env create --name ForDeadEnv
 conda activate ForDeadEnv
@@ -22,4 +22,4 @@ La détection du déperissement se fait en cinq étapes.
 - La création du masque forêt, qui définit les zones d'intérêt
 - L'export de sorties permettant de visualiser les résultats au pas de temps souhaité
 
-Pour les détails sur la réalisation de ces étapes, voir les [guides utilisateurs](https://gitlab.com/jbferet/fordead_package/-/tree/dev/docs/user_guides).
+Pour les détails sur la réalisation de ces étapes, voir les [guides utilisateurs](https://gitlab.com/raphael.dutrieux/fordead_package/-/tree/dev/docs/user_guides).
