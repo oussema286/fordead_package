@@ -24,3 +24,15 @@ conda activate ForDeadEnv
 ```
 
 ### Utilisation du package `fordead`
+
+La détection du déperissement permet d'utiliser l'ensemble des données SENTINEL-2 depuis le lancement du premier satellite. Même en prenant une seule tuile, un tel jeu de données pèse plusieurs centaines de gigaoctets et prend plusieurs heures de temps de calcul pour réaliser l'ensemble des étapes de détection du déperissement. Pour cette raison, un jeu de données plus réduit a été préparé pour cette formation. Il contient l'ensemble des données SENTINEL-2 disponible sur une zone d'étude restreinte, en croppant à partir des données de la tuile. Cette zone est touchée par les scolytes, et contient plusieurs polygones de données de validation, ce qui en fait un bon exemple pour l'application de la détection de déperissement et la visualisation des résultats. 
+
+- Créer un script python en créant un nouveau fichier de texte dans le dossier de votre choix, et en le nommant _detection_scolytes.py_ (ou le nom de votre choix, mais avec l'extension .py)
+- Ouvrez ce script avec l'éditeur de votre choix
+
+#### Étape 1 : Calcul de l'indice de végétation et du masque pour chaque date SENTINEL
+La première étape consiste à calculer pour chaque date l'indice de végétation, et le masque. Le masque correspond à l'ensemble des données invalides, car ennuagées, enneigées, dans l'ombre, hors de la fauchée du satellite, peuplement déjà coupé...
+
+
+
+
