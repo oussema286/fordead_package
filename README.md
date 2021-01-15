@@ -1,4 +1,4 @@
-# ForDead_package
+# fordead : un package python pour la détection de changement en forêt à partir d'images SENTINEL-2
 
 Le package `fordead` a été développé pour la détection de changements en forêt à partir de données SENTINEL-2, en particulier dans un contexte de crise sanitaire du scolyte sur les épicéas. A partir de fonctions simplifiant l'utilisation de données satellites SENTINEL-2, il permet la cartographie des déperissements liés aux scolytes depuis 2018. Cependant, excepté les masques utilisés qui sont certainement trop spécifiques à l'étude de peuplements résineux, le reste des étapes du processus peuvent également être utilisées pour d'autres contextes. 
 
