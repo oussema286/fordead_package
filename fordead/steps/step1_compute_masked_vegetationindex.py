@@ -63,7 +63,7 @@ def compute_masked_vegetationindex(
     extent_shape_path=None,
     path_dict_vi = None
     ):
-    
+    print("Computing masks and vegetation index")
     if extent_shape_path is not None:
         extent = gp.read_file(extent_shape_path).total_bounds
         data_directory = Path(data_directory).parent / Path(extent_shape_path).stem

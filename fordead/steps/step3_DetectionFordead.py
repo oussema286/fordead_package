@@ -28,7 +28,7 @@ def decline_detection(
     data_directory,
     threshold_anomaly=0.16,
     ):
-    
+    print("Decline detection")
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly})

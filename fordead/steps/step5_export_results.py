@@ -31,7 +31,9 @@ def export_results(
     export_soil,
     multiple_files
     ):
-
+    
+    print("Exporting results")
+    
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     decline_data = import_decline_data(tile.paths)

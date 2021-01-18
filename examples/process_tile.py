@@ -24,7 +24,7 @@ def parse_command_line():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str, help = "Dossier contenant les dossiers des tuiles")
-    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ZoneTest"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
+    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ZoneTest2"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
     parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection")
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
@@ -66,11 +66,11 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     # main_directory = "/mnt/fordead/Out"
     # sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
     
-    main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
-    sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
+    # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
+    # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
     
-    # main_directory = "D:/Documents/Deperissement/Output"    
-    # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
+    main_directory = "D:/Documents/Deperissement/Output"    
+    sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
     # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneTest.shp"
         
     
@@ -96,7 +96,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 
 # =====================================================================================================================
      
-        print("Computing masks and vegetation index")
+        
         compute_masked_vegetationindex(input_directory = sentinel_directory / tuile,
                                         data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
                                         lim_perc_cloud = lim_perc_cloud, vi = vi,
@@ -115,7 +115,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
 # =====================================================================================================================    
     
-        print("Decline detection")
+        
         decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
                           threshold_anomaly = threshold_anomaly)
         file = open(logpath, "a") 
@@ -134,7 +134,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================
 
         # print("Computing forest mask")
-        print("Exporting results")
+        
         export_results(
             data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
             start_date = start_date_results,

@@ -28,7 +28,7 @@ def parse_command_line():
     return dictArgs
 
 def compute_forest_mask(data_directory,
-                        forest_mask_source,
+                        forest_mask_source = None,
                         
                         path_example_raster = None,
 
