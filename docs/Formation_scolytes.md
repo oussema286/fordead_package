@@ -87,7 +87,7 @@ Après avoir observé les rasters, il est souhaitable de supprimer les couches d
 
 #### Étape 2 : Modélisation du comportement périodique de l'indice de végétation 
 Pour modéliser le comportement normal de l'indice de végétation, on utilise seulement les dates SENTINEL les plus anciennes, en faisant l'hypothèse qu'elles sont antérieures à un possible déperissement. La fonction harmonique suivante est ajustée à ces données :
-𝒇(𝒕)=𝒂𝟏+𝒃𝟏.𝐬𝐢𝐧⁡(𝟐𝝅𝒕/𝑇)+𝒃𝟐.𝐜𝐨𝐬⁡(𝟐𝝅𝒕/𝑇)+𝒃𝟑.𝐬𝐢𝐧⁡(𝟒𝝅𝒕/𝑇)+𝒃𝟒.𝐜𝐨𝐬⁡(𝟒𝝅𝒕/𝑇) où T = 365,25
+𝒇(𝒕)=𝒂𝟏+𝒃𝟏.𝐬𝐢𝐧⁡(𝟐𝝅𝒕/𝑇)+𝒃𝟐.𝐜𝐨𝐬⁡(𝟐𝝅𝒕/𝑇)+𝒃𝟑.𝐬𝐢𝐧⁡(𝟒𝝅𝒕/𝑇)+𝒃𝟒.𝐜𝐨𝐬⁡(𝟒𝝅𝒕/𝑇) où T = 365,25.
 Vous pouvez retrouver le [guide d'utilisation de cette étape](https://gitlab.com/raphael.dutrieux/fordead_package/-/blob/master/docs/user_guides/02_train_model.md).
 
 Pour effectuer cette étape, ajoutez dans le script :
@@ -114,5 +114,49 @@ Ouvrez le raster coeff_model.tif dans QGIS. Faites un clique droit sur un des pi
 
 Ouvrez maintenant le raster first_detection_date_index.tif. Il permet de connaître pour chaque pixel les dates utilisées pour l'apprentissage du modèle, et celles utilisées pour la détection de déperissement. Il contient l'index de la première date à partir de laquelle le déperissement est détecté. Sur cette zone, il y a assez de dates valides pour que l'ensemble des pixels terminent leur apprentissage avant la première date de 2018 (le paramètre **min_last_date_training** est fixé à 2018-01-01 par défaut ce qui permet d'avoir un recul de deux ans d'images satellites SENTINEL-2), ils ont donc tous la même valeur sauf les zones "sans données" qui correspondent aux zones détectées comme "sol nu / coupe" très tôt, qui sont donc masquées sur la quasi-totalité des dates et qui n'ont donc pas le nombre de dates valides minimum pour le calcul du modèle. 
 
+VALID AREA MASK
+
 #### Étape 3 : Détection du déperissement
 Lors de cette étape, pour chaque date SENTINEL non utilisée pour l'apprentissage, l'indice de végétation réel est comparé à l'indice de végétation prédit à partir des modèles calculés dans l'étape précèdente. Si la différence dépasse un seuil, une anomalie est détectée. Si trois anomalies successives sont détectées, le pixel est considéré comme dépérissant. Si après avoir été détecté comme déperissant, le pixel a trois dates successives sans anomalies, il n'est plus considéré comme dépérissant. N'hésitez pas à consulter le [guide d'utilisation](https://gitlab.com/raphael.dutrieux/fordead_package/-/blob/master/docs/user_guides/03_decline_detection.md) de cette étape.
+
+Pour effectuer cette étape, ajouter au script :
+- Pour importer la fonction
+```bash
+from fordead.steps.step3_DetectionFordead import decline_detection
+```
+- Pour lancer la fonction
+```bash
+decline_detection(data_directory = data_directory)
+```
+Puis, relancez le script depuis l'invité de commande :
+```bash
+python <nom du script.py>
+```
+
+##### Observation des sorties
+Les sorties de cette étape sont dans 
+DataAnomalies
+DataDecline
+
+#### Étape 4 : Calcul du masque forêt
+L'ensemble des calculs précedents sont réalisés sur l'ensemble des pixels de la zone d'étude. Cependant, en particulier lorsqu'on travaille sur de larges zones, il est nécessaire de définir les zones d'intérêts pour ne pas interpréter des résultats sur des zones urbaines, des cultures, etc...
+Dans le cas du scolyte, on s'intéresse uniquement aux peuplements forestiers résineux. Cette étape permet de créer le masque forêt correspondant à notre zone d'intérêt. Vous pouvez consulter son [guide d'utilisation](https://gitlab.com/raphael.dutrieux/fordead_package/-/blob/master/docs/user_guides/04_compute_forest_mask.md).
+
+Pour effectuer cette étape, ajouter au script :
+- Pour importer la fonction
+```bash
+from fordead.steps.step4_compute_forest_mask import compute_forest_mask
+```
+- Pour lancer la fonction
+```bash
+compute_forest_mask(data_directory, forest_mask_source = 'BDFORET', 
+                    dep_path = <chemin du shapefile des départements français>,
+                    bdforet_dirpath = <chemin du dossier de la BD forêt>)
+```
+Puis, relancez le script depuis l'invité de commande :
+```bash
+python <nom du script.py>
+```
+
+
+> **_NOTE :_** Il est possible d'utiliser cette étape déconnectée des autres en précisant le paramètre **path_example_raster** avec le chemin d'un raster "exemple" qui donnera son système de projection, sa résolution, son extent au masque produit. Ne pas renseigner ce paramètre ne pose pas de soucis puisque le chemin d'un raster exemple peut être récupéré depuis les étapes précédentes par le biais du fichier TileInfo.
