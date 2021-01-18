@@ -5,12 +5,12 @@ Created on Tue Nov 17 12:02:24 2020
 @author: admin
 """
 
+from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
+from fordead.steps.step2_TrainFordead import train_model
+from fordead.steps.step3_DetectionFordead import decline_detection
+from fordead.steps.step4_compute_forest_mask import compute_forest_mask
+from fordead.steps.step5_export_results import export_results
 
-from examples.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
-from examples.step2_TrainFordead import train_model
-from examples.step3_DetectionFordead import decline_detection
-from examples.step4_compute_forest_mask import compute_forest_mask
-from examples.step5_export_results import export_results
 from fordead.ImportData import TileInfo
 
 from pathlib import Path
@@ -115,7 +115,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
 # =====================================================================================================================    
     
-        print("Decline detetion")
+        print("Decline detection")
         decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
                           threshold_anomaly = threshold_anomaly)
         file = open(logpath, "a") 
