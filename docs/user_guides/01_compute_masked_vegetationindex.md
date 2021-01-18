@@ -1,6 +1,8 @@
 ## ÉTAPE 1 : step1_compute_masked_vegetationindex.py
 Cette étape permet le calcul d'indices de végétation et de masques pour chaque date SENTINEL-2
 
+![Diagram_step1](Diagrams/Diagram_step1.png "Diagramme de l'étape")
+
 #### ENTRÉES
 Les paramètres en entrée sont :
 - **input_directory** : le chemin du dossier correspondant à une tuile ou une zone contenant un dossier par date SENTINEL contenant les différentes bandes. Les dossiers doivent contenir la date correspondante dans leur nom sous un des formats suivants : YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY ou DDMMYYYY. Les fichiers des bandes doivent contenir le nom de la bande correspondante (B2 ou B02, B3 ou B03, etc...).
