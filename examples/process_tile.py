@@ -2,7 +2,7 @@
 """
 Created on Tue Nov 17 12:02:24 2020
 
-@author: admin
+@author: Raphael Dutrieux
 """
 
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex

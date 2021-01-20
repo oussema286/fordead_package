@@ -23,8 +23,8 @@ def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",default = "D:/Documents/Deperissement/Output_detection/T31UFQ", type = str, help = "Dossier contenant les données calculées")
-    parser.add_argument("--shape_path", dest = "shape_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/test_visualisation_series.shp", help = "Path to shapefile containing points whose data will be plotted. They must contain an 'id' field. If None, indexes for x and y can be given")
+    parser.add_argument("-d", "--data_directory", dest = "data_directory", type = str, help = "Dossier contenant les données calculées")
+    parser.add_argument("--shape_path", dest = "shape_path",type = str, help = "Path to shapefile containing points whose data will be plotted. They must contain an 'id' field. If None, indexes for x and y can be given")
     
 
     dictArgs={}
@@ -32,9 +32,6 @@ def parse_command_line():
     	dictArgs[key]=value
     return dictArgs
 
-# data_directory = "D:/Documents/Deperissement/Output_detection/T31UFQ"
-# data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest"
-# shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/test_visualisation_series.shp"
 # =============================================================================
 # # IMPORT ALL DATA
 # =============================================================================

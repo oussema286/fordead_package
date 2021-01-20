@@ -2,7 +2,7 @@
 """
 Created on Tue Nov  3 16:21:35 2020
 
-@author: admin
+@author: Raphael Dutrieux
 """
 import xarray as xr
 import numpy as np

@@ -2,7 +2,7 @@
 """
 Created on Fri Nov 27 18:20:18 2020
 
-@author: admin
+@author: Raphael Dutrieux
 """
 import argparse
 from fordead.ImportData import TileInfo
@@ -12,12 +12,12 @@ from fordead.writing_data import write_tif
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Path of the output directory")
+    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str, help = "Path of the output directory")
     parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = None, help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
-    parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
-    parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+    parser.add_argument("--dep_path", dest = "dep_path",type = str, help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+    parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str, help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--list_forest_type", dest = "list_forest_type",type = str,default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
-    parser.add_argument("--path_oso", dest = "path_oso",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/OCS_2017_CESBIO.tif", help = "Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
+    parser.add_argument("--path_oso", dest = "path_oso",type = str, help = "Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
     parser.add_argument("--list_code_oso", dest = "list_code_oso",type = str,default = [32], help = "List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'")
 
     parser.add_argument("--path_example_raster", dest = "path_example_raster",type = str, default = None, help = "Path to raster from which to copy the extent, resolution, CRS...")
@@ -29,15 +29,15 @@ def parse_command_line():
 
 def compute_forest_mask(data_directory,
                         forest_mask_source = None,
-                        
-                        path_example_raster = None,
 
                         list_forest_type = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"],
                         dep_path = None,
                         bdforet_dirpath = None,
                         
                         path_oso = None,
-                        list_code_oso = None
+                        list_code_oso = [32],
+                        
+                        path_example_raster = None
                         ):
     
     tile = TileInfo(data_directory)

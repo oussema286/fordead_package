@@ -16,7 +16,7 @@ import time
 
 def parse_command_line():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les données")
+    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str, help = "Dossier avec les données")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():

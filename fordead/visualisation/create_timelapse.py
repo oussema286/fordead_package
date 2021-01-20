@@ -2,7 +2,7 @@
 """
 Created on Mon Jun 22 10:30:53 2020
 
-@author: admin
+@author: Raphael Dutrieux
 
 
 Crée un timelapse à partir des résultats calculés
@@ -33,9 +33,9 @@ from fordead.ImportData import TileInfo
 
 def parse_command_line():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "D:/Documents/Deperissement/Output/ZoneTest2", help = "Directory with the computed results of decline detection")
-    parser.add_argument("-s", "--shape_path", dest = "shape_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneTest2.shp", help = "Path of the shapefile of the area to convert to timelapse")
-    parser.add_argument("--obs_terrain_path", dest = "obs_terrain_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/Scolytes.shp", help = "Path of the shapefile with ground observations")
+    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str, help = "Directory with the computed results of decline detection")
+    parser.add_argument("-s", "--shape_path", dest = "shape_path",type = str, help = "Path of the shapefile of the area to convert to timelapse")
+    parser.add_argument("--obs_terrain_path", dest = "obs_terrain_path",type = str, help = "Path of the shapefile with ground observations")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value

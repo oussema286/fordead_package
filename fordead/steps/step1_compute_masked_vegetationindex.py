@@ -4,12 +4,6 @@ Created on Thu Nov 19 16:06:51 2020
 
 @author: Raphaël Dutrieux
 
-L'arborescence nécessaire dans le dossier indiqué par le paramètre InputDirectory est la suivante :
-    -tile1
-        -Date1
-        -Date2
-        ...
-
 """
 
 #%% =============================================================================
@@ -36,9 +30,9 @@ from fordead.writing_data import write_tif
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel/ZoneTest", help = "Path of the directory with Sentinel dates")
-    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Path of the output directory")
-    parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.31, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness")
+    parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str, help = "Path of the directory with Sentinel dates")
+    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str, help = "Path of the output directory")
+    parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness")
     parser.add_argument("--interpolation_order", dest = "interpolation_order",type = int,default = 0, help ="interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique")
     parser.add_argument("--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'")
     parser.add_argument("--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
@@ -55,7 +49,7 @@ def parse_command_line():
 def compute_masked_vegetationindex(
     input_directory,
     data_directory,
-    lim_perc_cloud=0.3,
+    lim_perc_cloud=0.4,
     interpolation_order = 0,
     sentinel_source = "THEIA",
     apply_source_mask = False,

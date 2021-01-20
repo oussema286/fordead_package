@@ -13,15 +13,12 @@ from fordead.ImportData import import_stackedmaskedVI, TileInfo
 from fordead.ModelVegetationIndex import get_detection_dates, model_vi
 from fordead.writing_data import write_tif
 
-from fordead.decline_detection import prediction_vegetation_index, detection_anomalies
 
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ZoneTest", help = "Dossier avec les indices de végétations et les masques")
+    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str, help = "Dossier avec les indices de végétations et les masques")
     parser.add_argument("--nb_min_date", dest = "nb_min_date",type = int,default = 10, help = "Minimum number of valid dates to compute a vegetation index model for the pixel")
-    parser.add_argument("--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
-    parser.add_argument("--threshold_outliers", dest = "threshold_outliers",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     parser.add_argument("-s", "--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
     parser.add_argument("-e", "--max_last_date_training", dest = "max_last_date_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
 
@@ -37,8 +34,6 @@ def parse_command_line():
 def train_model(
     data_directory,
     nb_min_date = 10,
-    threshold_outliers=0.16,
-    remove_outliers=True,
     min_last_date_training="2018-01-01",
     max_last_date_training="2018-06-01",
     path_vi=None,
@@ -51,7 +46,7 @@ def train_model(
     if path_vi==None : path_vi = tile.paths["VegetationIndexDir"]
     if path_masks==None : path_masks = tile.paths["MaskDir"]
     
-    tile.add_parameters({"nb_min_date" : nb_min_date, "threshold_outliers" : threshold_outliers, "remove_outliers" : remove_outliers, "min_last_date_training" : min_last_date_training, "max_last_date_training" : max_last_date_training})
+    tile.add_parameters({"nb_min_date" : nb_min_date, "min_last_date_training" : min_last_date_training, "max_last_date_training" : max_last_date_training})
     if tile.parameters["Overwrite"] : tile.delete_dirs("coeff_model","AnomaliesDir","state_decline", "valid_area_mask" ,"periodic_results_decline","result_files") #Deleting previous training and detection results if they exist
 
     #Create missing directories and add paths to TileInfo object
@@ -81,13 +76,6 @@ def train_model(
         stack_masks = stack_masks | detection_dates #Masking data not used in training
         coeff_model = model_vi(stack_vi, stack_masks)
         
-        # if remove_outliers:
-        #     predicted_vi = prediction_vegetation_index(coeff_model, stack_vi.Time.data)
-        #     outliers = detection_anomalies(stack_vi, predicted_vi, threshold_outliers) & ~detection_dates
-        #     stack_masks = stack_masks | outliers #Masking outliers
-        #     coeff_model = model_vi(stack_vi, stack_masks)
-            
-     
         #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, la zone utilisable
         write_tif(first_detection_date_index,stack_vi.attrs, tile.paths["first_detection_date_index"],nodata=0)
         write_tif(coeff_model,stack_vi.attrs, tile.paths["coeff_model"])

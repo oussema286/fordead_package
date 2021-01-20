@@ -2,7 +2,7 @@
 """
 Created on Mon Nov  2 09:34:34 2020
 
-@author: admin
+@author: Raphael Dutrieux
 """
 
 import datetime

@@ -2,7 +2,7 @@
 """
 Created on Fri Nov 20 17:29:17 2020
 
-@author: admin
+@author: Raphael Dutrieux
 """
 import xarray as xr
 import re
@@ -150,7 +150,7 @@ def compute_masks(stack_bands, soil_data, date_index):
 
 def get_dict_vi(path_dict_vi = None):
     dict_vi = {"CRSWIR" : {'formula': 'B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))', 'decline_change_direction': '+'},
-                "NDVI" : {'formula': '(B8âˆ’B4)/(B8+B4)', 'decline_change_direction': '+'}}
+                "NDVI" : {'formula': '(B8-B4)/(B8+B4)', 'decline_change_direction': '+'}}
     if path_dict_vi is not None:
         d = {}
         with open(path_dict_vi) as f:
