@@ -13,4 +13,5 @@ dependencies:
   - pathlib
   - rioxarray
   - path
+  - plotly
 
