@@ -6,37 +6,14 @@ Created on Fri Sep 18 13:37:02 2020
 """
 
 import plotly.graph_objects as go
-# import os
-# #from glob import glob
-# import earthpy.spatial as es
-# import numpy as np
-# import rasterio
 import geopandas as gp
-# import pandas as pd
-# from shapely.geometry import mapping
-import rioxarray
 import xarray as xr
 import rasterio
 from affine import Affine
 import numpy as np
 
-from fordead.ImportData import import_resampled_sen_stack, import_soil_data, import_decline_data
+from fordead.ImportData import import_resampled_sen_stack, import_soil_data, import_decline_data, import_forest_mask
 
-
-# def clip_array_with_shape(shape, array):
-#     extent = shape.total_bounds
-    
-#     clipped_array = array.rio.clip_box(minx=min(min(array.x),extent[0]),
-#                                miny=min(min(array.y),extent[1]),
-#                                maxx=max(max(array.x),extent[2]),
-#                                maxy=max(max(array.y),extent[3]))
-#     # clipped_array = array.rio.clip_box(minx=extent[0],
-#     #                            miny=extent[1],
-#     #                            maxx=extent[2],
-#     #                            maxy=extent[3])
-#     clipped_array.attrs = array.attrs
-    
-#     return array
 
 def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"]):
     list_rgb = [import_resampled_sen_stack(tile.paths["Sentinel"][date], bands,extent = extent) for date in tile.dates]
@@ -87,9 +64,9 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
                 soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
                 affected=detected+2*soil
                 
-                # forest_mask = import_forest_mask(tile.paths["ForestMask"])
+                forest_mask = import_forest_mask(tile.paths["ForestMask"])
                 # valid_area = 
-                # affected.where()
+                affected = affected.where(forest_mask,0)
                 
                 results_affected = (
                             {'properties': {'Etat': v}, 'geometry': s}
@@ -108,7 +85,6 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
                             DictCoordX[int(geom["properties"]["Etat"])]+=list((xList-np.array(stack_rgb.attrs["transform"][2]))/10-0.5)+[None]
                             DictCoordY[int(geom["properties"]["Etat"])]+=list((np.array(stack_rgb.attrs["transform"][5])-yList)/10-0.5)+[None]
                 
-                                
                 fig.add_trace(go.Scatter(
                     x=DictCoordX[2],
                     y=DictCoordY[2],
@@ -117,7 +93,6 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
                     name='Sol nu / Coupe rase',
                 ))
                 
-
                 fig.add_trace(go.Scatter(
                     x=DictCoordX[3],
                     y=DictCoordY[3],

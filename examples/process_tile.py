@@ -6,8 +6,8 @@ Created on Tue Nov 17 12:02:24 2020
 """
 
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
-from fordead.steps.step2_TrainFordead import train_model
-from fordead.steps.step3_DetectionFordead import decline_detection
+from fordead.steps.step2_train_model import train_model
+from fordead.steps.step3_decline_detection import decline_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step5_export_results import export_results
 
@@ -19,12 +19,13 @@ import time
 import datetime
 
 
+
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str, help = "Dossier contenant les dossiers des tuiles")
-    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ZoneTest2"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
+    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ROI1","ROI5","ROI2","ROI7","ROI8","ZoneFaucheDouble","ZoneFaucheUnique","ZoneTest1"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
     parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection")
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
