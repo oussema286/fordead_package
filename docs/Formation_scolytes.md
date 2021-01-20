@@ -45,6 +45,8 @@ Sinon, lancer l'invité de commande _anaconda prompt_, puis activer l'environnem
 conda activate fordead_env
 ```
 
+
+
 ## Création d'un script pour détecter le dépérissement lié au scolyte sur une zone donnée à l'aide du package fordead
 
 La détection du déperissement permet d'utiliser l'ensemble des données SENTINEL-2 depuis le lancement du premier satellite. Même en prenant une seule tuile, un tel jeu de données pèse plusieurs centaines de gigaoctets et prend plusieurs heures de temps de calcul pour réaliser l'ensemble des étapes de détection du déperissement. Pour cette raison, un jeu de données plus réduit a été préparé pour cette formation. Il contient l'ensemble des données SENTINEL-2 disponible sur une zone d'étude restreinte, en croppant à partir des données de la tuile. Cette zone est touchée par les scolytes, et contient plusieurs polygones de données de validation, ce qui en fait un bon exemple pour l'application de la détection de déperissement et la visualisation des résultats. 
