@@ -12,7 +12,7 @@ import os, sys
 from path import Path
 import fordead
 from fordead.masking_vi import compute_vegetation_index
-import maja_fun as maja
+import fordead.maja_fun as maja
 import matplotlib as plot
 
 ###############################################################################
@@ -26,14 +26,14 @@ import matplotlib as plot
 ##       define location for image data, vector data & results directory     ##
 ###############################################################################
 # define path for the zipped THEIA images
-THEIA_file = [Path('../01_DATA/RASTER/THEIA/SENTINEL2B_20170823-103018-461_L2A_T31UGP_D.zip').expanduser()]
+THEIA_file = [Path('../../../../01_DATA/RASTER/THEIA/SENTINEL2B_20170823-103018-461_L2A_T31UGP_D.zip').expanduser()]
 
 # define path for results and create directory
-outdir = Path('../03_RESULTS/maja_preprocess').expanduser()
+outdir = Path('../../../../03_RESULTS/maja_preprocess').expanduser()
 outdir.mkdir_p()
 
 # define shapefile corresponding to the study area
-shape = Path('../01_DATA/VECTOR/ZoneEtude.shp').expanduser()
+shape = Path('../../../../01_DATA/VECTOR/ZoneEtude.shp').expanduser()
 
 ###############################################################################
 ## process data: unzip, crop, compute spectral indices, stack & write images ##
