@@ -12,4 +12,5 @@ dependencies:
   - dask
   - pathlib
   - rioxarray
+  - path
 
