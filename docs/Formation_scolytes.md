@@ -42,14 +42,14 @@ Si le package n'est pas encore installé, suivre le [guide d'installation](https
 
 Sinon, lancer l'invité de commande _anaconda prompt_, puis activer l'environnement par la commande : 
 ```bash
-conda activate ForDeadEnv
+conda activate fordead_env
 ```
 
 ## Création d'un script pour détecter le dépérissement lié au scolyte sur une zone donnée à l'aide du package fordead
 
 La détection du déperissement permet d'utiliser l'ensemble des données SENTINEL-2 depuis le lancement du premier satellite. Même en prenant une seule tuile, un tel jeu de données pèse plusieurs centaines de gigaoctets et prend plusieurs heures de temps de calcul pour réaliser l'ensemble des étapes de détection du déperissement. Pour cette raison, un jeu de données plus réduit a été préparé pour cette formation. Il contient l'ensemble des données SENTINEL-2 disponible sur une zone d'étude restreinte, en croppant à partir des données de la tuile. Cette zone est touchée par les scolytes, et contient plusieurs polygones de données de validation, ce qui en fait un bon exemple pour l'application de la détection de déperissement et la visualisation des résultats. 
 
-- Créer un script python en créant un nouveau fichier de texte dans le dossier de votre choix, et en le nommant _detection_scolytes.py_ (ou le nom de votre choix, mais avec l'extension .py)
+- Créer un script python en créant un nouveau fichier de texte dans le dossier <MyWorkingDirectory>/B_PROGRAMS, et en le nommant _detection_scolytes.py_ (ou le nom de votre choix, mais avec l'extension .py)
 - Ouvrez ce script avec l'éditeur de votre choix
 
 #### Étape 1 : Calcul de l'indice de végétation et du masque pour chaque date SENTINEL
@@ -61,22 +61,24 @@ Pour effectuer cette étape, ajoutez dans le script :
 ```bash
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 ```
-- Pour choisir les paramètres en entrée
+- Pour choisir les paramètres en entrée :
 ```bash
-input_directory = "<chemin dossier des données SENTINEL de la tuile>"
-data_directory = "<chemin dossier d'écriture des résultats>"
+input_directory = "<MyWorkingDirectory>/A_DATA/RASTER/SERIES_SENTINEL/ZoneEtude"
+data_directory = "<MyWorkingDirectory>/C_RESULTS/ZoneEtude"
 ```
+> **_NOTE :_** Il est préférable d'utiliser "/" plutôt que "\" à l'écriture des chemins afin d'éviter les soucis.
+
 - Pour lancer la fonction
 ```bash
 compute_masked_vegetationindex(input_directory = input_directory, data_directory = data_directory)
 ```
 Puis lancer le script python depuis l'invité de commande en vous plaçant dans le répertoire du script en utilisant la commande suivante :
 ```bash
-cd <chemin complet du dossier>
+cd <MyWorkingDirectory>/B_PROGRAMS
 ```
 Puis lancer le script :
 ```bash
-python <nom du script.py>
+python detection_scolytes.py
 ```
 ##### Faire tourner l'étape en lançant la fonction depuis l'invité de commande
 Il est également possible d'appliquer la même étape en passant par l'invité de commande.
@@ -86,9 +88,9 @@ python step1_compute_masked_vegetationindex.py -h
 ```
 A partir de l'aide, lancez la fonction en appliquant vos paramètres. Exemple :
 ```bash
-python step1_compute_masked_vegetationindex.py -i <chemin dossier des données SENTINEL de la tuile> -o <chemin dossier d'écriture des résultats>
+python step1_compute_masked_vegetationindex.py -i <MyWorkingDirectory>/A_DATA/RASTER/SERIES_SENTINEL/ZoneEtude -o <MyWorkingDirectory>/C_RESULTS/ZoneEtude
 ```
-
+**-i** permet de définir le paramètre **input_directory** et **-o** le paramètre **data_directory**, ainsi exactement la même fonction est lancée.
 ---------
 
 Vous remarquerez que si vous avez utilisé les même paramètres dans les deux cas, il s'affiche "0 new SENTINEL dates" et le programme tourne plus rapidement la deuxième fois, car les indices de végétation déjà calculés ne sont pas recalculés. En revanche, si vous changez les paramètres, les résultats précédants seront supprimés et remplacés.
@@ -121,7 +123,7 @@ train_model(data_directory = data_directory)
 ```
 Puis, comme pour l'étape 1, relancez le script depuis l'invité de commande :
 ```bash
-python <nom du script.py>
+python detection_scolytes.py
 ```
 
 Le reste des paramètres connaissent une valeur par défaut dans la fonction et n'ont pas besoin d'être renseignées. Ces valeurs par défaut ont été déterminées de manière empirique pour la problématique du scolyte et peuvent ne pas être optimales selon la localisation ou la problématique donnée. Le [guide d'utilisation](https://gitlab.com/raphael.dutrieux/fordead_package/-/blob/master/docs/user_guides/02_train_model.md) donne des détails sur les différents paramètres, lisez le et vérifiez que vous comprenez bien leur sens.
@@ -177,8 +179,8 @@ from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 - Pour lancer la fonction
 ```bash
 compute_forest_mask(data_directory, forest_mask_source = 'BDFORET', 
-                    dep_path = <chemin du shapefile des départements français>,
-                    bdforet_dirpath = <chemin du dossier de la BD forêt>)
+                    dep_path = <MyWorkingDirectory>/A_DATA/VECTOR/departements-20140306-100m.shp,
+                    bdforet_dirpath = <MyWorkingDirectory>/A_DATA/VECTOR/BDFORET)
 ```
 Puis, relancez le script depuis l'invité de commande :
 ```bash
@@ -191,6 +193,51 @@ python <nom du script.py>
 Cette étape permet d'écrire un uniquement raster, Forest_Mask.tif dans le dossier ForestMask. Ouvrez ce raster. Il s'agit d'un raster binaire qui vaut 1 dans la zone d'intérêt, 0 ailleurs. Avec les paramètres renseignés ici, il est crée à partir de la rasterisation de la BD Forêt de l'IGN en gardant uniquement les peuplements résineux. 
 
 ## Visualisation des résultats
+
+Les étapes réalisées précédemment ont permis d'obtenir l'ensemble des résultats relatifs à la détection de scolytes, mais sous une forme difficile à analyser. Le package contient certains outils permettant de visualiser les résultats sous une forme plus digeste.
+
 ### Création d'un timelapse
 
+Pour commencer, nous allons créer un timelapse de la détection sur la zone analysée. Pour ce faire, ajouter dans le script :
+- Pour importer la fonction
+```bash
+from fordead.visualisation.create_timelapse import create_timelapse
+```
+- Pour ajouter les paramètres nécéssaires :
+```bash
+shape_path = "<MyWorkingDirectory>/A_DATA/VECTOR/Zones_Etude/ZoneEtude.shp"
+obs_terrain_path = "<MyWorkingDirectory>/A_DATA/VECTOR/ValidatedScolytes.shp"
+```
+- Pour lancer la fonction :
+```bash
+create_timelapse(data_directory = data_directory,shape_path = shape_path, obs_terrain_path = obs_terrain_path)
+```
+
+Cette fonction prend en entrée un shapefile avec un champ "id" dans lequel il peut y avoir un ou plusieurs polygones et écrit pour chaque polygone un fichier <id>.html dans le dossier "Timelapses". Elle est plutôt pensée pour visualiser les résultats sur une zone réduite à partir des résultats d'une tuile entière, il est recommandé d'éviter de lancer cette opération avec des polygones de plus d'une vingtaine de km². Cependant, on travaille ici déjà sur une zone réduite, en utilisant un shapefile d'un seul polygone couvrant l'ensemble de la zone. Le timelapse devrait se lancer automatiquement, sinon ouvrez le fichier <id>.html (il est possible que sa lecture fonctionne mieux sous Chrome).
+
+Une fois le timelapse ouvert, faites glisser le slider en bas de l'image pour vous déplacer temporellement dans l'animation. Les polygones noirs correspondent aux zones détectées comme sol nu, les polygones jaunes correspondent aux zones détectées comme dépérissantes et les polygones bleus correspondent aux coupes sanitaires, c'est à dire les zones détectées comme sol-nu/coupe après avoir été détectées comme atteintes.
+
+Les données d'observation sur le terrain sont également affichées, passez la souris sur ces polygones pour obtenir leurs informations : <stade de scolyte> | <organisme à l'origine de la donnée> : <date d'observation>. Sur cette zone, on peut observer des zones saines en vert foncé et des zones scolytées au stade rouge en rouge.
+
+Vous pouvez également zoomer sur la zone souhaitée en maintenant le clique appuyé tout en délimitant une zone. Vous pouvez ensuite dézoomer en double cliquant sur l'image. Passer la souris sur un pixel permet également d'obtenir ses informations :
+- x : coordonnées en x
+- y : coordonnées en y
+- z : [<réflectance dans le rouge>,<réflectance dans le vert>,<réflectance dans le bleu>], c'est à dire la valeur de la bande SENTINEL correspondante à la date donnée.
+
+Les résultats apparaissent à la date de la première anomalie, confirmée par la suite. Les fausses détections liées à un stress hydrique temporaire et corrigées par la suite n'apparaissent pas. De même, pour les dernières dates, il peut y avoir des anomalies n'apparaissant pas encore par manque de dates valides pour confirmer la détection.
+
+Prenez le temps d'explorer cet outil et les résultats de la détection. Vous pouvez remarquer que les polygones observés comme atteints sur le terrain sont détectés comme atteints avant la date d'observation, tandis que les polygones observés comme sains sont encore sains à la date d'observation, mais pas forcément par la suite.
+
+### Visualisation de la série temporelle de pixels en particulier
+Lors de la visualisation du timelapse, vous avez pu vous poser des questions sur les résultats de pixels en particulier. L'outil suivant va permettre d'afficher l'ensemble de la série temporelle utilisée pour un pixel en particulier, mis en relation avec les résultats de l'algorithme.
+Pour utiliser cet outil, ajouter dans le script :
+
+- Pour importer la fonction
+```bash
+from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
+```
+- Pour lancer la fonction :
+```bash
+vi_series_visualisation(data_directory = data_directory)
+```
 
