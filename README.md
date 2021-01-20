@@ -9,8 +9,8 @@ Depuis l'invite de commande, placer vous dans le répertoire de votre choix et l
 ```bash
 git clone https://gitlab.com/raphael.dutrieux/fordead_package.git
 cd fordead_package
-conda env create --name ForDeadEnv
-conda activate ForDeadEnv
+conda env create --name fordead
+conda activate fordead
 pip install .
 ```
 
