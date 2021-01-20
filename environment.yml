@@ -1,4 +1,4 @@
-name: ForDeadEnv
+name: fordead
 channels:
   - conda-forge
 dependencies:
