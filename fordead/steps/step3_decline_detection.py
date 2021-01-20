@@ -32,7 +32,7 @@ def decline_detection(
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly})
-    if tile.parameters["Overwrite"] : tile.delete_dirs("AnomaliesDir","state_decline" ,"periodic_results_decline","result_files") #Deleting previous detection results if they exist
+    if tile.parameters["Overwrite"] : tile.delete_dirs("AnomaliesDir","state_decline" ,"periodic_results_decline","result_files","timelapse") #Deleting previous detection results if they exist
     
     tile.add_dirpath("AnomaliesDir", tile.data_directory / "DataAnomalies") #Choose anomalies directory
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies

@@ -25,7 +25,7 @@ def parse_command_line():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str, help = "Dossier contenant les dossiers des tuiles")
-    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ROI1","ROI5","ROI2","ROI7","ROI8","ZoneFaucheDouble","ZoneFaucheUnique","ZoneTest1"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
+    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ZoneEtude"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
     parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection")
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
@@ -70,8 +70,9 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
     # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
     
-    main_directory = "D:/Documents/Deperissement/Output"    
-    sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
+    # main_directory = "D:/Documents/Deperissement/Output"    
+    # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
+    # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/01_DATA/RASTER/SERIES_SENTINEL"
     # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneTest.shp"
         
     
@@ -108,8 +109,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
 # =====================================================================================================================
 
-        train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,  
-                    threshold_outliers = 0.16, remove_outliers = remove_outliers)
+        train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile)
         # print(str(time.time() - start_time))
         file = open(logpath, "a") 
         file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()

@@ -57,12 +57,15 @@ DictCol={'C' : "white",
 #         2 : "black",
 #         3 : "blue"}
 
-def create_timelapse(data_directory,shape_path, obs_terrain_path, Overwrite):
+def create_timelapse(data_directory,shape_path, obs_terrain_path):
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-
+    tile.add_parameters({"shape_path" : shape_path})
+    if tile.parameters["Overwrite"] : tile.delete_dirs("timelapse") #Deleting previous detection results if they exist
+    
     tile.add_dirpath("timelapse", tile.data_directory / "Timelapses")
+
     
     ShapeInteret=gp.read_file(shape_path)
 
@@ -74,7 +77,7 @@ def create_timelapse(data_directory,shape_path, obs_terrain_path, Overwrite):
             NameFile=str(ShapeIndex)
         print(NameFile)
         
-        if Overwrite or not((tile.paths["timelapse"] / (NameFile + ".html")).exists()):
+        if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()):
             fig = CreateTimelapse(Shape,tile,DictCol, obs_terrain_path)
             plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=True)
 

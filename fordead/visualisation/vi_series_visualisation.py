@@ -90,12 +90,8 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         return fig
 
 
-def vi_series_visualisation(data_directory, shape_path):
-    
-    
-    data_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection/ROI8"
-    shape_path = None
-    
+def vi_series_visualisation(data_directory, shape_path = None):
+
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     chunks = None
@@ -121,7 +117,7 @@ def vi_series_visualisation(data_directory, shape_path):
     stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
 
 
-    if shape_path != None:
+    if shape_path is not None:
         shape = gp.read_file(shape_path)
         shape = shape.to_crs(crs = stack_vi.crs)
         
