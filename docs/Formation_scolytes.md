@@ -14,10 +14,10 @@
     * [Étape 3 : Détection du déperissement](#étape-3-détection-du-déperissement)
     * [Étape 4 : Calcul du masque forêt](#étape-4-calcul-du-masque-forêt)
 * [Visualisation des résultats](#visualisation-des-résultats)
-    * [Visualisation d'un timelapse](#)
-    * [Visualisation de la série temporelle de pixels en particulier](#)
-* [Rajouter des dates SENTINEL et mettre à jour la détection](#)
-* [Changer les paramètres de la détection](#)
+    * [Visualisation d'un timelapse](#création-dun-timelapse)
+    * [Visualisation de la série temporelle de pixels en particulier](#visualisation-de-la-série-temporelle-de-pixels-en-particulier)
+* [Rajouter des dates SENTINEL et mettre à jour la détection](#rajouter-des-dates-sentinel-et-mettre-à-jour-la-détection)
+* [Changer les paramètres de la détection](#changer-les-paramètres-de-la-détection)
     * [Changer l'indice de végétation](#)
     * [Changer le seuil de détection d'anomalies](#)
     * [Changer de zone d'étude](#)
@@ -44,8 +44,6 @@ Sinon, lancer l'invité de commande _anaconda prompt_, puis activer l'environnem
 ```bash
 conda activate fordead_env
 ```
-
-
 
 ## Création d'un script pour détecter le dépérissement lié au scolyte sur une zone donnée à l'aide du package fordead
 
@@ -84,7 +82,11 @@ python detection_scolytes.py
 ```
 ##### Faire tourner l'étape en lançant la fonction depuis l'invité de commande
 Il est également possible d'appliquer la même étape en passant par l'invité de commande.
-Depuis l'invité de commande, placez vous dans le dossier fordead_package/fordead/steps. La commande suivante permet d'afficher l'aide :
+Depuis l'invité de commande, placez vous dans le dossier du package fordead_package/fordead/steps par la commande : 
+```bash
+cd <MyWorkingDirectory>/B_PROGRAMS/Libraries/fordead_package/fordead/steps
+```
+Puis, la commande suivante permet d'afficher l'aide :
 ```bash
 python step1_compute_masked_vegetationindex.py -h
 ```
@@ -154,7 +156,7 @@ decline_detection(data_directory = data_directory)
 ```
 Puis, relancez le script depuis l'invité de commande :
 ```bash
-python <nom du script.py>
+python detection_scolytes.py
 ```
 
 ##### Observation des sorties
@@ -181,12 +183,12 @@ from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 - Pour lancer la fonction
 ```bash
 compute_forest_mask(data_directory, forest_mask_source = 'BDFORET', 
-                    dep_path = <MyWorkingDirectory>/A_DATA/VECTOR/departements-20140306-100m.shp,
-                    bdforet_dirpath = <MyWorkingDirectory>/A_DATA/VECTOR/BDFORET)
+                    dep_path = "<MyWorkingDirectory>/A_DATA/VECTOR/departements-20140306-100m.shp",
+                    bdforet_dirpath = "<MyWorkingDirectory>/A_DATA/VECTOR/BDFORET")
 ```
 Puis, relancez le script depuis l'invité de commande :
 ```bash
-python <nom du script.py>
+python detection_scolytes.py
 ```
 
 > **_NOTE :_** Il est possible d'utiliser cette étape déconnectée des autres en précisant le paramètre **path_example_raster** avec le chemin d'un raster "exemple" qui donnera son système de projection, sa résolution, son extent au masque produit. Ne pas renseigner ce paramètre ne pose pas de soucis puisque le chemin d'un raster exemple peut être récupéré depuis les étapes précédentes par le biais du fichier TileInfo.
@@ -214,8 +216,9 @@ obs_terrain_path = "<MyWorkingDirectory>/A_DATA/VECTOR/ValidatedScolytes.shp"
 ```bash
 create_timelapse(data_directory = data_directory,shape_path = shape_path, obs_terrain_path = obs_terrain_path)
 ```
+- Enfin, relancez le script.
 
-Cette fonction prend en entrée un shapefile avec un champ "id" dans lequel il peut y avoir un ou plusieurs polygones et écrit pour chaque polygone un fichier <id>.html dans le dossier "Timelapses". Elle est plutôt pensée pour visualiser les résultats sur une zone réduite à partir des résultats d'une tuile entière, il est recommandé d'éviter de lancer cette opération avec des polygones de plus d'une vingtaine de km². Cependant, on travaille ici déjà sur une zone réduite, en utilisant un shapefile d'un seul polygone couvrant l'ensemble de la zone. Le timelapse devrait se lancer automatiquement, sinon ouvrez le fichier <id>.html (il est possible que sa lecture fonctionne mieux sous Chrome).
+Cette fonction prend en entrée un shapefile avec un champ "Id" dans lequel il peut y avoir un ou plusieurs polygones et écrit pour chaque polygone un fichier <Id>.html dans le dossier "Timelapses". Elle est plutôt pensée pour visualiser les résultats sur une zone réduite à partir des résultats d'une tuile entière, il est recommandé d'éviter de lancer cette opération avec des polygones de plus d'une vingtaine de km². Cependant, on travaille ici déjà sur une zone réduite, en utilisant un shapefile d'un seul polygone couvrant l'ensemble de la zone. Le timelapse devrait se lancer automatiquement, sinon ouvrez le fichier <id>.html (il est possible que sa lecture fonctionne mieux sous Chrome).
 
 Une fois le timelapse ouvert, faites glisser le slider en bas de l'image pour vous déplacer temporellement dans l'animation. Les polygones noirs correspondent aux zones détectées comme sol nu, les polygones jaunes correspondent aux zones détectées comme dépérissantes et les polygones bleus correspondent aux coupes sanitaires, c'est à dire les zones détectées comme sol-nu/coupe après avoir été détectées comme atteintes.
 
@@ -242,4 +245,47 @@ from fordead.visualisation.vi_series_visualisation import vi_series_visualisatio
 ```bash
 vi_series_visualisation(data_directory = data_directory)
 ```
+De plus, pour éviter que le timelapse soit recalculé, mettez en commentaire la fonction à l'origine du timelapse en ajoutant "#" en début de ligne. Toute ligne commentée est ignorée au lancement du script :
+```bash
+#create_timelapse(data_directory = data_directory,shape_path = shape_path, obs_terrain_path = obs_terrain_path)
+```
+- Enfin, relancez le script
+
+Cette fonction permet de donner les coordonnées en X,Y du pixel souhaité afin d'en visualiser les résultats. A l'aide du timelapse réalisé précédemment, choisissez un pixel, récupérez ses coordonnées en passant votre souris sur celui ci, puis renseignez ces coordonnées dans l'invité de commande qui devrait indiquer :
+```bash
+X ?
+```
+Puis
+```bash
+Y ?
+```
+Un graphique doit alors s'afficher, avec la légende associée. Chaque point correspond à une date SENTINEL valide, avec la valeur de l'indice de végétation calculé. Vérifiez que vous comprenez chaque élément du graphique, et n'hésitez pas à poser la question s'il y a des points de doute.
+
+Après avoir fermé le graphique, vous pourrez renseigner d'autres coordonnées. Répétez cette opération pour au moins cinq pixels :
+- Un pixel qui reste sain jusqu'à la dernière date SENTINEL disponible
+- Un pixel manifestement atteint à la dernière date SENTINEL disponible
+- Un pixel atteint puis coupé
+- Un pixel coupé sans avoir été détecté comme atteint
+- Un pixel hors du masque forêt. Ce masque n'est pas renseigné sur le timelapse, mais vous pouvez deviner que certaines zones auraient dû être détectées comme "sol nu" à certaines parties de l'année. Ou vous pouvez vous aider du masque forêt ouvert dans QGIS. 
+
+Vous pouvez aussi appuyer sur Entrée sans renseigner de coordonnée X, dans ce cas, la fonction affiche la série temporelle d'un pixel au hasard au sein du masque forêt.
+Prenez le temps d'observer les pixels qui vous intéressent.
+
+Une fois que vous avez terminé vos observations, renseignez -1 comme coordonnée X pour terminer le programme.
+L'ensemble des graphiques ayant été crées sont disponibles dans le dossier "SeriesTemporelles".
+
+Il est également possible d'utiliser la fonction `vi_series_visualisation` en ajoutant le paramètre _shape_path = <chemin d'un shapefile de points>_. Ce shapefile de points doit contenir un champ "id" avec un identifiant numérique pour chaque point. Les pixels correspondants à chaque point sont alors identifiés et leurs graphiques sont sauvegardés dans le dossier "SeriesTemporelles". Cela permet de réaliser ces graphiques sans passer par la création du timelapse pour récupérer les coordonnées X,Y qui ne sont pas associées à un système de projection.
+
+## Rajouter des dates SENTINEL et mettre à jour la détection
+L'algorithme permet également de mettre à jour la détection avec de nouvelles images SENTINEL. Nous utilisions auparavant les dates SENTINEL depuis les premières images jusqu'au 01/06/2020. Dans le dossier <MyWorkingDirectory>/A_DATA/RASTER/SERIES_SENTINEL/MAJ_ZoneEtude sont disponibles les dates SENTINEL allant jusqu'à la fin de 2020. Nous allons mettre à jour la détection à partir de ces données. Pour ce faire :
+
+- Copiez ou coupez ces données dans le dossier <MyWorkingDirectory>/A_DATA/RASTER/SERIES_SENTINEL/ZoneEtude
+- Décommentez la fonction permettant de créer le timelapse en retirant le "#"
+- Coupez-collez le dossier "Timelapses" et "SeriesTemporelles" dans un autre dossier, par exemple en créant un dossier <MyWorkingDirectory>/C_RESULTS/Save_ZoneEtude. Cela permettra de comparer avant et après mise à jour, puisque les nouveaux timelapses et graphiques crées remplaceront les anciens. C'est optionnel mais permettra de ne rien écraser.
+- relancez le script 
+
+On peut voir que l'algorithme ne réalise les calculs que sur les nouvelles dates, à partir du modèle déjà établi.
+Prenez le temps d'examiner les nouveaux résultats, et éventuellement de les comparer avec les anciens.
+
+## Changer les paramètres de la détection
 
