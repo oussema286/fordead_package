@@ -274,7 +274,7 @@ Prenez le temps d'observer les pixels qui vous intéressent.
 Une fois que vous avez terminé vos observations, renseignez -1 comme coordonnée X pour terminer le programme.
 L'ensemble des graphiques ayant été crées sont disponibles dans le dossier "SeriesTemporelles".
 
-Il est également possible d'utiliser la fonction `vi_series_visualisation` en ajoutant le paramètre _shape_path = <chemin d'un shapefile de points>_. Ce shapefile de points doit contenir un champ "id" avec un identifiant numérique pour chaque point. Les pixels correspondants à chaque point sont alors identifiés et leurs graphiques sont sauvegardés dans le dossier "SeriesTemporelles". Cela permet de réaliser ces graphiques sans passer par la création du timelapse pour récupérer les coordonnées X,Y qui ne sont pas associées à un système de projection.
+> **_NOTE :_** Il est également possible d'utiliser la fonction `vi_series_visualisation` en ajoutant le paramètre _shape_path = <chemin d'un shapefile de points>_. Ce shapefile de points doit contenir un champ "id" avec un identifiant numérique pour chaque point. Les pixels correspondants à chaque point sont alors identifiés et leurs graphiques sont sauvegardés dans le dossier "SeriesTemporelles". Cela permet de réaliser ces graphiques sans passer par la création du timelapse pour récupérer les coordonnées X,Y qui ne sont pas associées à un système de projection.
 
 ## Rajouter des dates SENTINEL et mettre à jour la détection
 L'algorithme permet également de mettre à jour la détection avec de nouvelles images SENTINEL. Nous utilisions auparavant les dates SENTINEL depuis les premières images jusqu'au 01/06/2020. Dans le dossier <MyWorkingDirectory>/A_DATA/RASTER/SERIES_SENTINEL/MAJ_ZoneEtude sont disponibles les dates SENTINEL allant jusqu'à la fin de 2020. Nous allons mettre à jour la détection à partir de ces données. Pour ce faire :
@@ -288,4 +288,15 @@ On peut voir que l'algorithme ne réalise les calculs que sur les nouvelles date
 Prenez le temps d'examiner les nouveaux résultats, et éventuellement de les comparer avec les anciens.
 
 ## Changer les paramètres de la détection
+
+Depuis le début de ce TD, nous avons laissé tous les paramètres à leur valeur par défaut. Ces valeurs ont été déterminées de manière empirique pour la détection de scolytes. Il est intéressant de savoir modifier ces paramètres afin de s'adapter à des situations locales, ou d'autres problématiques. Pour commencer, supprimez l'ensemble des couches rajoutées à QGIS liées aux résultats précédents (pas besoin de retirer le raster virtuel en RGB). Le changement des paramètres entraînera la suppression des résultats précédents, si ils sont ouverts dans QGIS, ils ne pourront pas être supprimés et cela occasionnera des bugs.
+
+### Changer l'indice de végétation
+
+L'indice de végétation utilisé jusqu'ici est le CRSWIR, sensible à la teneur en eau. La teneur en eau étant la première caractéristique de la végétation affectée lors d'attaques de scolytes, il donne de bons résultats pour la détection de scolytes. Cependant, il existe d'autres indices de végétation, dont le plus connu est probablement le NDVI, plutôt sensible à l'activité photo-synthétique, les pigments chlorophylliens... L'utilisation du NDVI est déjà prévue dans le package, pour l'utiliser il suffit donc simplement de rajouter le paramètre _vi = "NDVI" dans la fonction _compute_masked_vegetationindex_ :
+```bash
+compute_masked_vegetationindex(input_directory = input_directory, data_directory = data_directory, vi = "NDVI")
+```
+Relancez le script.
+
 
