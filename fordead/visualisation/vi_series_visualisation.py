@@ -3,6 +3,7 @@
 Created on Thu Oct  1 14:56:23 2020
 
 @author: raphael.dutrieux
+
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -47,7 +48,7 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         if xy_first_detection_date_index !=0:
             pixel_series.where(pixel_series.training_date & ~pixel_series.mask,drop=True).plot.line("bo", label='Apprentissage')
             if (~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask,drop=True).plot.line("o",color = '#1fca3b', label='Dates sans anomalies') 
-            if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly,drop=True).plot.line("r*", markersize=9, label='Dates avec anomalies') 
+            if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.Soil,drop=True).plot.line("r*", markersize=9, label='Dates avec anomalies') 
   
             #Plotting vegetation index model and anomaly threshold
             yy.plot.line("b", label='Modélisation du CRSWIR sur les dates d\'apprentissage')
@@ -79,16 +80,9 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         else:
             pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
             plt.title("X : " + str(X)+"   Y : " + str(Y)+"\n Not enough dates to compute a model",size=15)
-            
+             
+        [plt.axvline(x=datetime.datetime.strptime(str(year)+"-01-01", '%Y-%m-%d'),color="black") for year in np.arange(pixel_series.isel(Time = 0).Time.data.astype('datetime64[Y]'), (pixel_series.isel(Time = -1).Time.data + np.timedelta64(35,'D')).astype('datetime64[Y]')+1) if str(year)!="2015"]
 
-        #Plotting vertical lines delimiting years
-        plt.axvline(x=datetime.datetime.strptime("2016-01-01", '%Y-%m-%d'),color="black")
-        plt.axvline(x=datetime.datetime.strptime("2017-01-01", '%Y-%m-%d'),color="black")
-        plt.axvline(x=datetime.datetime.strptime("2018-01-01", '%Y-%m-%d'),color="black")
-        plt.axvline(x=datetime.datetime.strptime("2019-01-01", '%Y-%m-%d'),color="black")
-        plt.axvline(x=datetime.datetime.strptime("2020-01-01", '%Y-%m-%d'),color="black")
-        plt.axvline(x=datetime.datetime.strptime("2021-01-01", '%Y-%m-%d'),color="black")
-        
         plt.legend()
         plt.ylim((0,2))
         plt.xlabel("Date",size=15)
@@ -99,7 +93,8 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
 
 
 def vi_series_visualisation(data_directory, shape_path = None):
-
+    data_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/C_RESULTS/ZoneEtude"
+    
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     chunks = None
