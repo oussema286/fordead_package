@@ -37,7 +37,9 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
         decline_data = import_decline_data(tile.paths)
         soil_data = soil_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         decline_data = decline_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-
+        forest_mask = import_forest_mask(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        
+        
 
 #         #Récupération des données observations
         ScolytesObs=gp.read_file(obs_terrain_path,bbox=shape_buffer.envelope)
@@ -64,7 +66,7 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
                 soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
                 affected=detected+2*soil
                 
-                forest_mask = import_forest_mask(tile.paths["ForestMask"])
+                
                 # valid_area = 
                 affected = affected.where(forest_mask,0)
                 

@@ -15,6 +15,7 @@ import xarray as xr
 
 from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
 from fordead.ModelVegetationIndex import compute_HarmonicTerms
+from fordead.masking_vi import get_dict_vi
 
 # =============================================================================
 #  IMPORT DES DONNEES CALCULEES
@@ -35,7 +36,7 @@ def parse_command_line():
 # =============================================================================
 # # IMPORT ALL DATA
 # =============================================================================
-def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly):
+def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi):
         fig=plt.figure(figsize=(10,7))
         ax = plt.gca()
         formatter = mdates.DateFormatter("%b %Y")
@@ -50,7 +51,13 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
   
             #Plotting vegetation index model and anomaly threshold
             yy.plot.line("b", label='Modélisation du CRSWIR sur les dates d\'apprentissage')
-            (yy+threshold_anomaly).plot.line("b--", label='Seuil de détection des anomalies')
+            
+            dict_vi = get_dict_vi(path_dict_vi)
+            if dict_vi[vi]["decline_change_direction"] == "+":
+                (yy+threshold_anomaly).plot.line("b--", label='Seuil de détection des anomalies')
+            elif dict_vi[vi]["decline_change_direction"] == "-":
+                (yy-threshold_anomaly).plot.line("b--", label='Seuil de détection des anomalies')
+            
             
             #Plotting vertical lines when decline or soil is detected
             if ~xy_decline_data["state"] & ~xy_soil_data["state"]:
@@ -80,11 +87,12 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         plt.axvline(x=datetime.datetime.strptime("2018-01-01", '%Y-%m-%d'),color="black")
         plt.axvline(x=datetime.datetime.strptime("2019-01-01", '%Y-%m-%d'),color="black")
         plt.axvline(x=datetime.datetime.strptime("2020-01-01", '%Y-%m-%d'),color="black")
+        plt.axvline(x=datetime.datetime.strptime("2021-01-01", '%Y-%m-%d'),color="black")
         
         plt.legend()
         plt.ylim((0,2))
         plt.xlabel("Date",size=15)
-        plt.ylabel("Vegetation index",size=15)
+        plt.ylabel(vi,size=15)
             
         plt.show()
         return fig
@@ -108,7 +116,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
     
     
     tile.add_dirpath("series", tile.data_directory / "SeriesTemporelles")
-    
+    tile.save_info()
     xx = np.array(range(int(stack_vi.DateNumber.min()), int(stack_vi.DateNumber.max())))
     xxDate=[np.datetime64(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in xx]
     
@@ -142,7 +150,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
                 pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
                 yy = (harmonic_terms * coeff_model.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest").compute()).sum(dim="band")
             
-            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"])
+            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"])
             fig.savefig(tile.paths["series"] / ("id_" + str(id_point) + ".png"))
     
     else:
@@ -189,7 +197,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
     
             #ax.axvspan(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(np.array(mydataTested.Day)[IndexStress[k]])),datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(np.array(mydataTested.Day)[IndexStress[k+1]])),color="orange",alpha=0.5)
             
-            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"])
+            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"])
             fig.savefig(tile.paths["series"] / ("X"+str(X)+"_Y"+str(Y)+".png"))
     
 if __name__ == '__main__':

@@ -20,7 +20,7 @@ import geopandas as gp
 # =============================================================================
 
 from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
-from fordead.masking_vi import compute_masks, compute_vegetation_index
+from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula
 from fordead.writing_data import write_tif
 
 #%% =============================================================================
@@ -68,7 +68,7 @@ def compute_masked_vegetationindex(
     tile = tile.import_info()
 
     tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "interpolation_order" : interpolation_order, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi, "extent_shape_path" : extent_shape_path, "path_dict_vi" : path_dict_vi})
-    if tile.parameters["Overwrite"] : tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_decline", "state_soil", "valid_area_mask" ,"periodic_results_decline","result_files","timelapse")
+    if tile.parameters["Overwrite"] : tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_decline", "state_soil", "valid_area_mask" ,"periodic_results_decline","result_files","timelapse","series")
 
     tile.getdict_datepaths("Sentinel",Path(input_directory)) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
     tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
@@ -92,19 +92,23 @@ def compute_masked_vegetationindex(
     else:
         soil_data = initialize_soil_data(raster_meta["shape"],raster_meta["coords"])
         
-
+    bands, formula = get_bands_and_formula(vi, path_dict_vi)
+    
     #get already computed dates
     tile.getdict_datepaths("VegetationIndex",tile.paths["VegetationIndexDir"])
     date_index=0
     for date in tile.paths["Sentinel"]:
         if cloudiness[date] <= lim_perc_cloud and not(date in tile.paths["VegetationIndex"]): #If date not too cloudy and not already computed
             # print(date)
+            
+            
+            
             # Resample and import SENTINEL data
-            stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2","B3","B4","B8A","B11","B12"], interpolation_order = interpolation_order, extent = extent)
+            stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands, interpolation_order = interpolation_order, extent = extent)
             # Compute masks
             mask = compute_masks(stack_bands, soil_data, date_index)
             # Compute vegetation index
-            vegetation_index = compute_vegetation_index(stack_bands, vi, path_dict_vi = path_dict_vi)
+            vegetation_index = compute_vegetation_index(stack_bands, formula = formula)
 
             #Masking invalid values (division by zero)
             nan_vi = vegetation_index.isnull()

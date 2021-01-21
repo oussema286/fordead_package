@@ -66,7 +66,7 @@ def create_timelapse(data_directory,shape_path, obs_terrain_path):
     
     tile.add_dirpath("timelapse", tile.data_directory / "Timelapses")
 
-    
+    tile.save_info()
     ShapeInteret=gp.read_file(shape_path)
 
     for ShapeIndex in range(ShapeInteret.shape[0]):
@@ -75,11 +75,11 @@ def create_timelapse(data_directory,shape_path, obs_terrain_path):
             NameFile=str(Shape["Id"].iloc[0])
         else:
             NameFile=str(ShapeIndex)
-        print(NameFile)
+        print("Creating timelapse | Id : " + NameFile)
         
-        if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()):
-            fig = CreateTimelapse(Shape,tile,DictCol, obs_terrain_path)
-            plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=True)
+        # if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()):
+        fig = CreateTimelapse(Shape,tile,DictCol, obs_terrain_path)
+        plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=True)
 
 
 if __name__ == '__main__':

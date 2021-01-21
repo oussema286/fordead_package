@@ -101,7 +101,7 @@ def get_pre_masks(stack_bands):
     # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B4 + B2 - B3)/(B4 + B2 + B3)") #Bare soil index
 
     shadows = (stack_bands==0).any(dim = "band")
-    outside_swath = stack_bands.sel(band = "B12")<0
+    outside_swath = stack_bands.isel(band=0)<0
     
     invalid = shadows | outside_swath | (stack_bands.sel(band = "B2") >= 600)
     
@@ -150,7 +150,7 @@ def compute_masks(stack_bands, soil_data, date_index):
 
 def get_dict_vi(path_dict_vi = None):
     dict_vi = {"CRSWIR" : {'formula': 'B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))', 'decline_change_direction': '+'},
-                "NDVI" : {'formula': '(B8-B4)/(B8+B4)', 'decline_change_direction': '+'}}
+                "NDVI" : {'formula': '(B8-B4)/(B8+B4)', 'decline_change_direction': '-'}}
     if path_dict_vi is not None:
         d = {}
         with open(path_dict_vi) as f:
@@ -160,6 +160,13 @@ def get_dict_vi(path_dict_vi = None):
                 
         dict_vi.update(d)
     return dict_vi
+
+def get_bands_and_formula(vi, path_dict_vi):
+    formula = get_dict_vi(path_dict_vi)[vi]["formula"]
+    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
+    bands = list(set(["B2","B3","B4","B11","B8A"] + ["B"+band for band in re.findall(match_string, formula)]))
+    return bands, formula
+    
 
 def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_dict_vi = None):
     

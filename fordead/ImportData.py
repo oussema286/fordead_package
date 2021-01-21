@@ -301,6 +301,7 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
     else:
         stack_bands = [xr.open_rasterio(band_paths[band],chunks = 1280).loc[dict(x=slice(extent[0]-20, extent[2]+20),y = slice(extent[3]+20,extent[1]-20))].compute() for band in list_bands]
     
+    crs = stack_bands[0].crs.replace("+init=","")
     #Resampling at 10m resolution
     for band_index in range(len(stack_bands)):
         if stack_bands[band_index].attrs["res"]==(20.0,20.0):            
@@ -318,7 +319,7 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
     concatenated_stack_bands.coords["band"] = list_bands
     # concatenated_stack_bands=concatenated_stack_bands.chunk({"band": 1,"x" : -1,"y" : 100})
     concatenated_stack_bands.attrs["nodata"] = 0
-    concatenated_stack_bands.attrs["crs"]=concatenated_stack_bands.crs.replace("+init=","")
+    concatenated_stack_bands.attrs["crs"]=crs
     return concatenated_stack_bands
 
 
