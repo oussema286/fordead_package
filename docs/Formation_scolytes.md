@@ -289,14 +289,14 @@ Prenez le temps d'examiner les nouveaux résultats, et éventuellement de les co
 
 ## Changer les paramètres de la détection
 
-Depuis le début de ce TD, nous avons laissé tous les paramètres à leur valeur par défaut. Ces valeurs ont été déterminées de manière empirique pour la détection de scolytes. Il est intéressant de savoir modifier ces paramètres afin de s'adapter à des situations locales, ou d'autres problématiques. Pour commencer, supprimez l'ensemble des couches rajoutées à QGIS liées aux résultats précédents (pas besoin de retirer le raster virtuel en RGB). Le changement des paramètres entraînera la suppression des résultats précédents, si ils sont ouverts dans QGIS, ils ne pourront pas être supprimés et cela occasionnera des bugs.
+Depuis le début de ce TD, nous avons laissé tous les paramètres à leur valeur par défaut. Ces valeurs ont été déterminées de manière empirique pour la détection de scolytes. Il est intéressant de savoir modifier ces paramètres afin de s'adapter à des situations locales, ou d'autres problématiques. Pour commencer, supprimez l'ensemble des couches rajoutées à QGIS liées aux résultats précédents (pas besoin de retirer le raster virtuel en RGB). Le changement des paramètres entraînera la suppression des résultats précédents, si ils sont ouverts dans QGIS, ils ne pourront pas être supprimés et cela occasionnera des bugs. 
 
 ### Changer l'indice de végétation
 
-L'indice de végétation utilisé jusqu'ici est le CRSWIR, sensible à la teneur en eau. La teneur en eau étant la première caractéristique de la végétation affectée lors d'attaques de scolytes, il donne de bons résultats pour la détection de scolytes. Cependant, il existe d'autres indices de végétation, dont le plus connu est probablement le NDVI, plutôt sensible à l'activité photo-synthétique, les pigments chlorophylliens... L'utilisation du NDVI est déjà prévue dans le package, pour l'utiliser il suffit donc simplement de rajouter le paramètre _vi = "NDVI" dans la fonction _compute_masked_vegetationindex_ :
+L'indice de végétation utilisé jusqu'ici est le CRSWIR, sensible à la teneur en eau. La teneur en eau étant la première caractéristique de la végétation affectée lors d'attaques de scolytes, il donne de bons résultats pour la détection de scolytes. Cependant, il existe d'autres indices de végétation, dont le plus connu est probablement le NDVI, plutôt sensible à l'activité photo-synthétique, les pigments chlorophylliens... 
+- L'utilisation du NDVI est déjà prévue dans le package, pour l'utiliser il suffit donc simplement de rajouter le paramètre `vi = "NDVI"` dans la fonction _compute_masked_vegetationindex_ :
 ```bash
 compute_masked_vegetationindex(input_directory = input_directory, data_directory = data_directory, vi = "NDVI")
 ```
-Relancez le script.
-
-
+- Sauvegardez vos visualisations si vous souhaitez effectuer une comparaison (optionnel)
+- Relancez le script.
