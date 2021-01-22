@@ -104,7 +104,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
     first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
     soil_data = import_soil_data(tile.paths,chunks = chunks)
     decline_data = import_decline_data(tile.paths,chunks = chunks)
-    valid_area_mask = import_forest_mask(tile.paths["valid_area_mask"],chunks = chunks)
+    forest_mask = import_forest_mask(tile.paths["ForestMask"],chunks = chunks)
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
     anomalies = import_stacked_anomalies(tile.paths["Anomalies"],chunks = chunks)
     
@@ -128,29 +128,31 @@ def vi_series_visualisation(data_directory, shape_path = None):
             id_point = shape.iloc[point_index]["id"]
             geometry_point = shape.iloc[point_index]["geometry"]
             
-            xy_first_detection_date_index = int(first_detection_date_index.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest"))
-            xy_soil_data = soil_data.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
-            xy_stack_masks = stack_masks.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
-            pixel_series = stack_vi.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
-            if xy_first_detection_date_index!=0:
-                xy_anomalies = anomalies.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
-                xy_decline_data = decline_data.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
+            if forest_mask.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest"):
+                xy_first_detection_date_index = int(first_detection_date_index.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest"))
+                xy_soil_data = soil_data.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
+                xy_stack_masks = stack_masks.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
+                pixel_series = stack_vi.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
+                if xy_first_detection_date_index!=0:
+                    xy_anomalies = anomalies.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
+                    xy_decline_data = decline_data.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
+                    
                 
-            
-            pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
-            pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
-            if xy_first_detection_date_index!=0:
-                anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
-                pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
-                pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
-                yy = (harmonic_terms * coeff_model.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest").compute()).sum(dim="band")
-            
-            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"])
-            fig.savefig(tile.paths["series"] / ("id_" + str(id_point) + ".png"))
-    
+                pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
+                pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
+                if xy_first_detection_date_index!=0:
+                    anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
+                    pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
+                    pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
+                    yy = (harmonic_terms * coeff_model.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest").compute()).sum(dim="band")
+                
+                fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"])
+                fig.savefig(tile.paths["series"] / ("id_" + str(id_point) + ".png"))
+            else:
+                print("Pixel outside forest mask")
     else:
     
-        PixelsToChoose = np.where(valid_area_mask)
+        PixelsToChoose = np.where(forest_mask)
         PixelID=random.randint(0,PixelsToChoose[0].shape[0])
         X=PixelsToChoose[0][PixelID]
         Y=PixelsToChoose[1][PixelID]
@@ -159,7 +161,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
             
             X=input("X ? ")
             if X=="":
-                PixelsToChoose = np.where(valid_area_mask)
+                PixelsToChoose = np.where(forest_mask)
                 PixelID=random.randint(0,PixelsToChoose[0].shape[0])
                 X=PixelsToChoose[1][PixelID]
                 Y=PixelsToChoose[0][PixelID]
@@ -168,26 +170,29 @@ def vi_series_visualisation(data_directory, shape_path = None):
             else:
                 X=int(X)
                 Y=int(input("Y ? "))
-        
-            yy = (harmonic_terms * coeff_model.isel(x = X, y = Y).compute()).sum(dim="coeff")
             
-            xy_first_detection_date_index = int(first_detection_date_index.isel(x = X, y = Y))
-            xy_soil_data = soil_data.isel(x = X, y = Y)
-            xy_stack_masks = stack_masks.isel(x = X, y = Y)
-            pixel_series = stack_vi.isel(x = X, y = Y)
-            if xy_first_detection_date_index!=0:
-                xy_anomalies = anomalies.isel(x = X, y = Y)
-                xy_decline_data = decline_data.isel(x = X, y = Y)
-    
-            pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
-            pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
-            if xy_first_detection_date_index!=0:
-                anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
-                pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
-                pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
-                            
-            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"])
-            fig.savefig(tile.paths["series"] / ("X"+str(X)+"_Y"+str(Y)+".png"))
+            if forest_mask.isel(x = X, y = Y):
+                yy = (harmonic_terms * coeff_model.isel(x = X, y = Y).compute()).sum(dim="coeff")
+                
+                xy_first_detection_date_index = int(first_detection_date_index.isel(x = X, y = Y))
+                xy_soil_data = soil_data.isel(x = X, y = Y)
+                xy_stack_masks = stack_masks.isel(x = X, y = Y)
+                pixel_series = stack_vi.isel(x = X, y = Y)
+                if xy_first_detection_date_index!=0:
+                    xy_anomalies = anomalies.isel(x = X, y = Y)
+                    xy_decline_data = decline_data.isel(x = X, y = Y)
+        
+                pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
+                pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
+                if xy_first_detection_date_index!=0:
+                    anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
+                    pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
+                    pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
+                                
+                fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"])
+                fig.savefig(tile.paths["series"] / ("X"+str(X)+"_Y"+str(Y)+".png"))
+            else:
+                print("Pixel outside forest mask")
     
 if __name__ == '__main__':
     dictArgs=parse_command_line()
