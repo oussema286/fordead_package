@@ -18,9 +18,9 @@
     * [Visualisation de la série temporelle de pixels en particulier](#visualisation-de-la-série-temporelle-de-pixels-en-particulier)
 * [Rajouter des dates SENTINEL et mettre à jour la détection](#rajouter-des-dates-sentinel-et-mettre-à-jour-la-détection)
 * [Changer les paramètres de la détection](#changer-les-paramètres-de-la-détection)
-    * [Changer l'indice de végétation](#)
-    * [Changer le seuil de détection d'anomalies](#)
-    * [Changer de zone d'étude](#)
+    * [Changer l'indice de végétation](#utiliser-un-indice-de-végétation-non-prévu-dans-le-package)
+    * [Changer le seuil de détection d'anomalies](#changer-le-seuil-de-détection-danomalies)
+    * [Changer de zone d'étude](#changer-de-zone-détude)
 * [Exporter des résultats adaptés à ses besoins](#)
     * [Étape 5 : Export des résultats](#)
 
