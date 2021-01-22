@@ -183,8 +183,8 @@ from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 - Pour lancer la fonction
 ```bash
 compute_forest_mask(data_directory, forest_mask_source = 'BDFORET', 
-                    dep_path = "<MyWorkingDirectory>/A_DATA/VECTOR/departements-20140306-100m.shp",
-                    bdforet_dirpath = "<MyWorkingDirectory>/A_DATA/VECTOR/BDFORET")
+                    dep_path = "<MyWorkingDirectory>/A_DATA/VECTOR/BD_ADMIN/departements-20140306-100m.shp",
+                    bdforet_dirpath = "<MyWorkingDirectory>/A_DATA/VECTOR/BD_FORET")
 ```
 Puis, relancez le script depuis l'invité de commande :
 ```bash
@@ -209,8 +209,8 @@ from fordead.visualisation.create_timelapse import create_timelapse
 ```
 - Pour ajouter les paramètres nécéssaires :
 ```bash
-shape_path = "<MyWorkingDirectory>/A_DATA/VECTOR/Zones_Etude/ZoneEtude.shp"
-obs_terrain_path = "<MyWorkingDirectory>/A_DATA/VECTOR/ValidatedScolytes.shp"
+shape_path = "<MyWorkingDirectory>/A_DATA/VECTOR/ZONE_ETUDE/ZoneEtude.shp"
+obs_terrain_path = "<MyWorkingDirectory>/A_DATA/VECTOR/BD_SCOLYTE/ValidatedScolytes.shp"
 ```
 - Pour lancer la fonction :
 ```bash
@@ -298,5 +298,39 @@ L'indice de végétation utilisé jusqu'ici est le CRSWIR, sensible à la teneur
 ```bash
 compute_masked_vegetationindex(input_directory = input_directory, data_directory = data_directory, vi = "NDVI")
 ```
+- Rajouter les paramètres `ymin = 0, ymax = 1.1` à la fonction `vi_series_visualisation(data_directory = data_directory)`. Ces paramètres permettent de donner les limites en ordonnée des graphiques de séries temporelles, car le NDVI n'a pas la même échelle que le CRSWIR.
+```bash
+vi_series_visualisation(data_directory = data_directory,ymin = 0, ymax = 1.1)
+```
 - Sauvegardez vos visualisations si vous souhaitez effectuer une comparaison (optionnel)
 - Relancez le script.
+
+Prenez le temps de visualiser les résultats.
+
+#### Utiliser un indice de végétation non prévu dans le package
+La version actuelle du package ne prévoit que les indices de végétation "CRSWIR" et "NDVI". Nous allons donc maintenant apprendre comment rajouter n'importe quel indice de végétation pour l'utiliser dans la détection. Par exemple, prenons le NDWI (Normalized Difference Water Index), un indice de végétation lié à la teneur en eau de la végétation qui suit la formule suivante : 
+```math
+\frac{B8A-B11}{B8A+B11}
+```
+
+- Créer un fichier texte `dict_vi.txt` dans le dossier <MyWorkingDirectory>/B_PROGRAMS (Vous pouvez en réalité utiliser le nom et dossier de votre choix)
+- Dans ce fichier texte, ajoutez la ligne suivante, avant de sauvegarder :
+```bash
+NDWI (B8A-B11)/(B8A+B11) -
+```
+où "NDWI" est le nom de l'indice, "(B8A-B11)/(B8A+B11)" est sa formule, et "-" est la direction vers laquelle l'indice de végétation tend lorsqu'il y a déperissement. L'algorithme accepte "-" ou "+", on a déjà pu voir que le CRSWIR augmente en cas de déperissement, tandis que le NDVI diminue.
+- Ajouter dans le script le paramètre `path_dict_vi = "<MyWorkingDirectory>/B_PROGRAMS/dict_vi.txt"` à la fonction `compute_masked_vegetationindex`, et changer le nom de l'indice de végétation pour "NDWI" :
+```bash
+compute_masked_vegetationindex(input_directory = input_directory, data_directory = data_directory, vi = "NDWI", path_dict_vi = "<MyWorkingDirectory>/B_PROGRAMS/dict_vi.txt")
+```
+- Relancez le script
+- Observez les résultats
+
+### Changer le seuil de détection d'anomalies
+Le seuil de détection des anomalies est réglé par défaut à 0.16, c'est à dire que la différence entre la courbe "Modélisation de l'indice de végétation sur les dates d'apprentissage" et la courbe "Seuil de détection des anomalies" est de 0.16. Il n'y a pas de raisons que ce seuil soit identique entre les différents indices de végétations. Modifiez ce seuil en rajoutant le paramètre `threshold_anomaly = 0.12` à la fonction `decline_detection` :
+```bash
+decline_detection(data_directory = data_directory, threshold_anomaly = 0.12)
+```
+Essayez différents seuils, observez les résultats. Plus ce seuil est élevé, moins la détection est sensible. Il y a un juste milieu à trouver afin de détecter les déperissements le plus précocement possible, en évitant les faux positifs.
+
+### Changer de zone d'étude
