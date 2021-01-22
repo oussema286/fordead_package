@@ -26,21 +26,14 @@
 #
 # ===============================================================================
 
-import tempfile
 import zipfile
-
 from path import Path
-import rasterio as rio
-import pandas as pd
-from rasterio.mask import mask
 from rasterio.enums import Resampling
-from shapely.geometry import box
 import geopandas as gpd
 import numpy as np
 import rioxarray as rxr
 import xarray as xr
 from pandas import to_datetime
-from fordead.masking_vi import compute_vegetation_index
 
 # other requirements:
 # matplotlib # plot rasters
@@ -85,185 +78,6 @@ def mask_file(indir, type='CLM', res=10):
     file = mask_dir.glob('*_{}_R{}.tif'.format(type, int(res/10)))[0]
     return file
 
-def bbox_clip(indir, shape, outdir, overwrite=False):
-    """
-    crop to extent of shapefile
-    Parameters
-    ----------
-    indir: str
-        directory containing the rasters to crop
-    shape: str | geopandas.geodataframe.GeoDataFrame
-        Shape to clip raster with.
-    outdir: str
-        Output directory where clipped files are written.
-
-    Returns
-    -------
-    list
-        List of clipped files
-
-    """
-    outdir = Path(outdir)
-    indir = Path(indir)
-    infiles = band_files(indir)
-    outfiles = band_files(outdir)
-
-    innames = [f.name for f in infiles]
-    outnames = [f.name for f in outfiles]
-    already_exist = all([(f in outnames) for f in innames])
-    if already_exist and not overwrite:
-        print('bbox_clip not processed, files already exists: {}'.format(outfiles))
-        return outfiles
-
-    if overwrite:
-        files_to_crop = infiles
-    else:
-        files_to_crop = [f for n, f in zip(innames, infiles) if n not in outnames]
-
-
-    shape = gdf_from_else(shape)
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir_path = Path(tmpdir)
-
-        metas = []
-        for f in files_to_crop:
-            with rio.open(f) as r:
-                metas.append(r.meta)
-
-        metas = pd.DataFrame(metas) # convert to dataframe
-        metas['path']=files_to_crop
-        metas['res'] = [m[0] for i, m in metas['transform'].iteritems()]
-        metas['crop_path'] = [tmpdir_path / p.name for p in metas.path.to_list()]
-
-        ref_meta = metas.loc[metas.res == max(metas.res)].iloc[0]
-
-        with rio.open(ref_meta.path) as r:
-            arr, transform = mask(r, [box(*shape.to_crs(r.crs).total_bounds)], crop=True)
-
-        shape60m = bbox(arr, transform)
-
-        try:
-            for m in metas.itertuples():
-                with rio.open(m.path) as r:
-                    arr, transform = mask(r, [shape60m], crop=True)
-                    if bbox(arr, transform) != shape60m:
-                        print('Different extent/grid: {}'.format(m.crop_path))
-                    meta = r.meta.copy()
-                    meta['transform'] = transform
-                    meta['width'] = arr.shape[-1]
-                    meta['height'] = arr.shape[-2]
-                    with rio.open(m.crop_path, 'w', **meta) as r1:
-                        r1.write(arr)
-        except Exception as e:
-            print('Crop went wrong: {}'.format(indir))
-            print('Removes temporary directory:{}'.format(tmpdir_path))
-            raise e
-
-        if outdir.isdir():
-            for m in metas.itertuples():
-                outfile = outdir / m.crop_path.name
-                m.crop_path.move(outfile)
-        else:
-            tmpdir_path.move(outdir)
-        outfiles = [outdir / f for f in innames]
-
-    return(outfiles)
-
-def clip(indir, shape, outdir, overwrite=False):
-    """
-    crop to extent of shapefile
-    Parameters
-    ----------
-    indir: str
-        directory containing the rasters to crop
-    shape: str | geopandas.geodataframe.GeoDataFrame
-        Shape to clip raster with.
-    outdir: str
-        Output directory where clipped files are written.
-
-    Returns
-    -------
-    list
-        List of clipped files
-    """
-    # indir = abspath('./data/S2/22KGV/S2B_MSIL1C_20190808T132239_N0208_R038_T22KGV_20190808T163402.SAFE/GRANULE/L1C_T22KGV_A012648_20190808T132736/IMG_DATA')
-    # shapefile = abspath('./data/SHP/tile_10km_sp_confidencial/base_sp.shp')
-    # outdir = abspath('./data/test')
-    outdir = Path(outdir)
-    indir = Path(indir)
-    infiles = band_files(indir)
-    outfiles = band_files(outdir)
-
-    innames = [f.name for f in infiles]
-    outnames = [f.name for f in outfiles]
-    already_exist = all([(f in outnames) for f in innames])
-    if already_exist and not overwrite:
-        print('Clip not processed, files already exists: {}'.format(outfiles))
-        return outfiles
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir_path = Path(tmpdir)
-        files_to_clip = bbox_clip(indir, shape, tmpdir_path, overwrite=overwrite)
-
-    # if overwrite:
-    #     files_to_clip = infiles
-    # else:
-    #     files_to_clip = [f for n, f in zip(innames, infiles) if n not in outnames]
-
-        shape = gdf_from_else(shape)
-
-        with tempfile.TemporaryDirectory() as tmpdir2:
-            tmpdir_path2 = Path(tmpdir2)
-
-            metas = []
-            for f in files_to_clip:
-                with rio.open(f) as r:
-                    metas.append(r.meta)
-
-            metas = pd.DataFrame(metas) # convert to dataframe
-            metas['path']=files_to_clip
-            metas['res'] = [m[0] for i, m in metas['transform'].iteritems()]
-            metas['clip_path'] = [tmpdir_path / p.name for p in metas.path.to_list()]
-
-            try:
-                for m in metas.itertuples():
-                    with rio.open(m.path) as r:
-                        arr, transform = mask(r, shape.to_crs(r.crs).geometry.to_list())
-                        meta = r.meta.copy()
-                        meta['transform'] = transform
-                        meta['width'] = arr.shape[-1]
-                        meta['height'] = arr.shape[-2]
-                        with rio.open(m.clip_path, 'w', **meta) as r1:
-                            r1.write(arr)
-            except Exception as e:
-                print('Clip went wrong: {}'.format(indir))
-                print('Removes temporary directory:{}'.format(tmpdir_path))
-                raise e
-
-            if outdir.isdir():
-                for m in metas.itertuples():
-                    outfile = outdir / m.clip_path.name
-                    m.clip_path.move(outfile)
-            else:
-                tmpdir_path.move(outdir)
-            outfiles = [outdir / f for f in innames]
-
-    return(outfiles)
-
-def bbox(arr, transform):
-    """
-    Get the bounding box of raster
-    Parameters
-    ----------
-    arr: numpy.array
-    transform: rasterio.transform
-
-    Returns
-    -------
-    shapely.geometry.box
-    """
-    return box(*(list(transform * [0, 0]) + list(transform * reversed(list(arr.shape)[-2:]))))
 
 def gdf_from_else(x):
     if isinstance(x, str):
@@ -276,68 +90,6 @@ def gdf_from_else(x):
         raise IOError('x expected to be a GeoDataFrame or a polygon file')
 
     return x
-
-def resample_raster(raster_path, outfile='', resampling=Resampling.nearest, res=10, overwrite=False):
-    """
-    Resample a raster file
-
-    Parameters
-    ----------
-    raster_path: str
-        Path to the raster file.
-    outfile: str
-        Path to the outputfile. If empty, data and transform are returned.
-    resampling: rasterio.enums.Resampling method
-    res: int
-        Final resolution
-    overwrite: bool
-
-    Returns
-    -------
-    str or (numpy.array, rasterio.transform)
-
-    """
-
-    outfile = Path(outfile)
-    if outfile.isfile() and not overwrite:
-        print('Resample not processed, directory already exists: {}'.format(outfile))
-        return outfile
-    with rio.open(raster_path) as r:
-        # resample data to target shape
-        rx, ry = r.res
-        # if (rx==res) and (ry==res) and outfile==raster_path:
-        #     print(f'Resample not processed, resolution is already {res}')
-        #     if outfile=='':
-        #         return
-        #     return outfile
-
-        raster_meta = r.meta
-        raster_data = r.read(
-            out_shape=(
-                r.count,
-                int(r.height * ry/res),
-                int(r.width * rx/res)
-            ),
-            resampling=resampling
-        )
-
-        # scale image transform
-        raster_transform = r.transform * r.transform.scale(
-            (r.width / raster_data.shape[-1]),
-            (r.height / raster_data.shape[-2])
-        )
-        raster_meta['width'] = raster_data.shape[-1]
-        raster_meta['height'] = raster_data.shape[-2]
-        raster_meta['transform'] = raster_transform
-
-        if outfile != '':
-            tmpfile = Path(tempfile.NamedTemporaryFile(suffix=outfile.ext).name)
-            with rio.open(tmpfile, 'w', **raster_meta) as rw:
-                rw.write(raster_data)
-            tmpfile.move(outfile)
-            return outfile
-
-        return raster_data, raster_meta
 
 def unzip(zfile, write_dir, overwrite=False):
     """
@@ -388,87 +140,6 @@ def unzip(zfile, write_dir, overwrite=False):
 
     return outdir
 
-def stack(band_files, outputfile, res=10, resampling=Resampling.nearest, overwrite=False, verbose=False):
-    """
-    Stack bands into an only file.
-
-    Parameters
-    ----------
-    band_files: list
-        list of file paths to stack into the output file.
-    outputfile: str
-        file path to be written (with the correct extension)
-    verbose: bool
-        if True, it gives a message when files are written.
-
-    Returns
-    -------
-
-    """
-
-    outputfile = Path(outputfile)
-    if outputfile.exists() and not overwrite:
-        print('Stacking not processed, file already exists: {}'.format(outputfile))
-        return outputfile
-
-    if verbose:
-        print('Resampling bands...')
-
-    bandlist = []
-    dst_meta_list = []
-    for bf in band_files:
-        raster_data, raster_meta = resample_raster(bf, resampling=resampling, res=res)
-        bandlist.append(raster_data[0,:,:])
-        dst_meta_list.append(raster_meta)
-
-    if any([m!=dst_meta_list[0] for m in dst_meta_list]):
-        raise IOError('Metadata are not uniform and cannot be stacked.')
-
-    dst_meta = dst_meta_list[0]
-
-    if verbose:
-        print('Stacking bands...')
-    # write bands in file
-    dst_meta['count'] = len(bandlist)
-    # dst_meta['driver'] = driver
-    with rio.open(outputfile, 'w', **dst_meta) as dst:
-        dst.write(np.array(bandlist))
-        # for i, band in enumerate(bandlist, 1):
-        #     dst.write(band, indexes=i)
-
-    if verbose:
-        print('Bands stacked into: {}'.format(outputfile))
-
-    return outputfile
-
-def preprocess_maja(infile, shape, outdir, res=10, overwrite=False, verbose=True):
-    infile = Path(infile)
-    outdir = Path(outdir)
-
-    outdir.mkdir_p()
-
-    ### clip
-    clip_dir = outdir / 'clipped' / infile.name
-    clip_dir.parent.mkdir_p()
-    # outfile = bbox_clip(outfile, shape, clip_dir, overwrite=overwrite)
-    outfiles = clip(infile, shape, clip_dir, overwrite=overwrite)
-
-    ### Resample
-    resampled_dir = outdir / 'resampled' / infile.name
-    resampled_dir.parent.mkdir_p()
-    resampled_dir.mkdir_p()
-    routfiles=[]
-    for f in outfiles:
-        outfile = resample_raster(f, resampled_dir / f.name, res=10)
-        routfiles.append(outfile)
-
-    ### stack
-    stack_file = outdir / 'stacked' / clip_dir.name + '_{}m.tif'.format(res)
-    stack_file.parent.mkdir_p()
-    stack(outfiles, stack_file, res=res, overwrite=overwrite)
-
-    return stack_file
-
 def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic, chunks={'x': 1024, 'y': 1024, 'band': -1}):
     """
     Read MAJA data: FRE bands and mask bbox clipped and resampled
@@ -481,10 +152,10 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic, chunks
         Region of interest polygon file (1 polygon expected)
     res: float
         Target resolution.
-    resampling_method: str
-        'linear' or 'nearest'.
+    resampling_method: int
+        rasterio.enums.Resampling method
     chunks: dict
-        chuncks to read/process in parallel
+        chunks to read/process in parallel
 
     Returns
     -------
@@ -546,3 +217,334 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic, chunks
     cube["time"] = to_datetime(date_str)
 
     return cube, regrid_bands['mask']
+
+
+### with rasterio
+# import tempfile
+# import rasterio as rio
+# import pandas as pd
+# from rasterio.mask import mask
+# from shapely.geometry import box
+# def bbox_clip(indir, shape, outdir, overwrite=False):
+#     """
+#     crop to extent of shapefile
+#     Parameters
+#     ----------
+#     indir: str
+#         directory containing the rasters to crop
+#     shape: str | geopandas.geodataframe.GeoDataFrame
+#         Shape to clip raster with.
+#     outdir: str
+#         Output directory where clipped files are written.
+#
+#     Returns
+#     -------
+#     list
+#         List of clipped files
+#
+#     """
+#     outdir = Path(outdir)
+#     indir = Path(indir)
+#     infiles = band_files(indir)
+#     outfiles = band_files(outdir)
+#
+#     innames = [f.name for f in infiles]
+#     outnames = [f.name for f in outfiles]
+#     already_exist = all([(f in outnames) for f in innames])
+#     if already_exist and not overwrite:
+#         print('bbox_clip not processed, files already exists: {}'.format(outfiles))
+#         return outfiles
+#
+#     if overwrite:
+#         files_to_crop = infiles
+#     else:
+#         files_to_crop = [f for n, f in zip(innames, infiles) if n not in outnames]
+#
+#
+#     shape = gdf_from_else(shape)
+#
+#     with tempfile.TemporaryDirectory() as tmpdir:
+#         tmpdir_path = Path(tmpdir)
+#
+#         metas = []
+#         for f in files_to_crop:
+#             with rio.open(f) as r:
+#                 metas.append(r.meta)
+#
+#         metas = pd.DataFrame(metas) # convert to dataframe
+#         metas['path']=files_to_crop
+#         metas['res'] = [m[0] for i, m in metas['transform'].iteritems()]
+#         metas['crop_path'] = [tmpdir_path / p.name for p in metas.path.to_list()]
+#
+#         ref_meta = metas.loc[metas.res == max(metas.res)].iloc[0]
+#
+#         with rio.open(ref_meta.path) as r:
+#             arr, transform = mask(r, [box(*shape.to_crs(r.crs).total_bounds)], crop=True)
+#
+#         shape60m = bbox(arr, transform)
+#
+#         try:
+#             for m in metas.itertuples():
+#                 with rio.open(m.path) as r:
+#                     arr, transform = mask(r, [shape60m], crop=True)
+#                     if bbox(arr, transform) != shape60m:
+#                         print('Different extent/grid: {}'.format(m.crop_path))
+#                     meta = r.meta.copy()
+#                     meta['transform'] = transform
+#                     meta['width'] = arr.shape[-1]
+#                     meta['height'] = arr.shape[-2]
+#                     with rio.open(m.crop_path, 'w', **meta) as r1:
+#                         r1.write(arr)
+#         except Exception as e:
+#             print('Crop went wrong: {}'.format(indir))
+#             print('Removes temporary directory:{}'.format(tmpdir_path))
+#             raise e
+#
+#         if outdir.isdir():
+#             for m in metas.itertuples():
+#                 outfile = outdir / m.crop_path.name
+#                 m.crop_path.move(outfile)
+#         else:
+#             tmpdir_path.move(outdir)
+#         outfiles = [outdir / f for f in innames]
+#
+#     return(outfiles)
+#
+# def clip(indir, shape, outdir, overwrite=False):
+#     """
+#     crop to extent of shapefile
+#     Parameters
+#     ----------
+#     indir: str
+#         directory containing the rasters to crop
+#     shape: str | geopandas.geodataframe.GeoDataFrame
+#         Shape to clip raster with.
+#     outdir: str
+#         Output directory where clipped files are written.
+#
+#     Returns
+#     -------
+#     list
+#         List of clipped files
+#     """
+#     # indir = abspath('./data/S2/22KGV/S2B_MSIL1C_20190808T132239_N0208_R038_T22KGV_20190808T163402.SAFE/GRANULE/L1C_T22KGV_A012648_20190808T132736/IMG_DATA')
+#     # shapefile = abspath('./data/SHP/tile_10km_sp_confidencial/base_sp.shp')
+#     # outdir = abspath('./data/test')
+#     outdir = Path(outdir)
+#     indir = Path(indir)
+#     infiles = band_files(indir)
+#     outfiles = band_files(outdir)
+#
+#     innames = [f.name for f in infiles]
+#     outnames = [f.name for f in outfiles]
+#     already_exist = all([(f in outnames) for f in innames])
+#     if already_exist and not overwrite:
+#         print('Clip not processed, files already exists: {}'.format(outfiles))
+#         return outfiles
+#
+#     with tempfile.TemporaryDirectory() as tmpdir:
+#         tmpdir_path = Path(tmpdir)
+#         files_to_clip = bbox_clip(indir, shape, tmpdir_path, overwrite=overwrite)
+#
+#     # if overwrite:
+#     #     files_to_clip = infiles
+#     # else:
+#     #     files_to_clip = [f for n, f in zip(innames, infiles) if n not in outnames]
+#
+#         shape = gdf_from_else(shape)
+#
+#         with tempfile.TemporaryDirectory() as tmpdir2:
+#             tmpdir_path2 = Path(tmpdir2)
+#
+#             metas = []
+#             for f in files_to_clip:
+#                 with rio.open(f) as r:
+#                     metas.append(r.meta)
+#
+#             metas = pd.DataFrame(metas) # convert to dataframe
+#             metas['path']=files_to_clip
+#             metas['res'] = [m[0] for i, m in metas['transform'].iteritems()]
+#             metas['clip_path'] = [tmpdir_path / p.name for p in metas.path.to_list()]
+#
+#             try:
+#                 for m in metas.itertuples():
+#                     with rio.open(m.path) as r:
+#                         arr, transform = mask(r, shape.to_crs(r.crs).geometry.to_list())
+#                         meta = r.meta.copy()
+#                         meta['transform'] = transform
+#                         meta['width'] = arr.shape[-1]
+#                         meta['height'] = arr.shape[-2]
+#                         with rio.open(m.clip_path, 'w', **meta) as r1:
+#                             r1.write(arr)
+#             except Exception as e:
+#                 print('Clip went wrong: {}'.format(indir))
+#                 print('Removes temporary directory:{}'.format(tmpdir_path))
+#                 raise e
+#
+#             if outdir.isdir():
+#                 for m in metas.itertuples():
+#                     outfile = outdir / m.clip_path.name
+#                     m.clip_path.move(outfile)
+#             else:
+#                 tmpdir_path.move(outdir)
+#             outfiles = [outdir / f for f in innames]
+#
+#     return(outfiles)
+#
+# def bbox(arr, transform):
+#     """
+#     Get the bounding box of raster
+#     Parameters
+#     ----------
+#     arr: numpy.array
+#     transform: rasterio.transform
+#
+#     Returns
+#     -------
+#     shapely.geometry.box
+#     """
+#     return box(*(list(transform * [0, 0]) + list(transform * reversed(list(arr.shape)[-2:]))))
+#
+#
+# def resample_raster(raster_path, outfile='', resampling=Resampling.nearest, res=10, overwrite=False):
+#     """
+#     Resample a raster file
+#
+#     Parameters
+#     ----------
+#     raster_path: str
+#         Path to the raster file.
+#     outfile: str
+#         Path to the outputfile. If empty, data and transform are returned.
+#     resampling: rasterio.enums.Resampling method
+#     res: int
+#         Final resolution
+#     overwrite: bool
+#
+#     Returns
+#     -------
+#     str or (numpy.array, rasterio.transform)
+#
+#     """
+#
+#     outfile = Path(outfile)
+#     if outfile.isfile() and not overwrite:
+#         print('Resample not processed, directory already exists: {}'.format(outfile))
+#         return outfile
+#     with rio.open(raster_path) as r:
+#         # resample data to target shape
+#         rx, ry = r.res
+#         # if (rx==res) and (ry==res) and outfile==raster_path:
+#         #     print(f'Resample not processed, resolution is already {res}')
+#         #     if outfile=='':
+#         #         return
+#         #     return outfile
+#
+#         raster_meta = r.meta
+#         raster_data = r.read(
+#             out_shape=(
+#                 r.count,
+#                 int(r.height * ry/res),
+#                 int(r.width * rx/res)
+#             ),
+#             resampling=resampling
+#         )
+#
+#         # scale image transform
+#         raster_transform = r.transform * r.transform.scale(
+#             (r.width / raster_data.shape[-1]),
+#             (r.height / raster_data.shape[-2])
+#         )
+#         raster_meta['width'] = raster_data.shape[-1]
+#         raster_meta['height'] = raster_data.shape[-2]
+#         raster_meta['transform'] = raster_transform
+#
+#         if outfile != '':
+#             tmpfile = Path(tempfile.NamedTemporaryFile(suffix=outfile.ext).name)
+#             with rio.open(tmpfile, 'w', **raster_meta) as rw:
+#                 rw.write(raster_data)
+#             tmpfile.move(outfile)
+#             return outfile
+#
+#         return raster_data, raster_meta
+
+# def stack(band_files, outputfile, res=10, resampling=Resampling.nearest, overwrite=False, verbose=False):
+#     """
+#     Stack bands into an only file.
+#
+#     Parameters
+#     ----------
+#     band_files: list
+#         list of file paths to stack into the output file.
+#     outputfile: str
+#         file path to be written (with the correct extension)
+#     verbose: bool
+#         if True, it gives a message when files are written.
+#
+#     Returns
+#     -------
+#
+#     """
+#
+#     outputfile = Path(outputfile)
+#     if outputfile.exists() and not overwrite:
+#         print('Stacking not processed, file already exists: {}'.format(outputfile))
+#         return outputfile
+#
+#     if verbose:
+#         print('Resampling bands...')
+#
+#     bandlist = []
+#     dst_meta_list = []
+#     for bf in band_files:
+#         raster_data, raster_meta = resample_raster(bf, resampling=resampling, res=res)
+#         bandlist.append(raster_data[0,:,:])
+#         dst_meta_list.append(raster_meta)
+#
+#     if any([m!=dst_meta_list[0] for m in dst_meta_list]):
+#         raise IOError('Metadata are not uniform and cannot be stacked.')
+#
+#     dst_meta = dst_meta_list[0]
+#
+#     if verbose:
+#         print('Stacking bands...')
+#     # write bands in file
+#     dst_meta['count'] = len(bandlist)
+#     # dst_meta['driver'] = driver
+#     with rio.open(outputfile, 'w', **dst_meta) as dst:
+#         dst.write(np.array(bandlist))
+#         # for i, band in enumerate(bandlist, 1):
+#         #     dst.write(band, indexes=i)
+#
+#     if verbose:
+#         print('Bands stacked into: {}'.format(outputfile))
+#
+#     return outputfile
+
+# def preprocess_maja(infile, shape, outdir, res=10, overwrite=False, verbose=True):
+#     infile = Path(infile)
+#     outdir = Path(outdir)
+#
+#     outdir.mkdir_p()
+#
+#     ### clip
+#     clip_dir = outdir / 'clipped' / infile.name
+#     clip_dir.parent.mkdir_p()
+#     # outfile = bbox_clip(outfile, shape, clip_dir, overwrite=overwrite)
+#     outfiles = clip(infile, shape, clip_dir, overwrite=overwrite)
+#
+#     ### Resample
+#     resampled_dir = outdir / 'resampled' / infile.name
+#     resampled_dir.parent.mkdir_p()
+#     resampled_dir.mkdir_p()
+#     routfiles=[]
+#     for f in outfiles:
+#         outfile = resample_raster(f, resampled_dir / f.name, res=10)
+#         routfiles.append(outfile)
+#
+#     ### stack
+#     stack_file = outdir / 'stacked' / clip_dir.name + '_{}m.tif'.format(res)
+#     stack_file.parent.mkdir_p()
+#     stack(outfiles, stack_file, res=res, overwrite=overwrite)
+#
+#     return stack_file
