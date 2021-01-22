@@ -334,3 +334,16 @@ decline_detection(data_directory = data_directory, threshold_anomaly = 0.12)
 Essayez différents seuils, observez les résultats. Plus ce seuil est élevé, moins la détection est sensible. Il y a un juste milieu à trouver afin de détecter les déperissements le plus précocement possible, en évitant les faux positifs.
 
 ### Changer de zone d'étude
+A partir du même script, nous allons maintenant faire tourner l'algorithme sur une deuxième zone d'étude, celle-ci située en Meuse et dont les premières attaques de scolytes sont déjà anciennes.
+
+- Pour ce faire, modifiez "ZoneEtude" dans les paramètres **input_directory**, **data_directory** et **shape_path** en "ZoneEtude2", afin de donner le chemin des données liées à cette zone :
+```bash
+input_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL/ZoneEtude2"
+data_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/C_RESULTS/ZoneEtude2"
+shape_path = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/VECTOR/ZONE_ETUDE/ZoneEtude2.shp"
+```
+- Utilisez les paramètres de votre choix parmi ceux modifiés précedemment
+- Relancez le script
+
+
+
