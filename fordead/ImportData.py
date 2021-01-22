@@ -153,7 +153,6 @@ class TileInfo:
 
         """
         for key_path in key_paths:
-            print(key_paths)
             if key_path in self.paths:
                 if self.paths[key_path].is_file():
                     self.paths[key_path].unlink()
