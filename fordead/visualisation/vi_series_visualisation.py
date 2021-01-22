@@ -45,10 +45,11 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         
         plt.xticks(rotation=30)
         if pixel_series.Soil.any() : pixel_series.where(pixel_series.Soil,drop=True).plot.line('k^', label='Coupe') 
+        
         if xy_first_detection_date_index !=0:
             pixel_series.where(pixel_series.training_date & ~pixel_series.mask,drop=True).plot.line("bo", label='Apprentissage')
             if (~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask,drop=True).plot.line("o",color = '#1fca3b', label='Dates sans anomalies') 
-            if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.Soil,drop=True).plot.line("r*", markersize=9, label='Dates avec anomalies') 
+            if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask & ~pixel_series.Soil,drop=True).plot.line("r*", markersize=9, label='Dates avec anomalies') 
   
             #Plotting vegetation index model and anomaly threshold
             yy.plot.line("b", label='Modélisation du CRSWIR sur les dates d\'apprentissage')
@@ -93,7 +94,6 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
 
 
 def vi_series_visualisation(data_directory, shape_path = None):
-    data_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/C_RESULTS/ZoneEtude"
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
@@ -104,7 +104,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
     first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
     soil_data = import_soil_data(tile.paths,chunks = chunks)
     decline_data = import_decline_data(tile.paths,chunks = chunks)
-    used_area_mask = import_forest_mask(tile.paths["valid_area_mask"],chunks = chunks)
+    valid_area_mask = import_forest_mask(tile.paths["valid_area_mask"],chunks = chunks)
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
     anomalies = import_stacked_anomalies(tile.paths["Anomalies"],chunks = chunks)
     
@@ -136,7 +136,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
                 xy_anomalies = anomalies.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
                 xy_decline_data = decline_data.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
                 
-                
+            
             pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
             pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
             if xy_first_detection_date_index!=0:
@@ -150,7 +150,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
     
     else:
     
-        PixelsToChoose = np.where(used_area_mask)
+        PixelsToChoose = np.where(valid_area_mask)
         PixelID=random.randint(0,PixelsToChoose[0].shape[0])
         X=PixelsToChoose[0][PixelID]
         Y=PixelsToChoose[1][PixelID]
@@ -159,7 +159,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
             
             X=input("X ? ")
             if X=="":
-                PixelsToChoose = np.where(used_area_mask)
+                PixelsToChoose = np.where(valid_area_mask)
                 PixelID=random.randint(0,PixelsToChoose[0].shape[0])
                 X=PixelsToChoose[1][PixelID]
                 Y=PixelsToChoose[0][PixelID]
@@ -185,13 +185,7 @@ def vi_series_visualisation(data_directory, shape_path = None):
                 anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
                 pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
                 pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
-            # stack_vi = stack_vi.assign_coords(training_date=("Time", [index < int(first_detection_date_index[X,Y]) for index in range(stack_vi.sizes["Time"])]))
-            # stack_vi = stack_vi.assign_coords(Soil = ("Time", [index >= int(soil_data["first_date"][X,Y]) if soil_data["state"][X,Y] else False for index in range(stack_vi.sizes["Time"])]))
-            # stack_vi = stack_vi.assign_coords(Anomaly = ("Time", [index >= int(soil_data["first_date"][X,Y]) if soil_data["state"][X,Y] else False for index in range(stack_vi.sizes["Time"])]))
-            # stack_vi = stack_vi.assign_coords(mask = ("Time", stack_masks[:,X,Y]))
-    
-            #ax.axvspan(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(np.array(mydataTested.Day)[IndexStress[k]])),datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(np.array(mydataTested.Day)[IndexStress[k+1]])),color="orange",alpha=0.5)
-            
+                            
             fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"])
             fig.savefig(tile.paths["series"] / ("X"+str(X)+"_Y"+str(Y)+".png"))
     

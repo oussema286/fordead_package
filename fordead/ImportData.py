@@ -420,8 +420,8 @@ def import_soil_data(dict_paths, chunks = None):
 
 def initialize_soil_data(shape,coords):
     state_soil=np.zeros(shape,dtype=bool)
-    first_date_soil=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
-    count_soil= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
+    first_date_soil=np.zeros(shape,dtype=np.uint16)
+    count_soil= np.zeros(shape,dtype=np.uint16)
     
     soil_data=xr.Dataset({"state": xr.DataArray(state_soil, coords=coords),
                          "first_date": xr.DataArray(first_date_soil, coords=coords),
