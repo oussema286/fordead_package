@@ -203,11 +203,13 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic, chunks
             new_b = b.rio.reproject(crs, resolution=res, resampling=resampling)
         regrid_bands.update({bn: new_b})
 
-        # clip mask
+    # convert mask values to valid=1 invalid=NA
+    regrid_bands['mask'] = (regrid_bands['mask'] == 0).astype('uint8').fillna(0)
+    # clip mask
     if shapefile is not None:
         geom = s.geometry.iloc[0]  # take only first polygon
         # convert mask to 1:valid, 0:invalid, and clip
-        regrid_bands['mask'] = (regrid_bands['mask']==0).astype('uint8').fillna(0).rio.clip([geom], drop=False, invert=False)
+        regrid_bands['mask'] = regrid_bands['mask'].rio.clip([geom], drop=False, invert=False)
 
     # stack
     cube = xr.concat(list(regrid_bands.values())[:-1], 'band')
