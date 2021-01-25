@@ -162,7 +162,7 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic,
     with_vrt: bool
         If True uses WarpedVRT and dask delayed procesing, chunking, parallelisation for reprojection task.
     vrt_ram: int
-        warp_mem_limit
+        warp_mem_limit, see https://rasterio.readthedocs.io/en/latest/api/rasterio.vrt.html#rasterio.vrt.WarpedVRT
 
     Returns
     -------
@@ -232,7 +232,34 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic,
 
     return cube, regrid_bands['mask']
 
-def resample_raster(raster_path, resampling=Resampling.cubic, res=10, chunks={'x': 1024, 'y': 1024, 'band': -1}, ram=1024):
+def resample_raster(raster_path, resampling=Resampling.cubic, res=10,
+                    chunks={'x': 1024, 'y': 1024, 'band': -1}, ram=1024):
+    """
+    Resample raster using WarpVRT and rioxarray
+
+    Parameters
+    ----------
+    raster_path: str
+    resampling: int
+        Method from rasterio.enums.Resampling
+    res: float
+        Should be a divider of raster extent.
+    chunks: dict
+        chunks of the output rioxarray
+    ram:
+        warp_mem_limit, see https://rasterio.readthedocs.io/en/latest/api/rasterio.vrt.html#rasterio.vrt.WarpedVRT
+
+    Returns
+    -------
+    rioxarray.DataArray
+
+    Notes
+    -----
+    Inspired of:
+        - https://github.com/corteva/rioxarray/issues/119
+        - https://gist.github.com/rmg55/875a2b79ee695007a78ae615f1c916b2
+
+    """
     with rio.open(raster_path) as r:
         rx, ry = r.res
         scale_x, scale_y = rx/res, ry/res
