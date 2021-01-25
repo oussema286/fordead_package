@@ -154,21 +154,22 @@ Les tâches de décompression, découpage des images sur une zone d'étude, harm
 >python ex_preprocess_theia.py
 >```
 >
->- A l’issue de l'exécution différentes images ont ete créées dans le répertoire suivant :
+>- A l’issue de l'exécution, différentes images ont ete créées dans le répertoire suivant :
 >
 >`<MyWorkingDirectory>\C_RESULTS\maja_preprocess`
 
-Ces images comprennent : 
+Ce repertoire inclut: 
 
-- l’image `SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2` décompressée
-- une image au format netcdf comprenant différents produits raster (notamment l’image Sentinel-2 ajustée sur la zone d'étude, masque de la zone, indices spectraux NDVI et CRSWIR associés) : 
-	- `maja_preprocess.nc`
+- un repertoire `Unzip` contenant l’image `SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2` décompressée
+- un repertoire `Subsets` contenant des images découpées sur la zone d'étude, dont: 
+	- une image au format netcdf comprenant différents produits raster (notamment l’image Sentinel-2 ajustée sur la zone d'étude, masque de la zone, indices spectraux NDVI et CRSWIR associés) : 
+		- `SENTINEL2A_20180823-103535-335_L2A_T31UGP_D.nc`
 
-- les images correspondant à ces produits individualisés et au format tif :
-	- `maja_preprocess_bands.tif`,
-	- `maja_preprocess_CRSWIR.tif`,
-	- `maja_preprocess_mask.tif`, 
-	- `maja_preprocess_NDVI.tif`
+	- les images correspondant à ces produits individualisés et au format tif :
+		- `SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_bands.tif`,
+		- `SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_CRSWIR.tif`,
+		- `SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_mask.tif`, 
+		- `SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_NDVI.tif`
 
 Ce script d’exemple peut-être copié dans le répertoire principal des programmes : 
 
