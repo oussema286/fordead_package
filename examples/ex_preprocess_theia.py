@@ -39,7 +39,8 @@ THEIA_file.isfile()
 # Get name of the image
 ImName = THEIA_file.name.splitext()[0]
 # define path for results and create directory
-outdir = Path('../../../../C_RESULTS/maja_preprocess').abspath() / ImName
+outdir = Path('../../../../C_RESULTS/maja_preprocess'/ ImName).abspath()
+outdir.parent.mkdir_p()
 outdir.mkdir_p()
 
 # define shapefile corresponding to the study area
@@ -55,7 +56,6 @@ file = maja.unzip(THEIA_file, outdir_UnZip, overwrite=False)
 file.glob('*')
 
 ### read raster & crop based spatial extent defined in vector file 
-# bands, mask = maja.read_maja(indir=file,chunks={'x': 500, 'y': 500, 'band': -1})
 # bands, mask = maja.read_maja(indir=file, shapefile=shape, with_vrt=True) # reproject with dask chunking and parallelization, much faster for large areas.
 bands, mask = maja.read_maja(indir=file, shapefile=shape)
 
