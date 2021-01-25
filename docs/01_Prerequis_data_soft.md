@@ -116,7 +116,7 @@ La plateforme de développement Anaconda permet de créer des ‘environnements 
 Dans le cadre de la formation, nous avons initié le développement du package python ‘[fordead]( https://gitlab.com/raphael.dutrieux/fordead_package)’, qui sera principalement utilisé pour appliquer la méthode de détection des foyers de scolytes par analyse de séries temporelles Sentinel-2. La page de présentation de fordead décrit les différentes étapes pour la mise en place de cet environnement virtuel, rappelées ici :
 > - Rechercher le chemin absolu d’accès au répertoire suivant :
 >
-> `<MyWorkingDirectory>\FORDEAD_SANTE_FORETS\B_PROGRAMS\Libraries`
+> `<MyWorkingDirectory>\FORMATION_SANTE_FORETS\B_PROGRAMS\Libraries`
 >
 >- Depuis un terminal anaconda (Menu Démarrer → Anaconda prompt), si votre répertoire de travail est situé sur une partition différente de ‘C:’, par exemple ‘D:’ commencez par taper : 
 >```bash=
@@ -124,7 +124,7 @@ Dans le cadre de la formation, nous avons initié le développement du package p
 >```
 >- Saisir alors l’instruction suivante pour se rendre sur le répertoire suivant :
 >```bash=
->cd <MyWorkingDirectory>\FORDEAD_SANTE_FORETS\B_PROGRAMS\Libraries
+>cd <MyWorkingDirectory>\FORMATION_SANTE_FORETS\B_PROGRAMS\Libraries
 >```
 >- Cloner en local le dépôt Git du projet fordead_package de l’UMR Tetis. Deux solutions sont possibles, au choix :
 >
@@ -148,12 +148,12 @@ Dans le cadre de la formation, nous avons initié le développement du package p
 >
 > - Décompresser l’archive zip téléchargée dans le répertoire des programmes :
 >
->`<MyWorkingDirectory>\FORDEAD_SANTE_FORETS\B_PROGRAMS\Libraries`
+>`<MyWorkingDirectory>\FORMATION_SANTE_FORETS\B_PROGRAMS\Libraries`
 >
 >Quelle que soit la solution choisie pour télécharger les outils Fordead, l’organisation des fichiers doit respecter le schéma suivant :
 >
 >```
->..\PRJ_FORDEAD_FORMATION\B_PROGRAMS
+>..\FORMATION_SANTE_FORETS\B_PROGRAMS
 >└───Libraries
 >    └───fordead_package
 >            ├───docs
@@ -189,7 +189,7 @@ La plateforme de visualisation [Sentinel-Hub](https://www.sentinel-hub.com/explo
 
 Dans le cadre de ce TD, nous allons utiliser deux images acquises à un an d’intervalle et comprenant un massif forestier situé à proximité de La **Longine (Haute-Saône, France)** et compris dans la zone d'étude définie dans le fichier vectoriel suivant: 
 
-`<MyWorkingDirectory>\FORDEAD_SANTE_FORETS\A_DATA\VECTOR\
+`<MyWorkingDirectory>\FORMATION_SANTE_FORETS\A_DATA\VECTOR\
 ZONE_ETUDE\ZoneEtude.shp`
 
 Sentinel-Hub permet d’effectuer des requêtes en prenant en compte une localité géographique, une limite supérieure de date, et un niveau d’ennuagement. Plusieurs types de visualisation (RGB, indices spectraux...) et autres réglages sont aussi disponibles via l’interface. 
