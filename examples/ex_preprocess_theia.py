@@ -8,15 +8,19 @@ This program aims at automated data processing
 """
 
 # import libraries
-import os, sys
 from path import Path
 from fordead.masking_vi import compute_vegetation_index
 import fordead.maja_fun as maja
-import matplotlib as plot
-from dask.distributed import Client, LocalCluster
-# lc = LocalCluster(n_workers=4, threads_per_worker=2,
-#                   processes=True, memory_limit='2GB')
-# client = Client(lc)
+# import matplotlib as plot
+# Cluster specification, here is an example for a local cluster (e.g. your personal computer)
+# from dask.distributed import LocalCluster,Client,performance_report
+# cluster = LocalCluster(n_workers=4,threads_per_worker=2, # typical values for i7 quad core: 4 cores, 2 threads/core
+#                      dashboard_address=':8785', # follow processing at http://localhost:8785
+#                      processes=True, # multithreaded (instead of fork)
+#                      memory_limit='2GB', # memory limit by worker
+#                      local_dir=Path('~/dask-worker-space').expanduser()) # temporary directory used in case of memory overload, best is on SSD drive
+# cl = Client(cluster)
+# cl
 
 ###############################################################################
 ##                           download from THEIA                             ##
@@ -29,28 +33,30 @@ from dask.distributed import Client, LocalCluster
 ##       define location for image data, vector data & results directory     ##
 ###############################################################################
 # define path for the zipped THEIA images
-THEIA_file = Path('../../../../A_DATA/RASTER/THEIA/SENTINEL2A_20180823-103535-335_L2A_T31UGP_D.zip').expanduser()
-# THEIA_file = Path('../../../../A_DATA/RASTER/THEIA/SENTINEL2B_20170823-103018-461_L2A_T31UGP_D.zip').expanduser()
+THEIA_file = Path('../../../../A_DATA/RASTER/THEIA/SENTINEL2A_20180823-103535-335_L2A_T31UGP_D.zip').abspath()
+THEIA_file.isfile()
+# THEIA_file = Path('../../../../A_DATA/RASTER/THEIA/SENTINEL2B_20170823-103018-461_L2A_T31UGP_D.zip').abspath()
 # Get name of the image
-ImName = os.path.splitext(os.path.basename(THEIA_file))[0]
+ImName = THEIA_file.name.splitext()[0]
 # define path for results and create directory
-outdir = Path('../../../../C_RESULTS/maja_preprocess/'+ImName).expanduser()
+outdir = Path('../../../../C_RESULTS/maja_preprocess').abspath() / ImName
 outdir.mkdir_p()
 
 # define shapefile corresponding to the study area
-shape = Path('../../../../A_DATA/VECTOR/ZoneEtude.shp').expanduser()
+shape = Path('../../../../A_DATA/VECTOR/ZoneEtude.shp').abspath()
 
 ###############################################################################
 ## process data: unzip, crop, compute spectral indices, stack & write images ##
 ###############################################################################
 ### unzip
-outdir_UnZip = Path('../../../../C_RESULTS/maja_preprocess/'+ImName+'/Unzip').expanduser()
+outdir_UnZip = outdir / 'Unzip'
 outdir_UnZip.mkdir_p()
 file = maja.unzip(THEIA_file, outdir_UnZip, overwrite=False)
 file.glob('*')
 
 ### read raster & crop based spatial extent defined in vector file 
 # bands, mask = maja.read_maja(indir=file,chunks={'x': 500, 'y': 500, 'band': -1})
+# bands, mask = maja.read_maja(indir=file, shapefile=shape, with_vrt=True) # reproject with dask chunking and parallelization, much faster for large areas.
 bands, mask = maja.read_maja(indir=file, shapefile=shape)
 
 ### Create a dataset including the different products resulting from processing
@@ -75,7 +81,7 @@ ds['NDVI'] = ndvi
 ds['CRSWIR'] = crswir
 
 # save dataset to netcdf file
-outdir_preprocess = Path('../../../../C_RESULTS/maja_preprocess/'+ImName+'/Subsets').expanduser()
+outdir_preprocess = outdir / 'Subsets'
 outdir_preprocess.mkdir_p()
 outfile = outdir_preprocess / outdir.name + '.nc'
 ds.to_netcdf(outfile,engine = 'netcdf4')
