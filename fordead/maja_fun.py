@@ -34,6 +34,8 @@ import numpy as np
 import rioxarray as rxr
 import xarray as xr
 from pandas import to_datetime
+import rasterio as rio
+from rasterio.vrt import WarpedVRT
 
 # other requirements:
 # matplotlib # plot rasters
@@ -157,6 +159,10 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic,
         rasterio.enums.Resampling method
     chunks: dict
         chunks to read/process in parallel
+    with_vrt: bool
+        If True uses WarpedVRT and dask delayed procesing, chunking, parallelisation for reprojection task.
+    vrt_ram: int
+        warp_mem_limit
 
     Returns
     -------
@@ -225,9 +231,6 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic,
     cube["time"] = to_datetime(date_str)
 
     return cube, regrid_bands['mask']
-
-import rasterio as rio
-from rasterio.vrt import WarpedVRT
 
 def resample_raster(raster_path, resampling=Resampling.cubic, res=10, chunks={'x': 1024, 'y': 1024, 'band': -1}, ram=1024):
     with rio.open(raster_path) as r:
