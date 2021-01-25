@@ -10,10 +10,13 @@ This program aims at automated data processing
 # import libraries
 import os, sys
 from path import Path
-import fordead
 from fordead.masking_vi import compute_vegetation_index
 import fordead.maja_fun as maja
 import matplotlib as plot
+from dask.distributed import Client, LocalCluster
+# lc = LocalCluster(n_workers=4, threads_per_worker=2,
+#                   processes=True, memory_limit='2GB')
+# client = Client(lc)
 
 ###############################################################################
 ##                           download from THEIA                             ##
@@ -26,23 +29,28 @@ import matplotlib as plot
 ##       define location for image data, vector data & results directory     ##
 ###############################################################################
 # define path for the zipped THEIA images
-THEIA_file = [Path('../../../../01_DATA/RASTER/THEIA/SENTINEL2B_20170823-103018-461_L2A_T31UGP_D.zip').expanduser()]
-
+THEIA_file = Path('../../../../A_DATA/RASTER/THEIA/SENTINEL2A_20180823-103535-335_L2A_T31UGP_D.zip').expanduser()
+# THEIA_file = Path('../../../../A_DATA/RASTER/THEIA/SENTINEL2B_20170823-103018-461_L2A_T31UGP_D.zip').expanduser()
+# Get name of the image
+ImName = os.path.splitext(os.path.basename(THEIA_file))[0]
 # define path for results and create directory
-outdir = Path('../../../../03_RESULTS/maja_preprocess').expanduser()
+outdir = Path('../../../../C_RESULTS/maja_preprocess/'+ImName).expanduser()
 outdir.mkdir_p()
 
 # define shapefile corresponding to the study area
-shape = Path('../../../../01_DATA/VECTOR/ZoneEtude.shp').expanduser()
+shape = Path('../../../../A_DATA/VECTOR/ZoneEtude.shp').expanduser()
 
 ###############################################################################
 ## process data: unzip, crop, compute spectral indices, stack & write images ##
 ###############################################################################
 ### unzip
-file = maja.unzip(THEIA_file[0], outdir, overwrite=False)
+outdir_UnZip = Path('../../../../C_RESULTS/maja_preprocess/'+ImName+'/Unzip').expanduser()
+outdir_UnZip.mkdir_p()
+file = maja.unzip(THEIA_file, outdir_UnZip, overwrite=False)
 file.glob('*')
 
 ### read raster & crop based spatial extent defined in vector file 
+# bands, mask = maja.read_maja(indir=file,chunks={'x': 500, 'y': 500, 'band': -1})
 bands, mask = maja.read_maja(indir=file, shapefile=shape)
 
 ### Create a dataset including the different products resulting from processing
@@ -67,8 +75,10 @@ ds['NDVI'] = ndvi
 ds['CRSWIR'] = crswir
 
 # save dataset to netcdf file
-outfile = outdir / outdir.name + '.nc'
-ds.to_netcdf(outfile)
+outdir_preprocess = Path('../../../../C_RESULTS/maja_preprocess/'+ImName+'/Subsets').expanduser()
+outdir_preprocess.mkdir_p()
+outfile = outdir_preprocess / outdir.name + '.nc'
+ds.to_netcdf(outfile,engine = 'netcdf4')
 # in case tifs are wanted:
 ds.bands.rio.to_raster(outfile.replace('.nc', '_bands.tif'))
 ds.mask.rio.to_raster(outfile.replace('.nc', '_mask.tif'))
