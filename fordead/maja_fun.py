@@ -140,7 +140,8 @@ def unzip(zfile, write_dir, overwrite=False):
 
     return outdir
 
-def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic, chunks={'x': 1024, 'y': 1024, 'band': -1}):
+def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic,
+              chunks={'x': 1024, 'y': 1024, 'band': -1}, with_vrt=False, vrt_ram=64):
     """
     Read MAJA data: FRE bands and mask bbox clipped and resampled
 
@@ -171,7 +172,12 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic, chunks
         return None
     band_names = [f.splitext()[0].split('_')[-1] for f in files]
 
-    bands = {b: rxr.open_rasterio(f, chunks=chunks) for b, f in zip(band_names, files)}
+    if with_vrt:
+        bands = {b: resample_raster(f, resampling=resampling, res=res, chunks=chunks, ram=vrt_ram) for b, f in
+                 zip(band_names, files)}
+    else:
+        bands = {b: rxr.open_rasterio(f, chunks=chunks) for b, f in zip(band_names, files)}
+
     crs = list(bands.values())[0].spatial_ref.crs_wkt
 
     if not (res in [10, 20]):
@@ -220,6 +226,24 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic, chunks
 
     return cube, regrid_bands['mask']
 
+import rasterio as rio
+from rasterio.vrt import WarpedVRT
+
+def resample_raster(raster_path, resampling=Resampling.cubic, res=10, chunks={'x': 1024, 'y': 1024, 'band': -1}, ram=1024):
+    with rio.open(raster_path) as r:
+        rx, ry = r.res
+        scale_x, scale_y = rx/res, ry/res
+        width, height = r.width * scale_x, r.height * scale_y
+        if not (height.is_integer() and width.is_integer()):
+            raise IOError('Resolution must be a divider of raster extent.')
+        transform = r.transform * r.transform.scale(1 / scale_x, 1 / scale_y)
+        with WarpedVRT(r, warp_mem_limit=ram, transform=transform,
+                       height=height, width=width,
+                       resampling=Resampling.cubic,
+                       warp_extras={'NUM_THREADS': 2}) as vrt:
+            ds = rxr.open_rasterio(vrt).chunk(chunks)
+
+    return ds
 
 ### with rasterio
 # import tempfile
