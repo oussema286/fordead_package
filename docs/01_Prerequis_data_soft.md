@@ -1,4 +1,4 @@
-## <div align="center"> TP-02 : Prérequis pour la formation "Détecter le changement en forêt avec des images satellitaires" </div>
+## <div align="center"> Prérequis pour la formation "Détecter le changement en forêt avec des images satellitaires" </div>
 
 * [2. Fiche A : Prérequis](#2-fiche-a-prérequis)
     * [2.1. Organisation du répertoire de travail](#21-organisation-du-répertoire-de-travail)
