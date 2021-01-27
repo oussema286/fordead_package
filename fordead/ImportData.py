@@ -425,7 +425,7 @@ def initialize_soil_data(shape,coords):
     soil_data=xr.Dataset({"state": xr.DataArray(state_soil, coords=coords),
                          "first_date": xr.DataArray(first_date_soil, coords=coords),
                          "count" : xr.DataArray(count_soil, coords=coords)})
-    
+    soil_data=soil_data.squeeze("band")
     return soil_data
 
 def import_masked_vi(dict_paths, date, chunks = None):
