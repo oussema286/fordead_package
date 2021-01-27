@@ -1,3 +1,18 @@
+## <div align="center"> Prérequis pour la formation "Détecter le changement en forêt avec des images satellitaires" </div>
+
+* [2. Fiche A : Prérequis](#2-fiche-a-prérequis)
+    * [2.1. Organisation du répertoire de travail](#21-organisation-du-répertoire-de-travail)
+    * [2.2. Inscriptions requises](#22-inscriptions-requises)
+    * [2.3. Logiciels utilisés](#23-logiciels-utilisés)
+* [3. Fiche B : Installation du paquet Fordead](#3-fiche-b-installation-du-paquet-fordead)
+    * [3.1. Mise en place d’un environnement virtuel Python](#31-mise-en-place-dun-environnement-virtuel-python)
+* [4. Fiche C : Téléchargement des données Sentinel-2](#4-fiche-c-téléchargement-des-données-sentinel-2)
+    * [4.1. Exploration des données disponibles](#41-exploration-des-données-disponibles)
+    * [4.2. Installation des outils de téléchargement Sentinel-2](#42-installation-des-outils-de-téléchargement-sentinel-2)
+    * [4.3. Utilisation des scripts de téléchargement automatisé](#43-utilisation-des-scripts-de-téléchargement-automatisé)
+    * [4.4. Données THEIA](#44-données-theia)
+    * [4.5. Données PEPS](#45-données-peps)
+
 # 2. Fiche A : Prérequis
 ## 2.1. Organisation du répertoire de travail
 Afin de faciliter la mise en application des méthodes qui seront étudiées et l’assistance si nécessaire, nous proposons de nous appuyer sur une arborescence commune permettant d’identifier facilement l’emplacement relatif aux données, aux codes utilisés ou développés, et aux résultats des différents traitements.
