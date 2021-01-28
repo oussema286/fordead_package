@@ -70,8 +70,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
     # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
     
-    main_directory = "D:/Documents/Deperissement/Output"    
-    sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
+    # main_directory = "D:/Documents/Deperissement/Output"    
+    # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
     # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
     # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneTest.shp"
         
@@ -128,7 +128,9 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
                             forest_mask_source = forest_mask_source,
                             dep_path = dep_path,
-                            bdforet_dirpath = bdforet_dirpath)
+                            bdforet_dirpath = bdforet_dirpath,
+                            path_oso = path_oso,
+                            list_code_oso = list_code_oso)
         file = open(logpath, "a") 
         file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()

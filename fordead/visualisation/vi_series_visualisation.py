@@ -182,7 +182,9 @@ def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 
                 if xy_first_detection_date_index!=0:
                     xy_anomalies = anomalies.isel(x = X, y = Y)
                     xy_decline_data = decline_data.isel(x = X, y = Y)
-        
+                else:
+                    xy_decline_data=None
+                    xy_anomalies = None
                 pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
                 pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
                 if xy_first_detection_date_index!=0:

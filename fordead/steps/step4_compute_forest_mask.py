@@ -57,7 +57,7 @@ def compute_forest_mask(data_directory,
             
         elif  forest_mask_source=="OSO":
             print("Computing forest mask from OSO")
-            clip_oso(path_oso, path_example_raster, list_code_oso)
+            forest_mask = clip_oso(path_oso, path_example_raster, list_code_oso)
             
         elif forest_mask_source==None:
             print("No mask used, computing forest mask with every pixel marked as True")
