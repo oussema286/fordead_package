@@ -114,8 +114,9 @@ Nous allons également comparer ces exports avec les rasters des données SENTIN
 ![raster_virtuel_4](img3/raster_virtuel_4.png "raster_virtuel_4")
 - Executer
 - Aller dans les propriétés du raster crée
-- Les bandes devraient ne pas être dans le bon ordre, mettre la bande 3 en rouge et la bande 1 en bleu. Modifiez l'échelle pour aller de 0 à 600 pour chaque bande.
 ![raster_virtuel_5](img3/raster_virtuel_5.png "raster_virtuel_5")
+- Les bandes devraient ne pas être dans le bon ordre, mettre la bande 3 en rouge et la bande 1 en bleu. Modifiez l'échelle pour aller de 0 à 600 pour chaque bande.
+![raster_virtuel_6](img3/raster_virtuel_6.png "raster_virtuel_6")
 
 Observez les résultats.
 
