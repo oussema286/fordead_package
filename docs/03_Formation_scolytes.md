@@ -21,8 +21,7 @@
     * [Changer l'indice de végétation](#utiliser-un-indice-de-végétation-non-prévu-dans-le-package)
     * [Changer le seuil de détection d'anomalies](#changer-le-seuil-de-détection-danomalies)
     * [Changer de zone d'étude](#changer-de-zone-détude)
-* [Exporter des résultats adaptés à ses besoins](#)
-    * [Étape 5 : Export des résultats](#)
+* [Exporter des résultats adaptés à ses besoins](#exporter-des-résultats-adaptés-à-ses-besoins)
 
 ## Introduction
 ### Préambule
@@ -103,8 +102,23 @@ Les paramètres input_directory et data_directory sont les deux seuls à ne pas 
 L'ensemble des étapes de la détection peuvent se réaliser de manière identique depuis l'invité de commande, ou par import des différentes fonctions dans un script. Dans la suite de ce TD, nous nous focaliseront sur le script en le complétant au fur et à mesure.
 
 ##### Observation des sorties
-Pour mieux vous représenter les sorties de cette étape, lancez QGIS et ajoutez les rasters VegetationIndex/VegetationIndex_2018-07-27.tif et Mask/Mask_2018-07-27.tif.
-+ Ajouter bandes SENTINEL et créer raster virtuel RGB ?
+Pour mieux vous représenter les sorties de cette étape, lancez QGIS et ajoutez les rasters **VegetationIndex/VegetationIndex_2018-07-27.tif** et **Mask/Mask_2018-07-27.tif**.
+
+Nous allons également comparer ces exports avec les rasters des données SENTINEL-2 dont ils sont issus. Pour cela, allez dans le dossier **<MyWorkingDirectory>/A_DATA/RASTER/SERIES_SENTINEL/ZoneEtude/SENTINEL2A_20180727-104023-458_L2A_T31UGP_D_V1-8**, puis rajoutez les bandes B2, B3, B4 à QGIS, soit respectivement les bandes rouge, vert et bleu. Ensuite, nous allons créer un raster virtuelle à partir de ces trois bandes pour visualiser une image en couleur.
+- Aller dans Raster/Divers/Construire un raster virtuel
+![raster_virtuel_1](img3/raster_virtuel_1.png "raster_virtuel_1")
+-  Sélectionner les bandes ajoutées
+![raster_virtuel_2](img3/raster_virtuel_2.png "raster_virtuel_2")
+![raster_virtuel_3](img3/raster_virtuel_3.png "raster_virtuel_3")
+- Cocher pour que chaque fichier de bande aille dans une bande différente
+![raster_virtuel_4](img3/raster_virtuel_4.png "raster_virtuel_4")
+- Executer
+- Aller dans les propriétés du raster crée
+- Les bandes devraient ne pas être dans le bon ordre, mettre la bande 3 en rouge et la bande 1 en bleu. Modifiez l'échelle pour aller de 0 à 600 pour chaque bande.
+![raster_virtuel_5](img3/raster_virtuel_5.png "raster_virtuel_5")
+
+Observez les résultats.
+
 Les rasters dans le dossier DataSoil contiennent les informations relatives à la détection du sol nu. Ce sol détecté peut correspondre à des zones non forestières, à des peuplements feuillus dont le sol est détecté en hiver, ou des coupes rases. Il y a trois rasters, qui, ensemble, permettent de reconstituer l'ensemble de l'information, et de la mettre à jour avec l'arrivée de nouvelles dates SENTINEL :
 - Le raster count_soil.tif compte le nombre d'anomalies de sol successives.
 - Lorsque count_soil atteint 3, pour trois anomalies successives, le raster state_soil.tif passe de 0 à 1. Les pixels avec la valeur 1 correspondent donc à ceux détectés comme sol nu / coupe au bout de l'analyse de l'ensemble des dates.
