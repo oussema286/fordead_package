@@ -345,5 +345,52 @@ shape_path = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/VECTOR/ZO
 - Utilisez les paramètres de votre choix parmi ceux modifiés précedemment
 - Relancez le script
 
+Prenez le temps d'observer les résultats du timelapse et des séries temporelles. Vous pourrez remarquer que cette zone, non située dans la zone de chevauchement entre orbites, dispose d'un nombre de dates plus faible que la zone précedente. Pour certains pixels, des dates entre 2018-01-01 et 2018-06-01 sont utilisées dans l'apprentissage afin d'atteindre le nombre de 10 dates valides. Vous pouvez ouvrir le raster DataModel/first_detection_date_index.tif dans QGIS pour constater qu'à la différence de la zone d'étude précédente, il y a effectivements des différences de première date utilisée pour la détection.
+
+## Exporter des résultats adaptés à ses besoins
+Les timelapses crées pour visualiser les résultats jusqu'ici ne peuvent pas être réalisés à grande échelle. Pour sortir des résultats à l'échelle de tuiles entières qui soient utilisables facilement par les utilisateurs, il existe une cinquième étape qui permet d'exporter les résultats sous forme de shapefile au pas de temps souhaité. Vous pouvez retrouver le [guide d'utilisation de cette étape](https://gitlab.com/raphael.dutrieux/fordead_package/-/blob/master/docs/user_guides/05_export_results.md).
+
+Pour effectuer cette étape, ajouter au script :
+- Pour importer la fonction
+```bash
+from fordead.steps.step5_export_results import export_results
+```
+- Pour lancer la fonction
+```bash
+export_results(
+    data_directory = data_directory,
+    start_date = "2015-05-23",
+    end_date = "2022-05-23",
+    frequency= "M",
+    export_soil = True,
+    multiple_files = False
+    )
+```
+- Mettez en commentaire les fonctions de visualisation pour éviter leurs temps de calcul en rajoutant # au début de leurs lignes.
+
+Puis, relancez le script depuis l'invité de commande :
+```bash
+python detection_scolytes.py
+```
+
+Les résultats sont dans le dossier Results, importez les dans QGIS, ajoutez une symbologie **Catégorisée** à partir du champ "period".
+- Dans le shapefile periodic_results_decline, les polygones contiennent la période à laquelle la première anomalie a été détecté pour les zones dépérissantes.
+- Dans le shapefile periodic_results_soil, les polygones contiennent la période à laquelle la première anomalie de sol a été détecté pour les zones détectées comme sol nu/coupe.
+Explorez ces résultats et assurez vous de bien les comprendre. 
+
+Ensuite, supprimez ces résultats de QGIS, puis sauvegardez les dans un dossier de sauvegarde si vous le souhaitez, car ils seront écrasés par la suite.
+
+Essayez un paramètrage différent en modifiant `multiple_files = False` en `multiple_files = True` avant de relancer le script. Dans le même dossier, vous devriez trouver un shapefile par mois dont le nom  correspond à la fin de chaque période, ils contiennent des polygones correspondant à l'état du peuplement à la fin de la période, même si les premières anomalies ont lieu avant la date renseignée par le paramètre `start_date`. L'état peut être Atteint, Coupe ou Coupe sanitaire.
+Importez en quelques un entre 2018 et fin 2020 pour voir l'évolution. Ajoutez une symbologie **Catégorisée** à partir du champ "state". 
+Vous pouvez copier le style d'une des couches aux autres couches.
+
+Ensuite, supprimez ces résultats de QGIS, puis sauvegardez les dans un dossier de sauvegarde si vous le souhaitez, car ils seront écrasés par la suite.
+
+Maintenant, modifiez le paramètre `frequency`, ce paramètre accepte des fréquences journalières ("D"), mensuelles ("M") ou annuelles ("A") ou des multiples ("15D" = jours, "3M" = trois mois...). Il est déconseillé de mettre une période trop courte, puisqu'il faut qu'il y ait des dates SENTINEL-2 au sein de ces périodes pour que les résultats soient intéressants. Ce paramètre accepte également la valeur "sentinel", auquel cas chaque période correspond au temps entre chaque date SENTINEL-2 utilisée. Les périodes ne sont donc pas de durée constante, par exemple si `multiple_files = False`, alors on obtient un shapefile pour chaque date SENTINEL-2 utilisée. 
+
+Faites tourner le script en utilisant le paramètre `frequency = "sentinel"`. Observez les résultats.
+Ensuite, prenez le temps d'essayer différents paramètres de fréquences, avec `multiple_files = False` et `multiple_files = True`, trouvez les paramètres qui vous semblent les plus adaptés, réflechissez aux améliorations que vous aimeriez voir, tout cela pourra nourrir la discussion autour des informations produites par la méthode et leur exploitation.
+
+N'hésitez pas également à modifier des paramètres plus en amont pour vous familiariser avec l'outil.
 
 
