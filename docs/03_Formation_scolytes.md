@@ -32,16 +32,16 @@ Le monde forestier fait face à une accélération sans précedent des déperiss
 Les objectifs de ce TD sont les suivants :
 - être capable de faire fonctionner l'ensemble des étapes permettant la cartographie des déperissements sur une zone donnée, ainsi que comprendre l'articulation de ces différentes étapes
 - Savoir modifier les paramètres de l'outil afin de pouvoir s'adapter selon la problématique  
-- Appréhender le potentiel et les limites de l'outil présenté
-- Savoir sortir des résultats sous la forme souhaitée
-- Visualiser les résultats et savoir les interpréter
+- Faire sortir les résultats sous la forme souhaitée
+- Visualiser ces résultats
+- Appréhender le potentiel et les limites de l'outil
 
 ### Pré-requis
 Si le package n'est pas encore installé, suivre le [guide d'installation](https://gitlab.com/raphael.dutrieux/fordead_package/-/blob/master/docs/user_guides/00_installation.md).
 
 Sinon, lancer l'invité de commande _anaconda prompt_, puis activer l'environnement par la commande : 
 ```bash
-conda activate fordead_env
+conda activate ForDeadEnv
 ```
 
 ## Création d'un script pour détecter le dépérissement lié au scolyte sur une zone donnée à l'aide du package fordead
@@ -93,8 +93,7 @@ A partir de l'aide, lancez la fonction en appliquant vos paramètres. Exemple :
 ```bash
 python step1_compute_masked_vegetationindex.py -i <MyWorkingDirectory>/A_DATA/RASTER/SERIES_SENTINEL/ZoneEtude -o <MyWorkingDirectory>/C_RESULTS/ZoneEtude
 ```
-**-i** permet de définir le paramètre **input_directory** et **-o** le paramètre **data_directory**, ainsi exactement la même fonction est lancée.
----------
+> **_NOTE :_** **-i** permet de définir le paramètre **input_directory** et **-o** le paramètre **data_directory**, ainsi exactement la même fonction est lancée.
 
 Vous remarquerez que si vous avez utilisé les même paramètres dans les deux cas, il s'affiche "0 new SENTINEL dates" et le programme tourne plus rapidement la deuxième fois, car les indices de végétation déjà calculés ne sont pas recalculés. En revanche, si vous changez les paramètres, les résultats précédants seront supprimés et remplacés.
 Les paramètres input_directory et data_directory sont les deux seuls à ne pas connaître de valeur par défaut puisqu'elles dépendent de l'emplacement de vos fichiers. Ce sont donc les deux seuls paramètres à renseigner obligatoirement, mais il est tout de même possible de modifier les autres paramètres. A l'aide du guide d'utilisateur, vérifiez que vous comprenez le sens des différents paramètres et n'hésitez pas à poser des questions si ce n'est pas le cas !
@@ -225,11 +224,10 @@ from fordead.visualisation.create_timelapse import create_timelapse
 - Pour ajouter les paramètres nécéssaires :
 ```bash
 shape_path = "<MyWorkingDirectory>/A_DATA/VECTOR/ZONE_ETUDE/ZoneEtude.shp"
-obs_terrain_path = "<MyWorkingDirectory>/A_DATA/VECTOR/BD_SCOLYTE/ValidatedScolytes.shp"
 ```
 - Pour lancer la fonction :
 ```bash
-create_timelapse(data_directory = data_directory,shape_path = shape_path, obs_terrain_path = obs_terrain_path)
+create_timelapse(data_directory = data_directory,shape_path = shape_path, obs_terrain_path = "<MyWorkingDirectory>/A_DATA/VECTOR/BD_SCOLYTE/ValidatedScolytes.shp")
 ```
 - Enfin, relancez le script.
 
