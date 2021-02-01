@@ -34,6 +34,8 @@ def write_tif(data_array, attributes, path, nodata = None):
 
     data_array.rio.to_raster(path,windowed = False, **args, tiled = True)
 
+
+
 def get_bins(start_date,end_date,frequency,dates):
     if frequency == "sentinel":
         bins_as_date = pd.DatetimeIndex(dates)

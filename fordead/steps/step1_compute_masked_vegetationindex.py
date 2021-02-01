@@ -130,8 +130,8 @@ def compute_masked_vegetationindex(
     
 if __name__ == '__main__':
     dictArgs=parse_command_line()
-    start_time_debut = time.time()
+    # start_time_debut = time.time()
     compute_masked_vegetationindex(**dictArgs)
-    print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
+    # print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
 
 

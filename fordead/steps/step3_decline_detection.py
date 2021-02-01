@@ -89,6 +89,6 @@ def decline_detection(
 if __name__ == '__main__':
     dictArgs=parse_command_line()
     # print(dictArgs)
-    start_time = time.time()
+    # start_time = time.time()
     decline_detection(**dictArgs)
-    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
+    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
