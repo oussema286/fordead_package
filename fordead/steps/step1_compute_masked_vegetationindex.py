@@ -58,12 +58,13 @@ def compute_masked_vegetationindex(
     path_dict_vi = None
     ):
         
-    if extent_shape_path is not None:
-        extent = gp.read_file(extent_shape_path).total_bounds
-        data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
-    else:
-        extent = None
+    # if extent_shape_path is not None:
+    #     extent = gp.read_file(extent_shape_path).total_bounds
         
+    # else:
+    #     extent = None
+    
+    if extent_shape_path is not None: data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
     tile = TileInfo(data_directory)
     tile = tile.import_info()
 
@@ -93,7 +94,8 @@ def compute_masked_vegetationindex(
     else:
         print("Computing masks and vegetation index : " + str(len(new_dates))+ " new dates")
         
-        raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0]["B2"], extent = extent)  
+        raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0]["B2"], extent_shape_path = extent_shape_path)  
+        
         #Import or initialize data for the soil mask
         if tile.paths["state_soil"].exists():
             soil_data = import_soil_data(tile.paths)
@@ -105,7 +107,7 @@ def compute_masked_vegetationindex(
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
                 # Resample and import SENTINEL data
-                stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands, interpolation_order = interpolation_order, extent = extent)
+                stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands, interpolation_order = interpolation_order, extent = raster_meta["extent"])
                 # Compute masks
                 mask = compute_masks(stack_bands, soil_data, date_index)
                 # Compute vegetation index

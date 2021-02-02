@@ -13,6 +13,7 @@ from pathlib import Path
 import pickle
 import shutil
 from scipy import ndimage
+import geopandas as gp
 
 def get_band_paths(dict_sen_paths):
     DictSentinelPaths={}
@@ -284,16 +285,26 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     else:
         return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
 
-def get_raster_metadata(raster_path = None,raster = None, extent = None):
+def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = None):
     if raster_path != None:
         raster = xr.open_rasterio(raster_path)
-    if extent is not None:
+    if extent_shape_path is not None:
+        
+        extent_shape = gp.read_file(extent_shape_path)
+        
+        extent_shape = extent_shape.to_crs(raster.crs.replace("+init=",""))
+        extent = extent_shape.total_bounds
         raster = raster.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        
     raster_meta = {"dims" : raster.dims,
                    "coords" : raster.coords,
                    "attrs" : raster.attrs,
                    "sizes" : raster.sizes,
-                   "shape" : raster.shape}
+                   "shape" : raster.shape,
+                   "extent" : np.array([float(raster[dict(x=0,y=0)].coords["x"])-raster.attrs["transform"][0]/2,
+                                        float(raster[dict(x=-1,y=-1)].coords["y"])-raster.attrs["transform"][0]/2,
+                                        float(raster[dict(x=-1,y=-1)].coords["x"])+raster.attrs["transform"][0]/2,
+                                        float(raster[dict(x=0,y=0)].coords["y"])+raster.attrs["transform"][0]/2])}
     return raster_meta
     
 
