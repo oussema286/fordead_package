@@ -25,12 +25,12 @@ def parse_command_line():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str, help = "Dossier contenant les dossiers des tuiles")
-    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ZoneTest1"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
+    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ZoneTestTest"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
     parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection")
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
     parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
-    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.31, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
+    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
@@ -110,6 +110,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================
 
         train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile)
+                    # path_masks = main_directory / tuile / "Mask",
+                    # path_vi = main_directory / tuile / "VegetationIndex")
         # print(str(time.time() - start_time))
         file = open(logpath, "a") 
         file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
@@ -143,7 +145,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             start_date = start_date_results,
             end_date = end_date_results,
             frequency= results_frequency,
-            export_soil = True,
+            export_soil = False,
             multiple_files = multiple_files
             )
         file = open(logpath, "a") 

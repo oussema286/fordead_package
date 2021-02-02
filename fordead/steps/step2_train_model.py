@@ -43,12 +43,14 @@ def train_model(
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     
-    if path_vi==None : path_vi = tile.paths["VegetationIndexDir"]
-    if path_masks==None : path_masks = tile.paths["MaskDir"]
+    if path_vi != None : tile.paths["VegetationIndexDir"] = path_vi
+    if path_masks != None : tile.paths["MaskDir"] = path_masks
+
     
     tile.add_parameters({"nb_min_date" : nb_min_date, "min_last_date_training" : min_last_date_training, "max_last_date_training" : max_last_date_training})
-    if tile.parameters["Overwrite"] : tile.delete_dirs("coeff_model","AnomaliesDir","state_decline", "valid_area_mask" ,"periodic_results_decline","result_files","timelapse","series") #Deleting previous training and detection results if they exist
-
+    if tile.parameters["Overwrite"] : 
+        tile.delete_dirs("coeff_model","AnomaliesDir","state_decline", "valid_area_mask" ,"periodic_results_decline","result_files","timelapse","series") #Deleting previous training and detection results if they exist
+        if hasattr(tile, "last_computed_anomaly"): delattr(tile, "last_computed_anomaly")
     #Create missing directories and add paths to TileInfo object
     tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.tif")
     tile.add_path("first_detection_date_index", tile.data_directory / "DataModel" / "first_detection_date_index.tif")
@@ -58,8 +60,8 @@ def train_model(
         print("Model already calculated")
     else:
         print("Computing model")
-        tile.getdict_paths(path_vi = path_vi,
-                            path_masks = path_masks)
+        tile.getdict_paths(path_vi = tile.paths["VegetationIndexDir"],
+                            path_masks = tile.paths["MaskDir"])
         
         # Import des index de végétations et des masques
         stack_vi, stack_masks = import_stackedmaskedVI(tile, max_last_date_training=max_last_date_training, chunks = 1280)
@@ -81,7 +83,7 @@ def train_model(
         write_tif(coeff_model,stack_vi.attrs, tile.paths["coeff_model"])
         write_tif(valid_area_mask,stack_vi.attrs, tile.paths["valid_area_mask"],nodata=0)
         #Save the TileInfo object
-        tile.save_info()
+    tile.save_info()
 
     
 if __name__ == '__main__':

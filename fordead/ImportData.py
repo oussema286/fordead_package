@@ -232,11 +232,17 @@ class TileInfo:
 
 
     def search_new_dates(self):
-        path_vi=self.paths["VegetationIndex"][self.dates[0]].parent
-        path_masks=self.paths["Masks"][self.dates[0]].parent
-        self.getdict_datepaths("VegetationIndex",path_vi)
-        self.getdict_datepaths("Masks",path_masks)
-        self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
+        self.getdict_datepaths("VegetationIndex",self.paths["VegetationIndexDir"])
+        self.getdict_datepaths("Masks",self.paths["MaskDir"])
+        
+        new_dates = np.array([date for date in self.paths["VegetationIndex"] if (not(hasattr(self, "dates")) or date > self.dates[-1])])
+        self.dates = np.concatenate((self.dates, new_dates)) if hasattr(self, "dates") else new_dates
+        
+        # if hasattr(self, 'dates'):
+        #     self.dates = np.array(list(self.paths["VegetationIndex"].keys())) >
+        # self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
+        
+        
         
 def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
     """

@@ -59,6 +59,7 @@ DictCol={'C' : "white",
 
 def create_timelapse(data_directory,shape_path, obs_terrain_path):
     
+    
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"shape_path" : shape_path})
