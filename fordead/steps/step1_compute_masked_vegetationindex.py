@@ -94,20 +94,20 @@ def compute_masked_vegetationindex(
     else:
         print("Computing masks and vegetation index : " + str(len(new_dates))+ " new dates")
         
-        raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0]["B2"], extent_shape_path = extent_shape_path)  
-        
+        tile.raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0]["B2"], extent_shape_path = extent_shape_path)  
+
         #Import or initialize data for the soil mask
         if tile.paths["state_soil"].exists():
             soil_data = import_soil_data(tile.paths)
         else:
-            soil_data = initialize_soil_data(raster_meta["shape"],raster_meta["coords"])
+            soil_data = initialize_soil_data(tile.raster_meta["shape"],tile.raster_meta["coords"])
 
         bands, formula = get_bands_and_formula(vi, path_dict_vi)
     
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
                 # Resample and import SENTINEL data
-                stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands, interpolation_order = interpolation_order, extent = raster_meta["extent"])
+                stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])
                 # Compute masks
                 mask = compute_masks(stack_bands, soil_data, date_index)
                 # Compute vegetation index
@@ -118,13 +118,13 @@ def compute_masked_vegetationindex(
                 vegetation_index = vegetation_index.where(~nan_vi,0)
                 mask = mask | nan_vi
                 
-                write_tif(vegetation_index, raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
-                write_tif(mask, raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
+                write_tif(vegetation_index, tile.raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
+                write_tif(mask, tile.raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
             # tile.last_computed_vi = date
       
-        write_tif(soil_data["state"], raster_meta["attrs"],tile.paths["state_soil"],nodata=0)
-        write_tif(soil_data["first_date"], raster_meta["attrs"],tile.paths["first_date_soil"],nodata=0)
-        write_tif(soil_data["count"], raster_meta["attrs"],tile.paths["count_soil"],nodata=0)
+        write_tif(soil_data["state"], tile.raster_meta["attrs"],tile.paths["state_soil"],nodata=0)
+        write_tif(soil_data["first_date"], tile.raster_meta["attrs"],tile.paths["first_date_soil"],nodata=0)
+        write_tif(soil_data["count"], tile.raster_meta["attrs"],tile.paths["count_soil"],nodata=0)
     
     tile.save_info()
     

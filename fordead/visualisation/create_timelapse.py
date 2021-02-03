@@ -62,13 +62,14 @@ def create_timelapse(data_directory,shape_path, obs_terrain_path):
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    tile.add_parameters({"shape_path" : shape_path})
-    if tile.parameters["Overwrite"] : tile.delete_dirs("timelapse") #Deleting previous detection results if they exist
-    
+    # tile.add_parameters({"shape_path" : shape_path})
+    # if tile.parameters["Overwrite"] : tile.delete_dirs("timelapse") #Deleting previous detection results if they exist
     tile.add_dirpath("timelapse", tile.data_directory / "Timelapses")
+
 
     tile.save_info()
     ShapeInteret=gp.read_file(shape_path)
+    ShapeInteret=ShapeInteret.to_crs(crs = tile.raster_meta["attrs"]["crs"])
 
     for ShapeIndex in range(ShapeInteret.shape[0]):
         Shape=ShapeInteret.iloc[ShapeIndex:(ShapeIndex+1)]

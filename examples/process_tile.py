@@ -11,6 +11,9 @@ from fordead.steps.step3_decline_detection import decline_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step5_export_results import export_results
 
+from fordead.visualisation.create_timelapse import create_timelapse
+from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
+
 from fordead.ImportData import TileInfo
 
 from pathlib import Path
@@ -25,12 +28,12 @@ def parse_command_line():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str, help = "Dossier contenant les dossiers des tuiles")
-    parser.add_argument('-t', '--tuiles', nargs='+',default = ["T31UFQ"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
+    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ZoneTest"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
     parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection")
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
     parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
-    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.31, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
+    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
@@ -70,10 +73,10 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
     # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
     
-    main_directory = "D:/Documents/Deperissement/Output"    
-    sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
+    # main_directory = "D:/Documents/Deperissement/Output"    
+    # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
     # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
-    extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneTest.shp"
+    # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneTest.shp"
         
     
     sentinel_directory = Path(sentinel_directory)
@@ -151,6 +154,16 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
         file.close()
+        
+        
+        
+                
+        # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+        #                  shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneTestReprojected.shp", 
+        #                  obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp")
+        # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2,
+        #                         shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/TestPointSerieVisualisation.shp")
+        
         
         
     tile = TileInfo(main_directory / tuile)

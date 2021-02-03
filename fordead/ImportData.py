@@ -288,11 +288,12 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
 def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = None):
     if raster_path != None:
         raster = xr.open_rasterio(raster_path)
+    raster.attrs["crs"] = raster.attrs["crs"].replace("+init=","")
     if extent_shape_path is not None:
         
         extent_shape = gp.read_file(extent_shape_path)
         
-        extent_shape = extent_shape.to_crs(raster.crs.replace("+init=",""))
+        extent_shape = extent_shape.to_crs(raster.crs)
         extent = extent_shape.total_bounds
         raster = raster.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         

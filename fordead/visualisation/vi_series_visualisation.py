@@ -123,7 +123,7 @@ def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 
 
     if shape_path is not None:
         shape = gp.read_file(shape_path)
-        shape = shape.to_crs(crs = stack_vi.crs)
+        shape = shape.to_crs(crs = stack_vi.crs.replace("+init=",""))
         
         for point_index in range(len(shape)):
             id_point = shape.iloc[point_index]["id"]
@@ -145,7 +145,7 @@ def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 
                     anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
                     pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
                     pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
-                    yy = (harmonic_terms * coeff_model.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest").compute()).sum(dim="band")
+                    yy = (harmonic_terms * coeff_model.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest").compute()).sum(dim="coeff")
                 
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"], ymin,ymax)
                 fig.savefig(tile.paths["series"] / ("id_" + str(id_point) + ".png"))
