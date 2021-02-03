@@ -108,9 +108,9 @@ def compute_masked_vegetationindex(
                 vegetation_index = compute_vegetation_index(stack_bands, formula = formula)
         
                 #Masking invalid values (division by zero)
-                nan_vi = vegetation_index.isnull()
-                vegetation_index = vegetation_index.where(~nan_vi,0)
-                mask = mask | nan_vi
+                invalid_values = vegetation_index.isnull() | np.isinf(vegetation_index)
+                vegetation_index = vegetation_index.where(~invalid_values,0)
+                mask = mask | invalid_values
                 
                 #Masking with source mask if option chosen
                 if apply_source_mask:

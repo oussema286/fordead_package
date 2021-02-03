@@ -33,7 +33,7 @@ def parse_command_line():
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
     parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
-    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
+    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.31, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
@@ -76,7 +76,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     main_directory = "D:/Documents/Deperissement/Output"    
     # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
     sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
-    # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneTest.shp"
+    # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/zone_timelapse.shp"
         
     
     sentinel_directory = Path(sentinel_directory)
@@ -112,7 +112,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
 # =====================================================================================================================
 
-        train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile)
+        train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+                    nb_min_date = 11)
                     # path_masks = main_directory / tuile / "Mask",
                     # path_vi = main_directory / tuile / "VegetationIndex")
         # print(str(time.time() - start_time))
@@ -122,38 +123,38 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================    
     
         
-        decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-                          threshold_anomaly = threshold_anomaly)
-        file = open(logpath, "a") 
-        file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
-# =====================================================================================================================
+#         decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+#                           threshold_anomaly = threshold_anomaly)
+#         file = open(logpath, "a") 
+#         file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+#         file.close()
+# # =====================================================================================================================
 
-        # print("Computing forest mask")
-        compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                            forest_mask_source = forest_mask_source,
-                            dep_path = dep_path,
-                            bdforet_dirpath = bdforet_dirpath,
-                            path_oso = path_oso,
-                            list_code_oso = list_code_oso)
-        file = open(logpath, "a") 
-        file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
-# =====================================================================================================================
+#         # print("Computing forest mask")
+#         compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+#                             forest_mask_source = forest_mask_source,
+#                             dep_path = dep_path,
+#                             bdforet_dirpath = bdforet_dirpath,
+#                             path_oso = path_oso,
+#                             list_code_oso = list_code_oso)
+#         file = open(logpath, "a") 
+#         file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+#         file.close()
+# # =====================================================================================================================
 
-        # print("Computing forest mask")
+#         # print("Computing forest mask")
         
-        export_results(
-            data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-            start_date = start_date_results,
-            end_date = end_date_results,
-            frequency= results_frequency,
-            export_soil = False,
-            multiple_files = multiple_files
-            )
-        file = open(logpath, "a") 
-        file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
-        file.close()
+#         export_results(
+#             data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+#             start_date = start_date_results,
+#             end_date = end_date_results,
+#             frequency= results_frequency,
+#             export_soil = False,
+#             multiple_files = multiple_files
+#             )
+        # file = open(logpath, "a") 
+        # file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
+        # file.close()
         
         
         
