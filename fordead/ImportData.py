@@ -285,6 +285,14 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     else:
         return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
 
+def get_source_mask(band_paths, sentinel_source, extent = None):
+    source_mask = import_resampled_sen_stack(band_paths, ["Mask"], interpolation_order = 0, extent = extent)
+    if sentinel_source=="THEIA":
+        binary_mask = source_mask>0
+    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
+        binary_mask = ~source_mask.isin([4,5])
+    return binary_mask
+
 def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = None):
     if raster_path != None:
         raster = xr.open_rasterio(raster_path)

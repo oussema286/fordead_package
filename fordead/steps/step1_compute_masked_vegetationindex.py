@@ -13,13 +13,13 @@ Created on Thu Nov 19 16:06:51 2020
 # import time
 import argparse
 from pathlib import Path
-import geopandas as gp
+# import geopandas as gp
 import numpy as np
 #%% ===========================================================================
 #   IMPORT LIBRAIRIES PERSO
 # =============================================================================
 
-from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
+from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata, get_source_mask
 from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula
 from fordead.writing_data import write_tif
 
@@ -57,12 +57,6 @@ def compute_masked_vegetationindex(
     extent_shape_path=None,
     path_dict_vi = None
     ):
-        
-    # if extent_shape_path is not None:
-    #     extent = gp.read_file(extent_shape_path).total_bounds
-        
-    # else:
-    #     extent = None
     
     if extent_shape_path is not None: data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
     tile = TileInfo(data_directory)
@@ -118,6 +112,10 @@ def compute_masked_vegetationindex(
                 vegetation_index = vegetation_index.where(~nan_vi,0)
                 mask = mask | nan_vi
                 
+                #Masking with source mask if option chosen
+                if apply_source_mask:
+                    mask = mask | get_source_mask(tile.paths["Sentinel"][date], sentinel_source, extent = tile.raster_meta["extent"])
+                    
                 write_tif(vegetation_index, tile.raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
                 write_tif(mask, tile.raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
             # tile.last_computed_vi = date
