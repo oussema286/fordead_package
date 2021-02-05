@@ -123,47 +123,46 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================    
     
         
-#         decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-#                           threshold_anomaly = threshold_anomaly)
-#         file = open(logpath, "a") 
-#         file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-#         file.close()
-# # =====================================================================================================================
+        decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+                          threshold_anomaly = threshold_anomaly)
+        file = open(logpath, "a") 
+        file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+        file.close()
+# =====================================================================================================================
 
-#         # print("Computing forest mask")
-#         compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-#                             forest_mask_source = forest_mask_source,
-#                             dep_path = dep_path,
-#                             bdforet_dirpath = bdforet_dirpath,
-#                             path_oso = path_oso,
-#                             list_code_oso = list_code_oso)
-#         file = open(logpath, "a") 
-#         file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-#         file.close()
+        # print("Computing forest mask")
+        compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+                            forest_mask_source = forest_mask_source,
+                            dep_path = dep_path,
+                            bdforet_dirpath = bdforet_dirpath,
+                            path_oso = path_oso,
+                            list_code_oso = list_code_oso)
+        file = open(logpath, "a") 
+        file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+        file.close()
 # # =====================================================================================================================
 
 #         # print("Computing forest mask")
         
-#         export_results(
-#             data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-#             start_date = start_date_results,
-#             end_date = end_date_results,
-#             frequency= results_frequency,
-#             export_soil = False,
-#             multiple_files = multiple_files
-#             )
-        # file = open(logpath, "a") 
-        # file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
-        # file.close()
+        export_results(
+            data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+            start_date = start_date_results,
+            end_date = end_date_results,
+            frequency= results_frequency,
+            export_soil = False,
+            multiple_files = multiple_files
+            )
+        file = open(logpath, "a") 
+        file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
+        file.close()
         
         
         
                 
         # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-        #                  shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneTestReprojected.shp", 
-        #                  obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp")
-        # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2,
-        #                         shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/TestPointSerieVisualisation.shp")
+        #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
+        #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp")
+        # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 3000)
         
         
         

@@ -98,6 +98,7 @@ def get_pre_masks(stack_bands):
     
     # soil_anomaly = (stack_bands.sel(band = "B11") > 1250) & (stack_bands.sel(band = "B2")<600) & (stack_bands.sel(band = "B3")+stack_bands.sel(band = "B4") > 800)
     soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & ((B3 + B4) > 800)")
+    # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & (B4 > 600)")
     # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B4 + B2 - B3)/(B4 + B2 + B3)") #Bare soil index
 
     shadows = (stack_bands==0).any(dim = "band")
@@ -150,7 +151,8 @@ def compute_masks(stack_bands, soil_data, date_index):
 
 def get_dict_vi(path_dict_vi = None):
     dict_vi = {"CRSWIR" : {'formula': 'B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))', 'decline_change_direction': '+'},
-                "NDVI" : {'formula': '(B8-B4)/(B8+B4)', 'decline_change_direction': '-'}}
+                "NDVI" : {'formula': '(B8-B4)/(B8+B4)', 'decline_change_direction': '-'},
+                "BSI" : {"formula" : '(B4 + B2 - B3)/(B4 + B2 + B3)', 'decline_change_direction' : '-'}}
     if path_dict_vi is not None:
         d = {}
         with open(path_dict_vi) as f:

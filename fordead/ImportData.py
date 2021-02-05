@@ -117,6 +117,23 @@ class TileInfo:
         with open(path, 'wb') as f:
             pickle.dump(self, f)
     
+    def print_info(self):
+        if hasattr(self, "parameters"):
+            print(" PARAMETRES\n")
+            for parameter in self.parameters:
+                print(parameter + " : " + str(self.parameters[parameter]))
+            
+        if hasattr(self, "dates"):
+            print("\n " + str(len(self.dates)) + " dates used :\n")
+            for date in self.dates:
+                print(date)
+                
+        if hasattr(self, "last_computed_anomaly"):
+            print("\n" + " Last computed anomaly : \n")
+            print(self.last_computed_anomaly)
+        else:
+            print(" Anomalies not computed")
+    
 
     def delete_dirs(self,*key_paths):
         """
@@ -474,3 +491,7 @@ def import_stacked_anomalies(paths_anomalies, chunks = None):
     stack_anomalies=stack_anomalies.chunk({"Time": -1,"x" : chunks,"y" : chunks})
     # stack_anomalies["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_anomalies["Time"])]))
     return stack_anomalies.astype(bool)
+
+
+
+    
