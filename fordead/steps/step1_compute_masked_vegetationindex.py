@@ -105,7 +105,7 @@ def compute_masked_vegetationindex(
                 # Compute masks
                 mask = compute_masks(stack_bands, soil_data, date_index)
                 # Compute vegetation index
-                vegetation_index = compute_vegetation_index(stack_bands, formula = "B11")
+                vegetation_index = compute_vegetation_index(stack_bands, formula = formula)
         
                 #Masking invalid values (division by zero)
                 invalid_values = vegetation_index.isnull() | np.isinf(vegetation_index)

@@ -96,7 +96,6 @@ def raster_full(path_example_raster, fill_value, dtype = None):
 
 def get_pre_masks(stack_bands):   
     
-    # soil_anomaly = (stack_bands.sel(band = "B11") > 1250) & (stack_bands.sel(band = "B2")<600) & (stack_bands.sel(band = "B3")+stack_bands.sel(band = "B4") > 800)
     soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & ((B3 + B4) > 800)")
     # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & (B4 > 600)")
     # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B4 + B2 - B3)/(B4 + B2 + B3)") #Bare soil index

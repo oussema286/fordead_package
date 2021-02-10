@@ -73,13 +73,6 @@ def train_model(
         
         #Fusion du masque forêt et des zones non utilisables par manque de données
         valid_area_mask = first_detection_date_index!=0
-        # stack_masks = stack_masks.where(valid_area_mask,True)
-        
-        
-        # Inf
-        # for i in range(46):
-        #     print(stack_vi[i,:,:].compute().data)
-        #     input()
         
         # Modéliser le CRSWIR tout en retirant outliers
         stack_masks = stack_masks | detection_dates #Masking data not used in training
