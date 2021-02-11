@@ -22,6 +22,6 @@ pages:
   artifacts:
     paths:
      - public
-     - dart_badge.svg
   only:
    - master
+   - schedules
