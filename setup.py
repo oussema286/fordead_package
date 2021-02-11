@@ -93,7 +93,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords=['Forest', 'bark bettle', 'Seninel 2'],
+    keywords=['Forest', 'bark bettle', 'Sentinel'],
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
