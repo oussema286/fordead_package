@@ -1,0 +1,34 @@
+# test website locally:
+# portray in_browser -c pyproject.toml
+# generate website with the following:
+# portray as_html -c pyproject.toml
+
+[tool.portray]
+#    docs_dir = "docs"
+# output_dir = "site"
+# modules = ["fordead"]
+    modules = ["fordead.decline_detection", "fordead.ImportData", "fordead.masking_vi", "fordead.maja_fun", "fordead.ModelVegetationIndex", "fordead.timelapse", "fordead.writing_data"]
+
+
+[[tool.portray.extra_markdown_extensions]]
+    [tool.portray.extra_markdown_extensions.mdx_math]
+        enable_dollar_delimiter = 1
+[[tool.portray.extra_markdown_extensions]]
+    [tool.portray.extra_markdown_extensions.toc]
+        toc_depth = 5
+        # toc_depth = "2-5" # for bootstrap
+
+
+[tool.portray.pdocs]
+# name = "API"
+exclude_source = 1
+template_dir = "templates/pdocs"
+
+[tool.portray.mkdocs]
+    site_name = "fordead"
+    extra_css = ['docs/style.css']
+    extra_javascript = ['https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML']
+#    extra_javascript = ['docs/menu.js']
+#     [tool.portray.mkdocs.theme]
+#         name = "bootstrap"
+
