@@ -5,7 +5,7 @@ pages:
   stage: deploy
   image: $CI_REGISTRY/raphael.dutrieux/fordead_package
   script:
-    - conda init
+    - conda init bash
     - conda activate fordead_env
     - python -V  # Print out python version for debugging
     - pip install portray python-markdown-math
