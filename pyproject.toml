@@ -31,4 +31,4 @@ template_dir = "templates/pdocs"
 #    extra_javascript = ['docs/menu.js']
 #     [tool.portray.mkdocs.theme]
 #         name = "bootstrap"
-
+	theme = "readthedocs"
