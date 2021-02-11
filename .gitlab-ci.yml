@@ -8,7 +8,9 @@ pages:
     - python -V  # Print out python version for debugging
     - pip install portray python-markdown-math
     # - python setup.py develop
-    # install DART
+    - conda env create --name fordead_env
+    - conda activate fordead_env
+    - pip install .
     - portray as_html -c pyproject.toml
     #    - pip install anybadge
     #    - DART_VERSION="$(echo "$DART_URL_LINUX" |sed 's/.*\(v[0-9]*\)_linux64.tar.gz$/\1/')"
