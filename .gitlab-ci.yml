@@ -8,6 +8,7 @@ pages:
     - python -V  # Print out python version for debugging
     - pip install portray python-markdown-math
     # - python setup.py develop
+    - conda init
     - conda env create --name fordead_env
     - conda activate fordead_env
     - pip install .
