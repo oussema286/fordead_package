@@ -20,4 +20,5 @@ pages:
     paths:
      - public
   only:
+   - documentation
    - schedules
