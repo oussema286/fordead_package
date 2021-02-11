@@ -3,7 +3,7 @@ stages:
 
 pages:
   stage: deploy
-  image: python:latest
+  image: conda/miniconda3:latest
   script:
     - python -V  # Print out python version for debugging
     - pip install portray python-markdown-math
