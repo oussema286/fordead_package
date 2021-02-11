@@ -1,0 +1,27 @@
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  image: python:latest
+  script:
+    - python -V  # Print out python version for debugging
+    - pip install portray python-markdown-math
+    # - python setup.py develop
+    # install DART
+    - portray as_html -c pyproject.toml
+    #    - pip install anybadge
+    #    - DART_VERSION="$(echo "$DART_URL_LINUX" |sed 's/.*\(v[0-9]*\)_linux64.tar.gz$/\1/')"
+    #    - anybadge -l DART -v $DART_VERSION -f dart_badge.svg -c blue
+    - mv site public
+  cache:
+    key: linux-cache
+    paths:
+      - cache
+    policy: pull
+  artifacts:
+    paths:
+     - public
+     - dart_badge.svg
+  only:
+   - master
