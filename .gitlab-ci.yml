@@ -6,6 +6,7 @@ pages:
   image: $CI_REGISTRY/raphael.dutrieux/fordead_package
   script:
     - conda init bash
+    - source ~/.bashrc
     - conda activate fordead
     - python -V  # Print out python version for debugging
     - pip install portray python-markdown-math
