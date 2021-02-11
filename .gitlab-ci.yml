@@ -5,6 +5,7 @@ pages:
   stage: deploy
   image: conda/miniconda3:latest
   script:
+    - echo $CI_REGISTRY
     - python -V  # Print out python version for debugging
     - pip install portray python-markdown-math
     # - python setup.py develop
