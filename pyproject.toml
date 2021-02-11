@@ -31,4 +31,7 @@ template_dir = "templates/pdocs"
 #    extra_javascript = ['docs/menu.js']
 #     [tool.portray.mkdocs.theme]
 #         name = "bootstrap"
-	theme = "readthedocs"
+
+[tool.portray.mkdocs.theme]
+name = "material"
+palette = {primary = "blue grey", accent = "pink"}
