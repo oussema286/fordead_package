@@ -9,7 +9,7 @@ pages:
     - source ~/.bashrc
     - conda activate fordead
     - python -V  # Print out python version for debugging
-    - pip install git+https://github.com/floriandeboissieu/portray python-markdown-math
+    - pip install git+https://github.com/floriandeboissieu/portray python-markdown-math mdx-breakless-lists
     - pip install -e .
     - portray as_html -c pyproject.toml
     - mv site public
