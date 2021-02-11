@@ -1,0 +1,961 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.14">
+    
+    
+      
+        <title>01 Prerequis Data Soft - fordead</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.d3202873.min.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ff0a5ce4.min.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#4cae4f">
+      
+    
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../style.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="green" data-md-color-accent="lightgreen">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#prerequis-pour-la-formation-detecter-le-changement-en-foret-avec-des-images-satellitaires" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="../.." title="fordead" class="md-header-nav__button md-logo" aria-label="fordead">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            fordead
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              01 Prerequis Data Soft
+            
+          </span>
+        </div>
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header-nav__source">
+        
+<a href="https://gitlab.com/raphael.dutrieux/fordead_package/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    fordead_package
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+        
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="fordead" class="md-nav__button md-logo" aria-label="fordead">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    fordead
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://gitlab.com/raphael.dutrieux/fordead_package/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    fordead_package
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../00_Intro_Objectifs/" title="00 Intro Objectifs" class="md-nav__link">
+      00 Intro Objectifs
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+    <a href="./" title="01 Prerequis Data Soft" class="md-nav__link md-nav__link--active">
+      01 Prerequis Data Soft
+    </a>
+    
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../02_pretraitement_classification/" title="02 Pretraitement Classification" class="md-nav__link">
+      02 Pretraitement Classification
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../03_Formation_scolytes/" title="03 Formation Scolytes" class="md-nav__link">
+      03 Formation Scolytes
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Img2" class="md-nav__link">
+      Img2
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Img3" class="md-nav__link">
+      Img3
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Img" class="md-nav__link">
+      Img
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
+      User Guides
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="User Guides" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        <span class="md-nav__icon md-icon"></span>
+        User Guides
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/00_installation/" title="00 Installation" class="md-nav__link">
+      00 Installation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/01_compute_masked_vegetationindex/" title="01 Compute Masked Vegetationindex" class="md-nav__link">
+      01 Compute Masked Vegetationindex
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/02_train_model/" title="02 Train Model" class="md-nav__link">
+      02 Train Model
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/03_decline_detection/" title="03 Decline Detection" class="md-nav__link">
+      03 Decline Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/04_compute_forest_mask/" title="04 Compute Forest Mask" class="md-nav__link">
+      04 Compute Forest Mask
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/05_export_results/" title="05 Export Results" class="md-nav__link">
+      05 Export Results
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Diagrams" class="md-nav__link">
+      Diagrams
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+    
+    <label class="md-nav__link" for="nav-10">
+      Reference
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Reference" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+        <span class="md-nav__icon md-icon"></span>
+        Reference
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10-1" type="checkbox" id="nav-10-1">
+    
+    <label class="md-nav__link" for="nav-10-1">
+      Fordead
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Fordead" data-md-level="2">
+      <label class="md-nav__title" for="nav-10-1">
+        <span class="md-nav__icon md-icon"></span>
+        Fordead
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/ImportData/" title="Importdata" class="md-nav__link">
+      Importdata
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/ModelVegetationIndex/" title="Modelvegetationindex" class="md-nav__link">
+      Modelvegetationindex
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/decline_detection/" title="Decline Detection" class="md-nav__link">
+      Decline Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/maja_fun/" title="Maja Fun" class="md-nav__link">
+      Maja Fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/masking_vi/" title="Masking Vi" class="md-nav__link">
+      Masking Vi
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/timelapse/" title="Timelapse" class="md-nav__link">
+      Timelapse
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/writing_data/" title="Writing Data" class="md-nav__link">
+      Writing Data
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://gitlab.com/raphael.dutrieux/fordead_package/edit/master/docs/01_Prerequis_data_soft.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                  
+                
+                
+                <h2 id="prerequis-pour-la-formation-detecter-le-changement-en-foret-avec-des-images-satellitaires"><div align="center"> Prérequis pour la formation "Détecter le changement en forêt avec des images satellitaires" </div></h2>
+<ul>
+<li><a href="#2-fiche-a-prérequis">2. Fiche A : Prérequis</a><ul>
+<li><a href="#21-organisation-du-répertoire-de-travail">2.1. Organisation du répertoire de travail</a></li>
+<li><a href="#22-inscriptions-requises">2.2. Inscriptions requises</a></li>
+<li><a href="#23-logiciels-utilisés">2.3. Logiciels utilisés</a></li>
+</ul>
+</li>
+<li><a href="#3-fiche-b-installation-du-paquet-fordead">3. Fiche B : Installation du paquet Fordead</a><ul>
+<li><a href="#31-mise-en-place-dun-environnement-virtuel-python">3.1. Mise en place d’un environnement virtuel Python</a></li>
+</ul>
+</li>
+<li><a href="#4-fiche-c-téléchargement-des-données-sentinel-2">4. Fiche C : Téléchargement des données Sentinel-2</a><ul>
+<li><a href="#41-exploration-des-données-disponibles">4.1. Exploration des données disponibles</a></li>
+<li><a href="#42-installation-des-outils-de-téléchargement-sentinel-2">4.2. Installation des outils de téléchargement Sentinel-2</a></li>
+<li><a href="#43-utilisation-des-scripts-de-téléchargement-automatisé">4.3. Utilisation des scripts de téléchargement automatisé</a></li>
+<li><a href="#44-données-theia">4.4. Données THEIA</a></li>
+<li><a href="#45-données-peps">4.5. Données PEPS</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="2-fiche-a-prerequis">2. Fiche A : Prérequis</h1>
+<h2 id="21-organisation-du-repertoire-de-travail">2.1. Organisation du répertoire de travail</h2>
+<p>Afin de faciliter la mise en application des méthodes qui seront étudiées et l’assistance si nécessaire, nous proposons de nous appuyer sur une arborescence commune permettant d’identifier facilement l’emplacement relatif aux données, aux codes utilisés ou développés, et aux résultats des différents traitements.</p>
+<h3 id="211-identification-du-repertoire-de-travail">2.1.1. Identification du répertoire de travail</h3>
+<p>Les images Sentinel-2 et les produits issus de leur traitement étant relativement volumineux, il est nécessaire de s’assurer d’un <strong>espace disque disponible supérieur à 10 Go</strong>. 
+Nous recommandons de <strong>travailler sur votre disque dur local</strong> (C:) ou <strong>une partition de ce disque dur local</strong>. Nous déconseillons l’utilisation d’un outil de stockage externe (clé USB, disque dur externe) ou d’un espace disque situé sur un réseau partagé, pour des raisons de performances. </p>
+<h3 id="212-definition-du-repertoire-de-travail">2.1.2. Définition du répertoire de travail</h3>
+<p>Une fois défini l’emplacement du répertoire de travail que vous utiliserez durant la formation, identifiez le chemin absolu à l'aide d’un explorateur (clic-droit sur la barre de chemin, et ‘copier l’adresse en tant que texte’). </p>
+<p><img alt="" src="../img/fig01.png" />
+<em>Figure 1. Définition du répertoire de travail.</em></p>
+<p>Le chemin absolu correspondant (<code>C:\Users\Feret</code> dans l’exemple ci-dessus) sera alors identifié comme <code>&lt;MyWorkingDirectory&gt;</code> dans la suite du document. </p>
+<h3 id="213-recuperation-de-larborescence-et-des-donnees">2.1.3. Récupération de l’arborescence et des données</h3>
+<p>Afin de simplifier l’organisation des données et de faciliter l’assistance si nécessaire, une arborescence de répertoires comprenant les données initiales, les programmes et les résultats des traitements, a été définie. </p>
+<blockquote>
+<ul>
+<li>Cette arborescence est contenue dans une archive à télécharger ici : </li>
+</ul>
+<p>https://filesender.renater.fr/?s=download&amp;token=881484a1-d260-43ad-a15a-cbe612c96edf (expiration : 05/02/2021)</p>
+<ul>
+<li>Une fois l’archive copiée dans <code>&lt;MyWorkingDirectory&gt;</code>, la décompresser.</li>
+</ul>
+<p>L’arborescence des répertoires est organisée de la façon suivante: </p>
+<p><img alt="" src="../img/fig02.png" /></p>
+<p><em>Figure 2. Arborescence de fichiers utilisée lors de la formation.</em>
+</p>
+</blockquote>
+<p>Le travail à réaliser s’appuie sur des données Sentinel-2 dont le téléchargement est abordé dans la section dédiée, mais aussi d’un certain nombre d’informations thématiques sous forme vectorielle, disponibles par défaut dans le répertoire suivant :</p>
+<p><code>FORMATION_SANTE_FORETS/A_DATA/VECTOR</code></p>
+<p>Afin de permettre une manipulation plus facile des données et d'éviter les contraintes associées aux performances limitées des machines, l’exercice se focalise sur deux zones d’étude restreintes.</p>
+<h2 id="22-inscriptions-requises">2.2. Inscriptions requises</h2>
+<h3 id="221-inscription-aux-portails-de-distribution-des-donnees-sentinel-2">2.2.1. Inscription aux portails de distribution des données Sentinel-2</h3>
+<p>Il existe plusieurs portails de distribution des données Sentinel-2. Parmi ces portails, nous allons décrire l'accès aux deux portails : </p>
+<ul>
+<li><a href="https://theia.cnes.fr/atdistrib/rocket/#/search?collection=SENTINEL2">THEIA</a>, qui donne accès aux données Sentinel-2 individuelles après correction des effets atmosphériques et topographiques à l'aide de la chaîne de traitement MAJA développée par le CESBIO </li>
+<li><a href="https://peps.cnes.fr/rocket/#/home">PEPS</a>, qui est un miroir français mis en place par le CNES du portail officiel d'accès au données de l’ESA (<a href="https://scihub.copernicus.eu/">scihub</a>)</li>
+</ul>
+<p><strong>Le téléchargement des données nécessite une inscription préalable qui permet d’obtenir un ++identifiant++ et un ++mot de passe++, qui seront requis lors de l’application des scripts de téléchargement automatiques.</strong> </p>
+<h3 id="222-inscription-a-gitlab">2.2.2. Inscription à gitlab</h3>
+<p>Un compte gitlab est nécessaire pour avoir accès aux développements en cours, en attendant la mise en place d’un package finalisé qui sera alors ouvert au public. 
+Après inscription sur le site de <a href="https://gitlab.com/">gitlab</a>, contactez <a href="mailto:raphael.dutrieux@inrae.fr">Raphaël Dutrieux</a> afin de donner votre identifiant gitlab et avoir accès aux différents développements actuellement en accès privé. </p>
+<h2 id="23-logiciels-utilises">2.3. Logiciels utilisés</h2>
+<p>Dans un premier temps, les traitements seront réalisés à l’aide du logiciel QGis, logiciel adapté pour traiter un jeu de données satellitaires réduit. La seconde partie de cette session exploite les outils développés en Python par l’UMR TETIS. Ces codes nécessitent d’installer un environnement dédié.</p>
+<p>la plateforme de développement <a href="https://www.anaconda.com/products/individual">Anaconda</a> qui permettra de mettre en place un environnement virtuel python 3 dédié aux applications vues lors de la formation et comprenant l’ensemble des librairies et dépendances nécessaires. </p>
+<p>le logiciel SIG QGIS (minimum version 3.10.13 LTR). Si QGIS n’est pas installé sur votre machine, les instructions sont fournies dans la suite du TD pour installer la version la plus récente dans l’environnement virtuel anaconda qui sera créé.</p>
+<h3 id="231-installation-danaconda">2.3.1. Installation d’Anaconda</h3>
+<ul>
+<li>Télécharger Anaconda (choisir la version en fonction de votre système) sur la page web suivante :</li>
+</ul>
+<p>https://www.anaconda.com/products/individual </p>
+<ul>
+<li>Suivre les instructions d’installation décrites sur la page web suivante :<ul>
+<li>pour Windows : https://docs.anaconda.com/anaconda/install/windows/</li>
+<li>pour Linux : https://docs.anaconda.com/anaconda/install/linux/</li>
+</ul>
+</li>
+</ul>
+<h3 id="232-installation-de-git">2.3.2. Installation de git</h3>
+<p><a href="https://git-scm.com/">Git</a> est un outil libre et open source permettant la gestion des versions des codes disponibles sur un dépôt. Dans le cadre de cette formation, un certain nombre d’outils ont été mis à disposition sur gitlab, et l’installation de git vous permettra de récupérer les dernières versions de ces codes, ainsi que d’effectuer les mises à jour au fur et à mesure des développements. Une fois anaconda installé, vous pouvez installer git simplement en suivant la procédure suivante : </p>
+<blockquote>
+<ul>
+<li>Ouvrez une invite de commande Anaconda (Anaconda Prompt) en appuyant sur la touche ‘Windows’ de votre clavier (on suppose que les utilisateurs de Linux sont familiers avec les terminaux), et commencez à taper ‘anaconda’ pour sélectionner ‘Anaconda Prompt’
+<img alt="" src="../img/fig03.png" />
+<em>Figure 3. Ouvrir une invite de commande Anaconda.</em></li>
+</ul>
+<p>L’invite de commande s’ouvre alors en pointant sur le répertoire qui se trouve être <code>&lt;MyWorkingDirectory&gt;</code>. C’est quand même bien fait, mais n’allez pas croire, c’est un hasard… C’est le répertoire par défaut de l’utilisateur de la machine.
+<img alt="" src="../img/fig04.png" />
+<em>Figure 4. Anaconda Prompt.</em></p>
+<ul>
+<li>Vous pouvez alors taper (ou copier / coller) l’instruction suivante dans l’invite de commande: 
+```bash=
+conda install -c anaconda git
+````</li>
+</ul>
+</blockquote>
+<hr />
+<h1 id="3-fiche-b-installation-du-paquet-fordead">3. Fiche B : Installation du paquet Fordead</h1>
+<h2 id="31-mise-en-place-dun-environnement-virtuel-python">3.1. Mise en place d’un environnement virtuel Python</h2>
+<p>La plateforme de développement Anaconda permet de créer des ‘environnements virtuels’ de développement python spécifiques et indépendants d’autres environnements python cohabitant sur une même machine. Ces environnements virtuels sont particulièrement intéressants pour s’assurer de la stabilité des applications utilisées dans différents projets et pouvant aboutir à des incompatibilités de dépendance si le même environnement python était utilisé.
+Dans le cadre de la formation, nous avons initié le développement du package python ‘<a href="https://gitlab.com/raphael.dutrieux/fordead_package">fordead</a>’, qui sera principalement utilisé pour appliquer la méthode de détection des foyers de scolytes par analyse de séries temporelles Sentinel-2. La page de présentation de fordead décrit les différentes étapes pour la mise en place de cet environnement virtuel, rappelées ici :</p>
+<blockquote>
+<ul>
+<li>Rechercher le chemin absolu d’accès au répertoire suivant :</li>
+</ul>
+<p><code>&lt;MyWorkingDirectory&gt;\FORMATION_SANTE_FORETS\B_PROGRAMS\Libraries</code></p>
+<ul>
+<li>Depuis un terminal anaconda (Menu Démarrer → Anaconda prompt), si votre répertoire de travail est situé sur une partition différente de ‘C:’, par exemple ‘D:’ commencez par taper : 
+<code>bash=
+D:</code></li>
+<li>Saisir alors l’instruction suivante pour se rendre sur le répertoire suivant :
+<code>bash=
+cd &lt;MyWorkingDirectory&gt;\FORMATION_SANTE_FORETS\B_PROGRAMS\Libraries</code></li>
+<li>
+<p>Cloner en local le dépôt Git du projet fordead_package de l’UMR Tetis. Deux solutions sont possibles, au choix :</p>
+</li>
+<li>
+<p>Option 1. Depuis le terminal en saisissant la commande suivante :
+<code>bash=
+git clone https://gitlab.com/raphael.dutrieux/fordead_package.git</code>
+Suite au lancement de cette commande, les informations suivantes devraient apparaître sur le terminal :
+<img alt="" src="../img/fig05.png" />
+<em>Figure 5. Retours de la commande git clone.</em></p>
+</li>
+<li>
+<p>Option 2. Depuis le site web de gitlab :</p>
+</li>
+<li>
+<p>Accéder au projet gitlab :</p>
+</li>
+</ul>
+<p>https://gitlab.com/raphael.dutrieux/fordead_package</p>
+<ul>
+<li>
+<p>Télécharger l’ensemble des codes dans une archive zip en cliquant sur le bouton <img alt="" src="../img/button01.png" />
+<img alt="" src="../img/fig06.png" />
+<em>Figure 6. Téléchargement manuelle depuis le site Gitlab.</em></p>
+</li>
+<li>
+<p>Décompresser l’archive zip téléchargée dans le répertoire des programmes :</p>
+</li>
+</ul>
+<p><code>&lt;MyWorkingDirectory&gt;\FORMATION_SANTE_FORETS\B_PROGRAMS\Libraries</code></p>
+<p>Quelle que soit la solution choisie pour télécharger les outils Fordead, l’organisation des fichiers doit respecter le schéma suivant :</p>
+<p><code>..\FORMATION_SANTE_FORETS\B_PROGRAMS
+└───Libraries
+   └───fordead_package
+           ├───docs
+           │    └───user_guides
+           │          └───Diagrams
+           ├───examples
+           └───fordead
+                ├───steps
+                └───visualisation</code>
+- Toujours dans le terminal Anaconda, accéder au répertoire fordead_package
+<code>bash=
+cd fordead_package</code>
+- le fichier permettant de paramétrer l’environnement virtuel est directement intégré dans créer un nouvel environnement avec la commande suivante (la création et le paramétrage du nouvel environnement peut demander quelques minutes et nécessite le téléchargement d’un certain nombre de packages): 
+<code>bash=
+conda env create --name ForDeadEnv
+conda activate ForDeadEnv
+pip install .</code>
+- Si QGIS n’est pas installé sur votre poste de travail, ou si vous devez le mettre à jour, il est possible d‘installer QGIS 3.16 dans l’environnement conda à l'aide de la commande suivante: 
+<code>bash=
+conda install -c conda-forge &gt;qgis=3.16</code>
+- Enfin, pour la production de figures avec python au cours de la formation, la librairie matplotlib pourra être utilisée : 
+<code>bash=
+conda install matplotlib</code></p>
+</blockquote>
+<hr />
+<h1 id="4-fiche-c-telechargement-des-donnees-sentinel-2">4. Fiche C : Téléchargement des données Sentinel-2</h1>
+<h2 id="41-exploration-des-donnees-disponibles">4.1. Exploration des données disponibles</h2>
+<p>La plateforme de visualisation <a href="https://www.sentinel-hub.com/explore/sentinelplayground/">Sentinel-Hub</a> permet d’explorer les données Sentinel-2 disponibles de manière rapide et intuitive. Ses fonctionnalités de base permettent des requêtes spatiales et temporelles, et la visualisation des différentes acquisitions disponibles pour un niveau d'enneigement des tuiles Sentinel-2. </p>
+<p>Dans le cadre de ce TD, nous allons utiliser deux images acquises à un an d’intervalle et comprenant un massif forestier situé à proximité de La <strong>Longine (Haute-Saône, France)</strong> et compris dans la zone d'étude définie dans le fichier vectoriel suivant: </p>
+<p><code>&lt;MyWorkingDirectory&gt;\FORMATION_SANTE_FORETS\A_DATA\VECTOR\
+ZONE_ETUDE\ZoneEtude.shp</code></p>
+<p>Sentinel-Hub permet d’effectuer des requêtes en prenant en compte une localité géographique, une limite supérieure de date, et un niveau d’ennuagement. Plusieurs types de visualisation (RGB, indices spectraux...) et autres réglages sont aussi disponibles via l’interface. 
+Les images correspondent à la tuile <strong>T31UGP</strong> et les dates d’acquisition sont le <strong>23 Août 2017</strong> et le <strong>23 Août 2018</strong>. </p>
+<h2 id="42-installation-des-outils-de-telechargement-sentinel-2">4.2. Installation des outils de téléchargement Sentinel-2</h2>
+<h3 id="421-script-de-telechargement-sur-la-plateforme-theia">4.2.1. Script de téléchargement sur la plateforme Theia</h3>
+<p>Le téléchargement des données disponibles sur le portail THEIA s’appuie sur l’application du script python ‘theia_download’ développé par Olivier Hagolle (CESBIO) et disponible librement sur son dépôt <a href="https://github.com/olivierhagolle/theia_download">git</a>. Le script permet d'accéder aux données THEIA proposées pour plusieurs capteurs, mais nous nous focaliserons ici sur les données Sentinel-2. </p>
+<blockquote>
+<ul>
+<li>Télécharger l’archive associée à theia_download et placer les fichiers décompressés dans l'arborescence :</li>
+</ul>
+<p><code>FORMATION_SANTE_FORETS/B_PROGRAMS/Libraries/theia_download</code></p>
+<p><img alt="" src="../img/fig07.png" />
+<em>Figure 7. Téléchargement du theia_download depuis https://github.com/olivierhagolle/theia_download</em></p>
+<p>La page github permet de prendre connaissance des lignes de commandes utiles pour télécharger les données THEIA. Nous détaillerons la procédure de téléchargement dans la section dédiée.</p>
+</blockquote>
+<h3 id="422-script-de-telechargement-sur-la-plateforme-peps">4.2.2. Script de téléchargement sur la plateforme PEPS</h3>
+<p>Le téléchargement des données disponibles sur le portail PEPS s’appuie sur l’application du script python ‘peps_download’ développé par Olivier Hagolle (CESBIO), modifiée et intégrée dans un package développé par Florian de Boissieu. Les sources du package sont disponibles sur <a href="https://github.com/floriandeboissieu/peps_download/tree/shapefile">gitlab</a>, et le package intègre en plus des fonctionnalités initiales, la possibilité de télécharger les données Sentinel-2 en définissant l’emprise géographique directement à partir d’un polygone défini par un shapefile. </p>
+<blockquote>
+<p>Le développement sous forme de package permet d’installer directement les fonctions associées dans l'environnement virtuel python, avec l’instruction suivante: 
+<code>bash=
+pip install git+https://github.com/floriandeboissieu/peps_download.git@shapefile</code>
+La page <a href="https://github.com/floriandeboissieu/peps_download/tree/shapefile">gitlab</a> permet de prendre connaissance des instructions python utiles pour télécharger les données PEPS. Nous détaillerons la procédure de téléchargement dans la section dédiée (cf. section 4.5).</p>
+</blockquote>
+<h2 id="43-utilisation-des-scripts-de-telechargement-automatise">4.3. Utilisation des scripts de téléchargement automatisé</h2>
+<p>La détection de changements repose sur l’utilisation conjointe d’au moins deux images satellitaires acquises à des dates différentes. Les images optiques acquises par les satellites Sentinel-2 (S2), opérés dans le cadre du programme Copernicus de l’Agence Spatiale Européenne (ESA), sont à ce jour les mieux adaptées pour effectuer ce type d’analyse.
+Pour cette première approche, deux images S2 acquises sur une même zone à deux dates différentes seront téléchargées. Les prétraitements ainsi que la classification des changements reposent sur les outils proposés par défaut dans le logiciel QGis.</p>
+<h2 id="44-donnees-theia">4.4. Données THEIA</h2>
+<p>Les données Sentinel-2 peuvent être téléchargées depuis le portail web THEIA, une fois identifiées. Il est aussi possible d’utiliser l’outil de téléchargement automatique theia_download s'appuyant sur python et l'utilitaire Curl. Il marche aussi bien sur Linux que sur Windows. L'utilisation de theia_download est présentée dans le fichier <code>README.md</code>. </p>
+<p>Dans le cadre de notre étude, nous allons lancer le téléchargement des images en appliquant le paramétrage correspondant aux acquisitions identifiées précédemment. </p>
+<h3 id="441-parametrage-de-theia_download">4.4.1. Paramétrage de theia_download</h3>
+<blockquote>
+<ul>
+<li>Ouvrez le fichier ‘config_theia.cfg’ situé à cet emplacement : </li>
+</ul>
+<p><code>FORMATION_SANTE_FORETS/B_PROGRAMS/theia_download-master</code></p>
+<ul>
+<li>Entrez votre adresse mail et votre mot de passe THEIA dans les emplacements dédiés.</li>
+</ul>
+</blockquote>
+<h3 id="442-requete-pour-telechargement">4.4.2. Requête pour téléchargement</h3>
+<blockquote>
+<ul>
+<li>Depuis un terminal anaconda (avec environnement virtuel activée), <ul>
+<li>placez-vous dans le répertoire theia_download-master</li>
+<li>lancez la commande suivante : 
+<code>bash=
+python ./theia_download.py -t T31UGP -c SENTINEL2 -a config_theia.cfg -d 2017-08-23 -f 2017-08-24 --write_dir ../../A_DATA/RASTER/THEIA</code></li>
+</ul>
+</li>
+</ul>
+<p>les paramètres de la commande sont :</p>
+<p><em><code>-t</code> : numéro de la tuile Sentinel-2 (la grille de tuiles Sentinel-2 est disponible sur le <a href="https://sentinel.esa.int/documents/247904/1955685/S2A_OPER_GIP_TILPAR_MPC__20151209T095117_V20150622T000000_21000101T000000_B00.kml">site de l'ESA</a>, et peut se visualiser avec Google Earth Engine par exemple)</em></p>
+<p><em><code>-c</code> : nom du capteur</em></p>
+<p><em><code>-a</code> : chemin d'accès au fichier de configuration (contient les identifiant et mot de passe)</em></p>
+<p><em><code>-d</code> : date de début</em></p>
+<p><em><code>-f</code> : date de fin (définir J+1 si la requête porte sur un jour précis)</em></p>
+<p><em><code>--level</code> : niveau de pré-traitement</em></p>
+<p><em><code>--write_dir</code>: chemin (absolu ou relatif) du répertoire dans lequel seront écrites les données.</em></p>
+<ul>
+<li>Adapter la commande de manière à télécharger l’image acquise le 23 Août 2018.</li>
+</ul>
+<p>A L'issue du téléchargement, deux fichiers Zip sont téléchargés : </p>
+<ul>
+<li><code>SENTINEL2A_20180823-103535-335_L2A_T31UGP_D.zip</code></li>
+<li><code>SENTINEL2B_20170823-103018-461_L2A_T31UGP_D.zip</code></li>
+</ul>
+<p>En cas de problème dans l’utilisation des scripts de téléchargement automatique, les archives ZIP des images sont disponibles en téléchargement durant la formation aux liens suivants : </p>
+<ul>
+<li>http://filez.teledetection.fr/sacz5lw (expiration : 01/02/2021)</li>
+<li>http://filez.teledetection.fr/huq3d (expiration : 01/02/2021)</li>
+</ul>
+</blockquote>
+<h2 id="45-donnees-peps">4.5. Données PEPS</h2>
+<p>Les données PEPS peuvent être téléchargées en appliquant le même type de requête depuis un terminal Anaconda, en lançant le script peps_download.py téléchargeable en ligne (après configuration du fichier d’identification), ou bien à partir d’un script python directement après avoir importé la librairie peps_download.</p>
+<blockquote>
+<ul>
+<li>Dans le terminal Anaconda, activer l’environnement de travail :</li>
+</ul>
+<p><code>conda activate ForDeadEnv</code></p>
+<ul>
+<li>Démarrer une console Python en tapant sur l’invite de commande :</li>
+</ul>
+<p><code>Python</code></p>
+<p>Lorsque Python est lancé, l’invite de commande débute désormais avec les symboles suivants : </p>
+<p><code>&gt;&gt;&gt;</code></p>
+<p><img alt="" src="../img/fig08.png" />
+<em>Figure 8. Activation de la console Python.</em>
+Importer le module peps_download en saisissant l’instruction suivante :</p>
+<p><code>python=
+from peps_download import peps_download</code>
+Si aucun message d’erreur apparaît, le module est chargé correctement.</p>
+<p>La fonction peps_download permet de lister et de télécharger automatiquement les données Sentinel-2 sur la plateforme PEPS. </p>
+<ul>
+<li>Pour connaître ses paramètres de configuration, il est possible de saisir l’instruction suivante :</li>
+</ul>
+<p><code>python=
+print(peps_download.__doc__)</code></p>
+<p>Ici, nous souhaitons télécharger deux images Sentinel-2 acquises le 23/08/2017 et le 23/08/2018 sur une emprise définie par le fichier vectoriel de la zone d’étude.</p>
+<ul>
+<li>Pour lister les produits disponibles, saisir l’instruction suivante (exemple pour l’image de 2017) :
+<code>python=
+peps_download(
+'A_DATA/RASTER/THEIA',
+auth='./config.txt',
+collection='S2ST',
+start_date='2017-08-23',
+end_date='2017-08-24',
+shape='./A_DATA/VECTOR/ZONE_ETUDE&gt;/ZoneEtude.shp',
+product_type='S2MSI2A',
+no_download=True
+)</code></li>
+<li>Pour télécharger les produits, saisir l’instruction suivante :
+<code>python=
+peps_download(
+'A_DATA/RASTER/THEIA',
+auth='./config.txt',
+collection='S2ST',
+start_date='2017-08-23',
+end_date='2018-08-24',
+shape='./A_DATA/VECTOR/ZONE_ETUDE/ZoneEtude.shp',
+product_type='S2MSI2A', 
+max_trials=10, 
+wait=1, 
+no_download=False, 
+extract=True
+)</code>
+Si la zone d’étude est à cheval sur au moins deux tuiles, il est possible d’ajouter le paramètre <code>tile=&lt;code_tuile&gt;</code> pour filtrer les résultats.</li>
+</ul>
+<p>Pour information, les paramètres max_trials et wait permettent de relancer à pas de temps régulier les requêtes de téléchargement. En effet, les archives Sentinel-2 peuvent être stockées sur bande. Lorsque ces images sont appelées, elles doivent être transférées sur disque avant d’être téléchargeables. Cette procédure, transparente pour l’utilisateur, nécessite un peu de temps, une dizaine de minutes environ.</p>
+</blockquote>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../00_Intro_Objectifs/" title="00 Intro Objectifs" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                00 Intro Objectifs
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../02_pretraitement_classification/" title="02 Pretraitement Classification" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                02 Pretraitement Classification
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Powered by
+        <a href="http://timothycrosley.github.io/portray">portray.</a>
+        You too can
+        <a href="http://timothycrosley.github.io/portray">
+          portray</a>
+        your Python project well using automatic documentation.
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/vendor.2d1db4bd.min.js"></script>
+      <script src="../../assets/javascripts/bundle.6627ddf3.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      
+      <script>
+        app = initialize({
+          base: "../..",
+          features: [],
+          search: Object.assign({
+            worker: "../../assets/javascripts/worker/search.5eca75d3.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"></script>
+      
+    
+  </body>
+</html>

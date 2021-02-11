@@ -1,0 +1,1104 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.14">
+    
+    
+      
+        <title>02 Pretraitement Classification - fordead</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.d3202873.min.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ff0a5ce4.min.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#4cae4f">
+      
+    
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../style.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="green" data-md-color-accent="lightgreen">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#detection-des-foyers-de-mortalite-dans-les-massifs-de-coniferes-par-imagerie-satellite-sentinel-2" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="../.." title="fordead" class="md-header-nav__button md-logo" aria-label="fordead">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            fordead
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              02 Pretraitement Classification
+            
+          </span>
+        </div>
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header-nav__source">
+        
+<a href="https://gitlab.com/raphael.dutrieux/fordead_package/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    fordead_package
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+        
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="fordead" class="md-nav__button md-logo" aria-label="fordead">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    fordead
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://gitlab.com/raphael.dutrieux/fordead_package/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    fordead_package
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../00_Intro_Objectifs/" title="00 Intro Objectifs" class="md-nav__link">
+      00 Intro Objectifs
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../01_Prerequis_data_soft/" title="01 Prerequis Data Soft" class="md-nav__link">
+      01 Prerequis Data Soft
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+    <a href="./" title="02 Pretraitement Classification" class="md-nav__link md-nav__link--active">
+      02 Pretraitement Classification
+    </a>
+    
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../03_Formation_scolytes/" title="03 Formation Scolytes" class="md-nav__link">
+      03 Formation Scolytes
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Img2" class="md-nav__link">
+      Img2
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Img3" class="md-nav__link">
+      Img3
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Img" class="md-nav__link">
+      Img
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
+      User Guides
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="User Guides" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        <span class="md-nav__icon md-icon"></span>
+        User Guides
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/00_installation/" title="00 Installation" class="md-nav__link">
+      00 Installation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/01_compute_masked_vegetationindex/" title="01 Compute Masked Vegetationindex" class="md-nav__link">
+      01 Compute Masked Vegetationindex
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/02_train_model/" title="02 Train Model" class="md-nav__link">
+      02 Train Model
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/03_decline_detection/" title="03 Decline Detection" class="md-nav__link">
+      03 Decline Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/04_compute_forest_mask/" title="04 Compute Forest Mask" class="md-nav__link">
+      04 Compute Forest Mask
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user_guides/05_export_results/" title="05 Export Results" class="md-nav__link">
+      05 Export Results
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Diagrams" class="md-nav__link">
+      Diagrams
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+    
+    <label class="md-nav__link" for="nav-10">
+      Reference
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Reference" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+        <span class="md-nav__icon md-icon"></span>
+        Reference
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10-1" type="checkbox" id="nav-10-1">
+    
+    <label class="md-nav__link" for="nav-10-1">
+      Fordead
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Fordead" data-md-level="2">
+      <label class="md-nav__title" for="nav-10-1">
+        <span class="md-nav__icon md-icon"></span>
+        Fordead
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/ImportData/" title="Importdata" class="md-nav__link">
+      Importdata
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/ModelVegetationIndex/" title="Modelvegetationindex" class="md-nav__link">
+      Modelvegetationindex
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/decline_detection/" title="Decline Detection" class="md-nav__link">
+      Decline Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/maja_fun/" title="Maja Fun" class="md-nav__link">
+      Maja Fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/masking_vi/" title="Masking Vi" class="md-nav__link">
+      Masking Vi
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/timelapse/" title="Timelapse" class="md-nav__link">
+      Timelapse
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../reference/fordead/writing_data/" title="Writing Data" class="md-nav__link">
+      Writing Data
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://gitlab.com/raphael.dutrieux/fordead_package/edit/master/docs/02_pretraitement_classification.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                  
+                
+                
+                <h1 id="detection-des-foyers-de-mortalite-dans-les-massifs-de-coniferes-par-imagerie-satellite-sentinel-2">Détection des foyers de mortalité dans les massifs de conifères par imagerie satellite Sentinel-2</h1>
+<hr />
+<p>Equipe de formation INRAE : Florian de Boissieu, Raphaël Dutrieux, Jean-Baptiste Féret, Kenji Ose</p>
+<hr />
+<h1 id="tp-01-decouverte-des-donnees-sentinel-2-et-detection-bi-date">TP-01 : Découverte des données Sentinel-2 et détection bi-date</h1>
+<hr />
+<h1 id="5-fiche-d-pretraitement-des-donnees-s2-sous-qgis">5. Fiche D : Prétraitement des données S2 sous QGIS</h1>
+<p>Les données Sentinel-2 téléchargées depuis THEIA sont fournies sous forme d’archive ZIP, et doivent d’abord être décompressées pour être ensuite mise en forme en fonction des besoins. </p>
+<h2 id="51-decompression-des-donnees-s2">5.1. Décompression des données S2</h2>
+<blockquote>
+<ul>
+<li>
+<p>A l’aide de l’explorateur Windows, ouvrir le répertoire <code>A_DATA/RASTER/THEIA</code> qui contient les deux images S2 zippées. Décompresser les images dans ce même répertoire. Vous obtenez les deux répertoires suivants :</p>
+</li>
+<li>
+<p><code>SENTINEL2B_20170823-103018-461_L2A_T31UGP_D</code></p>
+</li>
+<li><code>SENTINEL2A_20180823-103535-335_L2A_T31UGP_D</code></li>
+</ul>
+<p>Ces répertoires sont organisés de la manière suivante :</p>
+<p><code>bash=
+..\THEIA_DATA\SENTINEL2B_20170823-103018-461_L2A_T31UGP_D
+└───SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_ATB_R1.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_ATB_R2.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B11.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B12.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B2.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B3.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B4.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B5.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B6.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B7.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B8.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B8A.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_MTD_ALL.xml
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_QKL_ALL.jpg
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B11.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B12.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B2.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B3.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B4.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B5.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B6.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B7.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B8.tif
+        │   SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_SRE_B8A.tif
+        ├───DATA
+        └───MASKS</code>
+Dans cet exemple, le répertoire <code>SENTINEL2B..V2-2</code> contient l’ensemble des bandes spectrales de l’image Sentinel-2, soit un fichier image par bande. Deux types de conversion en réflectance au sol (ou TOC pour <em>Top of Canopy</em>)  sont ici proposés : SRE pour <em>Surface Reflectance</em> et, FRE pour <em>Flat Reflectance</em>. Ce dernier mode intègre, en plus des corrections atmosphériques, des corrections topographiques. Il est ici privilégié.</p>
+<ul>
+<li>Supprimer les fichiers ayant pour suffixe <em>SRE_B</em>.tif</li>
+</ul>
+</blockquote>
+<h2 id="52-ajuster-les-images-a-lemprise-dune-zone-detude-et-harmoniser-la-resolution-spatiale">5.2. Ajuster les images à l'emprise d’une zone d'étude et harmoniser la résolution spatiale</h2>
+<blockquote>
+<ul>
+<li>Ouvrir le logiciel QGis (version utilisée : 3.16.1)</li>
+<li>Dans QGis, ouvrir la <strong>boîte à outils de traitements</strong> : </li>
+</ul>
+<p><code>Traitement &gt; Boîte à outils</code></p>
+<ul>
+<li>Dans la boîte à outils de traitements, rechercher l’outil :</li>
+</ul>
+<p><code>GDAL &gt; Extraction raster &gt; Découper un raster selon [...] masque</code></p>
+<p><img alt="" src="../img2/image14.png" /></p>
+<ul>
+<li>Cliquer-droit sur l’outil et, sélectionner “Exécuter comme processus de lot…”</li>
+</ul>
+<p><img alt="" src="../img2/image1.png" /></p>
+<ul>
+<li>Dans la fenêtre de Traitements par lots :</li>
+<li>pour le champ “Couche source” : cliquer sur <code>Auto-remplissage &gt; sélectionner des fichiers...</code> et ouvrir tous les fichiers <em>FRE</em> de l’image S2 acquise en 2017</li>
+<li>
+<p>pour le champ “Couche de masquage” : </p>
+<ul>
+<li>sélectionner dans la première ligne le fichier <code>ZoneEtude.shp</code> dans le répertoire <code>A_DATA/VECTOR</code></li>
+<li>cliquer sur <code>Auto-Remplissage… &gt; Remplir</code> afin de renseigner automatiquement les lignes qui suivent.</li>
+</ul>
+<p><img alt="" src="../img2/image10.png" /></p>
+</li>
+<li>
+<p>pour le champ “Définir la résolution du fichier en sortie” : sélectionner sur la première ligne l’option “Oui” et effectuer un remplissage automatique pour les lignes qui suivent</p>
+</li>
+<li>pour le champ “Résolution X pour les bandes en sortie”, saisir la valeur 10 et effectuer un remplissage automatique pour le lignes qui suivent</li>
+<li>pour le champ “Résolution Y pour les bandes en sortie”, saisir la valeur 10 et effectuer un remplissage automatique pour le lignes qui suivent</li>
+<li>pour le champ “Découpé (masque)”, enregistrer le résultat dans le répertoire <code>C_RESULTS</code> et donner en nom de fichier le préfixe “CROP_10m_”<ul>
+<li>choisir les options comme indiqué sur la figure ci-dessous :</li>
+</ul>
+</li>
+</ul>
+<p><img alt="" src="../img2/image17.png" /></p>
+<ul>
+<li>Cliquer enfin sur le bouton “Exécuter”</li>
+</ul>
+</blockquote>
+<p>Chacune des bandes spectrales de l’image S2 de 2017 est ainsi découpée suivant l’emprise de la zone d’étude et ré-échantillonnée à 10 m de résolution spatiale. Les résultats sont enregistrés dans le répertoire <code>C_RESULTS</code> et leur nom de fichier est préfixé par la chaîne de caractères “CROP_10m_”.</p>
+<blockquote>
+<ul>
+<li>Reproduire ce traitement pour l’image S2 de 2018</li>
+</ul>
+</blockquote>
+<p>Suite aux traitements des deux images, le répertoire <code>C_RESULTS</code> devrait disposer de 20 fichiers images, soit 10 bandes spectrales par date.</p>
+<h2 id="53-calcul-dindices-de-vegetation">5.3. Calcul d’indices de végétation</h2>
+<p>Deux types d’indice de végétation sont produits et testés : le <strong>NDVI</strong> et le <strong>CRSWIR</strong>. Leur calcul est réalisé à l’aide de la calculatrice Raster de QGis.</p>
+<blockquote>
+<ul>
+<li>Dans un premier temps, charger si nécessaire dans QGis toutes les bandes spectrales prétraitées (cf. exercice précédent) de l’image S2 2017 :</li>
+</ul>
+<p>cliquer sur  : <code>Couche &gt; Ajouter une couche &gt; Ajouter une couche raster…</code></p>
+</blockquote>
+<h3 id="531-le-ndvi">5.3.1. Le NDVI</h3>
+<p>Le NDVI exploite les bandes situées dans les domaines visible rouge (R) et proche infrarouge (PIR), correspondant respectivement aux canaux B4 (665 nm) et B8 (842 nm) de Sentinel-2. Cet indice est particulièrement intéressant pour l'étude de la végétation et plus particulièrement de l'activité photosynthétique : il permet de tirer parti du contraste de réflectance entre les domaines rouge (très forte absorption due à la chlorophylle) et le domaine proche infrarouge (absence d'éléments absorbants dans la végétation). le NDVI est normalisé afin d’obtenir des valeurs comprises entre -1 et 1. </p>
+<p>L’expression du NDVI est la suivante :</p>
+<p><code>NDVI = (B8 - B4)/(B8 + B4)</code></p>
+<blockquote>
+<p>La procédure pour calculer le NDVI à partir de QGIS est la suivante: </p>
+<ul>
+<li>Cliquer sur le menu : <code>Raster &gt; Calculatrice Raster</code></li>
+<li>
+<p>Saisir l’expression suivante :
+<code>("CROP_10m_SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B8@1" - "CROP_10m_SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B4@1") / ("CROP_10m_SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B8@1" + "CROP_10m_SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B4@1")</code></p>
+</li>
+<li>
+<p>Enregistrer le résultat sous <code>C_RESULTS\NDVI_2017.tif</code></p>
+</li>
+<li>Exécuter le calcul</li>
+</ul>
+<p>Répéter cette procédure pour calculer le NDVI de l’image S2 2018 et enregistrer le résultat sous <code>C_RESULTS\NDVI_2018.tif</code>.</p>
+</blockquote>
+<h3 id="532-le-crswir">5.3.2. Le CRSWIR</h3>
+<p>L’indice CRSWIR exploite une bande du proche infrarouge et deux bandes du moyen infrarouge, respectivement les bandes B8A (864 nm), B11 (1610.4 nm) et B12 (2185.7 nm) de Sentinel-2. Cet indice se base sur le principe du Continuum Removal (CR), technique répandue dans le domaine hyperspectral qui permet de d’augmenter le contraste des domaines d’absorption de certains constituants distinguables par les mesures de spectroscopie, mais dont l’amplitude est possiblement très inférieure à la variabilité de la ‘ligne de base’ de la réflectance, induite par des conditions environnementales telles que la luminosité, l'humidité… Dans notre cas, le CRSWIR permet de rehausser l'intensité relative des variations de réflectance associées à la présence d’eau dans la végétation, caractérisée par un pic d'absorption important autour de 1500 nm. </p>
+<p>L’expression du CRSWIR est la suivante :</p>
+<p><code>CRSWIR = B11/(B8A+((B12-B8A)/(2185.7-864))x(1610.4-864))</code></p>
+<blockquote>
+<ul>
+<li>Comme pour le NDVI, calculer à l’aide de la calculatrice raster l’indice CRSWIR pour les années 2017 (<code>CRSWIR_2017.tif</code>) et 2018 (<code>CRSWIR_2018.tif</code>). </li>
+<li>A titre d’exemple, l’expression attendue pour 2017 est la suivante :
+<code>"CROP_10m_SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B11@1" / ("CROP_10m_SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B8A@1" + (("CROP_10m_SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B12@1" - "CROP_10m_SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2_FRE_B8A@1") / (2185.7 - 864)) * (1610.4 - 864))</code></li>
+</ul>
+</blockquote>
+<p>Pour être tout à fait rigoureux, il serait nécessaire d’adapter la longueur d’onde centrale des bandes 8A, 11 et 12 en fonction des caractéristiques de Sentinel-2A ou Sentinel-2B. Ici, nous partons du principe que les différences dans la réponse spectrale des capteurs sont négligeables, et utilisons la longueur d’onde centrale des bandes du capteur Sentinel-2A. </p>
+<h2 id="54-automatisation-des-taches">5.4. Automatisation des tâches</h2>
+<p>Les tâches de décompression, découpage des images sur une zone d'étude, harmonisation de la résolution spatiale entre bandes (à 10 m ou 20 m), empilement des bandes au sein d’un fichier image unique, et de calcul d’un indice spectral associé aux images Sentinel-2, peuvent s'avérer chronophages et complexes a mettre en oeuvre sur de gros volumes de données. Afin de faciliter cette succession de traitements, une librairie a été développée et intégrée au package fordead. Cette librairie, nommée <code>maja_fun</code>, est mise en application dans le script <code>ex_preprocess_theia.py</code> présenté dans le dossier d’exemples du package et située à l'emplacement suivant :</p>
+<p><code>&lt;MyWorkingDirectory&gt;\B_PROGRAMS\Libraries\fordead_package\examples\</code></p>
+<blockquote>
+<ul>
+<li>Ce script peut être ouvert à l'aide d’un éditeur de texte (comme notepad++) ou un environnement de développement (comme spyder). Une fois les chemins relatifs mis à jour, il peut ensuite être lancé depuis une invite de commande anaconda avec l’instruction suivante : </li>
+</ul>
+<p><code>bash=
+python ex_preprocess_theia.py</code></p>
+<ul>
+<li>A l’issue de l'exécution, différentes images ont ete créées dans le répertoire suivant :</li>
+</ul>
+<p><code>&lt;MyWorkingDirectory&gt;\C_RESULTS\maja_preprocess</code></p>
+</blockquote>
+<p>Ce repertoire inclut: </p>
+<ul>
+<li>un repertoire <code>Unzip</code> contenant l’image <code>SENTINEL2B_20170823-103018-461_L2A_T31UGP_C_V2-2</code> décompressée</li>
+<li>
+<p>un repertoire <code>Subsets</code> contenant des images découpées sur la zone d'étude, dont: </p>
+<ul>
+<li>
+<p>une image au format netcdf comprenant différents produits raster (notamment l’image Sentinel-2 ajustée sur la zone d'étude, masque de la zone, indices spectraux NDVI et CRSWIR associés) : </p>
+<ul>
+<li><code>SENTINEL2A_20180823-103535-335_L2A_T31UGP_D.nc</code></li>
+</ul>
+</li>
+<li>
+<p>les images correspondant à ces produits individualisés et au format tif :</p>
+<ul>
+<li><code>SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_bands.tif</code>,</li>
+<li><code>SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_CRSWIR.tif</code>,</li>
+<li><code>SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_mask.tif</code>, </li>
+<li><code>SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_NDVI.tif</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Ce script d’exemple peut-être copié dans le répertoire principal des programmes : </p>
+<p><code>&lt;MyWorkingDirectory&gt;\B_PROGRAMS\</code></p>
+<p>puis modifié pour ajuster ce traitement automatisé à d’autres jeux de données. Le paramétrage des variables d'entrée des fonctions incluses dans la librairie <code>maja_fun.py</code> offre de nombreuses possibilités, et celles-ci seront enrichies au fur et à mesure des versions du package.</p>
+<h2 id="55-preparation-et-integration-du-masque-foret">5.5. Préparation et intégration du masque forêt</h2>
+<p>Pour cet exercice, le masque est construit à partir de la <strong>BD Forêt ® V2</strong> de l’IGN. Il faut tout d’abord définir les essences à conserver, ici les classes “FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61" du champ CODE_TFV. Les résultats sont ensuite fusionnés et convertis en raster. Cette conversion requiert en entrée un champ attributaire codé en entier. Ici, les essences visées seront codées à 1, les autres à 0.</p>
+<h3 id="551-selection-des-entites-vectorielles-sur-la-zone-detude">5.5.1. Sélection des entités vectorielles sur la zone d’étude</h3>
+<p>La zone d’étude étant à cheval sur deux départements, il convient dans un premier temps d’effectuer une sélection zonale afin de réduire le jeu de données initial, de fusionner ensuite ces résultats dans une seule et même couche.</p>
+<blockquote>
+<ul>
+<li>Dans QGis, s’assurer que les couches vectorielles suivantes sont chargées :</li>
+<li>Dans le répertoire <code>[...]\A_DATA\VECTOR\ZONE_ETUDE</code> :<ul>
+<li>ZoneEtude.shp</li>
+</ul>
+</li>
+<li>
+<p>Dans le répertoire <code>[...]\A_DATA\VECTOR\BD_FORET</code> :</p>
+<ul>
+<li><code>BD_Foret_V2_Dep070_2015\BD_Foret_V2_Dep070_2015.shp</code></li>
+<li><code>BD_Foret_V2_Dep088_2014\BD_Foret_V2_Dep088_2014.shp</code></li>
+</ul>
+</li>
+<li>
+<p>Effectuer des sélections zonales sur les deux couches départementales de la BD Forêt ® et ce, en fonction de l’emprise de la zone d’étude. Par exemple pour le département 70, suivre la procédure suivante :</p>
+</li>
+<li>Dans le menu, cliquer sur :
+<code>Vecteur &gt; Outils de recherche &gt; Sélection par localisation…</code></li>
+<li>Dans le fenêtre de “Sélection par localisation”, paramétrer comme suit :</li>
+</ul>
+<p><img alt="" src="../img2/image3.png" /></p>
+<ul>
+<li>Cliquer-droit sur la couche BD Forêt ® du département 70 et exporter les entités sélectionnées sous :</li>
+</ul>
+<p><code>C_RESULTS\BD_Foret_V2_Dep070_zoneEtude.shp</code></p>
+<ul>
+<li>Lors de l’enregistrement, modifier la projection en sortie (<em>SCR : EPSG:32631</em>) afin qu’elle soit conforme aux données Sentinel-2 ici utilisées :</li>
+</ul>
+<p><img alt="" src="../img2/image4.png" /></p>
+<ul>
+<li>Reproduire ce traitement pour la BD Forêt ® IGN du département 88, et enregistrer le résultat sous :</li>
+</ul>
+<p><code>C_RESULTS\BD_Foret_V2_Dep088_zoneEtude.shp</code></p>
+<p>Les deux fichiers résultants sont enfin fusionnés dans un seul et même fichier.
+- Dans le menu, cliquer sur :
+<code>Vecteur &gt; Outils de gestion de données &gt; Fusionner des couches vecteur…</code>
+- Sélectionner en couches d’entrée : 
+  - <code>C_RESULTS\BD_Foret_V2_Dep070_zoneEtude.shp</code>
+  - <code>C_RESULTS\BD_Foret_V2_Dep088_zoneEtude.shp</code></p>
+<ul>
+<li>Et enregistrer le résultat sous :</li>
+</ul>
+<p><code>BD_Foret_zoneEtude.shp</code></p>
+</blockquote>
+<h3 id="552-ajout-et-renseignement-dun-champ-dans-la-table-attributaire">5.5.2. Ajout et renseignement d’un champ dans la table attributaire</h3>
+<p>Il est nécessaire de créer un nouveau champ dans la couche vectorielle afin de préciser quelles essences seront conservées ou non dans le masque final.</p>
+<blockquote>
+<ul>
+<li>Ouvrir la couche vectorielle <code>C_RESULTS/BD_Foret_zoneEtude.shp</code></li>
+<li>Sélectionner la couche et ouvrir la calculatrice de champ en cliquant sur l’icône <img alt="" src="../img2/image13.png" /> dans la barre de menu.</li>
+<li>
+<p>Dans la calculatrice de champ :</p>
+</li>
+<li>
+<p>cocher l’option “créer un nouveau champ”</p>
+</li>
+<li>choisir un nom de champ, par exemple : masque</li>
+<li>choisir le type de codage : Nombre entier</li>
+<li>dans l’espace “Expression”, saisir l’instruction suivante :</li>
+</ul>
+<p><code>CASE
+WHEN  
+"CODE_TFV"  = 'FF2-00-00' OR
+"CODE_TFV"  = 'FF2-90-90' OR
+"CODE_TFV"  = 'FF2-91-91' OR
+"CODE_TFV"  = 'FF2G61-61'
+THEN 1
+ELSE 0
+END</code></p>
+<ul>
+<li>Enregistrer les modifications</li>
+</ul>
+</blockquote>
+<h3 id="553-creation-du-masque-en-mode-raster">5.5.3. Création du masque en mode raster</h3>
+<p>Une fois le champ des valeurs entières créé, il faut produire un raster binaire sur la même grille (origine, résolution, et dimension) que les images Sentinel-2 traitées (préfixées ‘CROP_10m_*’).</p>
+<blockquote>
+<ul>
+<li>Dans le menu, cliquer sur :
+<code>Raster &gt; Conversion &gt; Rasteriser (vecteur vers raster) …</code></li>
+<li>Paramétrer comme suit :</li>
+</ul>
+<p><img alt="" src="../img2/image12.png" /></p>
+<p>N.B. Pour le paramètre “Emprise du résultat”, utiliser l’option “Calculer depuis la couche” pour obtenir les coordonnées extrémales de l’image de référence. </p>
+<p>Le résultat est une image binaire, 1 pour les zones d’intérêt, 0 pour le reste.</p>
+</blockquote>
+<h1 id="6-fiche-e-detection-de-changements">6. Fiche E : Détection de changements</h1>
+<p>Plusieurs solutions techniques sont possibles pour identifier les changements et tenter de les qualifier. Ces approches vont principalement de la mise à disposition ou non de données de terrain et des jeux de données image disponibles.</p>
+<p>Dans le cadre de cet exercice, le jeu de données est limité à deux images acquises sur une même zone à deux dates différentes. Il ne s’agit donc pas d’une série temporelle. Pour détecter les changements, il est possible de produire un indice de changement en déterminant des seuils soit manuellement soit en fonction de la distribution statistique des pixels, de tester également des algorithmes de classification supervisée ou non.</p>
+<h2 id="61-test-1-difference-normalisee-dindices-de-vegetation">6.1. Test 1. Différence normalisée d’indices de végétation</h2>
+<p>Le principe ici est de mettre en place un indice de changement en utilisant les indices NDVI ou CRSWIR calculés aux deux dates. Pour ce faire, à l’instar du NDVI, nous travaillons sur une différence normalisée.</p>
+<blockquote>
+<ul>
+<li>Ouvrir la calculatrice raster</li>
+<li>Saisir l’expression suivante :
+<code>("MASQUE_FORET@1"=0) * 255 + ("MASQUE_FORET@1"=1) * 
+(("NDVI_2018@1"-"NDVI_2017@1")/("NDVI_2018@1"+"NDVI_2017@1"))</code></li>
+<li>Enregistrer le résultat sous : <code>C_RESULTS\DIFF_CRSWIR_2017_2018_MASK.tif</code></li>
+</ul>
+<p>Pour afficher correctement l’image sur QGis, il convient d’indiquer la valeur 255 en no data afin d’établir un contraste uniquement sur les valeurs du delta NDVI.</p>
+<ul>
+<li>Double-cliquer sur le résultat dans la table des couches de QGis</li>
+<li>Dans les propriétés de la couche, cliquer sur l’onglet Transparence et saisir 255 en tant que valeur nulle complémentaire</li>
+</ul>
+</blockquote>
+<p>Le résultat est une image à une bande dont les valeurs sont théoriquement comprises entre -1 et 1. La valeur 255 étant associée aux essences non suivies. Les valeurs de pixels situées au voisinage de 0 correspondent à un état stable, celles qui tendent vers -1 reflètent une baisse d'activité photosynthétique due à des problèmes sanitaires, des pratiques sylvicoles ou autres.</p>
+<blockquote>
+<ul>
+<li>De la même manière, calculer la différence de CRSWIR et,</li>
+<li>Enregistrer le résultat sous : </li>
+</ul>
+<p><code>C_RESULTS\DIFF_CRSWIR_2017_2018_MASK.tif</code></p>
+<ul>
+<li>Analyser visuellement le résultat et comparer avec la différence des NDVI.
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………</li>
+</ul>
+</blockquote>
+<h2 id="62-test-2-classifications-automatiques">6.2. Test 2. Classifications automatiques</h2>
+<p>Une première approche possible pour détecter des anomalies en milieu forestier est de faire appel à des algorithmes de classification automatique d’images, supervisés ou non. Nous allons tester ici ces deux approches dans QGis, et cerner à la fois leurs avantages et inconvénients.</p>
+<h3 id="621-classification-non-supervisee">6.2.1. Classification non supervisée</h3>
+<p>La classification non supervisée regroupe les pixels qui partagent des caractéristiques similaires (par exemple, la radiométrie) en classe, sans toutefois les étiqueter. Il appartient alors à l’utilisateur d’attribuer chacune des classes à un type d’occupation du sol, un type de changement, etc.</p>
+<blockquote>
+<ul>
+<li>Dans QGis, ouvrir à la boîte à outils de traitements en cliquant dans le menu sur :</li>
+</ul>
+<p><code>Traitement &gt; Boîte à outils</code></p>
+<ul>
+<li>
+<p>Dans la boîte à outils de traitements, affichée par défaut à droite de l’interface, dérouler les menus suivants :</p>
+</li>
+<li>
+<p><code>SAGA &gt; Image analysis</code></p>
+</li>
+</ul>
+<p>Cette rubrique regroupe plusieurs outils de classification d’image. Nous limiterons les tests aux seules applications utilisables avec une configuration classique de QGis. En effet, certaines applications nécessitent l’installation de dépendances (par ex. opencv).</p>
+<ul>
+<li>
+<p>Ouvrir l’outil K-means clustering for grids, et configurer comme suit :</p>
+</li>
+<li>
+<p>Dans le champ Grilles, insérer les fichiers suivants :</p>
+<ul>
+<li><code>CROP_10m_SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_V1-8_FRE_B2.tif</code></li>
+<li><code>CROP_10m_SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_V1-8_FRE_B3.tif</code></li>
+<li><code>CROP_10m_SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_V1-8_FRE_B4.tif</code></li>
+<li><code>CROP_10m_SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_V1-8_FRE_B8.tif</code></li>
+</ul>
+</li>
+<li>
+<p>Dans le champ Méthode, choisir : 
+<code>[2] Combined Minimum Distance / Hillclimbing</code></p>
+</li>
+<li>
+<p>Dans le champ Clusters, saisir : 10</p>
+</li>
+<li>Dans le champ Maximum Iterations, saisir 10</li>
+<li>Cocher l’option Normalize</li>
+<li>Enregistrer la classification (Clusters) sous : </li>
+</ul>
+<p><code>C_RESULTS\classif_kmeans_2018.sdat</code></p>
+<p>En sortie, l’image est classée en 10 classes (clusters) sans étiquette. </p>
+<ul>
+<li>
+<p>Attribuer une couleur et une étiquette à chacune des classes via les propriétés de la couche.</p>
+</li>
+<li>
+<p>Relancer cet outil en incluant cette fois soit les bandes du visible et du proche infrarouge des années 2017 et 2018, soit les NDVI aux deux dates.</p>
+</li>
+</ul>
+</blockquote>
+<p>En analysant les résultats, quels sont selon vous les avantages et inconvénients de cette méthode dans une perspective opérationnelle ?
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………</p>
+<h3 id="622-classification-supervisee">6.2.2. Classification supervisée</h3>
+<p>La classification supervisée requiert en entrée des données d’apprentissage pour entraîner le modèle de classification. Dans le cas présent, il s’agit des relevés terrain.</p>
+<p>Pour les besoins de l’exercice, la couche vectorielle des relevés terrain (<code>A_DATA\VECTOR\BD_SCOLYTE\ValidatedScolytes.shp</code>) a été prétraitée de manière à ne conserver que les entités situées à l’intérieur de la zone d’étude, à coder un champ (‘class’) en valeur entière pour les parcelles saines (1) et celles impactées (2) par le scolyte.</p>
+<blockquote>
+<ul>
+<li>Ouvrir la couche vectorielle :</li>
+</ul>
+<p><code>A_DATA\VECTOR\BD_SCOLYTE\ValidatedScolytes.shp</code></p>
+<ul>
+<li>Dans la Boîte à outils de traitements, ouvrir l’application suivante :</li>
+</ul>
+<p><code>SAGA &gt; Image analysis &gt; Supervised classification for grids</code></p>
+<ul>
+<li>
+<p>Paramétrer comme suit :</p>
+</li>
+<li>
+<p>Dans le champ Entités, insérer les fichiers suivants :</p>
+<ul>
+<li><code>CROP_10m_SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_V1-8_FRE_B2.tif</code></li>
+<li><code>CROP_10m_SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_V1-8_FRE_B3.tif</code></li>
+<li><code>CROP_10m_SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_V1-8_FRE_B4.tif</code></li>
+<li><code>CROP_10m_SENTINEL2A_20180823-103535-335_L2A_T31UGP_D_V1-8_FRE_B8.tif</code></li>
+</ul>
+</li>
+<li>
+<p>Cocher l’option Normalize</p>
+</li>
+<li>Dans le champ Training Areas, sélectionner la couche :</li>
+</ul>
+<p><code>ValidatedScolytes.shp</code></p>
+<ul>
+<li>Dans le champ Class Identifier, sélectionner la couche :</li>
+</ul>
+<p><code>ValidatedScolytes.shp</code></p>
+<ul>
+<li>Dans le champ Méthode, sélectionner : [5] Spectral Angle Mapping</li>
+<li>Enregistrer la classification sous :
+<code>C_RESULTS\classif_specang_2018.sdat</code></li>
+</ul>
+</blockquote>
+<p>La qualité d’une classification est évaluée en général sur le critère thématique, en estimant la cohérence de l'étiquetage vis-à-vis de la “réalité” (cf. matrice de confusion et métriques dérivées). Or, cette qualité dépend du classifieur en lui-même, mais aussi des jeux d’apprentissage et des caractéristiques descriptives (par ex. bandes spectrales d’une image) utilisées.</p>
+<blockquote>
+<p>En utilisant toujour le même outil SAGA, </p>
+<ul>
+<li>Tester une à deux autres méthodes de classification supervisée et,</li>
+<li>
+<p>Comparer visuellement les résultats :
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………</p>
+</li>
+<li>
+<p>Ajouter simultanément les bandes spectrales des années 2017 et 2018 et relancer la méthode qui vous paraît la plus efficace.</p>
+</li>
+<li>Comparer les résultats avec la même méthode entraînée sur une seule année :
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………
+……………………………………………………………………………………………</li>
+</ul>
+</blockquote>
+<p>La classification supervisée repose sur des données d’apprentissage, souvent des relevés terrain. Cette méthode vous paraît-elle adaptée pour le suivi de phénomènes évoluant dans le temps et dans l’espace ? Préciser les avantages et/ou inconvénients de cette approche.
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………
+…………………………………………………………………………………………………………</p>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../01_Prerequis_data_soft/" title="01 Prerequis Data Soft" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                01 Prerequis Data Soft
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../03_Formation_scolytes/" title="03 Formation Scolytes" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                03 Formation Scolytes
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Powered by
+        <a href="http://timothycrosley.github.io/portray">portray.</a>
+        You too can
+        <a href="http://timothycrosley.github.io/portray">
+          portray</a>
+        your Python project well using automatic documentation.
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/vendor.2d1db4bd.min.js"></script>
+      <script src="../../assets/javascripts/bundle.6627ddf3.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      
+      <script>
+        app = initialize({
+          base: "../..",
+          features: [],
+          search: Object.assign({
+            worker: "../../assets/javascripts/worker/search.5eca75d3.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"></script>
+      
+    
+  </body>
+</html>

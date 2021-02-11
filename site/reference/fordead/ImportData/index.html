@@ -1,0 +1,1103 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="shortcut icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.14">
+    
+    
+      
+        <title>Importdata - fordead</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.d3202873.min.css">
+      
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ff0a5ce4.min.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#4cae4f">
+      
+    
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../../../docs/style.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="green" data-md-color-accent="lightgreen">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#module-fordeadimportdata" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="../../.." title="fordead" class="md-header-nav__button md-logo" aria-label="fordead">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            fordead
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              Importdata
+            
+          </span>
+        </div>
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header-nav__source">
+        
+<a href="https://gitlab.com/raphael.dutrieux/fordead_package/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    fordead_package
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+        
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="fordead" class="md-nav__button md-logo" aria-label="fordead">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    fordead
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://gitlab.com/raphael.dutrieux/fordead_package/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    fordead_package
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/00_Intro_Objectifs/" title="00 Intro Objectifs" class="md-nav__link">
+      00 Intro Objectifs
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/01_Prerequis_data_soft/" title="01 Prerequis Data Soft" class="md-nav__link">
+      01 Prerequis Data Soft
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/02_pretraitement_classification/" title="02 Pretraitement Classification" class="md-nav__link">
+      02 Pretraitement Classification
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/03_Formation_scolytes/" title="03 Formation Scolytes" class="md-nav__link">
+      03 Formation Scolytes
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../.." title="Img2" class="md-nav__link">
+      Img2
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../.." title="Img3" class="md-nav__link">
+      Img3
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../.." title="Img" class="md-nav__link">
+      Img
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
+      User Guides
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="User Guides" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        <span class="md-nav__icon md-icon"></span>
+        User Guides
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/user_guides/00_installation/" title="00 Installation" class="md-nav__link">
+      00 Installation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/user_guides/01_compute_masked_vegetationindex/" title="01 Compute Masked Vegetationindex" class="md-nav__link">
+      01 Compute Masked Vegetationindex
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/user_guides/02_train_model/" title="02 Train Model" class="md-nav__link">
+      02 Train Model
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/user_guides/03_decline_detection/" title="03 Decline Detection" class="md-nav__link">
+      03 Decline Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/user_guides/04_compute_forest_mask/" title="04 Compute Forest Mask" class="md-nav__link">
+      04 Compute Forest Mask
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../docs/user_guides/05_export_results/" title="05 Export Results" class="md-nav__link">
+      05 Export Results
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../.." title="Diagrams" class="md-nav__link">
+      Diagrams
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10" checked>
+    
+    <label class="md-nav__link" for="nav-10">
+      Reference
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Reference" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+        <span class="md-nav__icon md-icon"></span>
+        Reference
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10-1" type="checkbox" id="nav-10-1" checked>
+    
+    <label class="md-nav__link" for="nav-10-1">
+      Fordead
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Fordead" data-md-level="2">
+      <label class="md-nav__title" for="nav-10-1">
+        <span class="md-nav__icon md-icon"></span>
+        Fordead
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Importdata
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" title="Importdata" class="md-nav__link md-nav__link--active">
+      Importdata
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_cloudiness" class="md-nav__link">
+    get_cloudiness
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_date_cloudiness_perc" class="md-nav__link">
+    get_date_cloudiness_perc
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import_stackedmaskedvi" class="md-nav__link">
+    import_stackedmaskedVI
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retrieve_date_from_string" class="md-nav__link">
+    retrieve_date_from_string
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classes" class="md-nav__link">
+    Classes
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tileinfo" class="md-nav__link">
+    TileInfo
+  </a>
+  
+    <nav class="md-nav" aria-label="TileInfo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add_parameters" class="md-nav__link">
+    add_parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_dirs" class="md-nav__link">
+    delete_dirs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_files" class="md-nav__link">
+    delete_files
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getdict_datepaths" class="md-nav__link">
+    getdict_datepaths
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import_info" class="md-nav__link">
+    import_info
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save_info" class="md-nav__link">
+    save_info
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../ModelVegetationIndex/" title="Modelvegetationindex" class="md-nav__link">
+      Modelvegetationindex
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../decline_detection/" title="Decline Detection" class="md-nav__link">
+      Decline Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../maja_fun/" title="Maja Fun" class="md-nav__link">
+      Maja Fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../masking_vi/" title="Masking Vi" class="md-nav__link">
+      Masking Vi
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../timelapse/" title="Timelapse" class="md-nav__link">
+      Timelapse
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../writing_data/" title="Writing Data" class="md-nav__link">
+      Writing Data
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_cloudiness" class="md-nav__link">
+    get_cloudiness
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_date_cloudiness_perc" class="md-nav__link">
+    get_date_cloudiness_perc
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import_stackedmaskedvi" class="md-nav__link">
+    import_stackedmaskedVI
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retrieve_date_from_string" class="md-nav__link">
+    retrieve_date_from_string
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classes" class="md-nav__link">
+    Classes
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tileinfo" class="md-nav__link">
+    TileInfo
+  </a>
+  
+    <nav class="md-nav" aria-label="TileInfo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add_parameters" class="md-nav__link">
+    add_parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_dirs" class="md-nav__link">
+    delete_dirs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_files" class="md-nav__link">
+    delete_files
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getdict_datepaths" class="md-nav__link">
+    getdict_datepaths
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import_info" class="md-nav__link">
+    import_info
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save_info" class="md-nav__link">
+    save_info
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://gitlab.com/raphael.dutrieux/fordead_package/edit/master/reference/fordead/ImportData.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                  
+                
+                
+                <h1 id="module-fordeadimportdata">Module fordead.ImportData</h1>
+<p>Created on Mon Nov  2 09:42:31 2020</p>
+<p>@author: Raphael Dutrieux</p>
+<h2 id="functions">Functions</h2>
+<h3 id="get_cloudiness">get_cloudiness</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">get_cloudiness</span><span class="p">(</span>
+    <span class="n">path_cloudiness</span><span class="p">,</span>
+    <span class="n">dict_path_bands</span><span class="p">,</span>
+    <span class="n">sentinel_source</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="k">For</span><span class="w"> </span><span class="k">every</span><span class="w"> </span><span class="nc">date</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">dict_path_bands</span><span class="w"> </span><span class="p">(</span><span class="n">which</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">meant</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">contain</span><span class="w"> </span><span class="k">each</span><span class="w"> </span><span class="nc">date</span><span class="w"> </span><span class="n">available</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">sentinel</span><span class="w"> </span><span class="k">data</span><span class="w"> </span><span class="n">directory</span><span class="p">),</span><span class="w"> </span><span class="n">computes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cloudiness</span><span class="w"> </span><span class="n">percentage</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="k">path</span><span class="w"> </span><span class="n">dict_path_bands</span><span class="o">[</span><span class="n">date</span><span class="o">][</span><span class="n">&quot;Mask&quot;</span><span class="o">]</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">was</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">already</span><span class="w"> </span><span class="n">computed</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">stored</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="n">path_cloudiness</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">TileInfo</span><span class="w"> </span><span class="k">object</span><span class="p">.</span><span class="w"></span>
+<span class="k">Returns</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">dictionnary</span><span class="w"> </span><span class="k">where</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">key</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">date</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">value</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cloudiness</span><span class="w"> </span><span class="n">percentage</span><span class="p">.</span><span class="w"></span>
+</code></pre></div>
+
+<h3 id="get_date_cloudiness_perc">get_date_cloudiness_perc</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">get_date_cloudiness_perc</span><span class="p">(</span>
+    <span class="n">date_paths</span><span class="p">,</span>
+    <span class="n">sentinel_source</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="err">Computes cloudiness percentage of a Sentinel-2 date from the source mask (THEIA CLM or PEPS, scihub SCL)</span>
+</code></pre></div>
+
+<h3 id="import_stackedmaskedvi">import_stackedmaskedVI</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">import_stackedmaskedVI</span><span class="p">(</span>
+    <span class="n">tuile</span><span class="p">,</span>
+    <span class="n">max_last_date_training</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">chunks</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="gh">Parameters</span>
+<span class="gh">----------</span>
+tuile : Object of class TileInfo
+    Object containing paths of vegetation index and masks for each date
+
+<span class="gh">Returns</span>
+<span class="gh">-------</span>
+stack_vi : xarray.DataArray
+    DataArray containing vegetation index value with dimension Time, x and y
+stack_masks : xarray.DataArray
+    DataArray containing mask value with dimension Time, x and y
+</code></pre></div>
+
+<h3 id="retrieve_date_from_string">retrieve_date_from_string</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">retrieve_date_from_string</span><span class="p">(</span>
+    <span class="n">string</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="k">From</span> <span class="n">a</span> <span class="n">string</span> <span class="n">containing</span> <span class="n">a</span> <span class="nb">date</span> <span class="k">in</span> <span class="n">the</span> <span class="n">format</span> <span class="n">YYYY</span><span class="o">-</span><span class="n">MM</span><span class="o">-</span><span class="n">DD</span><span class="p">,</span> <span class="n">YYYY_MM_DD</span><span class="p">,</span> <span class="n">YYYYMMDD</span><span class="p">,</span> <span class="n">DD</span><span class="o">-</span><span class="n">MM</span><span class="o">-</span><span class="n">YYYY</span><span class="p">,</span> <span class="n">DD_MM_YYYY</span> <span class="k">or</span> <span class="n">DDMMYYYY</span><span class="p">,</span> <span class="n">retrieves</span> <span class="n">the</span> <span class="nb">date</span> <span class="k">in</span> <span class="n">the</span> <span class="n">format</span> <span class="n">YYYY</span><span class="o">-</span><span class="n">MM</span><span class="o">-</span><span class="n">DD</span><span class="p">.</span>
+<span class="n">Works</span> <span class="k">only</span> <span class="k">for</span> <span class="mi">20</span><span class="n">th</span> <span class="k">and</span> <span class="mi">21</span><span class="n">st</span> <span class="n">centuries</span> <span class="p">(</span><span class="n">years</span> <span class="n">beginning</span> <span class="k">with</span> <span class="mi">19</span> <span class="k">or</span> <span class="mi">20</span><span class="p">)</span>
+
+<span class="k">Parameters</span>
+<span class="c1">----------</span>
+<span class="n">string</span> <span class="p">:</span> <span class="n">str</span>
+    <span class="n">String</span> <span class="n">containing</span> <span class="n">a</span> <span class="nb">date</span>
+
+<span class="k">Returns</span>
+<span class="c1">-------</span>
+<span class="n">formatted_date</span> <span class="p">:</span> <span class="n">str</span>
+    <span class="nb">Date</span> <span class="k">in</span> <span class="n">the</span> <span class="n">format</span> <span class="n">YYYY</span><span class="o">-</span><span class="n">MM</span><span class="o">-</span><span class="n">DD</span>
+</code></pre></div>
+
+<h2 id="classes">Classes</h2>
+<h3 id="tileinfo">TileInfo</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">TileInfo</span><span class="p">(</span>
+    <span class="n">data_directory</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<h4 id="methods">Methods</h4>
+<h5 id="add_parameters">add_parameters</h5>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">add_parameters</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">parameters</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="n">Adds</span> <span class="n">attribute</span> <span class="s1">&#39;parameters&#39;</span> <span class="k">to</span> <span class="n">TileInfo</span> <span class="k">object</span> <span class="n">which</span> <span class="k">contains</span> <span class="n">dictionnary</span> <span class="k">of</span> <span class="k">parameters</span> <span class="k">and</span> <span class="n">their</span> <span class="k">values</span><span class="p">.</span>
+<span class="k">If</span> <span class="n">attribute</span> <span class="k">parameters</span> <span class="n">already</span> <span class="k">exists</span><span class="p">,</span> <span class="n">checks</span> <span class="k">for</span> <span class="n">conflicts</span> <span class="k">then</span> <span class="n">updates</span> <span class="k">parameters</span>
+<span class="k">In</span> <span class="k">case</span> <span class="k">of</span> <span class="n">conflicts</span><span class="p">,</span> <span class="n">meaning</span> <span class="k">if</span> <span class="k">parameter</span> <span class="n">was</span> <span class="k">unknown</span> <span class="k">or</span> <span class="n">changed</span><span class="p">,</span> <span class="n">the</span> <span class="k">parameter</span> <span class="s1">&#39;Overwrite&#39;</span> <span class="k">is</span> <span class="k">set</span> <span class="k">to</span> <span class="k">True</span> <span class="k">and</span> <span class="n">it</span> <span class="k">is</span> <span class="n">advised</span> <span class="k">to</span> <span class="n">remove</span> <span class="n">previous</span> <span class="n">results</span><span class="p">.</span>
+
+<span class="k">Parameters</span>
+<span class="c1">----------</span>
+<span class="k">parameters</span> <span class="p">:</span> <span class="n">dict</span>
+    <span class="n">Dictionnary</span> <span class="n">containing</span> <span class="k">parameters</span> <span class="k">and</span> <span class="n">their</span> <span class="k">values</span>
+</code></pre></div>
+
+<h5 id="delete_dirs">delete_dirs</h5>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">delete_dirs</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">key_paths</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="k">Using</span> <span class="n">keys</span> <span class="k">to</span> <span class="n">paths</span> <span class="p">(</span><span class="n">usually</span> <span class="n">added</span> <span class="n">through</span> <span class="n">add_path</span> <span class="k">or</span> <span class="n">add_dirpath</span><span class="p">),</span> <span class="n">deletes</span> <span class="n">directory</span> <span class="n">containing</span> <span class="n">the</span> <span class="n">file</span><span class="p">,</span> <span class="k">or</span> <span class="n">the</span> <span class="n">directory</span> <span class="k">if</span> <span class="n">the</span> <span class="n">path</span> <span class="n">already</span> <span class="n">links</span> <span class="k">to</span> <span class="n">a</span> <span class="n">directory</span><span class="p">.</span> 
+
+<span class="k">Parameters</span>
+<span class="c1">----------</span>
+<span class="n">key_path</span> <span class="p">:</span> <span class="n">str</span>
+    <span class="k">Key</span> <span class="k">in</span> <span class="n">the</span> <span class="n">dictionnary</span> <span class="n">containing</span> <span class="n">paths</span>
+
+<span class="k">Returns</span>
+<span class="c1">-------</span>
+<span class="k">None</span><span class="p">.</span>
+</code></pre></div>
+
+<h5 id="delete_files">delete_files</h5>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">delete_files</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">key_paths</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="k">Using</span> <span class="n">keys</span> <span class="k">to</span> <span class="n">paths</span> <span class="p">(</span><span class="n">usually</span> <span class="n">added</span> <span class="n">through</span> <span class="n">add_path</span><span class="p">),</span> <span class="n">deletes</span> <span class="n">file</span> 
+
+<span class="k">Parameters</span>
+<span class="c1">----------</span>
+<span class="n">key_path</span> <span class="p">:</span> <span class="n">str</span>
+    <span class="k">Key</span> <span class="k">in</span> <span class="n">the</span> <span class="n">dictionnary</span> <span class="n">containing</span> <span class="n">paths</span>
+
+<span class="k">Returns</span>
+<span class="c1">-------</span>
+<span class="k">None</span><span class="p">.</span>
+</code></pre></div>
+
+<h5 id="getdict_datepaths">getdict_datepaths</h5>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">getdict_datepaths</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">key</span><span class="p">,</span>
+    <span class="n">path_dir</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="gh">Parameters</span>
+<span class="gh">----------</span>
+path_dir : pathlib.WindowsPath
+    Directory containing files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
+
+<span class="gh">Returns</span>
+<span class="gh">-------</span>
+dict_datepaths : dict
+    Dictionnary linking formatted dates with the paths of the files from which the dates where extracted
+</code></pre></div>
+
+<h5 id="import_info">import_info</h5>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">import_info</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">path</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="err">Imports TileInfo object in the data_directory, or the one at path if the parameter is given</span>
+</code></pre></div>
+
+<h5 id="save_info">save_info</h5>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">save_info</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">path</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="err">Saves the TileInfo object in its data_directory by default or in specified location</span>
+</code></pre></div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../../../docs/user_guides/05_export_results/" title="05 Export Results" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                05 Export Results
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../ModelVegetationIndex/" title="Modelvegetationindex" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Modelvegetationindex
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Powered by
+        <a href="http://timothycrosley.github.io/portray">portray.</a>
+        You too can
+        <a href="http://timothycrosley.github.io/portray">
+          portray</a>
+        your Python project well using automatic documentation.
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../../assets/javascripts/vendor.2d1db4bd.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.6627ddf3.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      
+      <script>
+        app = initialize({
+          base: "../../..",
+          features: [],
+          search: Object.assign({
+            worker: "../../../assets/javascripts/worker/search.5eca75d3.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"></script>
+      
+    
+  </body>
+</html>
