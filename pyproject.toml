@@ -42,4 +42,6 @@ palette = {primary = "blue grey", accent = "pink"}
 [tool.portray.mkdocs.theme.icon]
 repo='fontawesome/brands/gitlab'
 
-
+[[tool.portray.mkdocs.plugins]]
+    [tool.portray.mkdocs.plugins.git-revision-date]
+        enabled_if_env = 'CI'
