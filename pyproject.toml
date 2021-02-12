@@ -6,9 +6,9 @@
 [tool.portray]
 #    docs_dir = "docs"
 # output_dir = "site"
-# modules = ["fordead"]
+#    modules = ["fordead"]
     modules = ["fordead.decline_detection", "fordead.ImportData", "fordead.masking_vi", "fordead.maja_fun", "fordead.ModelVegetationIndex", "fordead.timelapse", "fordead.writing_data"]
-
+    extra_markdown_extensions = ['mdx_breakless_lists']
 
 [[tool.portray.extra_markdown_extensions]]
     [tool.portray.extra_markdown_extensions.mdx_math]
@@ -27,6 +27,8 @@ template_dir = "templates/pdocs"
 [tool.portray.mkdocs]
     site_name = "fordead"
     extra_css = ['docs/style.css']
+    edit_uri = '-/edit/master/'
+
     extra_javascript = ['https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML']
 #    extra_javascript = ['docs/menu.js']
 #     [tool.portray.mkdocs.theme]
@@ -35,3 +37,8 @@ template_dir = "templates/pdocs"
 [tool.portray.mkdocs.theme]
 name = "material"
 palette = {primary = "blue grey", accent = "pink"}
+
+[tool.portray.mkdocs.theme.icon]
+repo='fontawesome/brands/gitlab'
+
+
