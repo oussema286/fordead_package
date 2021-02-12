@@ -28,6 +28,7 @@ template_dir = "templates/pdocs"
     site_name = "fordead"
     extra_css = ['docs/style.css']
     edit_uri = '-/edit/master/'
+    repo_name = 'GitLab'
 
     extra_javascript = ['https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML']
 #    extra_javascript = ['docs/menu.js']
@@ -37,3 +38,8 @@ template_dir = "templates/pdocs"
 [tool.portray.mkdocs.theme]
 name = "material"
 palette = {primary = "blue grey", accent = "pink"}
+
+[tool.portray.mkdocs.theme.icon]
+repo='fontawesome/brands/gitlab'
+
+
