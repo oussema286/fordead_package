@@ -73,6 +73,7 @@ def decline_detection(
                 masked_vi["mask"] = masked_vi["mask"] | (date_index < first_detection_date_index) #Masking pixels where date was used for training
 
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
+                
                 anomalies = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly, 
                                                 vi = vi, path_dict_vi = path_dict_vi).squeeze("Time")
                                 
