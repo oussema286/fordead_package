@@ -5,6 +5,7 @@ Cette étape permet le calcul d'indices de végétation et de masques pour chaqu
 
 #### ENTRÉES
 Les paramètres en entrée sont :
+
 - **input_directory** : le chemin du dossier correspondant à une tuile ou une zone contenant un dossier par date SENTINEL contenant les différentes bandes. Les dossiers doivent contenir la date correspondante dans leur nom sous un des formats suivants : YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY ou DDMMYYYY. Les fichiers des bandes doivent contenir le nom de la bande correspondante (B2 ou B02, B3 ou B03, etc...).
 - **data_directory** : Le chemin du dossier de sortie, dans lequel seront écrit les indices de végétations et masques
 - **lim_perc_cloud** : Le pourcentage maximum de nuages. Si le pourcentage de nuage de la date SENTINEL, calculé à partir de la classification du fournisseur, est supérieur à ce seuil, la date est ignorée.

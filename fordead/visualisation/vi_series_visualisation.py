@@ -101,6 +101,7 @@ def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 
     chunks = None
     
     stack_vi, stack_masks = import_stackedmaskedVI(tile,chunks = chunks)
+    stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
     coeff_model = import_coeff_model(tile.paths["coeff_model"],chunks = chunks)
     first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
     soil_data = import_soil_data(tile.paths,chunks = chunks)

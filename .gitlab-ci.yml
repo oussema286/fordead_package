@@ -1,0 +1,21 @@
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  image: $CI_REGISTRY/raphael.dutrieux/fordead_package
+  script:
+    - conda init bash
+    - source ~/.bashrc
+    - conda activate fordead
+    - python -V  # Print out python version for debugging
+    - pip install git+https://github.com/floriandeboissieu/portray python-markdown-math mdx-breakless-lists
+    - pip install -e .
+    - portray as_html -c pyproject.toml
+    - mv site public
+  artifacts:
+    paths:
+     - public
+  only:
+   - master
+   - schedules

@@ -7,6 +7,7 @@ Created on Tue Nov  3 16:21:35 2020
 import xarray as xr
 import numpy as np
 import dask.array as da
+import datetime
 
 def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
     """
@@ -51,7 +52,7 @@ def model_vi(stack_vi, stack_masks):
     Parameters
     ----------
     stack_vi : array (Time,x,y)
-        Array containing vegetation index data
+        Array containing vegetation index data, must contain coordinates 'Time' with format '%Y-%m-%d'
     stack_masks : array (Time,x,y)
         Array (boolean) containing mask data.
 
@@ -61,7 +62,10 @@ def model_vi(stack_vi, stack_masks):
         Array containing the five coefficients of the vegetation index model for each pixel
 
     """
-    HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
+    
+    DatesNumbers = [(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]
+    
+    HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in DatesNumbers])
         
     coeff_model = da.blockwise(censored_lstsq, 'kmn', stack_vi.data, 'tmn',~stack_masks.data, 'tmn', new_axes={'k':5}, dtype=HarmonicTerms.dtype, A=HarmonicTerms, meta=np.ndarray(()))
     coeff_model = xr.DataArray(coeff_model, dims=['coeff', stack_vi.dims[1], stack_vi.dims[2]], coords=[('coeff', np.arange(5)), stack_vi.coords[stack_vi.dims[1]], stack_vi.coords[stack_vi.dims[2]]])

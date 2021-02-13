@@ -22,4 +22,4 @@ La détection du déperissement se fait en cinq étapes.
 - La création du masque forêt, qui définit les zones d'intérêt
 - L'export de sorties permettant de visualiser les résultats au pas de temps souhaité
 
-Pour les détails sur la réalisation de ces étapes, voir les [guides utilisateurs](https://gitlab.com/raphael.dutrieux/fordead_package/-/tree/dev/docs/user_guides).
+L'ensemble de la documentation ainsi que les guides utilisateurs de ces étapes sont disponibles sur le [site](https://raphael.dutrieux.gitlab.io/fordead_package/).
