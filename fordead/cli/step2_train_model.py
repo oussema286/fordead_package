@@ -8,29 +8,19 @@ Created on Tue Nov  3 16:21:15 2020
 #   LIBRAIRIES
 # =============================================================================
 
-import argparse
+import click
 from fordead.ImportData import import_stackedmaskedVI, TileInfo
 from fordead.ModelVegetationIndex import get_detection_dates, model_vi
 from fordead.writing_data import write_tif
 
 
-def parse_command_line():
-    # execute only if run as a script
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str, help = "Dossier avec les indices de végétations et les masques")
-    parser.add_argument("--nb_min_date", dest = "nb_min_date",type = int,default = 10, help = "Minimum number of valid dates to compute a vegetation index model for the pixel")
-    parser.add_argument("-s", "--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
-    parser.add_argument("-e", "--max_last_date_training", dest = "max_last_date_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
-
-    parser.add_argument("--path_vi", dest = "path_vi",type = str,default = None, help = "Path of directory containing vegetation indices for each date. If None, the information has to be saved from a previous step")    
-    parser.add_argument("--path_masks", dest = "path_masks",type = str,default = None, help = "Path of directory containing masks for each date.  If None, the information has to be saved from a previous step")    
-    dictArgs={}
-    for key, value in parser.parse_args()._get_kwargs():
-    	dictArgs[key]=value
-    
-    return dictArgs
-
-
+@click.command(name='train_model')
+@click.option("-d", "--data_directory", type = str, help = "Dossier avec les indices de végétations et les masques")
+@click.option("--nb_min_date", type = int,default = 10, help = "Minimum number of valid dates to compute a vegetation index model for the pixel")
+@click.option("-s", "--min_last_date_training", type = str,default = "2018-01-01", help = "Première date de la détection")
+@click.option("-e", "--max_last_date_training", type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
+@click.option("--path_vi", type = str,default = None, help = "Path of directory containing vegetation indices for each date. If None, the information has to be saved from a previous step")
+@click.option("--path_masks", type = str,default = None, help = "Path of directory containing masks for each date.  If None, the information has to be saved from a previous step")
 def train_model(
     data_directory,
     nb_min_date = 10,
@@ -39,7 +29,23 @@ def train_model(
     path_vi=None,
     path_masks = None,
     ):
-    
+    """
+    Train vegetation index model
+    \f
+
+    Parameters
+    ----------
+    data_directory
+    nb_min_date
+    min_last_date_training
+    max_last_date_training
+    path_vi
+    path_masks
+
+    Returns
+    -------
+
+    """
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     
@@ -87,10 +93,9 @@ def train_model(
 
     
 if __name__ == '__main__':
-    dictArgs=parse_command_line()
     # print(dictArgs)
     # start_time = time.time()
-    train_model(**dictArgs)
+    train_model()
     # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
 
 

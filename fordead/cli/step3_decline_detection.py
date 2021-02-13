@@ -6,33 +6,41 @@ Created on Mon Nov  2 09:25:23 2020
 """
 
 
-import argparse
+import click
 import numpy as np
 from fordead.ImportData import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo
 from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 # import time
 
-
-def parse_command_line():
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-d", "--data_directory", dest = "data_directory",type = str, help = "Dossier avec les données")
-    parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies"),
-    parser.add_argument("--vi", dest = "vi",type = str,default = None, help = "Chosen vegetation index, only useful if step1 was skipped")
-    parser.add_argument("--path_dict_vi", dest = "path_dict_vi",type = str,default = None, help = "Path of text file to add vegetation index formula, only useful if step1 was skipped")
-
-    dictArgs={}
-    for key, value in parser.parse_args()._get_kwargs():
-    	dictArgs[key]=value
-    return dictArgs
-
-
+@click.command(name='detect')
+@click.option("-d", "--data_directory",  type=str, help="Dossier avec les données")
+@click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
+                    help="Seuil minimum pour détection d'anomalies")
+@click.option("--vi",  type=str, default=None,
+                    help="Chosen vegetation index, only useful if step1 was skipped")
+@click.option("--path_dict_vi",  type=str, default=None,
+                    help="Path of text file to add vegetation index formula, only useful if step1 was skipped")
 def decline_detection(
     data_directory,
     threshold_anomaly=0.16,
     vi = None,
     path_dict_vi = None
     ):
+    """
+    Produce the anomaly detection from the model
+    \f
+    Parameters
+    ----------
+    data_directory
+    threshold_anomaly
+    vi
+    path_dict_vi
+
+    Returns
+    -------
+
+    """
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly})
@@ -92,8 +100,7 @@ def decline_detection(
 
 
 if __name__ == '__main__':
-    dictArgs=parse_command_line()
     # print(dictArgs)
     # start_time = time.time()
-    decline_detection(**dictArgs)
+    decline_detection()
     # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
