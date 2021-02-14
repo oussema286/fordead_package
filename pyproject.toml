@@ -8,7 +8,7 @@
 # output_dir = "site"
 #    modules = ["fordead"]
     modules = ["fordead.decline_detection", "fordead.ImportData", "fordead.masking_vi", "fordead.maja_fun", "fordead.ModelVegetationIndex", "fordead.timelapse", "fordead.writing_data"]
-    extra_markdown_extensions = ['mdx_breakless_lists']
+    extra_markdown_extensions = ['mdx_breakless_lists', 'mkdocs-click']
 
 [[tool.portray.extra_markdown_extensions]]
     [tool.portray.extra_markdown_extensions.mdx_math]
