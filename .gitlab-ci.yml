@@ -3,7 +3,7 @@ stages:
 
 pages:
   stage: deploy
-  image: $CI_REGISTRY/raphael.dutrieux/fordead_package
+  image: $CI_REGISTRY/fordead/fordead_package
   script:
     - conda init bash
     - source ~/.bashrc
