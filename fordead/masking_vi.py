@@ -106,8 +106,7 @@ def get_pre_masks(stack_bands):
     invalid = shadows | outside_swath | (stack_bands.sel(band = "B2") >= 600)
     
     return soil_anomaly, shadows, outside_swath, invalid
-    # if ApplyMaskTheia : Invalid=np.logical_or(np.logical_or(Ombres, Nuages),np.logical_or(MaskTheia,HorsFauche))
-    # else : Invalid=np.logical_or(np.logical_or(Ombres, Nuages),HorsFauche)
+
 
 def detect_soil(soil_data, premask_soil, invalid, date_index):
     soil_data["count"]=xr.where(~invalid & premask_soil,soil_data["count"]+1,soil_data["count"])
