@@ -16,10 +16,10 @@ pip install .
 
 ## Utilisation pour la détection de déperissement
 La détection du déperissement se fait en cinq étapes.
-- Le calcul des indices de végétation et des masques pour chaque date SENTINEL-2
-- L'apprentissage par modélisation de l'indice de végétation pixel par pixel à partir des premières dates
-- La détection du déperissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel
-- La création du masque forêt, qui définit les zones d'intérêt
-- L'export de sorties permettant de visualiser les résultats au pas de temps souhaité
+- [Le calcul des indices de végétation et des masques pour chaque date SENTINEL-2](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)
+- [L'apprentissage par modélisation de l'indice de végétation pixel par pixel à partir des premières dates](https://fordead.gitlab.io/fordead_package/docs/user_guides/02_train_model/)
+- [La détection du déperissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel](https://fordead.gitlab.io/fordead_package/docs/user_guides/03_decline_detection/)
+- [La création du masque forêt, qui définit les zones d'intérêt](https://fordead.gitlab.io/fordead_package/docs/user_guides/04_compute_forest_mask/)
+- [L'export de sorties permettant de visualiser les résultats au pas de temps souhaité](https://fordead.gitlab.io/fordead_package/docs/user_guides/05_export_results/)
 
-L'ensemble de la documentation ainsi que les guides utilisateurs de ces étapes sont disponibles sur le [site](https://raphael.dutrieux.gitlab.io/fordead_package/).
+L'ensemble de la documentation ainsi que les guides utilisateurs de ces étapes sont disponibles sur le [site](https://fordead.gitlab.io/fordead_package/).
