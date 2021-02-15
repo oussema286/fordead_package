@@ -16,11 +16,11 @@ from fordead.writing_data import write_tif
 
 @click.command(name='train_model')
 @click.option("-d", "--data_directory", type = str, help = "Dossier avec les indices de végétations et les masques")
-@click.option("--nb_min_date", type = int,default = 10, help = "Minimum number of valid dates to compute a vegetation index model for the pixel")
-@click.option("-s", "--min_last_date_training", type = str,default = "2018-01-01", help = "Première date de la détection")
-@click.option("-e", "--max_last_date_training", type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
-@click.option("--path_vi", type = str,default = None, help = "Path of directory containing vegetation indices for each date. If None, the information has to be saved from a previous step")
-@click.option("--path_masks", type = str,default = None, help = "Path of directory containing masks for each date.  If None, the information has to be saved from a previous step")
+@click.option("--nb_min_date", type = int,default = 10, help = "Minimum number of valid dates to compute a vegetation index model for the pixel", show_default=True)
+@click.option("-s", "--min_last_date_training", type = str,default = "2018-01-01", help = "Première date de la détection", show_default=True)
+@click.option("-e", "--max_last_date_training", type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage", show_default=True)
+@click.option("--path_vi", type = str,default = None, help = "Path of directory containing vegetation indices for each date. If None, the information has to be saved from a previous step", show_default=True)
+@click.option("--path_masks", type = str,default = None, help = "Path of directory containing masks for each date.  If None, the information has to be saved from a previous step", show_default=True)
 def train_model(
     data_directory,
     nb_min_date = 10,

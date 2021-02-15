@@ -10,22 +10,22 @@ from fordead.masking_vi import rasterize_bdforet, clip_oso, raster_full
 from fordead.writing_data import write_tif
 
 @click.command(name='forest_mask')
-@click.option("-o", "--data_directory",  type=str, help="Path of the output directory")
+@click.option("-o", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
 @click.option("-f", "--forest_mask_source",  type=str, default=None,
-                    help="Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
+                    help="Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid", show_default=True)
 @click.option("--dep_path",  type=str,
-                    help="Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+                    help="Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'", show_default=True)
 @click.option("--bdforet_dirpath",  type=str,
-                    help="Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+                    help="Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'", show_default=True)
 @click.option("--list_forest_type",  type=str,
                     default=["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"],
-                    help="List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+                    help="List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'", show_default=True)
 @click.option("--path_oso",  type=str,
-                    help="Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
+                    help="Path to soil occupation raster, only used if forest_mask_source = 'OSO' ", show_default=True)
 @click.option("--list_code_oso",  type=str, default=[32],
-                    help="List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'")
+                    help="List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'", show_default=True)
 @click.option("--path_example_raster",  type=str, default=None,
-                    help="Path to raster from which to copy the extent, resolution, CRS...")
+                    help="Path to raster from which to copy the extent, resolution, CRS...", show_default=True)
 def compute_forest_mask(data_directory,
                         forest_mask_source = None,
 

@@ -10,17 +10,17 @@ from fordead.ImportData import import_decline_data, TileInfo, import_forest_mask
 from fordead.writing_data import get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date
 
 @click.command(name='export_results')
-@click.option("-d", "--data_directory",  type=str, help="Dossier avec les données")
+@click.option("-d", "--data_directory",  type=str, help="Dossier avec les données", show_default=True)
 @click.option("--start_date",  type=str, default='2015-06-23',
-                    help="Date de début pour l'export des résultats")
+                    help="Date de début pour l'export des résultats", show_default=True)
 @click.option("--end_date",  type=str, default="2022-01-02",
-                    help="Date de fin pour l'export des résultats")
+                    help="Date de fin pour l'export des résultats", show_default=True)
 @click.option("--frequency",  type=str, default='M',
-                    help="Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
+                    help="Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)", show_default=True)
 @click.option("--export_soil",  is_flag=True,
-                    help="If activated, results relating to soil detection are exported. Results of soil detection have to be computed and written in previous steps")
+                    help="If activated, results relating to soil detection are exported. Results of soil detection have to be computed and written in previous steps", show_default=True)
 @click.option("--multiple_files",  is_flag=True,
-                    help="If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
+                    help="If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline", show_default=True)
 def export_results(
     data_directory,
     start_date = '2015-06-23',

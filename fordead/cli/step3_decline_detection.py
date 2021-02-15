@@ -7,7 +7,7 @@ Created on Mon Nov  2 09:25:23 2020
 
 
 import click
-import numpy as np
+# import numpy as np
 from fordead.ImportData import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo
 from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
@@ -16,11 +16,11 @@ from fordead.decline_detection import detection_anomalies, prediction_vegetation
 @click.command(name='detect')
 @click.option("-d", "--data_directory",  type=str, help="Dossier avec les données")
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
-                    help="Seuil minimum pour détection d'anomalies")
+                    help="Seuil minimum pour détection d'anomalies", show_default=True)
 @click.option("--vi",  type=str, default=None,
-                    help="Chosen vegetation index, only useful if step1 was skipped")
+                    help="Chosen vegetation index, only useful if step1 was skipped", show_default=True)
 @click.option("--path_dict_vi",  type=str, default=None,
-                    help="Path of text file to add vegetation index formula, only useful if step1 was skipped")
+                    help="Path of text file to add vegetation index formula, only useful if step1 was skipped", show_default=True)
 def decline_detection(
     data_directory,
     threshold_anomaly=0.16,
