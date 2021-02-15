@@ -5,11 +5,11 @@ Created on Tue Nov 17 12:02:24 2020
 @author: Raphael Dutrieux
 """
 
-from fordead.cli.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
-from fordead.cli.step2_train_model import train_model
-from fordead.cli.step3_decline_detection import decline_detection
-from fordead.cli.step4_compute_forest_mask import compute_forest_mask
-from fordead.cli.step5_export_results import export_results
+from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
+from fordead.steps.step2_train_model import train_model
+from fordead.steps.step3_decline_detection import decline_detection
+from fordead.steps.step4_compute_forest_mask import compute_forest_mask
+from fordead.steps.step5_export_results import export_results
 
 from fordead.visualisation.create_timelapse import create_timelapse
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation

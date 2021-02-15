@@ -13,7 +13,7 @@ from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
 # import time
 
-@click.command(name='detect')
+@click.command(name='decline_detection')
 @click.option("-d", "--data_directory",  type=str, help="Dossier avec les données")
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
                     help="Seuil minimum pour détection d'anomalies", show_default=True)
