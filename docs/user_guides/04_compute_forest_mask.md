@@ -16,3 +16,22 @@ Les paramètres en entrée sont :
 Les sorties de cette quatrième étape, dans le dossier data_directory, sont :
 - Dans le dossier **ForestMask**, le raster binaire Forest_Mask.tif qui vaut 1 sur les pixels de forêt à étudier et 0 ailleurs.
 
+## Utilisation
+### A partir d'un script
+
+```bash
+from fordead.steps.step4_compute_forest_mask import compute_forest_mask
+compute_forest_mask(data_directory, 
+                    forest_mask_source = <forest_mask_source>, 
+                    dep_path = <dep_path>,
+                    bdforet_dirpath = <bdforet_dirpath>)
+```
+
+
+### A partir de la ligne de commande
+
+```bash
+fordead forest_mask [OPTIONS]
+```
+
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#forest_mask)
