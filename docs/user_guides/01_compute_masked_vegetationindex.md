@@ -1,4 +1,4 @@
-## ÉTAPE 1 : step1_compute_masked_vegetationindex.py
+# ÉTAPE 1 : step1_compute_masked_vegetationindex.py
 Cette étape permet le calcul d'indices de végétation et de masques pour chaque date SENTINEL-2
 
 ![Diagram_step1](Diagrams/Diagram_step1.png "Diagramme de l'étape")
@@ -27,4 +27,20 @@ Les sorties de cette première étape, dans le dossier data_directory, sont :
     - **first_date_soil** : L'index de la première date avec une anomalie de sol de la dernière série d'anomalies de sol
     - **state_soil** : Un raster binaire qui vaut 1 si le pixel est détecté comme sol (Au moins trois anomalies de sol successives)
 A partir de state_soil et first_date_soil, il est donc possible de savoir quels pixels sont détectés comme sol nu/coupe, et à partir de quelle date. count_soil permet de mettre à jour ces données en ajoutant de nouvelles dates SENTINEL.
+
+## Utilisation
+### A partir d'un script
+
+```bash
+from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
+compute_masked_vegetationindex(input_directory = <input_directory>, data_directory = <data_directory>)
+```
+
+### A partir de la ligne de commande
+
+```bash
+fordead masked_vi [OPTIONS]
+```
+
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#masked_vi)
 

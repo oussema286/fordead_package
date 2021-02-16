@@ -13,3 +13,16 @@ Les sorties de cette troisième étape, dans le dossier data_directory, sont :
     - **first_date_decline** : L'index de la première date avec une anomalie de la dernière série d'anomalies
     - **state_decline** : Un raster binaire qui vaut 1 si le pixel est détecté comme déperissant (Au moins trois anomalies successives)
 
+## Utilisation
+### A partir d'un script
+
+```bash
+from fordead.steps.step3_decline_detection import decline_detection
+decline_detection(data_directory = <data_directory>)
+```
+
+### A partir de la ligne de commande
+```bash
+fordead decline_detection [OPTIONS]
+```
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#decline_detection)

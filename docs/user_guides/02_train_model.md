@@ -21,3 +21,18 @@ Les sorties de cette deuxième étape, dans le dossier data_directory, sont :
 - Dans le dossier **ForestMask**, le raster binaire **valid_area_mask.tif** qui vaut 1 pour les pixels où le modèle a pu être calculé, 0 si il n'y avait pas assez de dates valides
 - Le fichier TileInfo est mis à jour.
 
+## Utilisation
+### A partir d'un script
+
+```bash
+from fordead.steps.step2_train_model import train_model
+train_model(data_directory = <data_directory>)
+```
+
+### A partir de la ligne de commande
+
+```bash
+fordead train_model [OPTIONS]
+```
+
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#train_model)

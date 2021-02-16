@@ -11,7 +11,7 @@ Created on Thu Nov 19 16:06:51 2020
 # =============================================================================
 
 # import time
-import argparse
+import click
 from pathlib import Path
 # import geopandas as gp
 import numpy as np
@@ -27,25 +27,16 @@ from fordead.writing_data import write_tif
 #   FONCTIONS
 # =============================================================================
 
-def parse_command_line():
-    # execute only if run as a script
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-i", "--input_directory", dest = "input_directory",type = str, help = "Path of the directory with Sentinel dates")
-    parser.add_argument("-o", "--data_directory", dest = "data_directory",type = str, help = "Path of the output directory")
-    parser.add_argument("-n", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness")
-    parser.add_argument("--interpolation_order", dest = "interpolation_order",type = int,default = 0, help ="interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique")
-    parser.add_argument("--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'")
-    parser.add_argument("--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
-    parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
-    parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection, if None, the whole tile is used")
-    parser.add_argument("--path_dict_vi", dest = "path_dict_vi",type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)")
-
-    dictArgs={}
-    for key, value in parser.parse_args()._get_kwargs():
-    	dictArgs[key]=value
-    return dictArgs
-
-
+@click.command(name='masked_vi')
+@click.option("-i", "--input_directory", type = str, help = "Path of the directory with Sentinel dates")
+@click.option("-o", "--data_directory", type = str, help = "Path of the output directory")
+@click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
+@click.option("--interpolation_order", type = int,default = 0, help ="interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique", show_default=True)
+@click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
+@click.option("--apply_source_mask",  is_flag=True, help = "If activated, applies the mask from SENTINEL-data supplier", show_default=True)
+@click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
+@click.option("--extent_shape_path", type = str,default = None, help = "Path of shapefile used as extent of detection, if None, the whole tile is used", show_default=True)
+@click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
 def compute_masked_vegetationindex(
     input_directory,
     data_directory,
@@ -57,7 +48,25 @@ def compute_masked_vegetationindex(
     extent_shape_path=None,
     path_dict_vi = None
     ):
-    
+    """
+    Compute masks and masked vegetation index
+    \f
+    Parameters
+    ----------
+    input_directory
+    data_directory
+    lim_perc_cloud
+    interpolation_order
+    sentinel_source
+    apply_source_mask
+    vi
+    extent_shape_path
+    path_dict_vi
+
+    Returns
+    -------
+
+    """
     if extent_shape_path is not None: data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
     tile = TileInfo(data_directory)
     tile = tile.import_info()
@@ -127,9 +136,8 @@ def compute_masked_vegetationindex(
     tile.save_info()
     
 if __name__ == '__main__':
-    dictArgs=parse_command_line()
     # start_time_debut = time.time()
-    compute_masked_vegetationindex(**dictArgs)
+    compute_masked_vegetationindex()
     # print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
 
 

@@ -17,3 +17,27 @@ Les sorties de cette cinquième étape, dans le dossier data_directory/Results, 
     - si export_soil est activé, le shapefile periodic_results_soil dont les polygones contiennent la période à laquelle la première anomalie de sol a été détecté pour les zones détectées comme sol nu/coupe. Les zones à nu avant start_date ou après end_date ne sont pas représentées.
 - si **multiple_files** vaut True :
     - Un shapefile par période dont le nom est la date de fin de la période (par exemple, avec start_date = 2018-01-01, end_date = 2018-04-01 et frequency = "M", on aura les fichiers suivants : 2018-01-30.shp, 2018-02-28.shp et 2018-03-31.shp. Chaque shapefile contient des polygones correspondant à l'état du peuplement à la fin de la période, même si les premières anomalies ont lieu avant start_date. L'état peut être Atteint, Coupe ou Coupe sanitaire si export_soil est activé, ou simplement "Atteint" sinon.
+
+## Utilisation
+### A partir d'un script
+
+```bash
+from fordead.steps.step5_export_results import export_results
+export_results(
+    data_directory = <data_directory>,
+    start_date = <start_date>,
+    end_date = <end_date>,
+    frequency= <frequency>,
+    export_soil = <export_soil>,
+    multiple_files = <multiple_files>
+    )
+```
+
+### A partir de la ligne de commande
+
+```bash
+fordead export_results [OPTIONS]
+```
+
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#export_results)
+
