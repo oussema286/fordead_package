@@ -7,7 +7,7 @@ Le package `fordead` a été développé pour la détection de changements en fo
 
 Depuis l'invite de commande, placer vous dans le répertoire de votre choix et lancez les commandes suivantes :
 ```bash
-git clone git@gitlab.com:fordead/fordead_package.git
+git clone https://gitlab.com/fordead/fordead_package.git
 cd fordead_package
 conda env create --name fordead_env
 conda activate fordead_env
