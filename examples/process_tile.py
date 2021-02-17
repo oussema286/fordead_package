@@ -73,9 +73,9 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
     # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
     
-    main_directory = "D:/Documents/Deperissement/Output"    
+    # main_directory = "D:/Documents/Depesrissement/Output"    
     # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
-    sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
+    # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
     # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/zone_timelapse.shp"
         
     
