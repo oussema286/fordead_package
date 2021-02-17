@@ -26,11 +26,11 @@ def fordead():
     The usual workflow is :
         masked_vi --> train_model --> decline_detection --> forest_mask --> export_results
     """
-fordead.add_command(compute_masked_vegetationindex)
-fordead.add_command(train_model)
-fordead.add_command(decline_detection)
-fordead.add_command(compute_forest_mask)
-fordead.add_command(export_results)
+fordead.add_command(cli_compute_masked_vegetationindex)
+fordead.add_command(cli_train_model)
+fordead.add_command(cli_decline_detection)
+fordead.add_command(cli_compute_forest_mask)
+fordead.add_command(cli_export_results)
 
 if __name__ == '__main__':  # pragma: no cover
     fordead()
