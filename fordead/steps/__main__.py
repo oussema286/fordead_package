@@ -2,11 +2,11 @@
 # dest \= "(\w+)",
 import click
 import collections
-from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
-from fordead.steps.step2_train_model import train_model
-from fordead.steps.step3_decline_detection import decline_detection
-from fordead.steps.step4_compute_forest_mask import compute_forest_mask
-from fordead.steps.step5_export_results import export_results
+from fordead.steps.step1_compute_masked_vegetationindex import cli_compute_masked_vegetationindex
+from fordead.steps.step2_train_model import cli_train_model
+from fordead.steps.step3_decline_detection import cli_decline_detection
+from fordead.steps.step4_compute_forest_mask import cli_compute_forest_mask
+from fordead.steps.step5_export_results import cli_export_results
 
 class OrderedGroup(click.Group):
     # ref: https://stackoverflow.com/questions/47972638/how-can-i-define-the-order-of-click-sub-commands-in-help
