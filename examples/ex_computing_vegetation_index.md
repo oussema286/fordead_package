@@ -14,6 +14,7 @@ Then define the path of the directory containing SENTINEL data, and path of the 
 - DD-MM-YYYY
 - DD_MM_YYYY
 - DDMMYYYY
+
 The band name must be in the file name (B2 or B02, B3 or B03, B4 or B04, B5 or B05, B6 or B06, B7 or B07, B8 or B08, B8A, B11, B12).
 ```bash
 input_directory = "<input_directory>"
