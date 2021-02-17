@@ -21,6 +21,33 @@ from fordead.writing_data import write_tif
 @click.option("-e", "--max_last_date_training", type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage", show_default=True)
 @click.option("--path_vi", type = str,default = None, help = "Path of directory containing vegetation indices for each date. If None, the information has to be saved from a previous step", show_default=True)
 @click.option("--path_masks", type = str,default = None, help = "Path of directory containing masks for each date.  If None, the information has to be saved from a previous step", show_default=True)
+def cli_train_model(
+    data_directory,
+    nb_min_date = 10,
+    min_last_date_training="2018-01-01",
+    max_last_date_training="2018-06-01",
+    path_vi=None,
+    path_masks = None,
+    ):
+    """
+    Train vegetation index model
+    \f
+
+    Parameters
+    ----------
+    data_directory
+    nb_min_date
+    min_last_date_training
+    max_last_date_training
+    path_vi
+    path_masks
+
+    Returns
+    -------
+    """
+    train_model(data_directory,nb_min_date,min_last_date_training,max_last_date_training,path_vi,path_masks)
+
+
 def train_model(
     data_directory,
     nb_min_date = 10,
@@ -95,7 +122,7 @@ def train_model(
 if __name__ == '__main__':
     # print(dictArgs)
     # start_time = time.time()
-    train_model()
+    cli_train_model()
     # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
 
 

@@ -21,6 +21,29 @@ from fordead.decline_detection import detection_anomalies, prediction_vegetation
                     help="Chosen vegetation index, only useful if step1 was skipped", show_default=True)
 @click.option("--path_dict_vi",  type=str, default=None,
                     help="Path of text file to add vegetation index formula, only useful if step1 was skipped", show_default=True)
+def cli_decline_detection(
+    data_directory,
+    threshold_anomaly=0.16,
+    vi = None,
+    path_dict_vi = None
+    ):
+    """
+    Produce the anomaly detection from the model
+    \f
+    Parameters
+    ----------
+    data_directory
+    threshold_anomaly
+    vi
+    path_dict_vi
+
+    Returns
+    -------
+
+    """
+    decline_detection(data_directory, threshold_anomaly, vi, path_dict_vi)
+
+
 def decline_detection(
     data_directory,
     threshold_anomaly=0.16,
@@ -103,5 +126,5 @@ def decline_detection(
 if __name__ == '__main__':
     # print(dictArgs)
     # start_time = time.time()
-    decline_detection()
+    cli_decline_detection()
     # print("Temps d execution : %s secondes ---" % (time.time() - start_time))

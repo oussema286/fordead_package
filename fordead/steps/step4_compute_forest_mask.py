@@ -26,6 +26,39 @@ from fordead.writing_data import write_tif
                     help="List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'", show_default=True)
 @click.option("--path_example_raster",  type=str, default=None,
                     help="Path to raster from which to copy the extent, resolution, CRS...", show_default=True)
+def cli_compute_forest_mask(data_directory,
+                        forest_mask_source = None,
+
+                        list_forest_type = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"],
+                        dep_path = None,
+                        bdforet_dirpath = None,
+                        
+                        path_oso = None,
+                        list_code_oso = [32],
+                        
+                        path_example_raster = None
+                        ):
+    """
+    Compute forest mask
+    \f
+    Parameters
+    ----------
+    data_directory
+    forest_mask_source
+    list_forest_type
+    dep_path
+    bdforet_dirpath
+    path_oso
+    list_code_oso
+    path_example_raster
+
+    Returns
+    -------
+
+    """
+    compute_forest_mask(data_directory, forest_mask_source, list_forest_type, dep_path, bdforet_dirpath, path_oso, list_code_oso, path_example_raster)
+
+
 def compute_forest_mask(data_directory,
                         forest_mask_source = None,
 
@@ -89,5 +122,5 @@ def compute_forest_mask(data_directory,
 if __name__ == '__main__':
     # print(dictArgs)
     # start_time_debut = time.time()
-    compute_forest_mask()
+    cli_compute_forest_mask()
     # print("Computing forest mask : %s secondes ---" % (time.time() - start_time_debut))

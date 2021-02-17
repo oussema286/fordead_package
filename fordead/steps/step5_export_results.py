@@ -21,6 +21,35 @@ from fordead.writing_data import get_bins, convert_dateindex_to_datenumber, get_
                     help="If activated, results relating to soil detection are exported. Results of soil detection have to be computed and written in previous steps", show_default=True)
 @click.option("--multiple_files",  is_flag=True,
                     help="If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline", show_default=True)
+def cli_export_results(
+    data_directory,
+    start_date = '2015-06-23',
+    end_date = "2022-01-02",
+    frequency = 'M',
+    export_soil = False,
+    multiple_files = False
+    ):
+    """
+    Export results to files
+    \f
+
+    Parameters
+    ----------
+    data_directory
+    start_date
+    end_date
+    frequency
+    export_soil
+    multiple_files
+
+    Returns
+    -------
+
+    """
+    export_results(data_directory, start_date, end_date, frequency, export_soil, multiple_files)
+
+
+
 def export_results(
     data_directory,
     start_date = '2015-06-23',
@@ -87,5 +116,5 @@ def export_results(
     tile.save_info()
 
 if __name__ == '__main__':
-    export_results()
+    cli_export_results()
     

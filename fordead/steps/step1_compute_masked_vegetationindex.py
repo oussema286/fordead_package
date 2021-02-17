@@ -37,6 +37,39 @@ from fordead.writing_data import write_tif
 @click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
 @click.option("--extent_shape_path", type = str,default = None, help = "Path of shapefile used as extent of detection, if None, the whole tile is used", show_default=True)
 @click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
+def cli_compute_masked_vegetationindex(
+    input_directory,
+    data_directory,
+    lim_perc_cloud=0.4,
+    interpolation_order = 0,
+    sentinel_source = "THEIA",
+    apply_source_mask = False,
+    vi = "CRSWIR",
+    extent_shape_path=None,
+    path_dict_vi = None
+    ):
+    """
+    Compute masks and masked vegetation index
+    \f
+    Parameters
+    ----------
+    input_directory
+    data_directory
+    lim_perc_cloud
+    interpolation_order
+    sentinel_source
+    apply_source_mask
+    vi
+    extent_shape_path
+    path_dict_vi
+
+    Returns
+    -------
+
+    """
+    compute_masked_vegetationindex(input_directory,data_directory, lim_perc_cloud, interpolation_order, sentinel_source, apply_source_mask, vi, extent_shape_path, path_dict_vi)
+
+
 def compute_masked_vegetationindex(
     input_directory,
     data_directory,
@@ -137,7 +170,7 @@ def compute_masked_vegetationindex(
     
 if __name__ == '__main__':
     # start_time_debut = time.time()
-    compute_masked_vegetationindex()
+    cli_compute_masked_vegetationindex()
     # print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
 
 
