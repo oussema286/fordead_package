@@ -24,7 +24,7 @@ from plotly.offline import plot
 #  IMPORT LIBRAIRIES PERSO
 # =============================================================================
 
-from fordead.timelapse import CreateTimelapse
+from fordead.timelapse import CreateTimelapse, polygon_from_coordinate_and_radius
 from fordead.ImportData import TileInfo
 
 # =============================================================================
@@ -57,7 +57,7 @@ DictCol={'C' : "white",
 #         2 : "black",
 #         3 : "blue"}
 
-def create_timelapse(data_directory,shape_path, obs_terrain_path):
+def create_timelapse(data_directory, obs_terrain_path,shape_path = None, coordinates = None, radius = None):
     
     
     tile = TileInfo(data_directory)
@@ -68,8 +68,15 @@ def create_timelapse(data_directory,shape_path, obs_terrain_path):
 
 
     tile.save_info()
-    ShapeInteret=gp.read_file(shape_path)
-    ShapeInteret=ShapeInteret.to_crs(crs = tile.raster_meta["attrs"]["crs"])
+    
+    if coordinates is not None and radius is not None:
+        ShapeInteret=polygon_from_coordinate_and_radius(coordinates, radius, tile.raster_meta["attrs"]["crs"] )
+        
+    elif shape_path is not None:
+        ShapeInteret=gp.read_file(shape_path)
+        ShapeInteret=ShapeInteret.to_crs(crs = tile.raster_meta["attrs"]["crs"])
+    else:
+        raise Exception("No shape_path or coordinates + radius")
 
     for ShapeIndex in range(ShapeInteret.shape[0]):
         Shape=ShapeInteret.iloc[ShapeIndex:(ShapeIndex+1)]

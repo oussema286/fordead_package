@@ -11,6 +11,7 @@ import xarray as xr
 import rasterio
 from affine import Affine
 import numpy as np
+from shapely.geometry import Polygon
 
 from fordead.ImportData import import_resampled_sen_stack, import_soil_data, import_decline_data, import_forest_mask
 
@@ -22,7 +23,14 @@ def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"]):
     stack_rgb=stack_rgb.transpose("Time", 'y', 'x',"band")
     return stack_rgb
 
-
+def polygon_from_coordinate_and_radius(coordinates, radius, crs):
+    lon_point_list = [coordinates[0]-radius,coordinates[0]+radius,coordinates[0]+radius,coordinates[0]-radius,coordinates[0]-radius,coordinates[0]-radius]
+    lat_point_list = [coordinates[1]+radius,coordinates[1]+radius,coordinates[1]-radius,coordinates[1]-radius,coordinates[1]+radius,coordinates[1]-radius]
+    
+    polygon_geom = Polygon(zip(lon_point_list, lat_point_list))
+    polygon = gp.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom])
+    return polygon
+    
     
 def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
         NbData=4
