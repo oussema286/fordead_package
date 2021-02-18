@@ -129,6 +129,9 @@ def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 
         for point_index in range(len(shape)):
             id_point = shape.iloc[point_index]["id"]
             geometry_point = shape.iloc[point_index]["geometry"]
+            print(id_point)
+            print(geometry_point)
+            print(point_index)
             
             if forest_mask.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest"):
                 xy_first_detection_date_index = int(first_detection_date_index.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest"))
