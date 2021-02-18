@@ -10,3 +10,5 @@
 - [x] ex_computing masked_vegetation_index
 - [ ] ex_read_tileinfo
 - [ ] process_tile
+## Development
+- [ ] Remove period_ind from result shapefile
