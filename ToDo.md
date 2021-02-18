@@ -12,3 +12,4 @@
 - [ ] process_tile
 ## Development
 - [ ] Remove period_ind from result shapefile
+- [ ] Allow timelapse creation from coordinate and radius
