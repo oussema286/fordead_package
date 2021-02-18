@@ -94,11 +94,11 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         return fig
 
 
-def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 2):
+def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 2, chunks = None):
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    chunks = None
+    
     
     stack_vi, stack_masks = import_stackedmaskedVI(tile,chunks = chunks)
     stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
