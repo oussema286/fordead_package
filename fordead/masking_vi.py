@@ -161,10 +161,10 @@ def get_dict_vi(path_dict_vi = None):
         dict_vi.update(d)
     return dict_vi
 
-def get_bands_and_formula(vi, path_dict_vi):
+def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
     formula = get_dict_vi(path_dict_vi)[vi]["formula"]
     match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
-    bands = list(set(["B2","B3","B4","B11","B8A"] + ["B"+band for band in re.findall(match_string, formula)]))
+    bands = list(set(forced_bands + ["B"+band for band in re.findall(match_string, formula)]))
     return bands, formula
     
 

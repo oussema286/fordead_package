@@ -279,7 +279,7 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
             cloudiness.perc_cloud[date] = get_date_cloudiness_perc(dict_path_bands[date], sentinel_source)
             
     cloudiness.save_info(path_cloudiness)
-    return cloudiness
+    return cloudiness.perc_cloud
 
 def get_date_cloudiness_perc(date_paths, sentinel_source):
     """
