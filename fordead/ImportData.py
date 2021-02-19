@@ -288,10 +288,24 @@ class TileInfo:
         
 def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
     """
-    For every date in dict_path_bands (which is meant to contain each date available in the sentinel data directory), computes the cloudiness percentage from the mask at path dict_path_bands[date]["Mask"] if it was not already computed and stored at path_cloudiness in a TileInfo object.
-    Returns a dictionnary where the key is the date and the value is the cloudiness percentage.
+    Imports, computes and stores cloudiness for all dates
+    
+    Parameters
+    ----------
+    path_cloudiness : str
+        Path where the TileInfo object storing cloudiness information for each date is saved and imported from.
+    dict_path_bands : dict
+        Dictionnary where keys are dates, values are another dictionnary where keys are bands and values are their paths (dict_path_bands["YYYY-MM-DD"]["Mask"] -> Path to the mask)
+    sentinel_source : str
+        'THEIA', 'Scihub' or 'PEPS'
+
+    Returns
+    -------
+    dict
+        Dictionnary where keys are dates and values the cloudiness percentage
 
     """
+    
     path_cloudiness= Path(path_cloudiness)
     cloudiness = TileInfo(path_cloudiness.parent)
     if path_cloudiness.exists():
@@ -308,7 +322,24 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
 def get_date_cloudiness_perc(date_paths, sentinel_source):
     """
     Computes cloudiness percentage of a Sentinel-2 date from the source mask (THEIA CLM or PEPS, scihub SCL)
+    A 20m resolution band is necessary for THEIA data to determine swath cover. B11 is used but could be replaced with another 20m band.
+    For THEIA, all pixels different to 0 in the mask are considered cloudy
+    For Scihub and PEPS, all pixels different to 4 or 5 in the mask are considered cloudy
+    
+    Parameters
+    ----------
+    date_paths : Dictionnary where keys are bands and values are their paths
+        DESCRIPTION.
+    sentinel_source : TYPE
+        'THEIA', 'Scihub' or 'PEPS'
+
+    Returns
+    -------
+    float
+        Cloudiness percentage
+
     """
+    
 
     if sentinel_source=="THEIA":
         tile_mask_info = xr.Dataset({"mask": xr.open_rasterio(date_paths["Mask"]),
@@ -360,8 +391,27 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
 
 
 def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, extent = None):
+    """
+    Imports and resamples the bands as an xarray
+
+    Parameters
+    ----------
+    band_paths : dict
+        Dictionnary where keys are bands and values are their paths
+    list_bands : list
+        List of bands to be imported
+    interpolation_order : int, optional
+        Order of interpolation as used in scipy's ndimage.zoom (0 = nearest neighbour, 1 = linear, 2 = bi-linear, 3 = cubic). The default is 0.
+    extent : list or 1D array, optional
+        Extent used for cropping [xmin,ymin, xmax,ymax] The default is None.
+
+    Returns
+    -------
+    concatenated_stack_bands : xarray
+        3D xarray with dimensions x,y and band
+
+    """
     #Importing data from files
-    
     if extent is None:
             stack_bands = [xr.open_rasterio(band_paths[band]) for band in list_bands]
     else:
