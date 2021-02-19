@@ -87,7 +87,17 @@ def retrieve_date_from_string(string):
 class TileInfo:
     def __init__(self, data_directory):
         """
-        Initialize TileInfo object, deletes previous results if they exist.
+        Initialize TileInfo object. This object is meant to store all relevant information (paths to input and output data, parameters used, used SENTINEL dates)
+        
+        Parameters
+        ----------
+        data_directory : str
+            Path of a directory. This directory will be created if it doesn't exist, it is meant to be where the TileInfo object will be saved, though it doesn't have to be. 
+
+        Returns
+        -------
+        None.
+
         """
         self.data_directory = Path(data_directory)
         self.data_directory.mkdir(parents=True, exist_ok=True)   
@@ -97,9 +107,22 @@ class TileInfo:
 
 
     def import_info(self, path= None):
-        """ Imports TileInfo object in the data_directory, or the one at path if the parameter is given"""
+        """
+        Imports TileInfo object in the data_directory, or the one at path if the parameter is given
+        If no TileInfo object exists, the object remains unchanged
         
-        if path == None:
+        Parameters
+        ----------
+        path : str, optional
+            Path to a TileInfo object to be imported. The default is None.
+
+        Returns
+        -------
+        TileInfo object
+            Imported TileInfo object if one exists already, or current TileInfo object if not.
+        """
+        
+        if path is None:
             path = self.data_directory / "TileInfo"
         if path.exists():
             with open(path, 'rb') as f:
@@ -112,6 +135,7 @@ class TileInfo:
         """
         Saves the TileInfo object in its data_directory by default or in specified location
         """
+        
         if path==None:
             path=self.data_directory / "TileInfo"
         with open(path, 'wb') as f:
@@ -202,6 +226,7 @@ class TileInfo:
     def getdict_paths(self,
                       path_vi, path_masks):
         
+        
         self.getdict_datepaths("VegetationIndex",path_vi)
         self.getdict_datepaths("Masks",path_masks)
         self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
@@ -218,13 +243,12 @@ class TileInfo:
         """
         Adds attribute 'parameters' to TileInfo object which contains dictionnary of parameters and their values.
         If attribute parameters already exists, checks for conflicts then updates parameters
-        In case of conflicts, meaning if parameter was unknown or changed, the parameter 'Overwrite' is set to True and it is advised to remove previous results.
+        In case of conflicts, meaning if parameter was unknown or changed, the parameter 'Overwrite' is set to True and can be used to know when to deleted previous computation results.
 
         Parameters
         ----------
         parameters : dict
             Dictionnary containing parameters and their values
-
 
         """
         if not(hasattr(self, 'parameters')):
