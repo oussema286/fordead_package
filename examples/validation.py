@@ -86,10 +86,6 @@ def validation(main_directory,validation_data_directory, tiles):
     if (main_directory / 'ResultsTable.csv').exists():
         (main_directory / 'ResultsTable.csv').unlink()
     for tile_name in tiles:
-        # stackCRSWIR = 
-        # stackPredictedCRSWIR = 
-        # stackDiff = 
-        # stackStress = 
         
         
         tile = TileInfo(main_directory / tile_name)

@@ -95,6 +95,26 @@ def raster_full(path_example_raster, fill_value, dtype = None):
     return filled_raster
 
 def get_pre_masks(stack_bands):   
+    """
+    Compute pre-masks from single date SENTINEL data
+
+    Parameters
+    ----------
+    stack_bands : xarray DataArray
+        3D xarray with band dimension
+
+    Returns
+    -------
+    soil_anomaly : xarray DataArray
+        Binary DataArray, holds True where soil anomalies are detected
+    shadows : xarray DataArray
+        Binary DataArray, holds True where shadows are detected
+    outside_swath : xarray DataArray
+        Binary DataArray, holds True where pixels are outside swath
+    invalid : xarray DataArray
+        Binary DataArray, aggregates shadows, very visible clouds and pixels outside swath
+
+    """
     
     soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & ((B3 + B4) > 800)")
     # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & (B4 > 600)")
@@ -108,22 +128,62 @@ def get_pre_masks(stack_bands):
     return soil_anomaly, shadows, outside_swath, invalid
 
 
-def detect_soil(soil_data, premask_soil, invalid, date_index):
-    soil_data["count"]=xr.where(~invalid & premask_soil,soil_data["count"]+1,soil_data["count"])
-    soil_data["count"]=xr.where(~invalid & ~premask_soil,0,soil_data["count"])
+def detect_soil(soil_data, soil_anomaly, invalid, date_index):
+    """
+    Updates soil detection using soil anomalies from a new date
+
+    Parameters
+    ----------
+    soil_data : xarray DataSet
+        DataSet where variable "state" is True where pixels are detected as cut, variable "count" gives the number of successive soil anomalies, and "first_date" gives the date index of the first anomaly
+    soil_anomaly : xarray DataArray
+        Binary DataArray, holds True where soil anomalies are detected
+    invalid : xarray DataArray
+        Binary DataArray, aggregates shadows, very visible clouds and pixels outside swath
+    date_index : int
+        Index of the date
+
+    Returns
+    -------
+    soil_data : xarray DataSet
+        Updated soil_data DataSet
+
+    """
+    
+    soil_data["count"]=xr.where(~invalid & soil_anomaly,soil_data["count"]+1,soil_data["count"])
+    soil_data["count"]=xr.where(~invalid & ~soil_anomaly,0,soil_data["count"])
     soil_data["state"] = xr.where(soil_data["count"] == 3, True, soil_data["state"])
     soil_data["first_date"] = xr.where(~invalid & (soil_data["count"] == 1) & ~soil_data["state"],date_index,soil_data["first_date"]) #Keeps index of first soil detection
     
     return soil_data
 
 
-def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
+def detect_clouds(stack_bands, soil_state, soil_anomaly):
+    """
+    Detects clouds, is meant to detect even faint clouds in resinous forest by removing detected soil and using a 3 pixels dilation
+
+    Parameters
+    ----------
+    stack_bands : xarray DataArray
+        3D xarray with band dimension
+    soil_state : xarray DataArray
+        DataArray which holds True where pixels are detected as cut
+    soil_anomaly : xarray DataArray
+        Binary DataArray, holds True where soil anomalies are detected
+
+    Returns
+    -------
+    clouds : xarray DataArray
+        Binary DataArray mask, holds True where clouds are detected
+
+    """
+    
     # NG = stack_bands.sel(band = "B3")/(stack_bands.sel(band = "B8A")+stack_bands.sel(band = "B4")+stack_bands.sel(band = "B3"))
     NG = compute_vegetation_index(stack_bands, formula = "B3/(B8A+B4+B3)")
     cond1 = NG > 0.15
     cond2 = stack_bands.sel(band = "B2") > 400
     cond3 = stack_bands.sel(band = "B2") > 700
-    cond4 =  ~(soil_data["state"] | premask_soil) #Not detected as soil
+    cond4 =  ~(soil_state | soil_anomaly) #Not detected as soil
     
     clouds = cond4 & (cond3 | (cond1 & cond2))    
     clouds[:,:] = ndimage.binary_dilation(clouds,iterations=3,structure=ndimage.generate_binary_structure(2, 1)) # 3 pixels dilation of cloud mask
@@ -132,17 +192,36 @@ def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
 
 
 def compute_masks(stack_bands, soil_data, date_index):
+    """
+    Computes mask from SENTINEL data, includes updated soil detection, clouds, shadows and pixels outside swath
+
+    Parameters
+    ----------
+    stack_bands : xarray DataArray
+        3D xarray with band dimension
+    soil_data : xarray DataSet
+        DataSet where variable "state" is True where pixels are detected as cut, variable "count" gives the number of successive soil anomalies, and "first_date" gives the date index of the first anomaly
+    date_index : int
+        Index of the date
+
+    Returns
+    -------
+    mask : xarray DataArray
+        Binary DataArray, holds True where pixels are masked
+
+    """
     
-    premask_soil, shadows, outside_swath, invalid = get_pre_masks(stack_bands)
+    
+    soil_anomaly, shadows, outside_swath, invalid = get_pre_masks(stack_bands)
     
     # Compute soil
-    soil_data = detect_soil(soil_data, premask_soil, invalid, date_index)
+    soil_data = detect_soil(soil_data, soil_anomaly, invalid, date_index)
         
     # Compute clouds
-    clouds = detect_clouds(stack_bands, outside_swath, soil_data, premask_soil)
+    clouds = detect_clouds(stack_bands, soil_data["state"], soil_anomaly)
     
     #Combine all masks
-    mask = shadows | clouds | outside_swath | soil_data['state'] | premask_soil
+    mask = shadows | clouds | outside_swath | soil_data['state'] | soil_anomaly
     # mask.plot()
     
     return mask
