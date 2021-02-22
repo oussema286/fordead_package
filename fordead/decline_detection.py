@@ -102,6 +102,46 @@ def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, p
             
     return anomalies
 
+
+
+def detection_decline_validation(decline_data, anomalies, mask, date_index, raster_binary_validation_data):
+    """
+    Updates decline data using anomalies.
+    
+    Parameters
+    ----------
+    decline_data : Dataset with three arrays : 
+        "count" which is the number of successive anomalies, 
+        "state" which is True where pixels are detected as declining, 
+        "first date" which contains the index of the date of the first anomaly.
+    anomalies : array (x,y) (bool)
+        Array, pixel value is True if an anomaly is detected.
+    mask : array (x,y) (bool)
+        Array, True where pixels are masked
+    date_index : int
+        Index of the date
+
+    Returns
+    -------
+    decline_data : Dataset
+        Dataset with the three arrays updated with the results from the date being analysed
+
+    """
+   
+    decline_data["count"] = xr.where(~mask & (anomalies!=decline_data["state"]),decline_data["count"]+1,decline_data["count"])
+    decline_data["count"] = xr.where(~mask & (anomalies==decline_data["state"]),0,decline_data["count"])
+    
+    changes = decline_data["state"].where(~mask & (decline_data["count"]==3)).data[raster_binary_validation_data]
+    
+    decline_data["state"] = xr.where(~mask & (decline_data["count"]==3), ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
+        
+    decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
+    decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & ~decline_data["state"], date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+   
+    
+    return decline_data, changes
+
+
 def detection_decline(decline_data, anomalies, mask, date_index):
     """
     Updates decline data using anomalies.
@@ -134,9 +174,6 @@ def detection_decline(decline_data, anomalies, mask, date_index):
     decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
     decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & ~decline_data["state"], date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
    
-    # print(int(decline_data["count"][40,40]))
-    # print(int(decline_data["first_date"][40,40]))
-    # print(int(decline_data["state"][40,40]))
     
     return decline_data
 
