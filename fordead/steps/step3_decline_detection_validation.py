@@ -191,11 +191,11 @@ def decline_detection(
                 d1 = {'IdZone': raster_id_validation_data.data[raster_binary_validation_data],
                       "IdPixel" : range(nb_pixels),
                       "Date" : [date]*nb_pixels,
-                      'Etat': soil.data[raster_binary_validation_data],
-                      "CRSWIR" : (masked_vi["vegetation_index"].data)[raster_binary_validation_data],
+                      'State': soil.data[raster_binary_validation_data],
+                      "vi" : (masked_vi["vegetation_index"].data)[raster_binary_validation_data],
                       "Mask" : (masked_vi["mask"].data)[raster_binary_validation_data],
                       "Anomalies" : anomalies.data[raster_binary_validation_data],
-                      "PredictedCRSWIR" : predicted_vi.squeeze("Time").data[raster_binary_validation_data],
+                      "Predicted_vi" : predicted_vi.squeeze("Time").data[raster_binary_validation_data],
                       "Change" : [index if np.isnan(index) else tile.dates[int(index)] for index in changes]}
                       # "DiffSeuil" : stackDiff[dateIndex,:,:][raster_binary_validation_data],
                       # "EtatStress" : stackStress[dateIndex,:,:][raster_binary_validation_data]}
@@ -203,7 +203,7 @@ def decline_detection(
                 Results = pd.DataFrame(data=d1)
                 
                 # print("to dataframe")
-                Results.to_csv(tile.paths["validation"] / 'ResultsTable.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'ResultsTable.csv').exists()))
+                Results.to_csv(tile.paths["validation"] / 'Evolution_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'ResultsTable.csv').exists()))
                     
             tile.last_computed_anomaly = new_dates[-1]
                     
@@ -220,11 +220,12 @@ def decline_detection(
                   "coeff4" : coeff_model.sel(coeff = 4).data[raster_binary_validation_data],
                   "coeff5" : coeff_model.sel(coeff = 5).data[raster_binary_validation_data],
                   "valid" : valid_area_mask.data[raster_binary_validation_data],
-                  "vi" : tile.parameters["vi"]
+                  "Vegetation_Index" : tile.parameters["vi"],
+                  "threshold_anomaly" : tile.parameters["threshold_anomaly"]
                   }
             
             Results2 = pd.DataFrame(data=d2)
-            Results2.to_csv(tile.paths["validation"] / 'ResultsTable2.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'ResultsTable2.csv').exists()))
+            Results2.to_csv(tile.paths["validation"] / 'Pixel_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'ResultsTable2.csv').exists()))
                     
             # print("Détection du déperissement")
         tile.save_info()

@@ -136,7 +136,7 @@ def detection_decline_validation(decline_data, anomalies, mask, date_index, rast
     decline_data["state"] = xr.where(~mask & (decline_data["count"]==3), ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
         
     decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
-    decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & ~decline_data["state"], date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+    decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1), date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
    
     
     return decline_data, changes
