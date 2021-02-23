@@ -63,7 +63,7 @@ def get_rasterized_validation_data(path_shape, raster_metadata, ValidationObs):
         rasterized_validation_data = rasterio.features.rasterize(ScolytesTerrain_jsonMask,out_shape = (raster_metadata["sizes"]["y"],raster_metadata["sizes"]["x"]) ,dtype="int16",transform=raster_metadata["attrs"]['transform'])  
                                       
     else:
-        rasterized_validation_data = np.zeros((raster_metadata["sizes"]["x"],raster_metadata["sizes"]["y"]),dtype="uint8")
+        rasterized_validation_data = np.zeros((raster_metadata["sizes"]["y"],raster_metadata["sizes"]["x"]),dtype="uint8")
     
     return xr.DataArray(rasterized_validation_data,coords={"y" : raster_metadata["coords"]["y"],"x" : raster_metadata["coords"]["x"]}, dims=["y","x"])
 
@@ -128,8 +128,9 @@ def decline_detection(
     tile = tile.import_info()
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly})
     if tile.parameters["Overwrite"] : 
-        tile.delete_dirs("AnomaliesDir","state_decline" ,"periodic_results_decline","result_files","timelapse","series") #Deleting previous detection results if they exist
+        tile.delete_dirs("AnomaliesDir","state_decline" ,"periodic_results_decline","result_files","timelapse","series", "validation") #Deleting previous detection results if they exist
         if hasattr(tile, "last_computed_anomaly"): delattr(tile, "last_computed_anomaly")
+            
     if vi==None : vi = tile.parameters["vi"]
     if path_dict_vi==None : path_dict_vi = tile.parameters["path_dict_vi"] if "path_dict_vi" in tile.parameters else None
     
@@ -140,11 +141,8 @@ def decline_detection(
     tile.add_path("state_decline", tile.data_directory / "DataDecline" / "state_decline.tif")
     tile.add_path("first_date_decline", tile.data_directory / "DataDecline" / "first_date_decline.tif")
     tile.add_path("count_decline", tile.data_directory / "DataDecline" / "count_decline.tif")
-        
-    if (tile.data_directory / 'ResultsTable.csv').exists():
-        (tile.data_directory / 'ResultsTable.csv').unlink()
-    if (tile.data_directory / 'ResultsTable2.csv').exists():
-        (tile.data_directory / 'ResultsTable2.csv').unlink()
+    tile.add_dirpath("validation", tile.data_directory / "Validation")
+
         
     # raster_id_validation_data=get_rasterized_validation_data(validation_data_directory / ("scolyte"+tile_name[1:]+".shp"), raster_metadata, False)
     valid_area_mask = import_forest_mask(tile.paths["valid_area_mask"])
@@ -198,14 +196,14 @@ def decline_detection(
                       "Mask" : (masked_vi["mask"].data)[raster_binary_validation_data],
                       "Anomalies" : anomalies.data[raster_binary_validation_data],
                       "PredictedCRSWIR" : predicted_vi.squeeze("Time").data[raster_binary_validation_data],
-                      "Change" : changes}
+                      "Change" : [index if np.isnan(index) else tile.dates[int(index)] for index in changes]}
                       # "DiffSeuil" : stackDiff[dateIndex,:,:][raster_binary_validation_data],
                       # "EtatStress" : stackStress[dateIndex,:,:][raster_binary_validation_data]}
                 
                 Results = pd.DataFrame(data=d1)
                 
                 # print("to dataframe")
-                Results.to_csv(tile.data_directory / 'ResultsTable.csv', mode='a', index=False,header=not((tile.data_directory / 'ResultsTable.csv').exists()))
+                Results.to_csv(tile.paths["validation"] / 'ResultsTable.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'ResultsTable.csv').exists()))
                     
             tile.last_computed_anomaly = new_dates[-1]
                     
@@ -226,7 +224,7 @@ def decline_detection(
                   }
             
             Results2 = pd.DataFrame(data=d2)
-            Results2.to_csv(tile.data_directory / 'ResultsTable2.csv', mode='a', index=False,header=not((tile.data_directory / 'ResultsTable2.csv').exists()))
+            Results2.to_csv(tile.paths["validation"] / 'ResultsTable2.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'ResultsTable2.csv').exists()))
                     
             # print("Détection du déperissement")
         tile.save_info()

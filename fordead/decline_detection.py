@@ -131,7 +131,7 @@ def detection_decline_validation(decline_data, anomalies, mask, date_index, rast
     decline_data["count"] = xr.where(~mask & (anomalies!=decline_data["state"]),decline_data["count"]+1,decline_data["count"])
     decline_data["count"] = xr.where(~mask & (anomalies==decline_data["state"]),0,decline_data["count"])
     
-    changes = decline_data["state"].where(~mask & (decline_data["count"]==3)).data[raster_binary_validation_data]
+    changes = decline_data["first_date"].where(~mask & (decline_data["count"]==3)).data[raster_binary_validation_data]
     
     decline_data["state"] = xr.where(~mask & (decline_data["count"]==3), ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
         
