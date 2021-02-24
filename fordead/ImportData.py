@@ -403,7 +403,7 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
     interpolation_order : int, optional
         Order of interpolation as used in scipy's ndimage.zoom (0 = nearest neighbour, 1 = linear, 2 = bi-linear, 3 = cubic). The default is 0.
     extent : list or 1D array, optional
-        Extent used for cropping [xmin,ymin, xmax,ymax] The default is None.
+        Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
 
     Returns
     -------

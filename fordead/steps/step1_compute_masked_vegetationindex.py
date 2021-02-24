@@ -157,7 +157,8 @@ def compute_masked_vegetationindex(
                     
                 # Compute vegetation index
                 vegetation_index = compute_vegetation_index(stack_bands, formula = formula)
-        
+                vegetation_index = compute_vegetation_index(stack_bands, formula = "np.sqrt(B2)")
+
                 # Masking invalid values (division by zero)
                 invalid_values = vegetation_index.isnull() | np.isinf(vegetation_index)
                 vegetation_index = vegetation_index.where(~invalid_values,0)

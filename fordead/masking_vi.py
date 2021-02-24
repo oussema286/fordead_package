@@ -5,6 +5,7 @@ Created on Fri Nov 20 17:29:17 2020
 @author: Raphael Dutrieux
 """
 import xarray as xr
+import numpy as np
 import re
 from pathlib import Path
 import json
@@ -227,6 +228,23 @@ def compute_masks(stack_bands, soil_data, date_index):
     return mask
 
 def get_dict_vi(path_dict_vi = None):
+    """
+    Imports dictionnary containing formula of vegetation indices, as well as the way it changes in case of decline
+
+    Parameters
+    ----------
+    path_dict_vi : str, optional
+        Path of the text file. 
+        Each line of the text file corresponds to an index, in the format "INDEX_NAME FORMULA SIGN".
+        FORMULA corresponds to a formula as can be used in the function compute_vegetation_index, SIGN can be - or +. The default is None.
+
+    Returns
+    -------
+    dict_vi : dict
+        Dictionnary containing formula of vegetation indices, as well as the way it changes in case of decline
+
+    """
+    
     dict_vi = {"CRSWIR" : {'formula': 'B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))', 'decline_change_direction': '+'},
                 "NDVI" : {'formula': '(B8-B4)/(B8+B4)', 'decline_change_direction': '-'},
                 "BSI" : {"formula" : '(B4 + B2 - B3)/(B4 + B2 + B3)', 'decline_change_direction' : '-'}}
@@ -248,7 +266,31 @@ def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
     
 
 def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_dict_vi = None):
-    
+    """
+    Computes vegetation index
+
+    Parameters
+    ----------
+    stack_bands : xarray DataArray
+        3D xarray with band dimension
+    vi : str, optional
+        Name of vegetation index, see get_dict_vi documentation to know available vegetation indices. A formula can be given instead The default is "CRSWIR".
+    formula : str, optional
+        Formula used to calculate the vegetation index. Bands can be called by their name. All operations on xarrays and using numpy functions are possible.
+        Examples :
+            NDVI : formula = '(B8-B4)/(B8+B4)'
+            Squared-root of B2 : formula = 'np.sqrt(B2)'
+            Logical operations :  formula = '(B2 > 600) & (B11 > 1000) | ~(B3 <= 500)'
+            The default is None.
+    path_dict_vi : str, optional
+        Path to a text file containing vegetation indices formulas so they can be used using 'vi' parameter. See get_dict_vi documentation. The default is None.
+
+    Returns
+    -------
+    xarray DataArray
+        Computed vegetation index
+
+    """
     if formula is None:
         dict_vegetation_index = get_dict_vi(path_dict_vi)
         formula = dict_vegetation_index[vi]["formula"]

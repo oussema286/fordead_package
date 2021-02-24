@@ -15,6 +15,25 @@ from affine import Affine
 import geopandas as gp
 
 def write_tif(data_array, attributes, path, nodata = None):
+    """
+    Writes raster to the disk
+
+    Parameters
+    ----------
+    data_array : xarray DataArray
+        Object to be written
+    attributes : dict
+        Dictionnary containing attributes used to write the data_array ("crs","nodata","scales","offsets")
+    path : str
+        Path of the file to which data will be written
+    nodata : int or float, optional
+        Number used as nodata. If None, the nodata attribute of the object will be kept. The default is None.
+
+    Returns
+    -------
+    None.
+
+    """
     data_array.attrs=attributes
     data_array.attrs["crs"]=data_array.crs.replace("+init=","") #Remove "+init=" which it deprecated
 
