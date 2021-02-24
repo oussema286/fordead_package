@@ -8,7 +8,7 @@ Created on Mon Nov  2 09:25:23 2020
 
 import click
 # import numpy as np
-from fordead.ImportData import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask, import_soil_data
+from fordead.ImportData import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask, import_soil_data,import_resampled_sen_stack
 from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline_validation
 # from pathlib import Path
@@ -169,12 +169,15 @@ def decline_detection(
             else:
                 decline_data = initialize_decline_data(first_detection_date_index.shape,first_detection_date_index.coords)
             soil_data = import_soil_data(tile.paths)
-            
+           
             #DECLINE DETECTION
             for date_index, date in enumerate(tile.dates):
                 masked_vi = import_masked_vi(tile.paths, date)
                 soil = (soil_data["first_date"] <= date_index) & soil_data["state"]
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
+                B2 = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2"], interpolation_order = 0, extent = tile.raster_meta["extent"])
+
+                
                 if date not in new_dates:
                     anomalies = xr.DataArray(np.zeros(first_detection_date_index.shape,dtype=bool),coords={"y" : tile.raster_meta["coords"]["y"],"x" : tile.raster_meta["coords"]["x"]}, dims=["y","x"])
                     changes = [nan]*nb_pixels
@@ -194,7 +197,8 @@ def decline_detection(
                       'State': soil.data[raster_binary_validation_data],
                       "vi" : (masked_vi["vegetation_index"].data)[raster_binary_validation_data],
                       "Mask" : (masked_vi["mask"].data)[raster_binary_validation_data],
-                      "Anomalies" : anomalies.data[raster_binary_validation_data],
+                      "outside_swath" : B2.squeeze("band").data[raster_binary_validation_data]==-10000,
+                      "Anomaly" : anomalies.data[raster_binary_validation_data],
                       "Predicted_vi" : predicted_vi.squeeze("Time").data[raster_binary_validation_data],
                       "Change" : [index if np.isnan(index) else tile.dates[int(index)] for index in changes]}
                       # "DiffSeuil" : stackDiff[dateIndex,:,:][raster_binary_validation_data],
@@ -203,7 +207,7 @@ def decline_detection(
                 Results = pd.DataFrame(data=d1)
                 
                 # print("to dataframe")
-                Results.to_csv(tile.paths["validation"] / 'Evolution_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'ResultsTable.csv').exists()))
+                Results.to_csv(tile.paths["validation"] / 'Evolution_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'Evolution_data.csv').exists()))
                     
             tile.last_computed_anomaly = new_dates[-1]
                     
@@ -220,12 +224,13 @@ def decline_detection(
                   "coeff4" : coeff_model.sel(coeff = 4).data[raster_binary_validation_data],
                   "coeff5" : coeff_model.sel(coeff = 5).data[raster_binary_validation_data],
                   "valid" : valid_area_mask.data[raster_binary_validation_data],
+                  "first_detection_date" : tile.dates[first_detection_date_index.data[raster_binary_validation_data]],
                   "Vegetation_Index" : tile.parameters["vi"],
                   "threshold_anomaly" : tile.parameters["threshold_anomaly"]
                   }
             
             Results2 = pd.DataFrame(data=d2)
-            Results2.to_csv(tile.paths["validation"] / 'Pixel_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'ResultsTable2.csv').exists()))
+            Results2.to_csv(tile.paths["validation"] / 'Pixel_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'Pixel_data.csv').exists()))
                     
             # print("Détection du déperissement")
         tile.save_info()
