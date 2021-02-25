@@ -1,8 +1,8 @@
 # To do list
 ## Documentation
 ### Detail steps
-- [ ] step1
-- [ ] step2
+- [x] step1
+- [x] step2
 - [ ] step3
 - [ ] step4
 - [ ] step5
