@@ -45,7 +45,7 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 ## Détail du fonctionnement
 
 ### Imports des résultats précédents, suppression des résultats obsolètes 
-Avant tout, si la chaîne de traitement a déjà été utilisée sur la zone, les informations relatives à ces calculs sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, les résultats des calculs antérieurs sont supprimés et recalculés avec les nouveaux paramètres. 
+Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Ainsi, à moins que les paramètres aient été modifiés, uniquement les calculs suivants sont uniquement réalisés sur les nouvelles dates SENTINEL.
 > **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
 
 ### Filtre des dates trop ennuagées
@@ -87,5 +87,5 @@ L'indice de végétation choisi est calculé.
  > **_Fonctions utilisées :_** [compute_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)
 
  ### Ecriture des résultats
-Les indices de végétations, masques et données de détection du sol sont écrits
- > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif)
+Les indices de végétations, masques et données de détection du sol sont écrits. L'ensemble des paramètres, chemins des données et dates utilisées sont aussi sauvegardés.
+ > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#save_info)
