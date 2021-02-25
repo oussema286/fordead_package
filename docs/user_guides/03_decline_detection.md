@@ -26,3 +26,33 @@ decline_detection(data_directory = <data_directory>)
 fordead decline_detection [OPTIONS]
 ```
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#decline_detection)
+
+### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
+Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Ainsi, à moins que les paramètres aient été modifiés ou que ce soit la première fois que ce traitement est réalisé, la détection du dépérissement est mise à jour uniquement avec les nouvelles dates SENTINEL.
+> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+
+### Imports des résultats des étapes précédentes
+Les coefficients du modèle de prédiction de l'indice de végétation sont importés, ainsi que l'array contenant l'index de la première date utilisée pour la détection. Les arrays contenant les informations liées à la détection de déperissement (État des pixels, nombre d'anomalies successives, index de la date de première anomalie) sont initialisés si l'étape est utilisée pour la première fois, ou importés si il s'agit d'une mise à jour de la détection.
+> **_Fonctions utilisées :_** [import_coeff_model()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_coeff_model), [import_first_detection_date_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_first_detection_date_index), [initialize_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#initialize_decline_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_decline_data)
+
+## Pour chaque date non déjà utilisée pour la détection du dépérissement :
+
+### Imports de l'indice de végétation calculé et du masque
+> **_Fonctions utilisées :_** [import_masked_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_masked_vi)
+
+### Prédiction de l'indice de végétation à la date donnée.
+L'indice de végétation est prédit à partir des coefficients du modèle.
+> **_Fonctions utilisées :_** [prediction_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/decline_detection/#prediction_vegetation_index)
+
+### Détection d'anomalies
+Les anomalies sont détectées en comparant l'indice de végétation avec sa prédiction. Sachant si l'indice de végétation est supposé augmenter ou diminuer en cas de déperissement, les anomalies sont détectées là où la différence entre l'indice et sa prédiction est superieure à **threshold_anomaly** dans la direction du changement attendu en cas de déperissement.
+> **_Fonctions utilisées :_** [detection_anomalies()](https://fordead.gitlab.io/fordead_package/reference/fordead/decline_detection/#detection_anomalies)
+
+### Détection du déperissement
+Les anomalies successives sont comptées, à partir de trois anomalies successives, le pixel est considéré dépérissant. Si le pixel est considéré dépérissant, les dates successives sans anomalies sont comptées et à partir de trois dates sans anomalies, le pixel n'est plus considéré dépérissant.
+> **_Fonctions utilisées :_** [detection_decline()](https://fordead.gitlab.io/fordead_package/reference/fordead/decline_detection/#detection_decline)
+
+ ### Ecriture des résultats
+Les informations liées à la détection du dépérissement sont écrites. L'ensemble des paramètres, chemins des données et dates utilisées sont aussi sauvegardés.
+ > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#save_info)
+
