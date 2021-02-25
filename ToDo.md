@@ -3,7 +3,7 @@
 ### Detail steps
 - [x] step1
 - [x] step2
-- [ ] step3
+- [x] step3
 - [ ] step4
 - [ ] step5
 ### Detail examples with markdown
