@@ -56,27 +56,27 @@ On utilise ensuite uniquement les nouvelles dates dans le dossier **input_direct
 
 ### Import et ré-échantillonage des données SENTINEL
  - Les bandes d'intérêts de ces dates sont importées et ré-échantillonnées à 10m 
-> **_Fonctions utilisées :_** import_resampled_sen_stack()
+> **_Fonctions utilisées :_** [import_resampled_sen_stack()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_resampled_sen_stack)
 
 ### Création du masque
 La création du masque pour chaque date se fait en quatre étapes :
- > **_Fonctions utilisées :_** compute_masks()
+ > **_Fonctions utilisées :_** [compute_masks()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_masks)
 
 ##### Création des prémasques
 Détection d'anomalies de sol : (B11 > 1250) ET (B2 < 600) ET ((B3 + B4) > 800)
 Détection des ombres :  0 dans n'importe laquelle des bandes
 Détection des zones hors de la fauchée du satellite : Valeur inférieure à 0 dans une des bandes (vaut normalement -10000 pour les données THEIA) 
 Invalides : aggregation des ombres, hors fauchée et nuages très marqués (B2 >= 600)
- > **_Fonctions utilisées :_** get_pre_masks()
+ > **_Fonctions utilisées :_** [get_pre_masks()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#get_pre_masks)
 
 ##### Détection du sol nu
 Trois dates consécutives avec anomalies de sol (soil_anomaly vaut True) sans compter dates invalides (invalid vaut True)
- > **_Fonctions utilisées :_** detect_soil()
+ > **_Fonctions utilisées :_** [detect_soil()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#detect_soil)
 
 ##### Détection des nuages
 Pour détecter les nuages, on prend l'ensemble des nuages bien marqués (B2 > 700)
 On ajoute les voiles nuages plus fins $`\frac{B3}{B8A+B4+B3} >0.15`$ ET $`B2 >400`$ en retirant les pixels détectés comme sol nu ou anomalie de sol avec lesquels il peut y avoir confusion. Puis on opére une dilation de trois pixels pour récupérer les bords des nuages.
- > **_Fonctions utilisées :_** detect_clouds()
+ > **_Fonctions utilisées :_** [detect_clouds()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#detect_clouds)
 
 ##### Aggrégation des masques
 Aggrégation des ombres, des nuages, des pixels hors de la fauchée, du sol nu, des anomalies de sol nu.
@@ -84,8 +84,8 @@ Si apply_source_mask vaut True, le masque fournisseur est également appliqué.
 
 ### Calcul de l'indice de végétation
 L'indice de végétation choisi est calculé.
- > **_Fonctions utilisées :_** compute_vegetation_index()
+ > **_Fonctions utilisées :_** [compute_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)
 
  ### Ecriture des résultats
 Les indices de végétations, masques et données de détection du sol sont écrits
- > **_Fonctions utilisées :_** write_tif()
+ > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif)
