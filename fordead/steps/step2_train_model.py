@@ -97,7 +97,7 @@ def train_model(
                             path_masks = tile.paths["MaskDir"])
         
         # Import des index de végétations et des masques
-        stack_vi, stack_masks = import_stackedmaskedVI(tile, max_last_date_training=max_last_date_training, chunks = 1280)
+        stack_vi, stack_masks = import_stackedmaskedVI(tile, max_date=max_last_date_training, chunks = 1280)
    
         detection_dates, first_detection_date_index = get_detection_dates(stack_masks,
                                               min_last_date_training = min_last_date_training,
@@ -107,7 +107,7 @@ def train_model(
         #Fusion du masque forêt et des zones non utilisables par manque de données
         valid_area_mask = first_detection_date_index!=0
         
-        # Modéliser le CRSWIR tout en retirant outliers
+        # Modéliser le CRSWIR
         stack_masks = stack_masks | detection_dates #Masking data not used in training
         coeff_model = model_vi(stack_vi, stack_masks)
         

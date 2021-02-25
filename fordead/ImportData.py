@@ -447,39 +447,45 @@ def import_forest_mask(forest_mask_path,chunks = None):
     return forest_mask.astype(bool)
 
 
-def import_stackedmaskedVI(tuile,max_last_date_training=None,chunks = None):
+def import_stackedmaskedVI(tuile,max_date=None,chunks = None):
     """
+    Imports 3D arrays of the vegetation index series and masks
 
     Parameters
     ----------
     tuile : Object of class TileInfo
         Object containing paths of vegetation index and masks for each date
+    max_date : str, optional
+        Date in the format "YYYY-MM-DD". Only dates anterior to max_date are imported. If None, all dates are imported. The default is None.
+    chunks : int, optional
+        Chunks for import as dask array. If None, data is imported as xarray. The default is None.
 
     Returns
     -------
-    stack_vi : xarray.DataArray
+    stack_vi : xarray.DataArray or dask array
         DataArray containing vegetation index value with dimension Time, x and y
-    stack_masks : xarray.DataArray
+    stack_masks : xarray.DataArray or dask array
         DataArray containing mask value with dimension Time, x and y
 
     """
-    if max_last_date_training==None:
+    
+    if max_date==None:
         filter_dates=False
-        max_last_date_training=""
+        max_date=""
     else:
         filter_dates=True
         
-    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in tuile.paths["VegetationIndex"] if date <= max_last_date_training or not(filter_dates)]
+    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in tuile.paths["VegetationIndex"] if date <= max_date or not(filter_dates)]
     stack_vi=xr.concat(list_vi,dim="Time")
-    stack_vi=stack_vi.assign_coords(Time=[date for date in tuile.paths["VegetationIndex"].keys() if date <= max_last_date_training or not(filter_dates)])
+    stack_vi=stack_vi.assign_coords(Time=[date for date in tuile.paths["VegetationIndex"].keys() if date <= max_date or not(filter_dates)])
     stack_vi=stack_vi.squeeze("band")
     stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
     # stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
 
     
-    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in tuile.paths["Masks"] if date <= max_last_date_training or not(filter_dates)]
+    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in tuile.paths["Masks"] if date <= max_date or not(filter_dates)]
     stack_masks=xr.concat(list_mask,dim="Time")
-    stack_masks=stack_masks.assign_coords(Time=[date for date in tuile.paths["Masks"].keys() if date <= max_last_date_training or not(filter_dates)]).astype(bool)
+    stack_masks=stack_masks.assign_coords(Time=[date for date in tuile.paths["Masks"].keys() if date <= max_date or not(filter_dates)]).astype(bool)
     stack_masks=stack_masks.squeeze("band")
     stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
     # stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
@@ -488,16 +494,67 @@ def import_stackedmaskedVI(tuile,max_last_date_training=None,chunks = None):
 
     
 def import_coeff_model(path, chunks = None):
+    """
+    Imports array containing the coefficients to the model for vegetation index prediction. The array has a "coeff" dimension containing each coefficient.
+
+    Parameters
+    ----------
+    path : str
+        ath of the file.
+    chunks : TYPE, optional
+        Chunk size for import as dask array. The default is None.
+
+    Returns
+    -------
+    coeff_model : xarray DataArray of dask array
+        Array containing the coefficients to the model for vegetation index prediction.
+
+    """
+    
     coeff_model = xr.open_rasterio(path,chunks = chunks)
     coeff_model = coeff_model.rename({"band": "coeff"})
     return coeff_model
 
 def import_first_detection_date_index(path,chunks = None):
+    """
+    Imports array containing the index of the first date used for detection instead of training
+
+    Parameters
+    ----------
+    path : str
+        Path of the file.
+    chunks : int, optional
+        Chunk size for import as dask array. The default is None.
+
+    Returns
+    -------
+    first_detection_date_index : xarray DataArray of dask array
+        Array containing the index of the first date used for detection instead of training
+
+    """
+    
     first_detection_date_index=xr.open_rasterio(path,chunks = chunks)
     first_detection_date_index=first_detection_date_index.squeeze("band")
     return first_detection_date_index
 
 def import_decline_data(dict_paths, chunks = None):
+    """
+    Imports data relating to decline detection
+
+    Parameters
+    ----------
+    dict_paths : dict
+        Dictionnary containg the keys "state_decline", "first_date_decline" and "count_decline" whose values are the paths to the corresponding decline data file.
+    chunks : int, optional
+        Chunk size for import as dask array. The default is None.
+
+    Returns
+    -------
+    decline_data : xarray DataSet or dask DataSet
+        DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
+
+    """
+    
     state_decline = xr.open_rasterio(dict_paths["state_decline"],chunks = chunks).astype(bool)
     first_date_decline = xr.open_rasterio(dict_paths["first_date_decline"],chunks = chunks)
     count_decline = xr.open_rasterio(dict_paths["count_decline"],chunks = chunks)
@@ -510,6 +567,24 @@ def import_decline_data(dict_paths, chunks = None):
     return decline_data
         
 def initialize_decline_data(shape,coords):
+    """
+    Initializes data relating to decline detection
+
+    Parameters
+    ----------
+    shape : tuple
+        Tuple with sizes for the resulting array 
+    coords : Coordinates attribute of xarray DataArray
+        Coordinates y and x
+
+    Returns
+    -------
+    decline_data : xarray DataSet or dask DataSet
+        DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
+        For all three arrays, all pixels are intitialized at zero.
+
+
+    """
     
     count_decline= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
     first_date_decline=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
@@ -546,6 +621,25 @@ def initialize_soil_data(shape,coords):
     return soil_data
 
 def import_masked_vi(dict_paths, date, chunks = None):
+    """
+    Imports masked vegetation index
+
+    Parameters
+    ----------
+    dict_paths : str
+        Dictionnary where key "VegetationIndex" returns a dictionnary where keys are SENTINEL dates and values are paths to the files containing the values of the vegetation index for the SENTINEL date, and key "Masks" returns the equivalent for the masks files.
+    date : str
+        Date in the format "YYYY-MM-DD"
+    chunks : int, optional
+        Chunk size for import as dask array. The default is None.
+
+    Returns
+    -------
+    masked_vi : xarray DataSet
+        DataSet containing two DataArrays, "vegetation_index" containing vegetation index values, and "mask" containing mask values.
+
+    """
+    
     vegetation_index = xr.open_rasterio(dict_paths["VegetationIndex"][date],chunks = chunks)
     mask=xr.open_rasterio(dict_paths["Masks"][date],chunks = chunks).astype(bool)
     

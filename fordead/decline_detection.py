@@ -39,26 +39,31 @@ def prediction_vegetation_index(coeff_model,date_list):
 
 
 
-def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, path_dict_vi):
+def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, path_dict_vi = None):
     """
-    Detects anomalies by comparison between predicted and calculated vegetation index
-    
+    Detects anomalies by comparison between predicted and calculated vegetation index. The array returns contains True where the difference between the vegetation index and its prediction is above the threshold in the direction of the specified decline change direction of the vegetation index. 
+
     Parameters
     ----------
-    masked_vi : array (x,y) (bool)
-        Array, True where pixels are masked
+    vegetation_index : xarray DataArray
+        Array containing the vegetation index values computed from satellite data
     predicted_vi : array (x,y)
-        Array containing predicted vegetation index from the model
+        Array containing the vegetation index predicted by the model
     threshold_anomaly : float
-        Threshold used to compare predicted and calculated vegetation index. Anomalies are detected if the difference between the two is above this threshold.
+        Threshold used to compare predicted and calculated vegetation index.
+    vi : str
+        Name of the used vegetation index
+    path_dict_vi : str, optional
+        Path to a text file containing vegetation indices information, where is indicated whether the index rises of falls in case of forest decline. See get_dict_vi documentation. The default is None.
+
 
     Returns
     -------
     anomalies : array (x,y) (bool)
         Array, pixel value is True if an anomaly is detected.
 
-
     """
+
     dict_vi = get_dict_vi(path_dict_vi)
     
     diff_vi = vegetation_index-predicted_vi
@@ -74,13 +79,13 @@ def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, p
 
 def detection_decline(decline_data, anomalies, mask, date_index):
     """
-    Updates decline data using anomalies.
+    Updates decline data using anomalies. Successive anomalies are counted for pixels considered healthy, and successive dates without anomalies are counted for pixels considered declining. The state of the pixel changes when the count reaches 3.
     
     Parameters
     ----------
     decline_data : Dataset with three arrays : 
         "count" which is the number of successive anomalies, 
-        "state" which is True where pixels are detected as declining, 
+        "state" which is True where pixels are detected as declining, False where they are considered healthy.
         "first date" which contains the index of the date of the first anomaly.
     anomalies : array (x,y) (bool)
         Array, pixel value is True if an anomaly is detected.

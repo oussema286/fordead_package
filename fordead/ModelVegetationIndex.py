@@ -16,17 +16,18 @@ def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
     Parameters
     ----------
     stack_masks : xarray.DataArray (Time,x,y)
-        Stack of masks with dimensions 
+        Stack of masks with dimensions (Time,x,y)
     min_last_date_training : str
-        Earliest date at which the training will end and the detection begin
+        Earliest date at which the training ends and the detection begins
     nb_min_date : int, optional
-        Minimum number of dates from which to train the model. The default is 10.
+        Minimum number of dates used to train the model. The default is 10.
 
     Returns
     -------
-    xarray.DataArray (x,y)
+    detection_dates : xarray.DataArray (Time,x,y)
+        Boolean array, True at dates where the pixel is used for detection, False when used for training
+    first_detection_date_index : xarray.DataArray (x,y)
         Array containing the index of the last date which will be used for training, or 0 if there isn't enough valid data.
-
     """
     
     min_date_index=int(sum(stack_masks.Time<min_last_date_training))-1
