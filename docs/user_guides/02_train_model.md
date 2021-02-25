@@ -36,3 +36,29 @@ fordead train_model [OPTIONS]
 ```
 
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#train_model)
+
+## Détail du fonctionnement
+
+### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
+Avant tout, si la chaîne de traitement a déjà été utilisée sur la zone, les informations relatives à ces calculs sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, les résultats des calculs antérieurs sont supprimés et recalculés avec les nouveaux paramètres. Il est possible de commencer le traitement à cette étape si des indices de végétations et masques ont déjà été calculés pour chaque date.
+> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+
+### Import de l'ensemble des données d'indices de végétation et masques jusqu'à **min_last_date_training**
+> **_Fonctions utilisées :_** [import_stackedmaskedVI()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_stackedmaskedvi)
+
+### Détermination des dates utilisées pour l'apprentissage
+La date de début de détection peut être différent entre chaque pixels. Pour chaque pixel, l'apprentissage du modèle doit se faire sur au moins **nb_min_date** dates, et au moins sur l'ensemble des dates antérieures à **min_last_date_training**. Si il n'y a pas au moins **nb_min_date** à la date **max_last_date_training**, le pixel est abandonné. Cela permet de commencer la détection au plus tôt si cela est possible, tout en conservant un maximum de pixels en permettant un début de détection plus tardif sur les zones avec moins de dates valides.
+> **_Fonctions utilisées :_** [get_detection_dates()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#get_detection_dates)
+
+### Modélisation du comportement de l'indice de végétation
+Pour chaque pixel, un modèle est ajusté sur les dates d'apprentissage. Le modèle utilisé est le suivant :
+```math
+a1 + b1\sin{\frac{2\pi t}{T}} + b2\cos{\frac{2\pi t}{T}} + b3\sin{\frac{4\pi t}{T}} + b4\cos{\frac{4\pi t}{T}}
+```
+Cette étape consiste à déterminer les coefficients a1, b1, b2, b3 et b4 pour chaque pixel.
+maximum de pixels en permettant un début de détection plus tardif sur les zones avec moins de dates valides.
+> **_Fonctions utilisées :_** [model_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#model_vi)
+
+ ### Ecriture des résultats
+Les coefficients du modèle, l'index de la première date utilisée pour la détection et le masque des pixels valides car ayant suffisamment de dates SENTINEL pour le calcul du modèle sont écrits sous forme de rasters.
+ > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif)
