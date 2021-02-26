@@ -1,8 +1,6 @@
 # ÉTAPE 1 : step1_compute_masked_vegetationindex.py
 Cette étape permet le calcul d'indices de végétation et de masques pour chaque date SENTINEL-2
 
-![Diagram_step1](Diagrams/Diagram_step1.png "Diagramme de l'étape")
-
 #### ENTRÉES
 Les paramètres en entrée sont :
 
@@ -44,3 +42,50 @@ fordead masked_vi [OPTIONS]
 
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#masked_vi)
 
+## Détail du fonctionnement
+
+### Imports des résultats précédents, suppression des résultats obsolètes 
+Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Ainsi, à moins que les paramètres aient été modifiés, uniquement les calculs suivants sont uniquement réalisés sur les nouvelles dates SENTINEL.
+> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+
+### Filtre des dates trop ennuagées
+L'ennuagement de chaque date SENTINEL est calculé à partir du masque fournisseur.
+> **_Fonctions utilisées :_** [get_cloudiness()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#get_cloudiness), [get_date_cloudiness_perc()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#get_date_cloudiness_perc)
+
+On utilise ensuite uniquement les nouvelles dates dans le dossier **input_directory** dont l'ennuagement est inférieur à **lim_perc_cloud**.
+
+### Import et ré-échantillonage des données SENTINEL
+ - Les bandes d'intérêts de ces dates sont importées et ré-échantillonnées à 10m 
+> **_Fonctions utilisées :_** [import_resampled_sen_stack()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_resampled_sen_stack)
+
+### Création du masque
+La création du masque pour chaque date se fait en quatre étapes :
+ > **_Fonctions utilisées :_** [compute_masks()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_masks)
+
+##### Création des prémasques
+Détection d'anomalies de sol : (B11 > 1250) ET (B2 < 600) ET ((B3 + B4) > 800)
+Détection des ombres :  0 dans n'importe laquelle des bandes
+Détection des zones hors de la fauchée du satellite : Valeur inférieure à 0 dans une des bandes (vaut normalement -10000 pour les données THEIA) 
+Invalides : aggregation des ombres, hors fauchée et nuages très marqués (B2 >= 600)
+ > **_Fonctions utilisées :_** [get_pre_masks()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#get_pre_masks)
+
+##### Détection du sol nu
+Trois dates consécutives avec anomalies de sol (soil_anomaly vaut True) sans compter dates invalides (invalid vaut True)
+ > **_Fonctions utilisées :_** [detect_soil()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#detect_soil)
+
+##### Détection des nuages
+Pour détecter les nuages, on prend l'ensemble des nuages bien marqués (B2 > 700)
+On ajoute les voiles nuages plus fins $`\frac{B3}{B8A+B4+B3} >0.15`$ ET $`B2 >400`$ en retirant les pixels détectés comme sol nu ou anomalie de sol avec lesquels il peut y avoir confusion. Puis on opére une dilation de trois pixels pour récupérer les bords des nuages.
+ > **_Fonctions utilisées :_** [detect_clouds()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#detect_clouds)
+
+##### Aggrégation des masques
+Aggrégation des ombres, des nuages, des pixels hors de la fauchée, du sol nu, des anomalies de sol nu.
+Si apply_source_mask vaut True, le masque fournisseur est également appliqué.
+
+### Calcul de l'indice de végétation
+L'indice de végétation choisi est calculé.
+ > **_Fonctions utilisées :_** [compute_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)
+
+ ### Ecriture des résultats
+Les indices de végétations, masques et données de détection du sol sont écrits. L'ensemble des paramètres, chemins des données et dates utilisées sont aussi sauvegardés.
+ > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#save_info)
