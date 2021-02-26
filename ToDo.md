@@ -12,6 +12,6 @@
 - [ ] Add cli for read_tileinfo, and parameter to print paths
 - [ ] process_tile
 ## Development
-- [ ] Remove period_ind from result shapefile
+- [x] Remove period_ind from result shapefile
 - [x] Allow timelapse creation from coordinate and radius
 - [x] Developping branch for validation data export
