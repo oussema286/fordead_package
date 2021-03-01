@@ -4,7 +4,7 @@
 - [x] step1
 - [x] step2
 - [x] step3
-- [ ] step4
+- [x] step4
 - [ ] step5
 ### Detail examples with markdown
 - [x] ex_computing masked_vegetation_index
