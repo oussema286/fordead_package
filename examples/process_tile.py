@@ -33,7 +33,7 @@ def parse_command_line():
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
     parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
-    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.51, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
+    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.5, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
@@ -52,7 +52,7 @@ def parse_command_line():
     
     parser.add_argument("--start_date_results", dest = "start_date_results",type = str,default = '2015-06-23', help = "Date de début pour l'export des résultats")
     parser.add_argument("--end_date_results", dest = "end_date_results",type = str,default = "2022-01-01", help = "Date de fin pour l'export des résultats")
-    parser.add_argument("--results_frequency", dest = "results_frequency",type = str,default = '2M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
+    parser.add_argument("--results_frequency", dest = "results_frequency",type = str,default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
 
     dictArgs={}
