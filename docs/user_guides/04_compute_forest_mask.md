@@ -46,14 +46,16 @@ Les informations relatives aux traitements précédents sont importés (paramèt
 - Importation de la BDFORET des départements intersectant la zone d'étude
 - Filtre à partir des types de peuplements séléctionnés
 - Rasterisation en un masque binaire
- > **_Fonctions utilisées :_** rasterize_bdforet(), rasterize_polygons_binary(), bdforet_paths_in_zone()
+ > **_Fonctions utilisées :_** [rasterize_bdforet()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#rasterize_bdforet), [rasterize_polygons_binary()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#rasterize_polygons_binary), [bdforet_paths_in_zone()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#bdforet_paths_in_zone)
 
 ### A partir de carte OSO du CESBIO
  - Importation de la [carte oso](http://osr-cesbio.ups-tlse.fr/~oso/) et cropping à partir du raster au chemin **path_example_raster**
  - Filtre à partir de la liste **list_code_oso** pour obtenir un raster valant True sur les pixels dont la valeur dans la carte OSO est dans la liste **list_code_oso**
+ > **_Fonctions utilisées :_** [clip_oso()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#clip_oso)
 
 ### Pas d'utilisation de masque
  Si il est choisi de ne pas utiliser de masque, le masque forêt crée est rempli entièrement avec la valeur True et correspond à la dimension, résolutione et système de projection du raster au chemin **path_example_raster**
+ > **_Fonctions utilisées :_** [raster_full()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#raster_full)
 
 ### Ecriture des résultats
 Le masque forêt est écrit, et son chemin sauvegardé dans l'object TileInfo.
