@@ -15,6 +15,27 @@ import rasterio
 from scipy import ndimage
 
 def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
+    """
+    Returns list of shapefile in the zone given by the raster, as well as the polygon extent of the raster
+
+    Parameters
+    ----------
+    example_raster : xarray DataArray
+        Raster from which to copy the extent and resolution for the mask
+    dep_path : str
+        Path to shapefile containg departements with code_insee column.
+    bdforet_dirpath : str
+        Path to directory containing IGN's BDFORET with one directory per departements.
+
+    Returns
+    -------
+    bdforet_paths : list
+        List of paths to BDFORET shapefiles of departements intersecting the example_raster
+    tile_extent : geopandas GeoDataFrame
+        Polygon of the extent of the example_raster
+
+    """
+    
     lon_point_list = [example_raster.attrs["transform"][2], example_raster.attrs["transform"][2]+example_raster.sizes["x"]*10, example_raster.attrs["transform"][2]+example_raster.sizes["x"]*10, example_raster.attrs["transform"][2], example_raster.attrs["transform"][2]]
     lat_point_list = [example_raster.attrs["transform"][5], example_raster.attrs["transform"][5], example_raster.attrs["transform"][5]-10*example_raster.sizes["y"], example_raster.attrs["transform"][5]-10*example_raster.sizes["y"],example_raster.attrs["transform"][5]]
     
@@ -32,6 +53,27 @@ def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
 
 def rasterize_bdforet(example_path, dep_path, bdforet_dirpath, 
                       list_forest_type = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"]):
+    """
+    Creates forest mask from IGN's BDFORET
+
+    Parameters
+    ----------
+    example_path : str
+        Path to a raster from which to copy the extent and resolution for the mask
+    dep_path : str
+        Path to shapefile containg departements with code_insee column.
+    bdforet_dirpath : str
+        Path to directory containing IGN's BDFORET with one directory per departements.
+    list_forest_type : list, optional
+        List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BDFORET. The default is ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"].
+
+    Returns
+    -------
+    forest_mask : xarray DataArray
+        Boolean DataArray containing True where pixels are in the selected forest types.
+
+    """
+    
 
     example_raster = xr.open_rasterio(example_path)
     example_raster=example_raster.sel(band=1)
@@ -47,6 +89,22 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
     return forest_mask
 
 def rasterize_polygons_binary(polygons, example_raster):
+    """
+    Rasterizes polygons into binary raster
+
+    Parameters
+    ----------
+    polygons : geopandas GeoDataFrame
+        Polygons to rasterize
+    example_raster : xarray DataArray
+        Raster from which to copy the extent and resolution and crs for the mask
+
+    Returns
+    -------
+    forest_mask : xarray DataArray
+        Boolean DataArray containing True where pixels are inside the polygons.
+
+    """
     
     polygons=polygons.to_crs(crs=example_raster.attrs["crs"]) #Changing crs
     polygons=polygons["geometry"]

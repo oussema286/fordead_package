@@ -107,6 +107,7 @@ def export_results(
         tile.add_path("periodic_results_decline", tile.data_directory / "Results" / "periodic_results_decline.shp")
         periodic_results = get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_datenumber, relevant_area, decline_data.state.attrs)
         periodic_results.to_file(tile.paths["periodic_results_decline"])
+        del periodic_results
         
         if export_soil:
             tile.add_path("periodic_results_soil", tile.data_directory / "Results" / "periodic_results_soil.shp")
