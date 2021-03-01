@@ -152,18 +152,17 @@ def compute_masked_vegetationindex(
                 stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])
                 # Compute masks
                 mask = compute_masks(stack_bands, soil_data, date_index)
+                if apply_source_mask:
+                    mask = mask | get_source_mask(tile.paths["Sentinel"][date], sentinel_source, extent = tile.raster_meta["extent"]) #Masking with source mask if option chosen
+                    
                 # Compute vegetation index
                 vegetation_index = compute_vegetation_index(stack_bands, formula = formula)
-        
+
                 # Masking invalid values (division by zero)
                 invalid_values = vegetation_index.isnull() | np.isinf(vegetation_index)
                 vegetation_index = vegetation_index.where(~invalid_values,0)
                 mask = mask | invalid_values
                 
-                #Masking with source mask if option chosen
-                if apply_source_mask:
-                    mask = mask | get_source_mask(tile.paths["Sentinel"][date], sentinel_source, extent = tile.raster_meta["extent"])
-                    
                 #Writing vegetation index and mask
                 write_tif(vegetation_index, tile.raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
                 write_tif(mask, tile.raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
