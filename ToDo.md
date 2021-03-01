@@ -5,7 +5,7 @@
 - [x] step2
 - [x] step3
 - [x] step4
-- [ ] step5
+- [x] step5
 ### Detail examples with markdown
 - [x] ex_computing masked_vegetation_index
 - [x] ex_tileinfo
