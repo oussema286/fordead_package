@@ -52,7 +52,11 @@ Les informations relatives aux traitements précédents sont importés (paramèt
  - Importation de la [carte oso](http://osr-cesbio.ups-tlse.fr/~oso/) et cropping à partir du raster au chemin **path_example_raster**
  - Filtre à partir de la liste **list_code_oso** pour obtenir un raster valant True sur les pixels dont la valeur dans la carte OSO est dans la liste **list_code_oso**
 
- ### Pas d'utilisation de masque
+### Pas d'utilisation de masque
  Si il est choisi de ne pas utiliser de masque, le masque forêt crée est rempli entièrement avec la valeur True et correspond à la dimension, résolutione et système de projection du raster au chemin **path_example_raster**
+
+### Ecriture des résultats
+Le masque forêt est écrit, et son chemin sauvegardé dans l'object TileInfo.
+ > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#save_info)
 
 
