@@ -39,7 +39,8 @@ def cli_compute_forest_mask(data_directory,
                         path_example_raster = None
                         ):
     """
-    Compute forest mask
+    Compute forest mask from IGN's BDFORET or CESBIO's OSO map
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/04_compute_forest_mask/
     \f
     Parameters
     ----------
@@ -76,14 +77,22 @@ def compute_forest_mask(data_directory,
     \f
     Parameters
     ----------
-    data_directory
-    forest_mask_source
-    list_forest_type
-    dep_path
-    bdforet_dirpath
-    path_oso
-    list_code_oso
-    path_example_raster
+    data_directory : str
+        Path of the output directory
+    forest_mask_source : str
+        Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid
+    list_forest_type : list
+        List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'
+    dep_path : str
+        Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'
+    bdforet_dirpath : str
+        Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'
+    path_oso : str
+        Path to soil occupation raster, only used if forest_mask_source = 'OSO'
+    list_code_oso : list
+        List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'
+    path_example_raster : str
+        Path to raster from which to copy the extent, resolution, CRS...
 
     Returns
     -------

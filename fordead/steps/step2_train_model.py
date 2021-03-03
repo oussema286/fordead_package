@@ -15,10 +15,10 @@ from fordead.writing_data import write_tif
 
 
 @click.command(name='train_model')
-@click.option("-d", "--data_directory", type = str, help = "Dossier avec les indices de végétations et les masques")
+@click.option("-d", "--data_directory", type = str, help = "Path of the output directory")
 @click.option("--nb_min_date", type = int,default = 10, help = "Minimum number of valid dates to compute a vegetation index model for the pixel", show_default=True)
-@click.option("-s", "--min_last_date_training", type = str,default = "2018-01-01", help = "Première date de la détection", show_default=True)
-@click.option("-e", "--max_last_date_training", type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage", show_default=True)
+@click.option("-s", "--min_last_date_training", type = str,default = "2018-01-01", help = "First date that can be used for detection", show_default=True)
+@click.option("-e", "--max_last_date_training", type = str,default = "2018-06-01", help = "Last date that can be used for training", show_default=True)
 @click.option("--path_vi", type = str,default = None, help = "Path of directory containing vegetation indices for each date. If None, the information has to be saved from a previous step", show_default=True)
 @click.option("--path_masks", type = str,default = None, help = "Path of directory containing masks for each date.  If None, the information has to be saved from a previous step", show_default=True)
 def cli_train_model(
@@ -30,7 +30,10 @@ def cli_train_model(
     path_masks = None,
     ):
     """
-    Train vegetation index model
+    Uses first SENTINEL dates to train a periodic vegetation index model capable of predicting the vegetation index at any date.
+    If there aren't nb_min_date at min_last_date_training, later dates between min_last_date_training and max_last_date_training can be used.
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/02_train_model/
+    
     \f
 
     Parameters
@@ -57,17 +60,25 @@ def train_model(
     path_masks = None,
     ):
     """
-    Train vegetation index model
+    Uses first SENTINEL dates to train a periodic vegetation index model capable of predicting the vegetation index at any date.
+    If there aren't nb_min_date at min_last_date_training, later dates between min_last_date_training and max_last_date_training can be used.
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/02_train_model/
     \f
 
     Parameters
     ----------
-    data_directory
-    nb_min_date
-    min_last_date_training
-    max_last_date_training
-    path_vi
-    path_masks
+    data_directory : str
+        Path of the output directory
+    nb_min_date : int
+        Minimum number of valid dates to compute a vegetation index model for the pixel
+    min_last_date_training : str
+        First date that can be used for detection (format : 'YYYY-MM-DD')
+    max_last_date_training : str
+        Last date that can be used for training (format : 'YYYY-MM-DD')
+    path_vi : str
+        Path of directory containing vegetation indices for each date. If None, the information has to be saved from a previous step
+    path_masks : str
+        Path of directory containing masks for each date.  If None, the information has to be saved from a previous step
 
     Returns
     -------

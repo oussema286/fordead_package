@@ -14,9 +14,9 @@ from fordead.decline_detection import detection_anomalies, prediction_vegetation
 # import time
 
 @click.command(name='decline_detection')
-@click.option("-d", "--data_directory",  type=str, help="Dossier avec les données")
+@click.option("-d", "--data_directory",  type=str, help="Path of the output directory")
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
-                    help="Seuil minimum pour détection d'anomalies", show_default=True)
+                    help="Minimum threshold for anomaly detection", show_default=True)
 @click.option("--vi",  type=str, default=None,
                     help="Chosen vegetation index, only useful if step1 was skipped", show_default=True)
 @click.option("--path_dict_vi",  type=str, default=None,
@@ -28,7 +28,10 @@ def cli_decline_detection(
     path_dict_vi = None
     ):
     """
-    Produce the anomaly detection from the model
+    Detects anomalies by comparing the vegetation index and its prediction from the model. 
+    Detects declining pixels when there are 3 successive anomalies. If pixels detected as declining have 3 successive dates without anomalies, they are considered healthy again.
+    Anomalies and decline data are written in the data_directory
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/03_decline_detection/
     \f
     Parameters
     ----------
@@ -51,14 +54,22 @@ def decline_detection(
     path_dict_vi = None
     ):
     """
-    Produce the anomaly detection from the model
+    Detects anomalies by comparing the vegetation index and its prediction from the model. 
+    Detects declining pixels when there are 3 successive anomalies. If pixels detected as declining have 3 successive dates without anomalies, they are considered healthy again.
+    Anomalies and decline data are written in the data_directory
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/03_decline_detection/
+    
     \f
     Parameters
     ----------
-    data_directory
-    threshold_anomaly
-    vi
-    path_dict_vi
+    data_directory : str
+        Path of the output directory
+    threshold_anomaly : float
+        Minimum threshold for anomaly detection
+    vi : str
+        Chosen vegetation index, only useful if step1 was skipped
+    path_dict_vi : str
+        Path of text file to add vegetation index formula, only useful if step1 was skipped
 
     Returns
     -------

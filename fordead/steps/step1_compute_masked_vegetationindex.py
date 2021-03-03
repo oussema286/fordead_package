@@ -49,7 +49,10 @@ def cli_compute_masked_vegetationindex(
     path_dict_vi = None
     ):
     """
-    Computes masks and masked vegetation index
+    Computes masks and masked vegetation index for each SENTINEL date under a cloudiness threshold.
+    Masks include shadows, clouds, soil, pixels ouside satellite swath, and the mask from SENTINEL data provider if the option is chosen.
+    Results are written in the chosen directory.
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/
     \f
     Parameters
     ----------
@@ -87,7 +90,6 @@ def compute_masked_vegetationindex(
     Results are written in the chosen directory.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/
     
-    \f
     Parameters
     ----------
     input_directory : str
