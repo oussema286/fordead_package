@@ -7,7 +7,7 @@
 #    docs_dir = "docs"
 # output_dir = "site"
 #    modules = ["fordead"]
-    modules = ["fordead.decline_detection", "fordead.ImportData", "fordead.masking_vi", "fordead.maja_fun", "fordead.ModelVegetationIndex", "fordead.timelapse", "fordead.writing_data"]
+    modules = ["fordead.examples", "fordead.decline_detection", "fordead.ImportData", "fordead.masking_vi", "fordead.maja_fun", "fordead.ModelVegetationIndex", "fordead.timelapse", "fordead.writing_data"]
     extra_markdown_extensions = ['mdx_breakless_lists', 'mkdocs-click']
 
 [[tool.portray.extra_markdown_extensions]]
