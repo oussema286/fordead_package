@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jan 12 10:28:16 2021
 
-This program aims at automated data processing 
+# Created on Tue Jan 12 10:28:16 2021
 
-@author: de Boissieu F, Feret JB
-"""
+# This program aims at automated data processing 
+
+# @author: de Boissieu F, Feret JB
+
 
 # import libraries
 from path import Path
