@@ -8,7 +8,7 @@ Created on Mon Nov  2 09:42:31 2020
 import numpy as np
 import xarray as xr
 import re
-import datetime
+# import datetime
 from pathlib import Path
 import pickle
 import shutil
@@ -16,6 +16,21 @@ from scipy import ndimage
 import geopandas as gp
 
 def get_band_paths(dict_sen_paths):
+    """
+    Retrieves paths to each SENTINEL band for each date from the paths of the directories containing these bands for each date.
+
+    Parameters
+    ----------
+    dict_sen_paths : dict
+        dictionnary where keys are dates and values are the paths of the directory containing a file for each SENTINEL band
+
+    Returns
+    -------
+    DictSentinelPaths : dict
+        dictionnary with the same keys as dict_sen_paths, but where the paths to directories are replaced with another dictionnary where keys are the name of the bands, and values are their paths.
+
+    """
+    
     DictSentinelPaths={}
     for date in dict_sen_paths:
         AllPaths = dict_sen_paths[date].glob("**/*.tif")
