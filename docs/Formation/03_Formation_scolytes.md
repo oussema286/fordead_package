@@ -80,18 +80,14 @@ Puis lancer le script :
 python detection_scolytes.py
 ```
 ##### Faire tourner l'étape en lançant la fonction depuis l'invité de commande
-Il est également possible d'appliquer la même étape en passant par l'invité de commande.
-Depuis l'invité de commande, placez vous dans le dossier du package fordead_package/fordead/steps par la commande : 
+Il est également possible d'appliquer la même étape en passant par l'invité de commande. Les fonctions pouvant être lancées depuis l'invité de commande sont répértoriées avec leur aide sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/)
+La commande suivante permet d'afficher l'aide :
 ```bash
-cd <MyWorkingDirectory>/B_PROGRAMS/Libraries/fordead_package/fordead/steps
-```
-Puis, la commande suivante permet d'afficher l'aide :
-```bash
-python step1_compute_masked_vegetationindex.py -h
+fordead masked_vi -h
 ```
 A partir de l'aide, lancez la fonction en appliquant vos paramètres. Exemple :
 ```bash
-python step1_compute_masked_vegetationindex.py -i <MyWorkingDirectory>/A_DATA/RASTER/SERIES_SENTINEL/ZoneEtude -o <MyWorkingDirectory>/C_RESULTS/ZoneEtude
+fordead masked_vi -i <MyWorkingDirectory>/A_DATA/RASTER/SERIES_SENTINEL/ZoneEtude -o <MyWorkingDirectory>/C_RESULTS/ZoneEtude
 ```
 > **_NOTE :_** **-i** permet de définir le paramètre **input_directory** et **-o** le paramètre **data_directory**, ainsi exactement la même fonction est lancée.
 
