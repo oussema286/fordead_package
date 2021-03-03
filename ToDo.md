@@ -9,8 +9,7 @@
 ### Detail examples with markdown
 - [x] ex_computing masked_vegetation_index
 - [x] ex_tileinfo
-- [ ] Add cli for read_tileinfo, and parameter to print paths
-- [ ] process_tile
+- [x] Add cli for read_tileinfo
 ## Development
 - [x] Remove period_ind from result shapefile
 - [x] Allow timelapse creation from coordinate and radius
