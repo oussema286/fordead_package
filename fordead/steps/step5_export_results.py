@@ -113,6 +113,7 @@ def export_results(
             tile.add_path("periodic_results_soil", tile.data_directory / "Results" / "periodic_results_soil.shp")
             periodic_results = get_periodic_results_as_shapefile(first_date_number_soil, bins_as_date, bins_as_datenumber, relevant_area, soil_data.state.attrs)
             periodic_results.to_file(tile.paths["periodic_results_soil"])
+            del periodic_results
     
     tile.save_info()
 

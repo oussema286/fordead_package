@@ -33,7 +33,7 @@ from fordead.writing_data import write_tif
 @click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
 @click.option("--interpolation_order", type = int,default = 0, help ="interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique", show_default=True)
 @click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
-@click.option("--apply_source_mask",  is_flag=True, help = "If activated, applies the mask from SENTINEL-data supplier", show_default=True)
+@click.option("--apply_source_mask",  is_flag=True, help = "If True, applies the mask from SENTINEL-data supplier", show_default=True)
 @click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
 @click.option("--extent_shape_path", type = str,default = None, help = "Path of shapefile used as extent of detection, if None, the whole tile is used", show_default=True)
 @click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
@@ -49,7 +49,10 @@ def cli_compute_masked_vegetationindex(
     path_dict_vi = None
     ):
     """
-    Compute masks and masked vegetation index
+    Computes masks and masked vegetation index for each SENTINEL date under a cloudiness threshold.
+    Masks include shadows, clouds, soil, pixels ouside satellite swath, and the mask from SENTINEL data provider if the option is chosen.
+    Results are written in the chosen directory.
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/
     \f
     Parameters
     ----------
@@ -82,22 +85,31 @@ def compute_masked_vegetationindex(
     path_dict_vi = None
     ):
     """
-    Compute masks and masked vegetation index
-    \f
+    Computes masks and masked vegetation index for each SENTINEL date under a cloudiness threshold.
+    Masks include shadows, clouds, soil, pixels ouside satellite swath, and the mask from SENTINEL data provider if the option is chosen.
+    Results are written in the chosen directory.
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/
+    
     Parameters
     ----------
-    input_directory
-    data_directory
-    lim_perc_cloud
-    interpolation_order
-    sentinel_source
-    apply_source_mask
-    vi
-    extent_shape_path
-    path_dict_vi
-
-    Returns
-    -------
+    input_directory : str
+        Path of the directory with Sentinel dates
+    data_directory : str
+        Path of the output directory
+    lim_perc_cloud : float
+        Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness
+    interpolation_order : int
+        interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique
+    sentinel_source : str
+        Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'
+    apply_source_mask : bool
+        If True, applies the mask from SENTINEL-data supplier
+    vi : str
+        Chosen vegetation index
+    extent_shape_path : str
+        Path of shapefile used as extent of detection, if None, the whole tile is used
+    path_dict_vi : str
+        Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)
 
     """
     if extent_shape_path is not None: data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
@@ -152,23 +164,20 @@ def compute_masked_vegetationindex(
                 stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])
                 # Compute masks
                 mask = compute_masks(stack_bands, soil_data, date_index)
+                if apply_source_mask:
+                    mask = mask | get_source_mask(tile.paths["Sentinel"][date], sentinel_source, extent = tile.raster_meta["extent"]) #Masking with source mask if option chosen
+                    
                 # Compute vegetation index
                 vegetation_index = compute_vegetation_index(stack_bands, formula = formula)
-        
+
                 # Masking invalid values (division by zero)
                 invalid_values = vegetation_index.isnull() | np.isinf(vegetation_index)
                 vegetation_index = vegetation_index.where(~invalid_values,0)
                 mask = mask | invalid_values
                 
-                #Masking with source mask if option chosen
-                if apply_source_mask:
-                    mask = mask | get_source_mask(tile.paths["Sentinel"][date], sentinel_source, extent = tile.raster_meta["extent"])
-                    
                 #Writing vegetation index and mask
                 write_tif(vegetation_index, tile.raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
                 write_tif(mask, tile.raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
-                
-                del stack_bands, mask, vegetation_index, invalid_values
            
         #Writing soil data 
         write_tif(soil_data["state"], tile.raster_meta["attrs"],tile.paths["state_soil"],nodata=0)
