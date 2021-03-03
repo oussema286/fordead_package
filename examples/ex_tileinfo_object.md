@@ -30,5 +30,6 @@ The directories, and the parent directories to the files can be deleted :
 tile.delete_dirs("vegetation_index_directory","forest_mask")
 ```
 Also, to print information stored in the object, simply use `tile.print_info()`.
+Printing a TileInfo object information is also possible from the command line using the command `fordead read_tileinfo -o <data_directory>` (see [details](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-read_tileinfo)).
 
 In the end, every addition and change to the object can be save using `tile.save_info()`.
