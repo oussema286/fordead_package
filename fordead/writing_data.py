@@ -65,11 +65,20 @@ def convert_dateindex_to_datenumber(data, dates):
 
 def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_datenumber, relevant_area, attrs):
     inds_soil = np.digitize(first_date_number, bins_as_datenumber, right = True)
+    # geoms_period_index = list(
+    #             {'properties': {'period_index': v}, 'geometry': s}
+    #             for i, (s, v) 
+    #             in enumerate(
+    #                 rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).data , transform=Affine(*attrs["transform"]))))
+   
     geoms_period_index = list(
                 {'properties': {'period_index': v}, 'geometry': s}
                 for i, (s, v) 
                 in enumerate(
-                    rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).data , transform=Affine(*attrs["transform"]))))
+                    rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).compute().data , transform=Affine(*attrs["transform"]))))
+
+    
+    
     gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
     gp_results.period_index=gp_results.period_index.astype(int)
     gp_results.insert(1,"period",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d') + " - " + (bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))            
