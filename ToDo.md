@@ -6,6 +6,7 @@
 - [x] step3
 - [x] step4
 - [x] step5
+- [ ] Create diagrams
 ### Detail examples with markdown
 - [x] ex_computing masked_vegetation_index
 - [x] ex_tileinfo
