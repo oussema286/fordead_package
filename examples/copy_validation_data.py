@@ -38,8 +38,8 @@ def copy_validation_data(main_directory, tuiles): #Decline_detection argument
         Pixel_data = pd.read_csv(tile.paths["validation"] / 'Pixel_data.csv')
         Pixel_data.insert(Pixel_data.shape[-1],"Tile", tuile)
 
-        Pixel_data.to_csv(main_directory / "All_Results" / 'Pixel_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'Pixel_data.csv').exists()))
-        Evolution_data.to_csv(main_directory / "All_Results" / 'Evolution_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'Evolution_data.csv').exists()))
+        Pixel_data.to_csv(main_directory / "All_Results" / 'Pixel_data.csv', mode='a', index=False,header=not((main_directory / "All_Results" / 'Pixel_data.csv').exists()))
+        Evolution_data.to_csv(main_directory / "All_Results" / 'Evolution_data.csv', mode='a', index=False,header=not((main_directory / "All_Results" / 'Evolution_data.csv').exists()))
     
     
     
