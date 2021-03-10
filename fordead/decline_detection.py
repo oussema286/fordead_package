@@ -32,7 +32,7 @@ def prediction_vegetation_index(coeff_model,date_list):
         
     date_as_number_list=[(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in date_list]
     harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in date_as_number_list])
-    harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : date_list, "coeff" : [1,2,3,4,5]},dims=["Time", "coeff"])
+    harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : date_list, "coeff" : range(5)},dims=["Time", "coeff"])
     
     predicted_vi = sum(coeff_model * harmonic_terms)
     return predicted_vi
