@@ -68,9 +68,8 @@ def model_vi(stack_vi, stack_masks):
     
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in DatesNumbers])
         
-    coeff_model = da.blockwise(censored_lstsq, 'kmn', stack_vi.data, 'tmn',~stack_masks.data, 'tmn', new_axes={'k':5}, dtype=HarmonicTerms.dtype, A=HarmonicTerms, meta=np.ndarray(()))
-    coeff_model = xr.DataArray(coeff_model, dims=['coeff', stack_vi.dims[1], stack_vi.dims[2]], coords=[('coeff', np.arange(5)), stack_vi.coords[stack_vi.dims[1]], stack_vi.coords[stack_vi.dims[2]]])
-
+    coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms})
+    
     return coeff_model
 
 def censored_lstsq(B, M, A):
