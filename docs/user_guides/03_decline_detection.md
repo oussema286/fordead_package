@@ -5,6 +5,9 @@ Cette étape permet la détection du déperissement. Pour chaque date SENTINEL n
 Les paramètres en entrée sont :
 - **data_directory** : Le chemin du dossier de sortie dans lequel sera écrit les résultats de la détection.
 - **threshold_anomaly** : Seuil à partir duquel la différence entre l'indice de végétation réel et prédit est considéré comme une anomalie
+- **vi** : Indice de végétation utilisé, il est inutile de le renseigner si l'étape [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/) a été utilisée.
+- **path_dict_vi** : Chemin d'un fichier texte permettant d'ajouter des indices de végétations utilisables. Si non renseigné, uniquement les indices prévus dans le package sont utilisable (CRSWIR, NDVI). Le fichier [examples/ex_dict_vi.txt](/examples/ex_dict_vi.txt) donne l'exemple du formattage de ce fichier. Il s'agit de renseigner son nom, sa formule, et "+" ou "-" selon si l'indice augmente en cas de déperissement, ou si il diminue. Il est également inutile de le renseigner si cela a été fait lors de l'étape [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/).
+
 
 #### SORTIES
 Les sorties de cette troisième étape, dans le dossier data_directory, sont :
