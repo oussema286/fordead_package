@@ -68,6 +68,7 @@ def model_vi(stack_vi, stack_masks):
     
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in DatesNumbers])
     coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms})
+    coeff_model['coeff'] = range(1,6) # coordinate values as recorded in .tif bands
 
     return coeff_model
 
