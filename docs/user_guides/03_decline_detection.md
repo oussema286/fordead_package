@@ -15,7 +15,7 @@ Les sorties de cette troisième étape, dans le dossier data_directory, sont :
     - **count_decline** : le nombre de dates successives avec des anomalies
     - **first_date_decline** : L'index de la première date avec une anomalie de la dernière série d'anomalies
     - **state_decline** : Un raster binaire qui vaut 1 si le pixel est détecté comme déperissant (Au moins trois anomalies successives)
-
+- Dans le dossier **DataAnomalies**, un raster pour chaque date **Anomalies_YYYY-MM-JJ.tif** qui vaut True là où sont détectées les anomalies.
 ## Utilisation
 ### A partir d'un script
 
@@ -53,7 +53,7 @@ L'indice de végétation est prédit à partir des coefficients du modèle.
 Les anomalies sont détectées en comparant l'indice de végétation avec sa prédiction. Sachant si l'indice de végétation est supposé augmenter ou diminuer en cas de déperissement, les anomalies sont détectées là où la différence entre l'indice et sa prédiction est superieure à **threshold_anomaly** dans la direction du changement attendu en cas de déperissement.
 > **_Fonctions utilisées :_** [detection_anomalies()](https://fordead.gitlab.io/fordead_package/reference/fordead/decline_detection/#detection_anomalies)
 
-#### Détection du déperissement
+#### Détection du dépérissement
 Les anomalies successives sont comptées, à partir de trois anomalies successives, le pixel est considéré dépérissant. Si le pixel est considéré dépérissant, les dates successives sans anomalies sont comptées et à partir de trois dates sans anomalies, le pixel n'est plus considéré dépérissant.
 > **_Fonctions utilisées :_** [detection_decline()](https://fordead.gitlab.io/fordead_package/reference/fordead/decline_detection/#detection_decline)
 
