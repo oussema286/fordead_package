@@ -456,6 +456,22 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
 
         
 def import_forest_mask(forest_mask_path,chunks = None):
+    """
+    Imports forest mask
+
+    Parameters
+    ----------
+    forest_mask_path : str
+        Path of the forest mask binary raster.
+    chunks : int, optional
+        Chunks for import as dask array. If None, data is imported as xarray. The default is None.
+
+    Returns
+    -------
+    xarray DataArray
+        Binary array containing True if pixels are inside the region of interest.
+
+    """
     forest_mask = xr.open_rasterio(forest_mask_path,chunks = chunks)
     forest_mask=forest_mask[0,:,:]
     # forest_mask=forest_mask.rename({"band" : "Mask"})
@@ -613,6 +629,23 @@ def initialize_decline_data(shape,coords):
 
 
 def import_soil_data(dict_paths, chunks = None):
+    """
+    Imports data relating to soil detection
+
+    Parameters
+    ----------
+    dict_paths : dict
+        Dictionnary containg the keys "state_soil", "first_date_soil" and "count_soil" whose values are the paths to the corresponding soil detection data file.
+    chunks : int, optional
+        Chunk size for import as dask array. The default is None.
+
+    Returns
+    -------
+    soil_data : xarray DataSet or dask DataSet
+        DataSet containing three DataArrays, "state" containing the state of the pixel after computations (True for soil), "first_date" containing the index of the date of the first soil anomaly, "count" containing the number of successive soil anomalies.
+
+    """
+    
     state_soil = xr.open_rasterio(dict_paths["state_soil"], chunks = chunks).astype(bool)
     first_date_soil = xr.open_rasterio(dict_paths["first_date_soil"], chunks = chunks)
     count_soil = xr.open_rasterio(dict_paths["count_soil"], chunks = chunks)
@@ -625,6 +658,24 @@ def import_soil_data(dict_paths, chunks = None):
     return soil_data
 
 def initialize_soil_data(shape,coords):
+    """
+    Initializes data relating to soil detection
+
+    Parameters
+    ----------
+    shape : tuple
+        Tuple with sizes for the resulting array 
+    coords : Coordinates attribute of xarray DataArray
+        Coordinates y and x
+
+    Returns
+    -------
+    soil_data : xarray DataSet or dask DataSet
+        DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first soil anomaly, "count" containing the number of successive soil anomalies
+        For all three arrays, all pixels are intitialized at zero.
+
+
+    """
     state_soil=np.zeros(shape,dtype=bool)
     first_date_soil=np.zeros(shape,dtype=np.uint16)
     count_soil= np.zeros(shape,dtype=np.uint16)
