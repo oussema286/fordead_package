@@ -1,4 +1,4 @@
-## ÉTAPE 5 : step5_export_results.py
+## ÉTAPE 5 : Export de sorties
 Cette étape permet de sortir les résultats sous la forme désirée par l'utilisateur, pour la période et fréquence souhaitée. 
 
 #### ENTRÉES
@@ -42,6 +42,8 @@ fordead export_results [OPTIONS]
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#export_results)
 
 ## Détail du fonctionnement
+
+![Diagramme_step5](Diagrams/Diagramme_step5.png "Diagramme_step5")
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...) afin de pouvoir importer l'ensemble des résultats.

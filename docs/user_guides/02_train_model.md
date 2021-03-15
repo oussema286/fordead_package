@@ -1,4 +1,4 @@
-## ÉTAPE 2 : step2_TrainFordead.py
+## ÉTAPE 2 : Apprentissage par modélisation de l'indice de végétation pixel par pixel à partir des premières dates
 Cette étape permet le calcul d'un modèle à partir des premières dates SENTINEL, considérées comme représentatives du comportement saisonnier normal de l'indice de végétation. Ce modèle permet de prédire la valeur de l'indice de végétation à n'importe quelle date.
 
 #### ENTRÉES
@@ -38,6 +38,8 @@ fordead train_model [OPTIONS]
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#train_model)
 
 ## Détail du fonctionnement
+
+![Diagramme_step2](Diagrams/Diagramme_step2.png "Diagramme_step2")
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Avant tout, si la chaîne de traitement a déjà été utilisée sur la zone, les informations relatives à ces calculs sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, les résultats des calculs antérieurs sont supprimés et recalculés avec les nouveaux paramètres. Il est possible de commencer le traitement à cette étape si des indices de végétations et masques ont déjà été calculés pour chaque date.

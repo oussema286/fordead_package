@@ -1,5 +1,4 @@
-# ÉTAPE 1 : step1_compute_masked_vegetationindex.py
-Cette étape permet le calcul d'indices de végétation et de masques pour chaque date SENTINEL-2
+# ÉTAPE 1 : Calcul des indices de végétation et des masques pour chaque date SENTINEL-2
 
 #### ENTRÉES
 Les paramètres en entrée sont :
@@ -43,6 +42,8 @@ fordead masked_vi [OPTIONS]
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#masked_vi)
 
 ## Détail du fonctionnement
+
+![Diagramme_step1](Diagrams/Diagramme_step1.png "Diagramme_step1")
 
 ### Imports des résultats précédents, suppression des résultats obsolètes 
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Ainsi, à moins que les paramètres aient été modifiés, uniquement les calculs suivants sont uniquement réalisés sur les nouvelles dates SENTINEL.

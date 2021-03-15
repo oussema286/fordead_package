@@ -1,4 +1,4 @@
-## ÉTAPE 4 : step4_compute_forest_mask.py
+## ÉTAPE 4 : Création du masque forêt, qui définit les zones d'intérêt
 Cette étape permet de calculer le masque forêt et ainsi définir les zones d'intérêt.
 
 #### ENTRÉES
@@ -37,6 +37,8 @@ fordead forest_mask [OPTIONS]
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#forest_mask)
 
 ## Détail du fonctionnement
+
+![Diagramme_step4](Diagrams/Diagramme_step4.png "Diagramme_step4")
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Cette étape peut également être réalisée indépendamment du reste de la chaîne de traitement, en renseignant le paramètre **path_example_raster**, afin d'obtenir un masque forêt binaire. Sinon, le paramètre **path_example_raster** est automatiquement déterminé à partir des résultats des étapes précédentes afin que le masque forêt corresponde à la zone étudiée.

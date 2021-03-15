@@ -1,4 +1,4 @@
-## ÉTAPE 3 : step3_DetectionFordead.py
+## ÉTAPE 3 : Détection du dépérissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel
 Cette étape permet la détection du déperissement. Pour chaque date SENTINEL non utilisée pour l'apprentissage, l'indice de végétation réel est comparé à l'indice de végétation prédit à partir des modèles calculés dans l'étape précèdente. Si la différence dépasse un seuil, une anomalie est détectée. Si trois anomalies successives sont détectées, le pixel est considéré comme dépérissant. Si après avoir été détecté comme déperissant, le pixel a trois dates successives sans anomalies, il n'est plus considéré comme dépérissant.
 
 #### ENTRÉES
@@ -31,6 +31,8 @@ fordead decline_detection [OPTIONS]
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#decline_detection)
 
 ## Détail du fonctionnement
+
+![Diagramme_step3](Diagrams/Diagramme_step3.png "Diagramme_step3")
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Ainsi, à moins que les paramètres aient été modifiés ou que ce soit la première fois que ce traitement est réalisé, la détection du dépérissement est mise à jour uniquement avec les nouvelles dates SENTINEL.
