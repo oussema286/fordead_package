@@ -82,6 +82,8 @@ def create_timelapse(data_directory, obs_terrain_path,shape_path = None, coordin
         Shape=ShapeInteret.iloc[ShapeIndex:(ShapeIndex+1)]
         if 'Id' in Shape.columns:
             NameFile=str(Shape["Id"].iloc[0])
+        elif 'id' in Shape.columns:
+            NameFile=str(Shape["id"].iloc[0])
         else:
             NameFile=str(ShapeIndex)
         print("Creating timelapse | Id : " + NameFile)
