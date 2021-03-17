@@ -8,6 +8,9 @@ import xarray as xr
 import numpy as np
 import dask.array as da
 import datetime
+from scipy.linalg import lstsq
+from fordead.ImportData import import_forest_mask
+
 
 def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
     """
@@ -16,17 +19,18 @@ def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
     Parameters
     ----------
     stack_masks : xarray.DataArray (Time,x,y)
-        Stack of masks with dimensions 
+        Stack of masks with dimensions (Time,x,y)
     min_last_date_training : str
-        Earliest date at which the training will end and the detection begin
+        Earliest date at which the training ends and the detection begins
     nb_min_date : int, optional
-        Minimum number of dates from which to train the model. The default is 10.
+        Minimum number of dates used to train the model. The default is 10.
 
     Returns
     -------
-    xarray.DataArray (x,y)
+    detection_dates : xarray.DataArray (Time,x,y)
+        Boolean array, True at dates where the pixel is used for detection, False when used for training
+    first_detection_date_index : xarray.DataArray (x,y)
         Array containing the index of the last date which will be used for training, or 0 if there isn't enough valid data.
-
     """
     
     min_date_index=int(sum(stack_masks.Time<min_last_date_training))-1
@@ -44,7 +48,7 @@ def compute_HarmonicTerms(DateAsNumber):
     return np.array([1,np.sin(2*np.pi*DateAsNumber/365.25), np.cos(2*np.pi*DateAsNumber/365.25),np.sin(2*2*np.pi*DateAsNumber/365.25),np.cos(2*2*np.pi*DateAsNumber/365.25)])
 
 
-def model_vi(stack_vi, stack_masks):      
+def model_vi(stack_vi, stack_masks, one_dim = False):      
 
     """
     Models periodic vegetation index for each pixel.  
@@ -66,10 +70,13 @@ def model_vi(stack_vi, stack_masks):
     DatesNumbers = [(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]
     
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in DatesNumbers])
+    if not one_dim:
+        coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms})
+        coeff_model['coeff'] = range(1,6) # coordinate values as recorded in .tif bands
+    else:
+        p, _, _, _ = lstsq(HarmonicTerms, stack_vi.where(~stack_masks,drop=True))
+        coeff_model = xr.DataArray(p, coords={"coeff" : range(1,6)},dims=["coeff"])
         
-    coeff_model = da.blockwise(censored_lstsq, 'kmn', stack_vi.data, 'tmn',~stack_masks.data, 'tmn', new_axes={'k':5}, dtype=HarmonicTerms.dtype, A=HarmonicTerms, meta=np.ndarray(()))
-    coeff_model = xr.DataArray(coeff_model, dims=['coeff', stack_vi.dims[1], stack_vi.dims[2]], coords=[('coeff', np.arange(5)), stack_vi.coords[stack_vi.dims[1]], stack_vi.coords[stack_vi.dims[2]]])
-
     return coeff_model
 
 def censored_lstsq(B, M, A):
@@ -183,3 +190,46 @@ def censored_lstsq(B, M, A):
     out = out.reshape([A.shape[1]] + list(shape[1:]))
     # del B, M, rhs, T
     return out
+
+def prediction_vegetation_index(coeff_model,date_list):
+    """
+    Predicts the vegetation index from the model coefficients and the date
+    
+    Parameters
+    ----------
+    coeff_model : array (5,x,y)
+        Array containing the five coefficients of the vegetation index model for each pixel
+    date : str
+        Date in the format "YYYY-MM-DD"
+
+    Returns
+    -------
+    predicted_vi : array (x,y)
+        Array containing predicted vegetation index from the model
+
+    """
+        
+    date_as_number_list=[(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in date_list]
+    harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in date_as_number_list])
+    harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : date_list, "coeff" : range(1, 6)},dims=["Time", "coeff"])
+    
+    predicted_vi = sum(coeff_model * harmonic_terms)
+    return predicted_vi
+
+def model_vi_correction(stack_vi, mask_path):
+    forest_mask = import_forest_mask(mask_path)
+    median_vi = stack_vi.where(forest_mask).median(dim=["x","y"])
+    large_scale_model = model_vi(median_vi,xr.DataArray(np.zeros((median_vi.size),dtype = bool), coords=median_vi.coords), one_dim = True)
+    predicted_median_vi = prediction_vegetation_index(large_scale_model,median_vi.Time.data)
+    correction_vi = (predicted_median_vi - median_vi).compute()
+    stack_vi = stack_vi + correction_vi
+    return stack_vi, large_scale_model, correction_vi
+
+def correct_vi_date(vegetation_index, forest_mask, large_scale_model, date, correction_vi):
+    if date not in correction_vi.Time:
+        median_vi = vegetation_index.where(forest_mask).median(dim=["x","y"])
+        date_correction_vi = prediction_vegetation_index(large_scale_model,[date]) - median_vi
+        correction_vi = xr.concat((correction_vi,date_correction_vi),dim = 'Time')
+
+    vegetation_index = vegetation_index + correction_vi.sel(Time = date)
+    return vegetation_index, correction_vi

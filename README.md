@@ -15,6 +15,9 @@ pip install .
 ```
 
 ## Utilisation pour la détection de déperissement
+
+![diagramme_general](docs/user_guides/Diagrams/Diagramme_general.png "diagramme_general")
+
 La détection du déperissement se fait en cinq étapes.
 - [Le calcul des indices de végétation et des masques pour chaque date SENTINEL-2](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)
 - [L'apprentissage par modélisation de l'indice de végétation pixel par pixel à partir des premières dates](https://fordead.gitlab.io/fordead_package/docs/user_guides/02_train_model/)

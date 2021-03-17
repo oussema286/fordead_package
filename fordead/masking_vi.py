@@ -5,6 +5,7 @@ Created on Fri Nov 20 17:29:17 2020
 @author: Raphael Dutrieux
 """
 import xarray as xr
+import numpy as np
 import re
 from pathlib import Path
 import json
@@ -74,7 +75,6 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
 
     """
     
-
     example_raster = xr.open_rasterio(example_path)
     example_raster=example_raster.sel(band=1)
     example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
@@ -126,6 +126,25 @@ def rasterize_polygons_binary(polygons, example_raster):
     return forest_mask
 
 def clip_oso(path_oso, path_example_raster, list_code_oso):
+    """
+    Creates binary mask from CESBIO's soil occupation map (http://osr-cesbio.ups-tlse.fr/~oso/) by clipping it using a given raster's extent and filtering on listed values.
+
+    Parameters
+    ----------
+    path_oso : str
+        Path to CESBIO's OSO map.
+    path_example_raster : str
+        Path to raster used for clipping.
+    list_code_oso : list
+        List of codes used for filtering
+
+    Returns
+    -------
+    forest_mask : xarray DataArray
+        Boolean DataArray containing True where pixels's values in CESBIO's OSO map are in the list list_code_oso.
+
+    """
+    
     example_raster = xr.open_rasterio(path_example_raster)
     OSO = xr.open_rasterio(path_oso)
     example_raster.attrs["nodata"] = 0 #Avoids bug in reproject when nodata = nan and dtype = int
@@ -146,6 +165,25 @@ def clip_oso(path_oso, path_example_raster, list_code_oso):
     return forest_mask
 
 def raster_full(path_example_raster, fill_value, dtype = None):
+    """
+    Creates a raster with extent, resolution and projection system corresponding to a given raster, filled with a single value.
+
+    Parameters
+    ----------
+    path_example_raster : str
+        Path to raster used as a model.
+    fill_value : int or float
+        Value used to fill the raster
+    dtype : type, optional
+        Type of the fill_value. The default is None.
+
+    Returns
+    -------
+    filled_raster : xarray DataArray
+        Raster filled with a single value.
+
+    """
+    
     filled_raster = xr.open_rasterio(path_example_raster).sel(band=1)
     filled_raster[:,:]=fill_value
     filled_raster.attrs["crs"]=filled_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
@@ -153,6 +191,26 @@ def raster_full(path_example_raster, fill_value, dtype = None):
     return filled_raster
 
 def get_pre_masks(stack_bands):   
+    """
+    Compute pre-masks from single date SENTINEL data
+
+    Parameters
+    ----------
+    stack_bands : xarray DataArray
+        3D xarray with band dimension
+
+    Returns
+    -------
+    soil_anomaly : xarray DataArray
+        Binary DataArray, holds True where soil anomalies are detected
+    shadows : xarray DataArray
+        Binary DataArray, holds True where shadows are detected
+    outside_swath : xarray DataArray
+        Binary DataArray, holds True where pixels are outside swath
+    invalid : xarray DataArray
+        Binary DataArray, aggregates shadows, very visible clouds and pixels outside swath
+
+    """
     
     soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & ((B3 + B4) > 800)")
     # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & (B4 > 600)")
@@ -166,22 +224,62 @@ def get_pre_masks(stack_bands):
     return soil_anomaly, shadows, outside_swath, invalid
 
 
-def detect_soil(soil_data, premask_soil, invalid, date_index):
-    soil_data["count"]=xr.where(~invalid & premask_soil,soil_data["count"]+1,soil_data["count"])
-    soil_data["count"]=xr.where(~invalid & ~premask_soil,0,soil_data["count"])
+def detect_soil(soil_data, soil_anomaly, invalid, date_index):
+    """
+    Updates soil detection using soil anomalies from a new date
+
+    Parameters
+    ----------
+    soil_data : xarray DataSet
+        DataSet where variable "state" is True where pixels are detected as cut, variable "count" gives the number of successive soil anomalies, and "first_date" gives the date index of the first anomaly
+    soil_anomaly : xarray DataArray
+        Binary DataArray, holds True where soil anomalies are detected
+    invalid : xarray DataArray
+        Binary DataArray, aggregates shadows, very visible clouds and pixels outside swath
+    date_index : int
+        Index of the date
+
+    Returns
+    -------
+    soil_data : xarray DataSet
+        Updated soil_data DataSet
+
+    """
+    
+    soil_data["count"]=xr.where(~invalid & soil_anomaly,soil_data["count"]+1,soil_data["count"])
+    soil_data["count"]=xr.where(~invalid & ~soil_anomaly,0,soil_data["count"])
     soil_data["state"] = xr.where(soil_data["count"] == 3, True, soil_data["state"])
     soil_data["first_date"] = xr.where(~invalid & (soil_data["count"] == 1) & ~soil_data["state"],date_index,soil_data["first_date"]) #Keeps index of first soil detection
     
     return soil_data
 
 
-def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
+def detect_clouds(stack_bands, soil_state, soil_anomaly):
+    """
+    Detects clouds, is meant to detect even faint clouds in resinous forest by removing detected soil and using a 3 pixels dilation
+
+    Parameters
+    ----------
+    stack_bands : xarray DataArray
+        3D xarray with band dimension
+    soil_state : xarray DataArray
+        DataArray which holds True where pixels are detected as cut
+    soil_anomaly : xarray DataArray
+        Binary DataArray, holds True where soil anomalies are detected
+
+    Returns
+    -------
+    clouds : xarray DataArray
+        Binary DataArray mask, holds True where clouds are detected
+
+    """
+    
     # NG = stack_bands.sel(band = "B3")/(stack_bands.sel(band = "B8A")+stack_bands.sel(band = "B4")+stack_bands.sel(band = "B3"))
     NG = compute_vegetation_index(stack_bands, formula = "B3/(B8A+B4+B3)")
     cond1 = NG > 0.15
     cond2 = stack_bands.sel(band = "B2") > 400
     cond3 = stack_bands.sel(band = "B2") > 700
-    cond4 =  ~(soil_data["state"] | premask_soil) #Not detected as soil
+    cond4 =  ~(soil_state | soil_anomaly) #Not detected as soil
     
     clouds = cond4 & (cond3 | (cond1 & cond2))    
     clouds[:,:] = ndimage.binary_dilation(clouds,iterations=3,structure=ndimage.generate_binary_structure(2, 1)) # 3 pixels dilation of cloud mask
@@ -190,22 +288,64 @@ def detect_clouds(stack_bands, outside_swath, soil_data, premask_soil):
 
 
 def compute_masks(stack_bands, soil_data, date_index):
+    """
+    Computes mask from SENTINEL data, includes updated soil detection, clouds, shadows and pixels outside swath
+
+    Parameters
+    ----------
+    stack_bands : xarray DataArray
+        3D xarray with band dimension
+    soil_data : xarray DataSet
+        DataSet where variable "state" is True where pixels are detected as cut, variable "count" gives the number of successive soil anomalies, and "first_date" gives the date index of the first anomaly
+    date_index : int
+        Index of the date
+
+    Returns
+    -------
+    mask : xarray DataArray
+        Binary DataArray, holds True where pixels are masked
+
+    """
     
-    premask_soil, shadows, outside_swath, invalid = get_pre_masks(stack_bands)
+    
+    soil_anomaly, shadows, outside_swath, invalid = get_pre_masks(stack_bands)
     
     # Compute soil
-    soil_data = detect_soil(soil_data, premask_soil, invalid, date_index)
+    soil_data = detect_soil(soil_data, soil_anomaly, invalid, date_index)
         
     # Compute clouds
-    clouds = detect_clouds(stack_bands, outside_swath, soil_data, premask_soil)
+    clouds = detect_clouds(stack_bands, soil_data["state"], soil_anomaly)
     
     #Combine all masks
-    mask = shadows | clouds | outside_swath | soil_data['state'] | premask_soil
+    mask = shadows | clouds | outside_swath | soil_data['state'] | soil_anomaly
     # mask.plot()
     
     return mask
 
+def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
+    formula = get_dict_vi(path_dict_vi)[vi]["formula"]
+    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
+    bands = list(set(forced_bands + ["B"+band for band in re.findall(match_string, formula)]))
+    return bands, formula
+
 def get_dict_vi(path_dict_vi = None):
+    """
+    Imports dictionnary containing formula of vegetation indices, as well as the way it changes in case of decline
+
+    Parameters
+    ----------
+    path_dict_vi : str, optional
+        Path of the text file. 
+        Each line of the text file corresponds to an index, in the format "INDEX_NAME FORMULA SIGN".
+        FORMULA corresponds to a formula as can be used in the function compute_vegetation_index, SIGN can be - or +. The default is None.
+
+    Returns
+    -------
+    dict_vi : dict
+        Dictionnary containing formula of vegetation indices, as well as the way it changes in case of decline
+
+    """
+    
     dict_vi = {"CRSWIR" : {'formula': 'B11/(B8A+((B12-B8A)/(2185.7-864))*(1610.4-864))', 'decline_change_direction': '+'},
                 "NDVI" : {'formula': '(B8-B4)/(B8+B4)', 'decline_change_direction': '-'},
                 "BSI" : {"formula" : '(B4 + B2 - B3)/(B4 + B2 + B3)', 'decline_change_direction' : '-'}}
@@ -219,15 +359,35 @@ def get_dict_vi(path_dict_vi = None):
         dict_vi.update(d)
     return dict_vi
 
-def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
-    formula = get_dict_vi(path_dict_vi)[vi]["formula"]
-    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
-    bands = list(set(forced_bands + ["B"+band for band in re.findall(match_string, formula)]))
-    return bands, formula
+
     
 
 def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_dict_vi = None):
-    
+    """
+    Computes vegetation index
+
+    Parameters
+    ----------
+    stack_bands : xarray DataArray
+        3D xarray with band dimension
+    vi : str, optional
+        Name of vegetation index, see get_dict_vi documentation to know available vegetation indices. A formula can be given instead The default is "CRSWIR".
+    formula : str, optional
+        Formula used to calculate the vegetation index. Bands can be called by their name. All operations on xarrays and using numpy functions are possible.
+        Examples :
+            NDVI : formula = '(B8-B4)/(B8+B4)'
+            Squared-root of B2 : formula = 'np.sqrt(B2)'
+            Logical operations :  formula = '(B2 > 600) & (B11 > 1000) | ~(B3 <= 500)'
+            The default is None.
+    path_dict_vi : str, optional
+        Path to a text file containing vegetation indices formulas so they can be used using 'vi' parameter. See get_dict_vi documentation. The default is None.
+
+    Returns
+    -------
+    xarray DataArray
+        Computed vegetation index
+
+    """
     if formula is None:
         dict_vegetation_index = get_dict_vi(path_dict_vi)
         formula = dict_vegetation_index[vi]["formula"]

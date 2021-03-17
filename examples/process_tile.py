@@ -22,7 +22,6 @@ import time
 import datetime
 
 
-
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
@@ -55,6 +54,8 @@ def parse_command_line():
     parser.add_argument("--results_frequency", dest = "results_frequency",type = str,default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
 
+    parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
+
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -65,7 +66,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   lim_perc_cloud, vi, sentinel_source, apply_source_mask, #compute_masked_vegetationindex arguments
                   remove_outliers, threshold_outliers, min_last_date_training, date_lim_training, #Train_model arguments
                   threshold_anomaly,
-                  start_date_results, end_date_results, results_frequency, multiple_files): #Decline_detection argument
+                  start_date_results, end_date_results, results_frequency, multiple_files,
+                  correct_vi): #Decline_detection argument
 
     # main_directory = "/mnt/fordead/Out"
     # sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
@@ -102,10 +104,23 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
+        
 # =====================================================================================================================
 
+        # print("Computing forest mask")
+        compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+                            forest_mask_source = forest_mask_source,
+                            dep_path = dep_path,
+                            bdforet_dirpath = bdforet_dirpath,
+                            path_oso = path_oso,
+                            list_code_oso = list_code_oso)
+        file = open(logpath, "a") 
+        file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+        file.close()
+# =====================================================================================================================
+            
         train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                    nb_min_date = 10)
+                    nb_min_date = 11, correct_vi = True)
                     # path_masks = main_directory / tuile / "Mask",
                     # path_vi = main_directory / tuile / "VegetationIndex")
         # print(str(time.time() - start_time))
@@ -124,18 +139,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
-# =====================================================================================================================
 
-        # print("Computing forest mask")
-        compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                            forest_mask_source = forest_mask_source,
-                            dep_path = dep_path,
-                            bdforet_dirpath = bdforet_dirpath,
-                            path_oso = path_oso,
-                            list_code_oso = list_code_oso)
-        file = open(logpath, "a") 
-        file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
 # # =====================================================================================================================
 
 #         # print("Computing forest mask")

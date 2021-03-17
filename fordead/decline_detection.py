@@ -5,90 +5,41 @@ Created on Mon Nov  2 09:34:34 2020
 @author: Raphael Dutrieux
 """
 
-import datetime
-from fordead.ModelVegetationIndex import compute_HarmonicTerms
+# import datetime
+# from fordead.ModelVegetationIndex import compute_HarmonicTerms
 from fordead.masking_vi import get_dict_vi
 import xarray as xr
+# import numpy as np
 
-import numpy as np
 
-def prediction_vegetation_index(coeff_model,date_list):
+
+
+
+def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, path_dict_vi = None):
     """
-    Predicts the vegetation index from the model coefficients and the date
-    
+    Detects anomalies by comparison between predicted and calculated vegetation index. The array returns contains True where the difference between the vegetation index and its prediction is above the threshold in the direction of the specified decline change direction of the vegetation index. 
+
     Parameters
     ----------
-    coeff_model : array (5,x,y)
-        Array containing the five coefficients of the vegetation index model for each pixel
-    date : str
-        Date in the format "YYYY-MM-DD"
-
-    Returns
-    -------
+    vegetation_index : xarray DataArray
+        Array containing the vegetation index values computed from satellite data
     predicted_vi : array (x,y)
-        Array containing predicted vegetation index from the model
-
-    """
-        # harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in stack_vi["DateNumber"]])
-        # harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : stack_vi["Time"], "band" : [1,2,3,4,5]},dims=["Time", "band"])
-        # predicted_vi = sum(coeff_model * harmonic_terms)
-        
-    date_as_number_list=[(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in date_list]
-    harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in date_as_number_list])
-    harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : date_list, "coeff" : [1,2,3,4,5]},dims=["Time", "coeff"])
-    # harmonic_terms = compute_HarmonicTerms(date_as_number)
-    # harmonic_terms = xr.DataArray(harmonic_terms, coords={"band" : [1,2,3,4,5]},dims=["band"])
-    
-    predicted_vi = sum(coeff_model * harmonic_terms)
-    return predicted_vi
-
-# def prediction_vegetation_index(coeff_model,date):
-#     """
-#     Predicts the vegetation index from the model coefficients and the date
-    
-#     Parameters
-#     ----------
-#     coeff_model : array (5,x,y)
-#         Array containing the five coefficients of the vegetation index model for each pixel
-#     date : str
-#         Date in the format "YYYY-MM-DD"
-
-#     Returns
-#     -------
-#     predicted_vi : array (x,y)
-#         Array containing predicted vegetation index from the model
-
-#     """
-        
-#     date_as_number=(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
-    
-#     harmonic_terms = compute_HarmonicTerms(date_as_number)
-#     harmonic_terms = xr.DataArray(harmonic_terms, coords={"band" : [1,2,3,4,5]},dims=["band"])
-    
-#     predicted_vi = sum(coeff_model * harmonic_terms)
-#     return predicted_vi
-
-
-def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, path_dict_vi):
-    """
-    Detects anomalies by comparison between predicted and calculated vegetation index
-    
-    Parameters
-    ----------
-    masked_vi : array (x,y) (bool)
-        Array, True where pixels are masked
-    predicted_vi : array (x,y)
-        Array containing predicted vegetation index from the model
+        Array containing the vegetation index predicted by the model
     threshold_anomaly : float
-        Threshold used to compare predicted and calculated vegetation index. Anomalies are detected if the difference between the two is above this threshold.
+        Threshold used to compare predicted and calculated vegetation index.
+    vi : str
+        Name of the used vegetation index
+    path_dict_vi : str, optional
+        Path to a text file containing vegetation indices information, where is indicated whether the index rises of falls in case of forest decline. See get_dict_vi documentation. The default is None.
+
 
     Returns
     -------
     anomalies : array (x,y) (bool)
         Array, pixel value is True if an anomaly is detected.
 
-
     """
+
     dict_vi = get_dict_vi(path_dict_vi)
     
     diff_vi = vegetation_index-predicted_vi
@@ -144,13 +95,13 @@ def detection_decline_validation(decline_data, anomalies, mask, date_index, rast
 
 def detection_decline(decline_data, anomalies, mask, date_index):
     """
-    Updates decline data using anomalies.
+    Updates decline data using anomalies. Successive anomalies are counted for pixels considered healthy, and successive dates without anomalies are counted for pixels considered declining. The state of the pixel changes when the count reaches 3.
     
     Parameters
     ----------
     decline_data : Dataset with three arrays : 
         "count" which is the number of successive anomalies, 
-        "state" which is True where pixels are detected as declining, 
+        "state" which is True where pixels are detected as declining, False where they are considered healthy.
         "first date" which contains the index of the date of the first anomaly.
     anomalies : array (x,y) (bool)
         Array, pixel value is True if an anomaly is detected.
@@ -173,19 +124,6 @@ def detection_decline(decline_data, anomalies, mask, date_index):
         
     decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
     decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & ~decline_data["state"], date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
-   
-    
+
     return decline_data
 
-# def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly):
-#     """
-#     Détecte les anomalies par comparaison entre l'indice de végétation réel et l'indice prédit.
-
-#     """
-        
-#     diff_vi = masked_vi["vegetation_index"]-predicted_vi
-#     Anomalies = diff_vi > threshold_anomaly
-    
-#     # Anomalies.where(~(rasterSigma==0),False)#Retire les zones invalides (sans modèle)
-    
-#     return anomalies

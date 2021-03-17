@@ -10,8 +10,8 @@ import click
 # import numpy as np
 from fordead.ImportData import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask, import_soil_data,import_resampled_sen_stack
 from fordead.writing_data import write_tif
-from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline_validation
-# from pathlib import Path
+from fordead.decline_detection import detection_anomalies, detection_decline_validation
+from fordead.ModelVegetationIndex import correct_vi_date, prediction_vegetation_index
 
 import geopandas as gp
 import json
@@ -143,7 +143,8 @@ def decline_detection(
     tile.add_path("count_decline", tile.data_directory / "DataDecline" / "count_decline.tif")
     tile.add_dirpath("validation", tile.data_directory / "Validation")
 
-        
+    if tile.parameters["correct_vi"]:
+        forest_mask = import_forest_mask(tile.paths["ForestMask"])
     # raster_id_validation_data=get_rasterized_validation_data(validation_data_directory / ("scolyte"+tile_name[1:]+".shp"), raster_metadata, False)
     valid_area_mask = import_forest_mask(tile.paths["valid_area_mask"])
     raster_id_validation_data=get_rasterized_validation_data(ground_obs_path, tile.raster_meta, False)
@@ -173,6 +174,9 @@ def decline_detection(
             #DECLINE DETECTION
             for date_index, date in enumerate(tile.dates):
                 masked_vi = import_masked_vi(tile.paths, date)
+                if tile.parameters["correct_vi"]:
+                    masked_vi["vegetation_index"], tile.correction_vi = correct_vi_date(masked_vi["vegetation_index"],forest_mask, tile.large_scale_model, date, tile.correction_vi)
+
                 soil = (soil_data["first_date"] <= date_index) & soil_data["state"]
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
                 B2 = import_resampled_sen_stack(tile.paths["Sentinel"][date], ["B2"], interpolation_order = 0, extent = tile.raster_meta["extent"])

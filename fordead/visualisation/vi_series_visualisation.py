@@ -120,7 +120,10 @@ def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 
     harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in xx])
     harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : xxDate, "coeff" : [1,2,3,4,5]},dims=["Time","coeff"])
     stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
-
+    
+    if tile.parameters["correct_vi"]:
+        stack_vi = stack_vi + tile.correction_vi
+    
 
     if shape_path is not None:
         shape = gp.read_file(shape_path)

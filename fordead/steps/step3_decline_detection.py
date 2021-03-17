@@ -7,16 +7,16 @@ Created on Mon Nov  2 09:25:23 2020
 
 
 import click
-# import numpy as np
-from fordead.ImportData import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo
+from fordead.ImportData import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask
 from fordead.writing_data import write_tif
-from fordead.decline_detection import detection_anomalies, prediction_vegetation_index, detection_decline
-# import time
+from fordead.decline_detection import detection_anomalies, detection_decline
+from fordead.ModelVegetationIndex import prediction_vegetation_index, correct_vi_date
+
 
 @click.command(name='decline_detection')
-@click.option("-d", "--data_directory",  type=str, help="Dossier avec les données")
+@click.option("-d", "--data_directory",  type=str, help="Path of the output directory")
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
-                    help="Seuil minimum pour détection d'anomalies", show_default=True)
+                    help="Minimum threshold for anomaly detection", show_default=True)
 @click.option("--vi",  type=str, default=None,
                     help="Chosen vegetation index, only useful if step1 was skipped", show_default=True)
 @click.option("--path_dict_vi",  type=str, default=None,
@@ -28,7 +28,10 @@ def cli_decline_detection(
     path_dict_vi = None
     ):
     """
-    Produce the anomaly detection from the model
+    Detects anomalies by comparing the vegetation index and its prediction from the model. 
+    Detects declining pixels when there are 3 successive anomalies. If pixels detected as declining have 3 successive dates without anomalies, they are considered healthy again.
+    Anomalies and decline data are written in the data_directory
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/03_decline_detection/
     \f
     Parameters
     ----------
@@ -51,14 +54,22 @@ def decline_detection(
     path_dict_vi = None
     ):
     """
-    Produce the anomaly detection from the model
+    Detects anomalies by comparing the vegetation index and its prediction from the model. 
+    Detects declining pixels when there are 3 successive anomalies. If pixels detected as declining have 3 successive dates without anomalies, they are considered healthy again.
+    Anomalies and decline data are written in the data_directory
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/03_decline_detection/
+    
     \f
     Parameters
     ----------
-    data_directory
-    threshold_anomaly
-    vi
-    path_dict_vi
+    data_directory : str
+        Path of the output directory
+    threshold_anomaly : float
+        Minimum threshold for anomaly detection
+    vi : str
+        Chosen vegetation index, only useful if step1 was skipped
+    path_dict_vi : str
+        Path of text file to add vegetation index formula, only useful if step1 was skipped
 
     Returns
     -------
@@ -96,11 +107,15 @@ def decline_detection(
             decline_data = import_decline_data(tile.paths)
         else:
             decline_data = initialize_decline_data(first_detection_date_index.shape,first_detection_date_index.coords)
-        
+        if tile.parameters["correct_vi"]:
+            forest_mask = import_forest_mask(tile.paths["ForestMask"])
         #DECLINE DETECTION
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
                 masked_vi = import_masked_vi(tile.paths,date)
+                if tile.parameters["correct_vi"]:
+                    masked_vi["vegetation_index"], tile.correction_vi = correct_vi_date(masked_vi["vegetation_index"],forest_mask, tile.large_scale_model, date, tile.correction_vi)
+
                 masked_vi["mask"] = masked_vi["mask"] | (date_index < first_detection_date_index) #Masking pixels where date was used for training
 
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])

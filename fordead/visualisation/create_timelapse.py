@@ -88,7 +88,7 @@ def create_timelapse(data_directory, obs_terrain_path,shape_path = None, coordin
         
         # if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()):
         fig = CreateTimelapse(Shape,tile,DictCol, obs_terrain_path)
-        plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=True)
+        plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=False)
 
 
 if __name__ == '__main__':
