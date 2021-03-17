@@ -194,6 +194,7 @@ class TileInfo:
                     shutil.rmtree(self.paths[key_path])
                 elif self.paths[key_path].is_file():
                     shutil.rmtree(self.paths[key_path].parent)
+                      
    
     def delete_files(self,*key_paths):
         """
@@ -298,7 +299,7 @@ class TileInfo:
         # if hasattr(self, 'dates'):
         #     self.dates = np.array(list(self.paths["VegetationIndex"].keys())) >
         # self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
-        
+
         
         
 def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):

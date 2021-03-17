@@ -33,7 +33,7 @@ def parse_command_line():
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
     parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
-    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
+    parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.31, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
@@ -55,6 +55,8 @@ def parse_command_line():
     parser.add_argument("--results_frequency", dest = "results_frequency",type = str,default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
 
+    parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
+
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -65,7 +67,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   lim_perc_cloud, vi, sentinel_source, apply_source_mask, #compute_masked_vegetationindex arguments
                   remove_outliers, threshold_outliers, min_last_date_training, date_lim_training, #Train_model arguments
                   threshold_anomaly,
-                  start_date_results, end_date_results, results_frequency, multiple_files): #Decline_detection argument
+                  start_date_results, end_date_results, results_frequency, multiple_files,
+                  correct_vi): #Decline_detection argument
 
     # main_directory = "/mnt/fordead/Out"
     # sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
@@ -73,8 +76,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
     # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
     
-    # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
-    # main_directory = "D:/Documents/Deperissement/Output"    
+    sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
+    main_directory = "D:/Documents/Deperissement/Output"    
     # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
 
     # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/zone_timelapse.shp"
@@ -101,10 +104,23 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
+        
 # =====================================================================================================================
 
+        # print("Computing forest mask")
+        compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+                            forest_mask_source = forest_mask_source,
+                            dep_path = dep_path,
+                            bdforet_dirpath = bdforet_dirpath,
+                            path_oso = path_oso,
+                            list_code_oso = list_code_oso)
+        file = open(logpath, "a") 
+        file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+        file.close()
+# =====================================================================================================================
+            
         train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                    nb_min_date = 10)
+                    nb_min_date = 11, correct_vi = False)
                     # path_masks = main_directory / tuile / "Mask",
                     # path_vi = main_directory / tuile / "VegetationIndex")
         # print(str(time.time() - start_time))
@@ -119,18 +135,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
-# =====================================================================================================================
 
-        # print("Computing forest mask")
-        compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                            forest_mask_source = forest_mask_source,
-                            dep_path = dep_path,
-                            bdforet_dirpath = bdforet_dirpath,
-                            path_oso = path_oso,
-                            list_code_oso = list_code_oso)
-        file = open(logpath, "a") 
-        file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
 # # =====================================================================================================================
 
 #         # print("Computing forest mask")
@@ -157,7 +162,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
         #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
         #                   coordinates = (765013, 5312071), radius = 500)
-        # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
+        vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
         
         
         

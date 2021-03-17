@@ -104,7 +104,7 @@ def compute_forest_mask(data_directory,
     tile.add_parameters({"forest_mask_source" : forest_mask_source, "list_forest_type" : list_forest_type, "list_code_oso" : list_code_oso})
     if tile.parameters["Overwrite"] : tile.delete_files("ForestMask" ,"periodic_results_decline","result_files","timelapse")
 
-    if path_example_raster == None : path_example_raster = tile.paths["state_decline"]
+    if path_example_raster == None : path_example_raster = tile.paths["VegetationIndex"][tile.dates[0]]
     tile.add_path("ForestMask", tile.data_directory / "ForestMask" / "Forest_Mask.tif")
     
     if tile.paths["ForestMask"].exists():

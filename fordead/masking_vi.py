@@ -321,6 +321,12 @@ def compute_masks(stack_bands, soil_data, date_index):
     
     return mask
 
+def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
+    formula = get_dict_vi(path_dict_vi)[vi]["formula"]
+    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
+    bands = list(set(forced_bands + ["B"+band for band in re.findall(match_string, formula)]))
+    return bands, formula
+
 def get_dict_vi(path_dict_vi = None):
     """
     Imports dictionnary containing formula of vegetation indices, as well as the way it changes in case of decline
@@ -352,11 +358,7 @@ def get_dict_vi(path_dict_vi = None):
         dict_vi.update(d)
     return dict_vi
 
-def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
-    formula = get_dict_vi(path_dict_vi)[vi]["formula"]
-    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
-    bands = list(set(forced_bands + ["B"+band for band in re.findall(match_string, formula)]))
-    return bands, formula
+
     
 
 def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_dict_vi = None):
