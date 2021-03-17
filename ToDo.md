@@ -16,4 +16,4 @@
 - [x] Allow timelapse creation from coordinate and radius
 - [x] Developping branch for validation data export
 - [ ] Adding possibility to save vegetation index as compressed netcdf
-- [ ] Correcting vegetation index from large scale median vegetation index 
+- [x] Correcting vegetation index from large scale median vegetation index 
