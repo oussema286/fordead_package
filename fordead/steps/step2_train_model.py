@@ -126,7 +126,7 @@ def train_model(
         valid_area_mask = first_detection_date_index!=0
         
         if correct_vi:
-            stack_vi, tile.large_scale_model, tile.correction_vi = model_vi_correction(stack_vi, tile.paths["ForestMask"])
+            stack_vi, tile.large_scale_model, tile.correction_vi = model_vi_correction(stack_vi, stack_masks, tile.paths["ForestMask"])
 
         # Modéliser le CRSWIR
         stack_masks = stack_masks | detection_dates #Masking data not used in training

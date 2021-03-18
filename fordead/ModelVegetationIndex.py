@@ -216,23 +216,38 @@ def prediction_vegetation_index(coeff_model,date_list):
     predicted_vi = sum(coeff_model * harmonic_terms)
     return predicted_vi
 
-def model_vi_correction(stack_vi, mask_path):
-    forest_mask = import_forest_mask(mask_path, chunks = 1280)
+def model_vi_correction(stack_vi, stack_masks, mask_path):
+    forest_mask = import_forest_mask(mask_path)
     # stack_vi = stack_vi.chunk({"Time": 1,"x" : 1280,"y" : 1280})
+    import time
+    # start_time = time.time()
+    
+    # median_vi=[]
     # for date in stack_vi.Time.data:
-    #     stack_vi.sel(Time = date).where(forest_mask,drop =True).nanmedian(dim=["x","y"],skipna=True)
-        
-    #     np.nanmedian(stack_vi.sel(Time = date).where(forest_mask,drop =True))
-    #     np.median(stack_vi.sel(Time = date))
+    #     median_vi += [np.nanmedian(stack_vi.sel(Time = date).where(forest_mask,drop =True))]
+    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
     
-    median_vi = xr.DataArray([np.nanmedian(stack_vi.sel(Time = date).where(forest_mask,drop =True)) for date in stack_vi.Time.data],coords = stack_vi.Time.coords)
-                 
     
-    # stack_vi.sel(Time = date).medi1an(skipna=True)
-    # median_vi = stack_vi.where(forest_mask).median(dim=["x","y"],skipna=True).compute()
+    start_time = time.time()
+    median_vi=[]
+    for date in stack_vi.Time.data:
+        print(date)
+        print("masking")
+        data = stack_vi.sel(Time = date).compute().data[(forest_mask & ~stack_masks.sel(Time = date)).compute().data]
+        print("computing")
+        median_vi += [np.median(data)]
+    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
+    median_vi = np.array(median_vi)
+    
+    # start_time = time.time()
+    # median_vi = xr.DataArray([np.nanmedian(stack_vi.sel(Time = date).where(forest_mask & ~stack_masks.sel(Time = date),drop =True)) for date in stack_vi.Time.data],coords = stack_vi.Time.coords)
+    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
+    
+
     print("median computed")
     # stack_vi = stack_vi.chunk({"Time": -1,"x" : 1280,"y" : 1280})
-    large_scale_model = model_vi(median_vi, xr.DataArray(np.zeros((median_vi.size),dtype = bool), coords=median_vi.coords), one_dim = True)
+    # large_scale_model = model_vi(median_vi, xr.DataArray(np.zeros((median_vi.size),dtype = bool), coords=median_vi.coords), one_dim = True)
+    large_scale_model = model_vi(median_vi, np.isnan(median_vi), one_dim = True)
     predicted_median_vi = prediction_vegetation_index(large_scale_model,median_vi.Time.data)
     correction_vi = (predicted_median_vi - median_vi)
     stack_vi = stack_vi + correction_vi
