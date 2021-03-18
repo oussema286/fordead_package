@@ -218,7 +218,7 @@ def prediction_vegetation_index(coeff_model,date_list):
 
 def model_vi_correction(stack_vi, stack_masks, mask_path):
     forest_mask = import_forest_mask(mask_path)
-    # stack_vi = stack_vi.chunk({"Time": 1,"x" : 1280,"y" : 1280})
+    stack_vi = stack_vi.chunk({"Time": 1,"x" : 1280,"y" : 1280})
     import time
     # start_time = time.time()
     
