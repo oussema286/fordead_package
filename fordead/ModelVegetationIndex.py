@@ -218,17 +218,27 @@ def prediction_vegetation_index(coeff_model,date_list):
 
 def model_vi_correction(stack_vi, mask_path):
     forest_mask = import_forest_mask(mask_path, chunks = 1280)
-    stack_vi = stack_vi.chunk({"Time": 1,"x" : 1280,"y" : 1280})
-    median_vi = stack_vi.where(forest_mask).median(dim=["x","y"],skipna=True)
-    # print("median computed")
-    stack_vi = stack_vi.chunk({"Time": -1,"x" : 1280,"y" : 1280})
+    # stack_vi = stack_vi.chunk({"Time": 1,"x" : 1280,"y" : 1280})
+    # for date in stack_vi.Time.data:
+    #     stack_vi.sel(Time = date).where(forest_mask,drop =True).nanmedian(dim=["x","y"],skipna=True)
+        
+    #     np.nanmedian(stack_vi.sel(Time = date).where(forest_mask,drop =True))
+    #     np.median(stack_vi.sel(Time = date))
+    
+    median_vi = xr.DataArray([np.nanmedian(stack_vi.sel(Time = date).where(forest_mask,drop =True)) for date in stack_vi.Time.data],coords = stack_vi.Time.coords)
+                 
+    
+    # stack_vi.sel(Time = date).medi1an(skipna=True)
+    # median_vi = stack_vi.where(forest_mask).median(dim=["x","y"],skipna=True).compute()
+    print("median computed")
+    # stack_vi = stack_vi.chunk({"Time": -1,"x" : 1280,"y" : 1280})
     large_scale_model = model_vi(median_vi, xr.DataArray(np.zeros((median_vi.size),dtype = bool), coords=median_vi.coords), one_dim = True)
     predicted_median_vi = prediction_vegetation_index(large_scale_model,median_vi.Time.data)
     correction_vi = (predicted_median_vi - median_vi)
     stack_vi = stack_vi + correction_vi
     # stack_vi = stack_vi + xr.DataArray(np.ones((stack_vi.sizes["Time"]),dtype = int),coords = stack_vi.Time.coords)
-    # , large_scale_model, correction_vi
-    return stack_vi, 1, 1
+    
+    return stack_vi, large_scale_model, correction_vi
 
 def correct_vi_date(vegetation_index, forest_mask, large_scale_model, date, correction_vi):
     if date not in correction_vi.Time:
