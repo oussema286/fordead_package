@@ -175,7 +175,7 @@ def decline_detection(
             for date_index, date in enumerate(tile.dates):
                 masked_vi = import_masked_vi(tile.paths, date)
                 if tile.parameters["correct_vi"]:
-                    masked_vi["vegetation_index"], tile.correction_vi = correct_vi_date(masked_vi["vegetation_index"],forest_mask, tile.large_scale_model, date, tile.correction_vi)
+                    masked_vi["vegetation_index"], tile.correction_vi = correct_vi_date(masked_vi,forest_mask, tile.large_scale_model, date, tile.correction_vi)
 
                 soil = (soil_data["first_date"] <= date_index) & soil_data["state"]
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])

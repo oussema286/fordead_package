@@ -9,7 +9,7 @@ import numpy as np
 import dask.array as da
 import datetime
 from scipy.linalg import lstsq
-from fordead.ImportData import import_forest_mask
+from fordead.ImportData import import_forest_mask, import_masked_vi
 
 
 def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
@@ -74,7 +74,7 @@ def model_vi(stack_vi, stack_masks, one_dim = False):
         coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms})
         coeff_model['coeff'] = range(1,6) # coordinate values as recorded in .tif bands
     else:
-        p, _, _, _ = lstsq(HarmonicTerms, stack_vi.where(~stack_masks,drop=True))
+        p, _, _, _ = lstsq(HarmonicTerms[~stack_masks], stack_vi.where(~stack_masks,drop=True))
         coeff_model = xr.DataArray(p, coords={"coeff" : range(1,6)},dims=["coeff"])
         
     return coeff_model
@@ -216,10 +216,10 @@ def prediction_vegetation_index(coeff_model,date_list):
     predicted_vi = sum(coeff_model * harmonic_terms)
     return predicted_vi
 
-def model_vi_correction(stack_vi, stack_masks, mask_path):
-    forest_mask = import_forest_mask(mask_path)
-    stack_vi = stack_vi.chunk({"Time": 1,"x" : 1280,"y" : 1280})
-    import time
+def model_vi_correction(stack_vi, stack_masks, dict_paths):
+    forest_mask = import_forest_mask(dict_paths["ForestMask"])
+    # stack_vi = stack_vi.chunk({"Time": 1,"x" : 1280,"y" : 1280})
+    # import time
     # start_time = time.time()
     
     # median_vi=[]
@@ -228,38 +228,44 @@ def model_vi_correction(stack_vi, stack_masks, mask_path):
     # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
     
     
-    start_time = time.time()
-    median_vi=[]
-    for date in stack_vi.Time.data:
-        print(date)
-        print("masking")
-        data = stack_vi.sel(Time = date).compute().data[(forest_mask & ~stack_masks.sel(Time = date)).compute().data]
-        print("computing")
-        median_vi += [np.median(data)]
-    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
-    median_vi = np.array(median_vi)
-    
     # start_time = time.time()
+    # median_vi=[]
+    # for date in stack_vi.Time.data:
+    #     print(date)
+    #     print("masking")
+    #     data = stack_vi.sel(Time = date).compute().data[(forest_mask & ~stack_masks.sel(Time = date)).compute().data]
+    #     print("computing")
+    #     median_vi += [np.median(data)]
+    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
+    # median_vi = np.array(median_vi)
+    
     # median_vi = xr.DataArray([np.nanmedian(stack_vi.sel(Time = date).where(forest_mask & ~stack_masks.sel(Time = date),drop =True)) for date in stack_vi.Time.data],coords = stack_vi.Time.coords)
     # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
-    
-
-    print("median computed")
-    # stack_vi = stack_vi.chunk({"Time": -1,"x" : 1280,"y" : 1280})
-    # large_scale_model = model_vi(median_vi, xr.DataArray(np.zeros((median_vi.size),dtype = bool), coords=median_vi.coords), one_dim = True)
-    large_scale_model = model_vi(median_vi, np.isnan(median_vi), one_dim = True)
+    median_vi=[]
+    for date in stack_vi.Time.data:
+        print("Import")
+        masked_vi = import_masked_vi(dict_paths, date)
+        print("Masking")
+        try:
+            data = masked_vi["vegetation_index"].where(forest_mask & ~masked_vi["mask"],drop =True)
+            print("calcul")
+            median_vi += [float(data.median())]
+        except ValueError:
+            print("calcul")
+            median_vi += [0]
+    median_vi = xr.DataArray(np.array(median_vi), coords=stack_vi.Time.coords)
+    large_scale_model = model_vi(median_vi, median_vi==0, one_dim = True)
     predicted_median_vi = prediction_vegetation_index(large_scale_model,median_vi.Time.data)
-    correction_vi = (predicted_median_vi - median_vi)
+    correction_vi = (predicted_median_vi - median_vi).where(median_vi!=0,0)
     stack_vi = stack_vi + correction_vi
-    # stack_vi = stack_vi + xr.DataArray(np.ones((stack_vi.sizes["Time"]),dtype = int),coords = stack_vi.Time.coords)
     
     return stack_vi, large_scale_model, correction_vi
 
-def correct_vi_date(vegetation_index, forest_mask, large_scale_model, date, correction_vi):
+def correct_vi_date(masked_vi, forest_mask, large_scale_model, date, correction_vi):
     if date not in correction_vi.Time:
-        median_vi = vegetation_index.where(forest_mask).median(dim=["x","y"])
+        median_vi = masked_vi["vegetation_index"].where(forest_mask & masked_vi["mask"]).median(dim=["x","y"])
         date_correction_vi = prediction_vegetation_index(large_scale_model,[date]) - median_vi
         correction_vi = xr.concat((correction_vi,date_correction_vi),dim = 'Time')
 
-    vegetation_index = vegetation_index + correction_vi.sel(Time = date)
-    return vegetation_index, correction_vi
+    masked_vi["vegetation_index"] = masked_vi["vegetation_index"] + correction_vi.sel(Time = date)
+    return masked_vi["vegetation_index"], correction_vi
