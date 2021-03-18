@@ -120,7 +120,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================
             
         train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                    nb_min_date = 10, correct_vi = True)
+                    nb_min_date = 11, correct_vi = True)
                     # path_masks = main_directory / tuile / "Mask",
                     # path_vi = main_directory / tuile / "VegetationIndex")
         # print(str(time.time() - start_time))
