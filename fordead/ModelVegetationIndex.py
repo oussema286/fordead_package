@@ -217,13 +217,15 @@ def prediction_vegetation_index(coeff_model,date_list):
     return predicted_vi
 
 def model_vi_correction(stack_vi, mask_path):
-    forest_mask = import_forest_mask(mask_path, chunks = 1280)
-    median_vi = stack_vi.where(forest_mask).median(dim=["x","y"]).compute()
-    large_scale_model = model_vi(median_vi, xr.DataArray(np.zeros((median_vi.size),dtype = bool), coords=median_vi.coords), one_dim = True)
-    predicted_median_vi = prediction_vegetation_index(large_scale_model,median_vi.Time.data)
-    correction_vi = (predicted_median_vi - median_vi)
-    stack_vi = stack_vi + correction_vi
-    return stack_vi, large_scale_model, correction_vi
+    # forest_mask = import_forest_mask(mask_path, chunks = 1280)
+    # median_vi = stack_vi.where(forest_mask).median(dim=["x","y"])
+    # large_scale_model = model_vi(median_vi, xr.DataArray(np.zeros((median_vi.size),dtype = bool), coords=median_vi.coords), one_dim = True)
+    # predicted_median_vi = prediction_vegetation_index(large_scale_model,median_vi.Time.data)
+    # correction_vi = (predicted_median_vi - median_vi)
+    # stack_vi = stack_vi + correction_vi
+    stack_vi = stack_vi + xr.DataArray(np.ones((stack_vi.sizes["Time"]),dtype = int),coords = stack_vi.Time.coords)
+    # , large_scale_model, correction_vi
+    return stack_vi, 1, 1
 
 def correct_vi_date(vegetation_index, forest_mask, large_scale_model, date, correction_vi):
     if date not in correction_vi.Time:
