@@ -114,21 +114,38 @@ def convert_dateindex_to_datenumber(dataset, dates):
 
     """
     
+    # # print("test1")
+    # # array = xr.DataArray(range(dates.size), coords={"Time" : dates},dims=["Time"])  
+    # array = np.array(dates)
+    # # array = np.array(range(dates.size))
+    # print("test2")
+    # # dateindex_flat = array[dataset.first_date.data.ravel()]
+    # date_flat = array[dataset.first_date.data.ravel()]
+    # print("test3")
+    # # datenumber_flat = (pd.to_datetime(dateindex_flat.Time.data)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
+    # datenumber_flat = (pd.to_datetime(date_flat)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
+    # print("test4")
+    # date_number = np.reshape(np.array(datenumber_flat),dataset.first_date.shape)
+    # print("test5")
+    # date_number[~dataset.state.data] = 99999999
+    # print("test6")
+    
+    # .reshape(-1)
     print("test1")
-    # array = xr.DataArray(range(dates.size), coords={"Time" : dates},dims=["Time"])  
-    array = np.array(dates)
-    # array = np.array(range(dates.size))
+    datenumber_flat = (pd.to_datetime(dates)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
     print("test2")
-    # dateindex_flat = array[dataset.first_date.data.ravel()]
-    date_flat = array[dataset.first_date.data.ravel()]
+    date_number = datenumber_flat[dataset.first_date.data.ravel()]
     print("test3")
-    # datenumber_flat = (pd.to_datetime(dateindex_flat.Time.data)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
-    datenumber_flat = (pd.to_datetime(date_flat)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
+    date_number = np.reshape(np.array(date_number),dataset.first_date.shape)
     print("test4")
-    date_number = np.reshape(np.array(datenumber_flat),dataset.first_date.shape)
-    print("test5")
     date_number[~dataset.state.data] = 99999999
-    print("test6")
+    print("test5")
+    
+    
+    
+    
+    
+    
     return date_number
 
 
