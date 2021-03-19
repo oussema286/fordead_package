@@ -90,7 +90,9 @@ def export_results(
     tile.add_parameters({"start_date" : start_date,"end_date" : end_date, "frequency" : frequency, "export_soil" : export_soil, "multiple_files" : multiple_files})
     if tile.parameters["Overwrite"] : tile.delete_dirs("periodic_results_decline","result_files") #Deleting previous detection results if they exist
     
+    print("test1")
     bins_as_date, bins_as_datenumber = get_bins(start_date,end_date,frequency,tile.dates)
+    print("test2")
     first_date_number = convert_dateindex_to_datenumber(decline_data, tile.dates)
     if export_soil:
         soil_data = import_soil_data(tile.paths, chunks= 1280)
@@ -99,7 +101,7 @@ def export_results(
     forest_mask = import_forest_mask(tile.paths["ForestMask"], chunks= 1280)
     valid_area = import_forest_mask(tile.paths["valid_area_mask"], chunks= 1280)
     relevant_area = forest_mask & valid_area
-        
+    print("test3")
     if multiple_files:
         tile.add_dirpath("result_files", tile.data_directory / "Results")
         for date_bin_index, date_bin in enumerate(bins_as_date):
