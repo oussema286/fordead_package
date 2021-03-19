@@ -152,15 +152,13 @@ def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_d
     #             for i, (s, v) 
     #             in enumerate(
     #                 rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).data , transform=Affine(*attrs["transform"]))))
-   
+    print("test")
     geoms_period_index = list(
                 {'properties': {'period_index': v}, 'geometry': s}
                 for i, (s, v) 
                 in enumerate(
                     rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).compute().data , transform=Affine(*attrs["transform"]))))
-
-    
-    
+    print("test2")
     gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
     gp_results.period_index=gp_results.period_index.astype(int)
     gp_results.insert(0,"period_start",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d'))

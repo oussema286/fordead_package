@@ -218,40 +218,12 @@ def prediction_vegetation_index(coeff_model,date_list):
 
 def model_vi_correction(stack_vi, stack_masks, dict_paths):
     forest_mask = import_forest_mask(dict_paths["ForestMask"])
-    # stack_vi = stack_vi.chunk({"Time": 1,"x" : 1280,"y" : 1280})
-    # import time
-    # start_time = time.time()
-    
-    # median_vi=[]
-    # for date in stack_vi.Time.data:
-    #     median_vi += [np.nanmedian(stack_vi.sel(Time = date).where(forest_mask,drop =True))]
-    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
-    
-    
-    # start_time = time.time()
-    # median_vi=[]
-    # for date in stack_vi.Time.data:
-    #     print(date)
-    #     print("masking")
-    #     data = stack_vi.sel(Time = date).compute().data[(forest_mask & ~stack_masks.sel(Time = date)).compute().data]
-    #     print("computing")
-    #     median_vi += [np.median(data)]
-    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
-    # median_vi = np.array(median_vi)
-    
-    # median_vi = xr.DataArray([np.nanmedian(stack_vi.sel(Time = date).where(forest_mask & ~stack_masks.sel(Time = date),drop =True)) for date in stack_vi.Time.data],coords = stack_vi.Time.coords)
-    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
     median_vi=[]
     for date in stack_vi.Time.data:
-        print("Import")
         masked_vi = import_masked_vi(dict_paths, date)
-        print("Masking")
         try:
-            data = masked_vi["vegetation_index"].where(forest_mask & ~masked_vi["mask"],drop =True)
-            print("calcul")
-            median_vi += [float(data.median())]
+            median_vi += [float(masked_vi["vegetation_index"].where(forest_mask & ~masked_vi["mask"],drop =True).median())]
         except ValueError:
-            print("calcul")
             median_vi += [0]
     median_vi = xr.DataArray(np.array(median_vi), coords=stack_vi.Time.coords)
     large_scale_model = model_vi(median_vi, median_vi==0, one_dim = True)
@@ -263,7 +235,7 @@ def model_vi_correction(stack_vi, stack_masks, dict_paths):
 
 def correct_vi_date(masked_vi, forest_mask, large_scale_model, date, correction_vi):
     if date not in correction_vi.Time:
-        median_vi = masked_vi["vegetation_index"].where(forest_mask & masked_vi["mask"]).median(dim=["x","y"])
+        median_vi = masked_vi["vegetation_index"].where(forest_mask & ~masked_vi["mask"]).median(dim=["x","y"])
         date_correction_vi = prediction_vegetation_index(large_scale_model,[date]) - median_vi
         correction_vi = xr.concat((correction_vi,date_correction_vi),dim = 'Time')
 
