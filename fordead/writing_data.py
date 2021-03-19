@@ -114,11 +114,21 @@ def convert_dateindex_to_datenumber(dataset, dates):
 
     """
     
-    array = xr.DataArray(range(dates.size), coords={"Time" : dates},dims=["Time"])   
-    dateindex_flat = array[dataset.first_date.data.ravel()]
-    datenumber_flat = (pd.to_datetime(dateindex_flat.Time.data)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
+    print("test1")
+    # array = xr.DataArray(range(dates.size), coords={"Time" : dates},dims=["Time"])  
+    array = np.array(dates)
+    # array = np.array(range(dates.size))
+    print("test2")
+    # dateindex_flat = array[dataset.first_date.data.ravel()]
+    date_flat = array[dataset.first_date.data.ravel()]
+    print("test3")
+    # datenumber_flat = (pd.to_datetime(dateindex_flat.Time.data)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
+    datenumber_flat = (pd.to_datetime(date_flat)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
+    print("test4")
     date_number = np.reshape(np.array(datenumber_flat),dataset.first_date.shape)
+    print("test5")
     date_number[~dataset.state.data] = 99999999
+    print("test6")
     return date_number
 
 
@@ -152,13 +162,11 @@ def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_d
     #             for i, (s, v) 
     #             in enumerate(
     #                 rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).data , transform=Affine(*attrs["transform"]))))
-    print("test")
     geoms_period_index = list(
                 {'properties': {'period_index': v}, 'geometry': s}
                 for i, (s, v) 
                 in enumerate(
                     rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).compute().data , transform=Affine(*attrs["transform"]))))
-    print("test2")
     gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
     gp_results.period_index=gp_results.period_index.astype(int)
     gp_results.insert(0,"period_start",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d'))

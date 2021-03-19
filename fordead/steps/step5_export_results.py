@@ -86,14 +86,13 @@ def export_results(
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    decline_data = import_decline_data(tile.paths, chunks= 1280)
+    decline_data = import_decline_data(tile.paths, chunks= None)
     tile.add_parameters({"start_date" : start_date,"end_date" : end_date, "frequency" : frequency, "export_soil" : export_soil, "multiple_files" : multiple_files})
     if tile.parameters["Overwrite"] : tile.delete_dirs("periodic_results_decline","result_files") #Deleting previous detection results if they exist
     
-    print("test1")
     bins_as_date, bins_as_datenumber = get_bins(start_date,end_date,frequency,tile.dates)
-    print("test2")
     first_date_number = convert_dateindex_to_datenumber(decline_data, tile.dates)
+    print("test2")
     if export_soil:
         soil_data = import_soil_data(tile.paths, chunks= 1280)
         first_date_number_soil = convert_dateindex_to_datenumber(soil_data, tile.dates)
