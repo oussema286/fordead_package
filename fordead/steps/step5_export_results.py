@@ -92,7 +92,7 @@ def export_results(
     
     bins_as_date, bins_as_datenumber = get_bins(start_date,end_date,frequency,tile.dates)
     first_date_number = convert_dateindex_to_datenumber(decline_data, tile.dates)
-    print("test2")
+
     if export_soil:
         soil_data = import_soil_data(tile.paths, chunks= 1280)
         first_date_number_soil = convert_dateindex_to_datenumber(soil_data, tile.dates)
@@ -100,7 +100,7 @@ def export_results(
     forest_mask = import_forest_mask(tile.paths["ForestMask"], chunks= 1280)
     valid_area = import_forest_mask(tile.paths["valid_area_mask"], chunks= 1280)
     relevant_area = forest_mask & valid_area
-    print("test3")
+
     if multiple_files:
         tile.add_dirpath("result_files", tile.data_directory / "Results")
         for date_bin_index, date_bin in enumerate(bins_as_date):
