@@ -69,16 +69,13 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 
     # main_directory = "/mnt/fordead/Out"
     # sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
-    
     # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
     # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
-    
-    # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
-    # main_directory = "D:/Documents/Deperissement/Output"    
     # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
-
     # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/zone_timelapse.shp"
         
+    # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
+    # main_directory = "D:/Documents/Deperissement/Output"    
     
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
@@ -121,7 +118,6 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
 # =====================================================================================================================
 
-        # print("Computing forest mask")
         compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
                             forest_mask_source = forest_mask_source,
                             dep_path = dep_path,
@@ -146,17 +142,11 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
         file.close()
-        
-        
-        
                 
-        create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                          shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
-                          obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp")
         # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
         #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
-        #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
-        #                   coordinates = (765013, 5312071), radius = 500)
+        #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp")
+
         # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
         
         

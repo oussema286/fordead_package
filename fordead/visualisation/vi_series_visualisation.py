@@ -29,6 +29,8 @@ def parse_command_line():
     parser.add_argument("--shape_path", dest = "shape_path",type = str, help = "Path to shapefile containing points whose data will be plotted. They must contain an 'id' field. If None, indexes for x and y can be given")
     parser.add_argument("--ymin", dest = "ymin",type = float, default = 0, help = "ymin limit of graph")
     parser.add_argument("--ymax", dest = "ymax",type = float, default = 2, help = "ymax limit of graph")
+    parser.add_argument("--chunks", dest = "chunks",type = int, default = 1280, help = "Chunk length to import data as dask arrays and save RAM")
+    parser.add_argument("--name_column", dest = "name_column",type = str, default = "id", help = "Name of the column containing the name of the export. Not used if timelapse made from coordinates")
 
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
@@ -94,7 +96,7 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         return fig
 
 
-def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 2, chunks = None):
+def vi_series_visualisation(data_directory, shape_path = None, name_column = "id", ymin = 0, ymax = 2, chunks = None):
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
@@ -127,7 +129,7 @@ def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 
         shape = shape.to_crs(crs = stack_vi.crs.replace("+init=",""))
         
         for point_index in range(len(shape)):
-            id_point = shape.iloc[point_index]["id"]
+            id_point = shape.iloc[point_index][name_column]
             geometry_point = shape.iloc[point_index]["geometry"]
             print(id_point)
             

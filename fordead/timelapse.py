@@ -30,16 +30,16 @@ def polygon_from_coordinate_and_radius(coordinates, radius, crs):
     polygon_geom = Polygon(zip(lon_point_list, lat_point_list))
     polygon = gp.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom])
     return polygon
-    
-    
+
+
+
 def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
         NbData=4
-        shape_buffer=shape.geometry.buffer(100)
         fig = go.Figure()
         
         
         #Récupération des données raster
-        extent= shape_buffer.total_bounds
+        extent= shape.total_bounds
         stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"])
         soil_data = import_soil_data(tile.paths)
         decline_data = import_decline_data(tile.paths)
@@ -50,8 +50,9 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
         
 
 #         #Récupération des données observations
-        ScolytesObs=gp.read_file(obs_terrain_path,bbox=shape_buffer.envelope)
-        ScolytesObs=ScolytesObs.to_crs(crs=stack_rgb.crs)
+        if obs_terrain_path is not None:
+            ScolytesObs=gp.read_file(obs_terrain_path,bbox=shape.envelope)
+            ScolytesObs=ScolytesObs.to_crs(crs=stack_rgb.crs)
         # CountInvalid=0
         valid_dates = xr.where(stack_rgb == -10000,True,False).sum(dim="x").sum(dim="y").sum(dim="band")/(stack_rgb.size / stack_rgb.sizes["Time"]) < 0.90
         nb_valid_dates = int(valid_dates.sum())
@@ -129,21 +130,25 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
     
         
         # Visualisation données terrain
-        for ObsIndex in range(ScolytesObs.shape[0]):
-            Obs=ScolytesObs.iloc[ObsIndex]
-            coords=Obs['geometry'].exterior.coords.xy
-            x1=(coords[0]-np.array(stack_rgb.attrs["transform"][2]))/10-0.5
-            y1=(np.array(stack_rgb.attrs["transform"][5])-coords[1])/10-0.5
-            
-            fig.add_trace(go.Scatter(
-            x=x1,
-            y=y1, 
-            mode='lines',
-            line_color=DictCol[Obs['scolyte1']],
-            name=Obs['scolyte1'] + " | " + Obs['organisme'] + " : " + Obs['date'],
-            hovertemplate=Obs['scolyte1'] + " | " + Obs['organisme'] + " : " + Obs['date']+ '<extra></extra>'
-            ))
-    
+        if obs_terrain_path is not None:
+            Nb_ScolytesObs = ScolytesObs.shape[0]
+            for ObsIndex in range(Nb_ScolytesObs):
+                Obs=ScolytesObs.iloc[ObsIndex]
+                coords=Obs['geometry'].exterior.coords.xy
+                x1=(coords[0]-np.array(stack_rgb.attrs["transform"][2]))/10-0.5
+                y1=(np.array(stack_rgb.attrs["transform"][5])-coords[1])/10-0.5
+                
+                fig.add_trace(go.Scatter(
+                x=x1,
+                y=y1, 
+                mode='lines',
+                line_color=DictCol[Obs['scolyte1']],
+                name=Obs['scolyte1'] + " | " + Obs['organisme'] + " : " + Obs['date'],
+                hovertemplate=Obs['scolyte1'] + " | " + Obs['organisme'] + " : " + Obs['date']+ '<extra></extra>'
+                ))
+        else:
+            Nb_ScolytesObs = 0
+        
         
         #Slider  
         steps = []
@@ -152,7 +157,7 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
             step = dict(
                 label = tile.dates[valid_dates][i],
                 method="restyle",
-                args=["visible", [False] * nb_valid_dates*NbData+[True]*ScolytesObs.shape[0]])
+                args=["visible", [False] * nb_valid_dates*NbData+[True]*Nb_ScolytesObs])
                 # args=["visible", [False] * (len(Day)+stackAtteint.shape[0]*3) + [True] * scolytes.shape[0] + [False] * stackMask.shape[0]] ,
             
             step["args"][1][i*NbData] = True  # Toggle i'th trace to "visible"
