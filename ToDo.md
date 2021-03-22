@@ -7,6 +7,7 @@
 - [x] step4
 - [x] step5
 - [x] Create diagrams
+- [ ] Modify diagrams
 ### Detail examples with markdown
 - [x] ex_computing masked_vegetation_index
 - [x] ex_tileinfo
@@ -17,3 +18,5 @@
 - [x] Developping branch for validation data export
 - [ ] Adding possibility to save vegetation index as compressed netcdf
 - [x] Correcting vegetation index from large scale median vegetation index 
+- [ ] Add path_forest_mask parameter to export_results to skip the step
+- [ ] Develop confidence index
