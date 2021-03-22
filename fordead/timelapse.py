@@ -133,10 +133,12 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
         if obs_terrain_path is not None:
             Nb_ScolytesObs = ScolytesObs.shape[0]
             for ObsIndex in range(Nb_ScolytesObs):
+                
                 Obs=ScolytesObs.iloc[ObsIndex]
                 coords=Obs['geometry'].exterior.coords.xy
-                x1=(coords[0]-np.array(stack_rgb.attrs["transform"][2]))/10-0.5
-                y1=(np.array(stack_rgb.attrs["transform"][5])-coords[1])/10-0.5
+                x1=(coords[0]-np.array(int(stack_rgb.x.min())-5))/10-0.5
+                y1=(np.array(int(stack_rgb.y.max())+5)-coords[1])/10-0.5
+
                 
                 fig.add_trace(go.Scatter(
                 x=x1,

@@ -72,7 +72,7 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
     
     if coordinates is not None:
         print("Timelapse created from coordinates")
-        ShapeInteret = gp.GeoDataFrame({"id" : [str(coordinates[0])+"_"+str(coordinates[1])]},geometry = gp.points_from_xy([coordinates[0]], [coordinates[1]]))
+        ShapeInteret = gp.GeoDataFrame({"id" : [str(coordinates[0])+"_"+str(coordinates[1])]},geometry = gp.points_from_xy([coordinates[0]], [coordinates[1]]),crs =tile.raster_meta["attrs"]["crs"] )
         name_column = "id"
     elif shape_path is not None:
         print("Timelapse(s) created from " + shape_path)
