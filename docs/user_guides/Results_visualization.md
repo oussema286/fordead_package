@@ -64,3 +64,6 @@ data_directory, shape_path = None, ymin = 0, ymax = 2, chunks = None
 
 #### SORTIES
 Les sorties sont dans le dossier data_directory/SeriesTemporelles, avec pour chaque point un fichier .png avec comme nom de fichier la valeur dans la colonne **name_column**.
+
+#### EXEMPLE
+![graph_example](Diagrams/graph_example.png "graph_example")
