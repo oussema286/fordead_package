@@ -1,5 +1,6 @@
 # To do list
 ## Documentation
+- [x] Adding documentation for visualization tools
 ### Detail steps
 - [x] step1
 - [x] step2
