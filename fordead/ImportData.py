@@ -165,10 +165,10 @@ class TileInfo:
         if hasattr(self, "dates"):
             print("\n " + str(len(self.dates)) + " dates used :\n")
             for date in self.dates:
-                print(date)
+                print(date, end = " | ")
                 
         if hasattr(self, "last_computed_anomaly"):
-            print("\n" + " Last computed anomaly : \n")
+            print("\n\n" + " Last computed anomaly : \n")
             print(self.last_computed_anomaly)
         else:
             print(" Anomalies not computed")
