@@ -20,4 +20,5 @@
 - [ ] Adding possibility to save vegetation index as compressed netcdf
 - [x] Correcting vegetation index from large scale median vegetation index 
 - [ ] Add path_forest_mask parameter to export_results to skip the step
-- [ ] Develop confidence index
+- [ ] Create confidence index
+- [ ] cli command for visualization tools
