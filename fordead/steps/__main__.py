@@ -37,5 +37,6 @@ fordead.add_command(cli_export_results)
 fordead.add_command(cli_read_tileinfo)
 fordead.add_command(cli_vi_series_visualisation)
 fordead.add_command(cli_create_timelapse)
+
 if __name__ == '__main__':  # pragma: no cover
     fordead()
