@@ -212,7 +212,8 @@ def decline_detection(
                 
                 # print("to dataframe")
                 Results.to_csv(tile.paths["validation"] / 'Evolution_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'Evolution_data.csv').exists()))
-                    
+                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
+
             tile.last_computed_anomaly = new_dates[-1]
                     
             #Writing decline data to rasters        

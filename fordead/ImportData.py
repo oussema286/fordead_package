@@ -171,7 +171,7 @@ class TileInfo:
             print("\n" + " Last computed anomaly : \n")
             print(self.last_computed_anomaly)
         else:
-            print(" Anomalies not computed")
+            print("Anomalies not computed")
     
 
     def delete_dirs(self,*key_paths):
