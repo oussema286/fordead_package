@@ -127,7 +127,7 @@ def vi_series_visualisation(data_directory, shape_path = None, ymin = 0, ymax = 
 
     if shape_path is not None:
         shape = gp.read_file(shape_path)
-        shape = shape.to_crs(crs = tile.raster_meta["attrs"]["crs"])
+        shape = shape.to_crs(crs = stack_vi.crs.replace("+init=",""))
         
         for point_index in range(len(shape)):
             id_point = shape.iloc[point_index]["id"]
