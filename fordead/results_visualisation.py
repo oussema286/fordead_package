@@ -254,7 +254,6 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
     plt.xlabel("Date",size=15)
     plt.ylabel(vi,size=15)
         
-    plt.show()
     return fig
 
 def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies):

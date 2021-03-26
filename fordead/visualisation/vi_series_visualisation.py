@@ -13,6 +13,7 @@ import random
 import geopandas as gp
 import xarray as xr
 import click
+import matplotlib.pyplot as plt
 
 from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
 from fordead.ModelVegetationIndex import compute_HarmonicTerms
@@ -140,7 +141,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                 pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
                 fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
-
+                plt.show()
             elif X=="-1":
                 #ARRET SI X = -1
                 break
@@ -165,6 +166,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                 if xy_forest_mask:
                     fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
                     fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
+                    plt.show()
                 else:
                     print("Pixel outside forest mask")
     
