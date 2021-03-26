@@ -33,15 +33,16 @@ def timelapse():
 @timelapse.command(name='timelapse')
 @click.option("-o", "--data_directory", type = str, help = "Path of the directory containing results from the region of interest")
 @click.option("--obs_terrain_path", type = str, help = "Path of the shapefile with ground observations")
-@click.option("--shape_path", type = str, help = "Path of the shapefile of the area, or points, to convert to timelapse. Not used if timelapse made from coordinates")
-@click.option("--name_column", type = str, default = "id", help = "Name of the column containing the name of the export. Not used if timelapse made from coordinates")
-@click.option("--coordinates", type = tuple, help = "Tuple of coordinates in the crs of the Sentinel-2 tile. Format : (x,y). Not used if timelapse is made using a shapefile")
+@click.option("--shape_path", type = str, help = "Path of the shapefile of the area, or points, to convert to timelapse. Not used if timelapse made from x and y coordinates")
+@click.option("--name_column", type = str, default = "id", help = "Name of the column containing the name of the export. Not used if timelapse made from x and y coordinates")
+@click.option("--x", type = int, help = "Coordinate x in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile")
+@click.option("--y", type = int, help = "Coordinate y in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile")
 @click.option("--buffer", type = int, default = 100, help = "Buffer around polygons or points for the extent of the timelapse")
-def cli_create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id", coordinates = None, buffer = 100):
+def cli_create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id", x = None, y = None, buffer = 100):
     """
     Create timelapse allowing navigation through Sentinel-2 dates with detection results superimposed.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons or points with a column containing a unique ID used to name the export. 
-    By specifying 'coordinates' parameter, it can be used by specifying coordinates in the system of projection of the tile. 
+    By specifying 'x' and 'y' parameters, it can be used by specifying coordinates in the system of projection of the tile. 
     The timelapse is exported in the data_directory/Timelapses directory as an html file.
     See details https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
     \f
@@ -51,12 +52,13 @@ def cli_create_timelapse(data_directory, obs_terrain_path = None, shape_path = N
     obs_terrain_path
     shape_path
     name_column
-    coordinates
+    x
+    y
     buffer
 
 
     """
-    create_timelapse(data_directory, obs_terrain_path, shape_path, name_column, coordinates, buffer)
+    create_timelapse(data_directory, obs_terrain_path, shape_path, name_column, x, y, buffer)
 
 #%% =============================================================================
 #   MAIN CODE
@@ -74,11 +76,11 @@ DictCol={'C' : "white",
 #         2 : "black",
 #         3 : "blue"}
 
-def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id", coordinates = None, buffer = 100):
+def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id",  x = None, y = None, buffer = 100):
     """
     Create timelapse allowing navigation through Sentinel-2 dates with detection results superimposed.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons with a column containing a unique ID used to name the export. 
-    By specifying 'coordinates' parameter, it can be used by specifying coordinates in the system of projection of the tile. 
+    By specifying 'x' and 'y' parameters, it can be used by specifying coordinates in the system of projection of the tile. 
     The timelapse is exported in the data_directory/Timelapses directory as an html file.
     See details https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
 
@@ -89,11 +91,13 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
     obs_terrain_path : str, optional
         Optionnal, Path of the shapefile with ground observations. The default is None.
     shape_path : str, optional
-        Path of the shapefile of the area or points to convert to timelapse. Not used if timelapse made from coordinates. The default is None.
+        Path of the shapefile of the area or points to convert to timelapse. Not used if timelapse made from x and y coordinates. The default is None.
     name_column : str, optional
-        Name of the column containing the name of the export. Not used if timelapse made from coordinates. The default is "id".
-    coordinates : tuple, optional
-        Tuple of coordinates in the crs of the Sentinel-2 tile. Format : (x,y). Not used if timelapse is made using shapefile. The default is None.
+        Name of the column containing the name of the export. Not used if timelapse made from x and y coordinates. The default is "id".
+    x : int, optional
+        Coordinate x in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile. The default is None.
+    y : int, optional
+        Coordinate y in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile. The default is None.
     buffer : int, optional
         Buffer around polygons or points for the extent of the timelapse. The default is 100.
 
@@ -108,9 +112,9 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
     tile.save_info()
     
     #Importing/creating ROI
-    if coordinates is not None:
+    if (x is not None) and (y is not None):
         print("Timelapse created from coordinates")
-        ShapeInteret = gp.GeoDataFrame({"id" : [str(coordinates[0])+"_"+str(coordinates[1])]},geometry = gp.points_from_xy([coordinates[0]], [coordinates[1]]),crs =tile.raster_meta["attrs"]["crs"] )
+        ShapeInteret = gp.GeoDataFrame({"id" : [str(x)+"_"+str(y)]},geometry = gp.points_from_xy([x], [y]),crs =tile.raster_meta["attrs"]["crs"] )
         name_column = "id"
     elif shape_path is not None:
         print("Timelapse(s) created from " + shape_path)
