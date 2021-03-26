@@ -77,7 +77,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         
     # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
     # main_directory = "D:/Documents/Deperissement/Output"    
-    
+
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
     logpath = main_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")
