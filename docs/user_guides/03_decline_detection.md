@@ -28,7 +28,7 @@ decline_detection(data_directory = <data_directory>)
 ```bash
 fordead decline_detection [OPTIONS]
 ```
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#decline_detection)
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-decline_detection)
 
 ## Détail du fonctionnement
 

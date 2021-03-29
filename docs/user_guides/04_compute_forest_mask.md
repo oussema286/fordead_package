@@ -34,7 +34,7 @@ compute_forest_mask(data_directory,
 fordead forest_mask [OPTIONS]
 ```
 
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#forest_mask)
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-forest_mask)
 
 ## Détail du fonctionnement
 
