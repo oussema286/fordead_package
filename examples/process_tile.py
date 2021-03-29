@@ -117,9 +117,6 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             
         train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
                     nb_min_date = nb_min_date, correct_vi = correct_vi)
-                    # path_masks = main_directory / tuile / "Mask",
-                    # path_vi = main_directory / tuile / "VegetationIndex")
-        # print(str(time.time() - start_time))
         file = open(logpath, "a") 
         file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
@@ -129,17 +126,12 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
                           ground_obs_path = Path("/mnt/fordead/Data/Vecteurs/ObservationsTerrain") / ("scolyte"+tuile[1:]+".shp"),
                           threshold_anomaly = threshold_anomaly)
-        # decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-        #                   ground_obs_path = Path("C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain") / ("scolyte"+"T31UGP"[1:]+".shp"),
-        #                   threshold_anomaly = threshold_anomaly)
         file = open(logpath, "a") 
         file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
 
 # # =====================================================================================================================
 
-#         # print("Computing forest mask")
-        
         export_results(
             data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
             start_date = start_date_results,
@@ -151,17 +143,12 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a")
         file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
         file.close()
-        
-        
-        
                 
-        # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-        #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
-        #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp")
+
         # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
         #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
         #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
-        #                   coordinates = (765013, 5312071), radius = 500)
+        #                   name_column = "id")
         # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
         
         

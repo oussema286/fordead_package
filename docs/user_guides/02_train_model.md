@@ -35,7 +35,7 @@ train_model(data_directory = <data_directory>)
 fordead train_model [OPTIONS]
 ```
 
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#train_model)
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-train_model)
 
 ## Détail du fonctionnement
 
