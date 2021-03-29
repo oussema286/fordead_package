@@ -43,15 +43,21 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
         
         
         #Récupération des données raster
-        extent= shape.total_bounds
-        stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"])
+        extent = shape.total_bounds
+
         soil_data = import_soil_data(tile.paths)
         decline_data = import_decline_data(tile.paths)
         soil_data = soil_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         decline_data = decline_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         forest_mask = import_forest_mask(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         
+        #Correcting extent if computed area is smaller than Sentinel-2 data area
+        extent = np.array([float(forest_mask[dict(x=0,y=0)].coords["x"])-forest_mask.attrs["transform"][0]/2,
+                                                float(forest_mask[dict(x=-1,y=-1)].coords["y"])-forest_mask.attrs["transform"][0]/2,
+                                                float(forest_mask[dict(x=-1,y=-1)].coords["x"])+forest_mask.attrs["transform"][0]/2,
+                                                float(forest_mask[dict(x=0,y=0)].coords["y"])+forest_mask.attrs["transform"][0]/2])
         
+        stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"])
 
 #         #Récupération des données observations
         if obs_terrain_path is not None:
