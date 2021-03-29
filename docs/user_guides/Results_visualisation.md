@@ -49,6 +49,11 @@ create_timelapse(data_directory = <data_directory>,shape_path = <shape_path>, bu
 from fordead.visualisation.create_timelapse import create_timelapse
 create_timelapse(data_directory = <data_directory>,coordinates = (x,y), buffer = 100)
 ```
+### A partir de l'invité de commande
+```bash
+fordead timelapse [OPTIONS]
+```
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-timelapse)
 
 ## Créer des graphes montrant l'évolution de la série temporelle
 #### ENTRÉES
@@ -64,6 +69,28 @@ data_directory, shape_path = None, ymin = 0, ymax = 2, chunks = None
 
 #### SORTIES
 Les sorties sont dans le dossier data_directory/SeriesTemporelles, avec pour chaque point un fichier .png avec comme nom de fichier la valeur dans la colonne **name_column**.
+
+
+## Utilisation
+### A partir d'un script
+#### A partir d'un shapefile contenant les zones d'intérêt
+```bash
+from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
+vi_series_visualisation(data_directory = <data_directory>, shape_path = <shape_path>, name_column = "id", ymin = 0, ymax = 2, chunks = 100)
+```
+#### A partir de coordonnées
+```bash
+from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
+vi_series_visualisation(data_directory = <data_directory>, ymin = 0, ymax = 2, chunks = 100)
+```
+Dans ce mode, l'utilisateur peut choisir de donner des coordonnées X et Y dans le système projection des données Sentinel-2 utilisées.
+Il est également possible de donner l'indice du pixel en partant du (xmin,ymax), utile si un timelapse a été crée sur l'ensemble de la zone calculée auquel cas l'indice correspond aux coordonnées dans le timelapse.
+
+### A partir de l'invité de commande
+```bash
+fordead graph_series [OPTIONS]
+```
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-graph_series)
 
 #### EXEMPLE
 ![graph_example](Diagrams/graph_example.png "graph_example")

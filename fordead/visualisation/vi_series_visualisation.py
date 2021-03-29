@@ -5,103 +5,87 @@ Created on Thu Oct  1 14:56:23 2020
 @author: raphael.dutrieux
 
 """
-import matplotlib.pyplot as plt
+
+
 import numpy as np
 import datetime
-import matplotlib.dates as mdates
 import random
 import geopandas as gp
-import argparse
 import xarray as xr
+import click
+import matplotlib.pyplot as plt
 
 from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
 from fordead.ModelVegetationIndex import compute_HarmonicTerms
-from fordead.masking_vi import get_dict_vi
+from fordead.results_visualisation import select_pixel_from_coordinates, select_pixel_from_indices, plot_temporal_series
 
-# =============================================================================
-#  IMPORT DES DONNEES CALCULEES
-# =============================================================================
-def parse_command_line():
-    # execute only if run as a script
-    parser = argparse.ArgumentParser()
+@click.group()
+def graph_series():
+    """Main entrypoint."""
+    
+@graph_series.command(name='graph_series')
+@click.option("-o", "--data_directory", type = str, help = "Path of the directory containing results from the region of interest")
+@click.option("--shape_path", type = str, help = "Path to shapefile containing points whose data will be plotted. If None, indexes or coordinates for x and y can be given")
+@click.option("--name_column", type = str, default = "id", help = "Name of the column containing the name of the point, used to name the exported image. Not used if pixel is selected from indexes or coordinates")
+@click.option("--ymin", type = float, default = 0, help = "ymin limit of graph")
+@click.option("--ymax", type = float, default = 2, help = "ymax limit of graph")
+@click.option("--chunks", type = int, default = None, help = "Chunk length to import data as dask arrays and save RAM, advised if computed area in data_directory is large")
+def cli_vi_series_visualisation(data_directory, shape_path = None, name_column = "id", ymin = 0, ymax = 2, chunks = None):
+    """
+    From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
+    By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
+    If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
+    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
+    The graphs are exported in the data_directory/TimeSeries directory as png files.
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
+    \f
+    Parameters
+    ----------
+    data_directory
+    shape_path
+    name_column
+    ymin
+    ymax
+    chunks
 
-    parser.add_argument("-d", "--data_directory", dest = "data_directory", type = str, help = "Dossier contenant les données calculées")
-    parser.add_argument("--shape_path", dest = "shape_path",type = str, help = "Path to shapefile containing points whose data will be plotted. They must contain an 'id' field. If None, indexes for x and y can be given")
-    parser.add_argument("--ymin", dest = "ymin",type = float, default = 0, help = "ymin limit of graph")
-    parser.add_argument("--ymax", dest = "ymax",type = float, default = 2, help = "ymax limit of graph")
-    parser.add_argument("--chunks", dest = "chunks",type = int, default = 1280, help = "Chunk length to import data as dask arrays and save RAM")
-    parser.add_argument("--name_column", dest = "name_column",type = str, default = "id", help = "Name of the column containing the name of the export. Not used if timelapse made from coordinates")
+    Returns
+    -------
 
-    dictArgs={}
-    for key, value in parser.parse_args()._get_kwargs():
-    	dictArgs[key]=value
-    return dictArgs
+    """
+    vi_series_visualisation(data_directory, shape_path, name_column, ymin, ymax, chunks)
 
-# =============================================================================
-# # IMPORT ALL DATA
-# =============================================================================
-def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax):
-        fig=plt.figure(figsize=(10,7))
-        ax = plt.gca()
-        formatter = mdates.DateFormatter("%b %Y")
-        ax.xaxis.set_major_formatter(formatter)
-        
-        plt.xticks(rotation=30)
-        if pixel_series.Soil.any() : pixel_series.where(pixel_series.Soil,drop=True).plot.line('k^', label='Coupe') 
-        
-        if xy_first_detection_date_index !=0:
-            pixel_series.where(pixel_series.training_date & ~pixel_series.mask,drop=True).plot.line("bo", label='Apprentissage')
-            if (~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask,drop=True).plot.line("o",color = '#1fca3b', label='Dates sans anomalies') 
-            if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask & ~pixel_series.Soil,drop=True).plot.line("r*", markersize=9, label='Dates avec anomalies') 
-  
-            #Plotting vegetation index model and anomaly threshold
-            yy.plot.line("b", label='Modélisation du '+vi+' sur les dates d\'apprentissage')
-            
-            dict_vi = get_dict_vi(path_dict_vi)
-            if dict_vi[vi]["decline_change_direction"] == "+":
-                (yy+threshold_anomaly).plot.line("b--", label='Seuil de détection des anomalies')
-            elif dict_vi[vi]["decline_change_direction"] == "-":
-                (yy-threshold_anomaly).plot.line("b--", label='Seuil de détection des anomalies')
-            
-            
-            #Plotting vertical lines when decline or soil is detected
-            if ~xy_decline_data["state"] & ~xy_soil_data["state"]:
-                plt.title("X : " + str(X)+"   Y : " + str(Y)+"\nPixel sain",size=15)
-            elif xy_decline_data["state"] & ~xy_soil_data["state"]:
-                date_atteint = pixel_series.Time[int(xy_decline_data["first_date"])].data
-                plt.axvline(x=date_atteint, color='red', linewidth=3, linestyle=":",label="Détection de déperissement")
-                plt.title("X : " + str(X)+"    Y : " + str(Y)+"\nPixel atteint, première anomalie le " + str(date_atteint.astype("datetime64[D]")),size=15)
-            elif xy_decline_data["state"] & xy_soil_data["state"]:
-                date_atteint = pixel_series.Time[int(xy_decline_data["first_date"])].data
-                date_coupe = pixel_series.Time[int(xy_soil_data["first_date"])].data
-                plt.axvline(x=date_atteint, color="red", linewidth=3, linestyle=":")
-                plt.axvline(x=date_coupe,color='black', linewidth=3, linestyle=":")
-                plt.title("X : " + str(X)+"   Y : " + str(Y)+"\nPixel atteint, première anomalie le " + str(date_atteint.astype("datetime64[D]")) + ", coupé le " + str(date_coupe.astype("datetime64[D]")),size=15)
-            else:
-                date_coupe = pixel_series.Time[int(xy_soil_data["first_date"])].data
-                plt.axvline(x=date_coupe, color='black', linewidth=3, linestyle=":",label="Détection de coupe")
-                plt.title("X : " + str(X)+"   Y : " + str(Y)+"\nPixel coupé, détection le " + str(date_coupe.astype("datetime64[D]")),size=15)
-        else:
-            pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
-            plt.title("X : " + str(X)+"   Y : " + str(Y)+"\n Not enough dates to compute a model",size=15)
-             
-        [plt.axvline(x=datetime.datetime.strptime(str(year)+"-01-01", '%Y-%m-%d'),color="black") for year in np.arange(pixel_series.isel(Time = 0).Time.data.astype('datetime64[Y]'), (pixel_series.isel(Time = -1).Time.data + np.timedelta64(35,'D')).astype('datetime64[Y]')+1) if str(year)!="2015"]
-
-        plt.legend()
-        plt.ylim((ymin,ymax))
-        plt.xlabel("Date",size=15)
-        plt.ylabel(vi,size=15)
-            
-        plt.show()
-        return fig
 
 
 def vi_series_visualisation(data_directory, shape_path = None, name_column = "id", ymin = 0, ymax = 2, chunks = None):
     
+    """
+    From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
+    By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
+    If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
+    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
+    The graphs are exported in the data_directory/TimeSeries directory as png files.
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
+    
+    Parameters
+    ----------
+    data_directory : str
+        Path of the directory containing results from the region of interest
+    shape_path: str
+        Path to shapefile containing points whose data will be plotted. If None, indexes or coordinates for x and y can be given
+    name_column: str
+        Name of the column containing the name of the point, used to name the exported image. Not used if pixel is selected from indexes or coordinates
+    ymin: float
+        ymin limit of graph
+    ymax: float
+        ymax limit of graph
+    chunks: int
+        Chunk length to import data as dask arrays and save RAM, advised if computed area in data_directory is large
+
+    """
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     
-    
+    # IMPORTING ALL DATA
     stack_vi, stack_masks = import_stackedmaskedVI(tile,chunks = chunks)
     stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
     coeff_model = import_coeff_model(tile.paths["coeff_model"],chunks = chunks)
@@ -112,9 +96,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
     anomalies = import_stacked_anomalies(tile.paths["Anomalies"],chunks = chunks)
     
-    
-    
-    tile.add_dirpath("series", tile.data_directory / "SeriesTemporelles")
+    tile.add_dirpath("series", tile.data_directory / "TimeSeries")
     tile.save_info()
     xx = np.array(range(int(stack_vi.DateNumber.min()), int(stack_vi.DateNumber.max())))
     xxDate=[np.datetime64(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in xx]
@@ -134,74 +116,63 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
             print(id_point)
             
             if forest_mask.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest"):
-                xy_first_detection_date_index = int(first_detection_date_index.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest"))
-                xy_soil_data = soil_data.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
-                xy_stack_masks = stack_masks.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
-                pixel_series = stack_vi.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
-                if xy_first_detection_date_index!=0:
-                    xy_anomalies = anomalies.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
-                    xy_decline_data = decline_data.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")
-                    
-                
-                pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
-                pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
-                if xy_first_detection_date_index!=0:
-                    anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
-                    pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
-                    pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
-                    yy = (harmonic_terms * coeff_model.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest").compute()).sum(dim="coeff")
-                
+                pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_coordinates(geometry_point.x,geometry_point.y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"], ymin,ymax)
-                fig.savefig(tile.paths["series"] / ("id_" + str(id_point) + ".png"))
+                fig.savefig(tile.paths["series"] / (str(id_point) + ".png"))
+                fig.close()
             else:
                 print("Pixel outside forest mask")
     else:
-    
+        #Initialiser X,Y
         PixelsToChoose = np.where(forest_mask)
         PixelID=random.randint(0,PixelsToChoose[0].shape[0])
         X=PixelsToChoose[0][PixelID]
         Y=PixelsToChoose[1][PixelID]
-    
+        
+        mode = input("Type 'c' to input coordinates as coordinates in the system of projection of the tile\nType 'i' to input coordinates by positional indexing as using the pixel index from the top left hand corner\n[c/i]?")
+        
         while X!=-1:
             
             X=input("X ? ")
             if X=="":
-                PixelsToChoose = np.where(forest_mask)
+                #PIXEL ALEATOIRE DANS LE MASQUE FORET
                 PixelID=random.randint(0,PixelsToChoose[0].shape[0])
                 X=PixelsToChoose[1][PixelID]
                 Y=PixelsToChoose[0][PixelID]
+                pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
+                fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
+                fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
+                plt.show()
+                fig.close()
             elif X=="-1":
+                #ARRET SI X = -1
                 break
             else:
-                X=int(X)
-                Y=int(input("Y ? "))
-            
-            if forest_mask.isel(x = X, y = Y):
-                yy = (harmonic_terms * coeff_model.isel(x = X, y = Y).compute()).sum(dim="coeff")
-                
-                xy_first_detection_date_index = int(first_detection_date_index.isel(x = X, y = Y))
-                xy_soil_data = soil_data.isel(x = X, y = Y)
-                xy_stack_masks = stack_masks.isel(x = X, y = Y)
-                pixel_series = stack_vi.isel(x = X, y = Y)
-                if xy_first_detection_date_index!=0:
-                    xy_anomalies = anomalies.isel(x = X, y = Y)
-                    xy_decline_data = decline_data.isel(x = X, y = Y)
+                #CHOIX DU PIXEL
+                if mode == "c":
+                    #A PARTIR DES COORDONNEES
+                    X=int(X)
+                    Y=int(input("Y ? "))
+                    pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
+                    xy_forest_mask = forest_mask.sel(x = X, y = Y,method = "nearest")
+                elif mode == "i":
+                    #A PARTIR DE L'INDICE
+                    X=int(X)
+                    Y=int(input("Y ? "))
+                    pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
+                    xy_forest_mask = forest_mask.isel(x = X, y = Y)
                 else:
-                    xy_decline_data=None
-                    xy_anomalies = None
-                pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
-                pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
-                if xy_first_detection_date_index!=0:
-                    anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
-                    pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
-                    pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
-                                
-                fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
-                fig.savefig(tile.paths["series"] / ("X"+str(X)+"_Y"+str(Y)+".png"))
-            else:
-                print("Pixel outside forest mask")
+                    raise Exception("Index or coordinate mode incorrect. Type 'c' for coordinate mode, 'i' for index mode")
+                    
+                #PLOTTING
+                if xy_forest_mask:
+                    fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
+                    fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
+                    plt.show()
+                    fig.close()
+                else:
+                    print("Pixel outside forest mask")
     
 if __name__ == '__main__':
-    dictArgs=parse_command_line()
     # print(dictArgs)
-    vi_series_visualisation(**dictArgs)
+    cli_vi_series_visualisation()
