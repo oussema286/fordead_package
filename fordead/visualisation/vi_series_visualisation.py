@@ -122,7 +122,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                 pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_coordinates(geometry_point.x,geometry_point.y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"], ymin,ymax)
                 fig.savefig(tile.paths["series"] / (str(id_point) + ".png"))
-                fig.close()
+                plt.close()
             else:
                 print("Pixel outside forest mask")
     else:
@@ -146,7 +146,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
                 fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
                 plt.show()
-                fig.close()
+                plt.close()
             elif X=="-1":
                 #ARRET SI X = -1
                 break
@@ -172,7 +172,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                     fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
                     fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
                     plt.show()
-                    fig.close()
+                    plt.close()
                 else:
                     print("Pixel outside forest mask")
     
