@@ -53,7 +53,7 @@ create_timelapse(data_directory = <data_directory>,coordinates = (x,y), buffer =
 ```bash
 fordead timelapse [OPTIONS]
 ```
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#timelapse)
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-timelapse)
 
 ## Créer des graphes montrant l'évolution de la série temporelle
 #### ENTRÉES
@@ -90,7 +90,7 @@ Il est également possible de donner l'indice du pixel en partant du (xmin,ymax)
 ```bash
 fordead graph_series [OPTIONS]
 ```
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#graph_series)
+Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-graph_series)
 
 #### EXEMPLE
 ![graph_example](Diagrams/graph_example.png "graph_example")
