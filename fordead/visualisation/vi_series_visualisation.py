@@ -35,7 +35,7 @@ def cli_vi_series_visualisation(data_directory, shape_path = None, name_column =
     From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
     If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
-    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (useful if results are from a cropped region of interest used to create a timelapse (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), so the indices correspond to the indices in the timelapse) 
+    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
     The graphs are exported in the data_directory/TimeSeries directory as png files.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
     \f
@@ -62,7 +62,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
     If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
-    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (useful if results are from a cropped region of interest used to create a timelapse (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), so the indices correspond to the indices in the timelapse) 
+    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
     The graphs are exported in the data_directory/TimeSeries directory as png files.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
     

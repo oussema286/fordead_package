@@ -84,7 +84,7 @@ from fordead.visualisation.vi_series_visualisation import vi_series_visualisatio
 vi_series_visualisation(data_directory = <data_directory>, ymin = 0, ymax = 2, chunks = 100)
 ```
 Dans ce mode, l'utilisateur peut choisir de donner des coordonnées X et Y dans le système projection des données Sentinel-2 utilisées.
-Il est également possible de donner l'indice du pixel en partant du (xmin,ymax), utile si un timelapse a été crée sur l'ensemble de la zone calculé auquel cas l'indice correspond aux coordonnées dans le timelapse.
+Il est également possible de donner l'indice du pixel en partant du (xmin,ymax), utile si un timelapse a été crée sur l'ensemble de la zone calculée auquel cas l'indice correspond aux coordonnées dans le timelapse.
 
 ### A partir de l'invité de commande
 ```bash
