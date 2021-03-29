@@ -13,11 +13,11 @@ This page provides documentation for our command line tools.
     :depth: 1
 	
 ::: mkdocs-click
-    :module: fordead.results_visualisation.vi_series_visualisation
+    :module: fordead.visualisation.vi_series_visualisation
     :command: graph_series
     :depth: 1
 	
 ::: mkdocs-click
-    :module: fordead.results_visualisation.create_timelapse
+    :module: fordead.visualisation.create_timelapse
     :command: timelapse
     :depth: 1
