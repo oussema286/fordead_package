@@ -250,10 +250,7 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
             plt.axvline(x=date_coupe, color='black', linewidth=3, linestyle=":",label="Détection de coupe")
             plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nPixel coupé, détection le " + str(date_coupe.astype("datetime64[D]")),size=15)
     else:
-        print(pixel_series.where(~pixel_series.mask,drop=True))
-        print(pixel_series)
-        print(pixel_series.mask)
-        pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
+        if (~pixel_series.mask).any(): pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
         plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\n Not enough dates to compute a model",size=15)
          
     [plt.axvline(x=datetime.datetime.strptime(str(year)+"-01-01", '%Y-%m-%d'),color="black") for year in np.arange(pixel_series.isel(Time = 0).Time.data.astype('datetime64[Y]'), (pixel_series.isel(Time = -1).Time.data + np.timedelta64(35,'D')).astype('datetime64[Y]')+1) if str(year)!="2015"]
