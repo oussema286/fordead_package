@@ -263,7 +263,6 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
     return fig
 
 def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies):
-    yy = (harmonic_terms * coeff_model.sel(x = X, y = Y,method = "nearest").compute()).sum(dim="coeff")
     
     xy_first_detection_date_index = int(first_detection_date_index.sel(x = X, y = Y,method = "nearest"))
     xy_soil_data = soil_data.sel(x = X, y = Y,method = "nearest")
@@ -272,16 +271,16 @@ def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detect
     if xy_first_detection_date_index!=0:
         xy_anomalies = anomalies.sel(x = X, y = Y,method = "nearest")
         xy_decline_data = decline_data.sel(x = X, y = Y,method = "nearest")
-    else:
-        xy_decline_data=None
-        xy_anomalies = None
-        
-    pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
-    pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
-    if xy_first_detection_date_index!=0:
         anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
         pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
         pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
+        yy = (harmonic_terms * coeff_model.sel(x = X, y = Y,method = "nearest").compute()).sum(dim="coeff")
+    else:
+        xy_decline_data=None
+        xy_anomalies = None
+        yy = None
+    pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
+    pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
         
     return pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index
     
