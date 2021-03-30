@@ -237,7 +237,7 @@ def correct_vi_date(masked_vi, forest_mask, large_scale_model, date, correction_
     if date not in correction_vi.Time:
         median_vi = masked_vi["vegetation_index"].where(forest_mask & ~masked_vi["mask"]).median(dim=["x","y"])
         if np.isnan(median_vi):
-            date_correction_vi = 0
+            date_correction_vi = xr.DataArray(0, coords={"Time" : [date]},dims=["Time"])
         else:
             date_correction_vi = prediction_vegetation_index(large_scale_model,[date]) - median_vi
         correction_vi = xr.concat((correction_vi,date_correction_vi),dim = 'Time')
