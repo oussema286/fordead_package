@@ -107,6 +107,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     
     if tile.parameters["correct_vi"]:
         print(stack_vi)
+        print(tile.correction_vi)
         stack_vi = stack_vi + tile.correction_vi
         print(stack_vi)
         
