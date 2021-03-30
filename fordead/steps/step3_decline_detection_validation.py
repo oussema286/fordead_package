@@ -193,7 +193,6 @@ def decline_detection(
                     decline_data, changes = detection_decline_validation(decline_data, anomalies, masked_vi["mask"] | (date_index < first_detection_date_index), date_index, raster_binary_validation_data)
                                    
                     write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
-                    del masked_vi, predicted_vi, anomalies
 
                 # affected= (detected+2*soil).data
                 d1 = {'IdZone': raster_id_validation_data.data[raster_binary_validation_data],
@@ -208,7 +207,8 @@ def decline_detection(
                       "Change" : [index if np.isnan(index) else tile.dates[int(index)] for index in changes]}
                       # "DiffSeuil" : stackDiff[dateIndex,:,:][raster_binary_validation_data],
                       # "EtatStress" : stackStress[dateIndex,:,:][raster_binary_validation_data]}
-                
+                del masked_vi, predicted_vi, anomalies
+
                 Results = pd.DataFrame(data=d1)
                 
                 # print("to dataframe")

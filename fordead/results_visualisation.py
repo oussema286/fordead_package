@@ -267,11 +267,14 @@ def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detect
     xy_soil_data = soil_data.sel(x = X, y = Y,method = "nearest")
     xy_stack_masks = stack_masks.sel(x = X, y = Y,method = "nearest")
     pixel_series = stack_vi.sel(x = X, y = Y,method = "nearest")
+    print(pixel_series)
     if xy_first_detection_date_index!=0:
         xy_anomalies = anomalies.sel(x = X, y = Y,method = "nearest")
         xy_decline_data = decline_data.sel(x = X, y = Y,method = "nearest")
         
     pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
+    print(pixel_series)
+    print(xy_stack_masks)
     pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
     if xy_first_detection_date_index!=0:
         anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
