@@ -207,13 +207,13 @@ def decline_detection_validation(
                       "Change" : [index if np.isnan(index) else tile.dates[int(index)] for index in changes]}
                       # "DiffSeuil" : stackDiff[dateIndex,:,:][raster_binary_validation_data],
                       # "EtatStress" : stackStress[dateIndex,:,:][raster_binary_validation_data]}
-                del masked_vi, predicted_vi, anomalies
 
                 Results = pd.DataFrame(data=d1)
                 
                 # print("to dataframe")
                 Results.to_csv(tile.paths["validation"] / 'Evolution_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'Evolution_data.csv').exists()))
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
+                del masked_vi, predicted_vi, anomalies
 
             tile.last_computed_anomaly = new_dates[-1]
                     

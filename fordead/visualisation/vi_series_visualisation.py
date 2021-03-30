@@ -108,8 +108,9 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     
     if tile.parameters["correct_vi"]:
         stack_vi = stack_vi + tile.correction_vi
-        
+  
     stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
+    stack_masks.coords["Time"] = tile.dates.astype("datetime64[D]")
 
     if shape_path is not None:
         shape = gp.read_file(shape_path)
