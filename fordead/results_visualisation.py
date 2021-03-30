@@ -250,6 +250,7 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
             plt.axvline(x=date_coupe, color='black', linewidth=3, linestyle=":",label="Détection de coupe")
             plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nPixel coupé, détection le " + str(date_coupe.astype("datetime64[D]")),size=15)
     else:
+        print(pixel_series.where(~pixel_series.mask,drop=True))
         pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
         plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\n Not enough dates to compute a model",size=15)
          
