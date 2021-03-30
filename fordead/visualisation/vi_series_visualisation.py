@@ -13,6 +13,8 @@ import random
 import geopandas as gp
 import xarray as xr
 import click
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
@@ -103,14 +105,11 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     
     harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in xx])
     harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : xxDate, "coeff" : [1,2,3,4,5]},dims=["Time","coeff"])
-    stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
     
     if tile.parameters["correct_vi"]:
-        print(stack_vi)
-        print(tile.correction_vi)
         stack_vi = stack_vi + tile.correction_vi
-        print(stack_vi)
         
+    stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
 
     if shape_path is not None:
         shape = gp.read_file(shape_path)
