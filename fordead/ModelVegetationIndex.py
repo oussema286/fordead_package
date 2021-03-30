@@ -236,7 +236,10 @@ def model_vi_correction(stack_vi, stack_masks, dict_paths):
 def correct_vi_date(masked_vi, forest_mask, large_scale_model, date, correction_vi):
     if date not in correction_vi.Time:
         median_vi = masked_vi["vegetation_index"].where(forest_mask & ~masked_vi["mask"]).median(dim=["x","y"])
-        date_correction_vi = prediction_vegetation_index(large_scale_model,[date]) - median_vi
+        if np.isnan(median_vi):
+            date_correction_vi = 0
+        else:
+            date_correction_vi = prediction_vegetation_index(large_scale_model,[date]) - median_vi
         correction_vi = xr.concat((correction_vi,date_correction_vi),dim = 'Time')
 
     masked_vi["vegetation_index"] = masked_vi["vegetation_index"] + correction_vi.sel(Time = date)
