@@ -7,7 +7,8 @@ Created on Tue Nov 17 12:02:24 2020
 
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
-from fordead.steps.step3_decline_detection_validation import decline_detection
+from fordead.steps.step3_decline_detection_validation import decline_detection_validation
+from fordead.steps.step3_decline_detection import decline_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step5_export_results import export_results
 
@@ -54,6 +55,7 @@ def parse_command_line():
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
+    parser.add_argument("--validation", dest = "validation", action="store_true",default = False, help = "If activated, exports validation results")
 
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
@@ -66,7 +68,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   min_last_date_training, date_lim_training, nb_min_date,#Train_model arguments
                   threshold_anomaly,
                   start_date_results, end_date_results, results_frequency, multiple_files,
-                  correct_vi): #Decline_detection argument
+                  correct_vi, validation):
 
     # main_directory = "/mnt/fordead/Out"
     # sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
@@ -122,13 +124,13 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
 # =====================================================================================================================    
     
-        
-        # decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-        #                   ground_obs_path = Path("/mnt/fordead/Data/Vecteurs/ObservationsTerrain") / ("scolyte"+tuile[1:]+".shp"),
-        #                   threshold_anomaly = threshold_anomaly)
-        decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-                          ground_obs_path = Path("/mnt/fordead/Data/Vecteurs/ObservationsTerrain") / ("scolyte31UGP.shp"),
-                          threshold_anomaly = threshold_anomaly)
+        if validation:
+            decline_detection_validation(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+                              ground_obs_path = Path("/mnt/fordead/Data/Vecteurs/ObservationsTerrain") / ("scolyte"+tuile[1:]+".shp"),
+                              threshold_anomaly = threshold_anomaly)
+        else:
+            decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+                                         threshold_anomaly = threshold_anomaly)
         # decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
         #                   ground_obs_path = Path("C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain") / ("scolyte31UGP.shp"),
         #                   threshold_anomaly = threshold_anomaly)

@@ -114,7 +114,7 @@ def decline_detection(
             if date in new_dates:
                 masked_vi = import_masked_vi(tile.paths,date)
                 if tile.parameters["correct_vi"]:
-                    masked_vi["vegetation_index"], tile.correction_vi = correct_vi_date(masked_vi["vegetation_index"],forest_mask, tile.large_scale_model, date, tile.correction_vi)
+                    masked_vi["vegetation_index"], tile.correction_vi = correct_vi_date(masked_vi,forest_mask, tile.large_scale_model, date, tile.correction_vi)
 
                 masked_vi["mask"] = masked_vi["mask"] | (date_index < first_detection_date_index) #Masking pixels where date was used for training
 
@@ -129,7 +129,7 @@ def decline_detection(
                 del masked_vi, predicted_vi, anomalies
         tile.last_computed_anomaly = new_dates[-1]
                 
-        #Writing decline data to rasters        
+        #Writing decline data to rasters
         write_tif(decline_data["state"], first_detection_date_index.attrs,tile.paths["state_decline"],nodata=0)
         write_tif(decline_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_decline"],nodata=0)
         write_tif(decline_data["count"], first_detection_date_index.attrs,tile.paths["count_decline"],nodata=0)

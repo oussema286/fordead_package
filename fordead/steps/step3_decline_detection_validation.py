@@ -69,7 +69,7 @@ def get_rasterized_validation_data(path_shape, raster_metadata, ValidationObs):
 
 
 
-@click.command(name='decline_detection')
+@click.command(name='decline_detection_validation')
 @click.option("-d", "--data_directory",  type=str, help="Dossier avec les données")
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
                     help="Seuil minimum pour détection d'anomalies", show_default=True)
@@ -78,7 +78,7 @@ def get_rasterized_validation_data(path_shape, raster_metadata, ValidationObs):
 @click.option("--path_dict_vi",  type=str, default=None,
                     help="Path of text file to add vegetation index formula, only useful if step1 was skipped", show_default=True)
 @click.option("--ground_obs_path",  type=str, help = "Dossier contenant les shapefiles de données de validation")
-def cli_decline_detection(
+def cli_decline_detection_validation(
     data_directory,
     ground_obs_path,
     threshold_anomaly=0.16,
@@ -99,10 +99,10 @@ def cli_decline_detection(
     -------
 
     """
-    decline_detection(data_directory, threshold_anomaly, vi, path_dict_vi)
+    decline_detection_validation(data_directory, ground_obs_path, threshold_anomaly, vi, path_dict_vi)
 
 
-def decline_detection(
+def decline_detection_validation(
     data_directory,
     ground_obs_path,
     threshold_anomaly=0.16,
@@ -246,5 +246,5 @@ def decline_detection(
 if __name__ == '__main__':
     # print(dictArgs)
     # start_time = time.time()
-    cli_decline_detection()
+    cli_decline_detection_validation()
     # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
