@@ -45,6 +45,7 @@ def get_rasterized_validation_data(path_shape, raster_metadata, ground_obs_erosi
     """
     
         #Rasterize données terrain
+    print(path_shape.exists())
     if path_shape.exists():
         ScolytesTerrain=gp.read_file(path_shape)
         ScolytesTerrain=ScolytesTerrain.to_crs(crs=raster_metadata["attrs"]["crs"])
@@ -55,7 +56,7 @@ def get_rasterized_validation_data(path_shape, raster_metadata, ground_obs_erosi
             ScolytesTerrain=ScolytesTerrain[ScolytesTerrain["IndSur"]==1]
         else:
             ScolytesTerrain['geometry']=ScolytesTerrain.geometry.buffer(20) #Buffer pour avoir au moins un pixel et que l'observation ne soit pas sautée
-    
+        print(ScolytesTerrain)
         ScolytesTerrain_json_str = ScolytesTerrain.to_json()
         ScolytesTerrain_json_dict = json.loads(ScolytesTerrain_json_str)
         ScolytesTerrain_jsonMask = [(feature["geometry"],feature["properties"][name_column]) for feature in ScolytesTerrain_json_dict["features"]]
