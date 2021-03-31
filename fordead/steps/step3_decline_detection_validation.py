@@ -163,7 +163,8 @@ def decline_detection_validation(
     raster_binary_validation_data = (raster_id_validation_data!=0)
 
     nb_pixels = int(np.sum(raster_binary_validation_data))
-
+    print(nb_pixels)
+    print(np.any(raster_binary_validation_data))
     if np.any(raster_binary_validation_data):
         #Verify if there are new SENTINEL dates
         new_dates = tile.dates[tile.dates > tile.last_computed_anomaly] if hasattr(tile, "last_computed_anomaly") else tile.dates[tile.dates >= tile.parameters["min_last_date_training"]]
