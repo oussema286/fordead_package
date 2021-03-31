@@ -41,7 +41,7 @@ def copy_validation_data(main_directory, tuiles): #Decline_detection argument
         Pixel_data.to_csv(main_directory / "All_Results" / 'Pixel_data.csv', mode='a', index=False,header=not((main_directory / "All_Results" / 'Pixel_data.csv').exists()))
         Evolution_data.to_csv(main_directory / "All_Results" / 'Evolution_data.csv', mode='a', index=False,header=not((main_directory / "All_Results" / 'Evolution_data.csv').exists()))
      
-        print('\r', tuile, " | ", len(tuile)-tuile_index-1, " remaining", sep='', end='', flush=True) if tuile_index != (len(tuiles) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
+        print('\r', tuile, " | ", len(tuiles)-tuile_index-1, " remaining", sep='', end='', flush=True) if tuile_index != (len(tuiles) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
 
     
     
