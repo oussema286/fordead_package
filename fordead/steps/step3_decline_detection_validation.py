@@ -151,6 +151,7 @@ def decline_detection_validation(
     
     tile.add_path("state_decline", tile.data_directory / "DataDecline" / "state_decline.tif")
     tile.add_path("first_date_decline", tile.data_directory / "DataDecline" / "first_date_decline.tif")
+    tile.add_path("first_date_unconfirmed_decline", tile.data_directory / "DataDecline" / "first_date_unconfirmed_decline.tif")
     tile.add_path("count_decline", tile.data_directory / "DataDecline" / "count_decline.tif")
     tile.add_dirpath("validation", tile.data_directory / "Validation")
 
@@ -230,6 +231,7 @@ def decline_detection_validation(
             #Writing decline data to rasters        
             write_tif(decline_data["state"], first_detection_date_index.attrs,tile.paths["state_decline"],nodata=0)
             write_tif(decline_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_decline"],nodata=0)
+            write_tif(decline_data["first_date_unconfirmed"], first_detection_date_index.attrs,tile.paths["first_date_unconfirmed_decline"],nodata=0)
             write_tif(decline_data["count"], first_detection_date_index.attrs,tile.paths["count_decline"],nodata=0)
             
             data = raster_id_validation_data.to_dataframe(name="IdZone")

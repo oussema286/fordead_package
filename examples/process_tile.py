@@ -76,10 +76,11 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
     # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
     # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/zone_timelapse.shp"
-    # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/test.shp"
+
+        
     # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
     # main_directory = "D:/Documents/Deperissement/Output"    
-    # correct_vi = True
+
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
     logpath = main_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")
@@ -124,13 +125,13 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
 # =====================================================================================================================    
     
-        # if validation:
-        #     decline_detection_validation(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-        #                       ground_obs_path = Path("/mnt/fordead/Data/Vecteurs/ObservationsTerrain") / ("scolyte"+tuile[1:]+".shp"),
-        #                       threshold_anomaly = threshold_anomaly)
-        # else:
-        #     decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-        #                                  threshold_anomaly = threshold_anomaly)
+        if validation:
+            decline_detection_validation(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+                              ground_obs_path = Path("/mnt/fordead/Data/Vecteurs/ObservationsTerrain") / ("scolyte"+tuile[1:]+".shp"),
+                              threshold_anomaly = threshold_anomaly)
+        else:
+            decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+                                          threshold_anomaly = threshold_anomaly)
         decline_detection_validation(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
                           ground_obs_path = Path("/mnt/fordead/Data/Vecteurs/points_visualisation.shp"),
                           threshold_anomaly = threshold_anomaly,
