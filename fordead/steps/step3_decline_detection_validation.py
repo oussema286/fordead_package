@@ -21,7 +21,7 @@ import pandas as pd
 import xarray as xr
 from numpy import nan
 
-def get_rasterized_validation_data(path_shape, raster_metadata, ValidationObs):
+def get_rasterized_validation_data(path_shape, raster_metadata, ground_obs_erosion, name_column  = "Id"):
     """
     Errode les vecteurs d'observations terrain de la tuile puis les transforme en raster avec comme valeur l'identifiant du polygone. 
     
@@ -49,16 +49,16 @@ def get_rasterized_validation_data(path_shape, raster_metadata, ValidationObs):
         ScolytesTerrain=gp.read_file(path_shape)
         ScolytesTerrain=ScolytesTerrain.to_crs(crs=raster_metadata["attrs"]["crs"])
         
-        if ValidationObs:
-            ScolytesTerrain['geometry']=ScolytesTerrain.geometry.buffer(10) #Buffer pour avoir au moins un pixel et que l'observation ne soit pas sautée
-        else:
+        if ground_obs_erosion:
             ScolytesTerrain['geometry']=ScolytesTerrain.geometry.buffer(-10)
             ScolytesTerrain=ScolytesTerrain[~(ScolytesTerrain.is_empty)]
             ScolytesTerrain=ScolytesTerrain[ScolytesTerrain["IndSur"]==1]
-            
+        else:
+            ScolytesTerrain['geometry']=ScolytesTerrain.geometry.buffer(20) #Buffer pour avoir au moins un pixel et que l'observation ne soit pas sautée
+    
         ScolytesTerrain_json_str = ScolytesTerrain.to_json()
         ScolytesTerrain_json_dict = json.loads(ScolytesTerrain_json_str)
-        ScolytesTerrain_jsonMask = [(feature["geometry"],feature["properties"]["Id"]) for feature in ScolytesTerrain_json_dict["features"]]
+        ScolytesTerrain_jsonMask = [(feature["geometry"],feature["properties"][name_column]) for feature in ScolytesTerrain_json_dict["features"]]
         
         rasterized_validation_data = rasterio.features.rasterize(ScolytesTerrain_jsonMask,out_shape = (raster_metadata["sizes"]["y"],raster_metadata["sizes"]["x"]) ,dtype="int16",transform=raster_metadata["attrs"]['transform'])  
                                       
@@ -78,9 +78,12 @@ def get_rasterized_validation_data(path_shape, raster_metadata, ValidationObs):
 @click.option("--path_dict_vi",  type=str, default=None,
                     help="Path of text file to add vegetation index formula, only useful if step1 was skipped", show_default=True)
 @click.option("--ground_obs_path",  type=str, help = "Dossier contenant les shapefiles de données de validation")
+@click.option("--ground_obs_erosion",  type=str, help = "If True, keeps only polygons with 'IndSur'==1 and apply 10m erosion. Else, keeps all polygons and apply 10m dilation")
 def cli_decline_detection_validation(
     data_directory,
     ground_obs_path,
+    ground_obs_erosion = True,
+    name_column = "Id",
     threshold_anomaly=0.16,
     vi = None,
     path_dict_vi = None,
@@ -91,6 +94,9 @@ def cli_decline_detection_validation(
     Parameters
     ----------
     data_directory
+    ground_obs_path
+    ground_obs_erosion
+    name_column
     threshold_anomaly
     vi
     path_dict_vi
@@ -105,6 +111,8 @@ def cli_decline_detection_validation(
 def decline_detection_validation(
     data_directory,
     ground_obs_path,
+    ground_obs_erosion = True,
+    name_column = "Id",
     threshold_anomaly=0.16,
     vi = None,
     path_dict_vi = None
@@ -115,6 +123,9 @@ def decline_detection_validation(
     Parameters
     ----------
     data_directory
+    ground_obs_path
+    ground_obs_erosion
+    name_column
     threshold_anomaly
     vi
     path_dict_vi
@@ -147,7 +158,7 @@ def decline_detection_validation(
         forest_mask = import_forest_mask(tile.paths["ForestMask"])
     # raster_id_validation_data=get_rasterized_validation_data(validation_data_directory / ("scolyte"+tile_name[1:]+".shp"), raster_metadata, False)
     valid_area_mask = import_forest_mask(tile.paths["valid_area_mask"])
-    raster_id_validation_data=get_rasterized_validation_data(ground_obs_path, tile.raster_meta, False)
+    raster_id_validation_data=get_rasterized_validation_data(ground_obs_path, tile.raster_meta, ground_obs_erosion, name_column)
     # raster_binary_validation_data = (raster_id_validation_data!=0) & valid_area_mask
     raster_binary_validation_data = (raster_id_validation_data!=0)
 
@@ -222,8 +233,13 @@ def decline_detection_validation(
             write_tif(decline_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_decline"],nodata=0)
             write_tif(decline_data["count"], first_detection_date_index.attrs,tile.paths["count_decline"],nodata=0)
             
+            data = raster_id_validation_data.to_dataframe(name="IdZone")
+            data = data[data.IdZone!=0]
+            
             d2 = {'IdZone': raster_id_validation_data.data[raster_binary_validation_data],
                   "IdPixel" : range(nb_pixels),
+                  "x" : data.index.get_level_values('x'),
+                  "y" : data.index.get_level_values('y'),
                   "coeff1" : coeff_model.sel(coeff = 1).data[raster_binary_validation_data],
                   "coeff2" : coeff_model.sel(coeff = 2).data[raster_binary_validation_data],
                   "coeff3" : coeff_model.sel(coeff = 3).data[raster_binary_validation_data],

@@ -14,7 +14,6 @@ import geopandas as gp
 import xarray as xr
 import click
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
@@ -113,6 +112,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     stack_masks.coords["Time"] = tile.dates.astype("datetime64[D]")
 
     if shape_path is not None:
+        matplotlib.use('Agg')
         shape = gp.read_file(shape_path)
         shape = shape.to_crs(crs = tile.raster_meta["attrs"]["crs"])
         
@@ -130,6 +130,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                 print("Pixel outside forest mask")
     else:
         #Initialiser X,Y
+        # matplotlib.use('TkAgg')
         PixelsToChoose = np.where(forest_mask)
         PixelID=random.randint(0,PixelsToChoose[0].shape[0])
         X=PixelsToChoose[0][PixelID]
