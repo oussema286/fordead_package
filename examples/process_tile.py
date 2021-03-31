@@ -74,8 +74,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
     # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/zone_timelapse.shp"
         
-    # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
-    # main_directory = "D:/Documents/Deperissement/Output"    
+    sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
+    main_directory = "D:/Documents/Deperissement/Output"    
     
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
@@ -151,7 +151,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
         #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
         #                   name_column = "id")
-        # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
+        vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
         
         
         

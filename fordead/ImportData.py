@@ -564,8 +564,7 @@ def import_first_detection_date_index(path,chunks = None):
 
     """
     
-    first_detection_date_index=xr.open_rasterio(path,chunks = chunks)
-    first_detection_date_index=first_detection_date_index.squeeze("band")
+    first_detection_date_index=xr.open_rasterio(path,chunks = chunks).squeeze("band")
     return first_detection_date_index
 
 def import_decline_data(dict_paths, chunks = None):
@@ -587,10 +586,12 @@ def import_decline_data(dict_paths, chunks = None):
     """
     
     state_decline = xr.open_rasterio(dict_paths["state_decline"],chunks = chunks).astype(bool)
+    first_date_unconfirmed_decline = xr.open_rasterio(dict_paths["first_date_unconfirmed_decline"],chunks = chunks)
     first_date_decline = xr.open_rasterio(dict_paths["first_date_decline"],chunks = chunks)
     count_decline = xr.open_rasterio(dict_paths["count_decline"],chunks = chunks)
     
     decline_data=xr.Dataset({"state": state_decline,
+                     "first_date_unconfirmed": first_date_unconfirmed_decline,
                      "first_date": first_date_decline,
                      "count" : count_decline})
     decline_data=decline_data.squeeze("band")
@@ -617,13 +618,10 @@ def initialize_decline_data(shape,coords):
 
     """
     
-    count_decline= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
-    first_date_decline=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
-    state_decline=np.zeros(shape,dtype=bool)
-    
-    decline_data=xr.Dataset({"state": xr.DataArray(state_decline, coords=coords),
-                         "first_date": xr.DataArray(first_date_decline, coords=coords),
-                         "count" : xr.DataArray(count_decline, coords=coords)})
+    decline_data=xr.Dataset({"state": xr.DataArray(np.zeros(shape,dtype=bool), coords=coords),
+                         "first_date_unconfirmed": xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords),
+                         "first_date":  xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords),
+                         "count" : xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords)})
     
     return decline_data
 
