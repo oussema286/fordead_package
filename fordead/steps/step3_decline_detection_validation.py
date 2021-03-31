@@ -62,9 +62,6 @@ def get_rasterized_validation_data(path_shape, raster_metadata, ground_obs_erosi
         ScolytesTerrain_jsonMask = [(feature["geometry"],feature["properties"][name_column]) for feature in ScolytesTerrain_json_dict["features"]]
         
         rasterized_validation_data = rasterio.features.rasterize(ScolytesTerrain_jsonMask,out_shape = (raster_metadata["sizes"]["y"],raster_metadata["sizes"]["x"]) ,dtype="int16",transform=raster_metadata["attrs"]['transform'])  
-        print(raster_metadata["attrs"]['transform'])
-        print(rasterized_validation_data)
-        print(np.any(rasterized_validation_data))
     else:
         rasterized_validation_data = np.zeros((raster_metadata["sizes"]["y"],raster_metadata["sizes"]["x"]),dtype="uint8")
     
