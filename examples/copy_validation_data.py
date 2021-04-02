@@ -24,7 +24,7 @@ def parse_command_line():
 def copy_validation_data(main_directory, tuiles): #Decline_detection argument
 
     # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
-    # main_directory = "D:/Documents/Deperissement/Output"    
+    main_directory = "D:/Documents/Deperissement/Output"    
     main_directory = Path(main_directory)
     
     for tuile_index, tuile in enumerate(tuiles):
@@ -34,13 +34,22 @@ def copy_validation_data(main_directory, tuiles): #Decline_detection argument
             tile.add_path("pixel_data", main_directory / "All_Results" / 'Pixel_data.csv')
             tile.delete_dirs("pixel_data")
             tile.add_path("pixel_data", main_directory / "All_Results" / 'Pixel_data.csv')
+            
+            del tile.parameters["list_forest_type"]
+            parameters = pd.DataFrame(data=tile.parameters)
+            parameters = parameters.transpose()
+            parameters.insert(0,"parameter",parameters.index)
+            parameters=parameters.rename(columns={0: "value"})
+            parameters.to_csv(main_directory / "All_Results" / 'parameters.csv', mode='w', index=False,header=True)
+
         Evolution_data = pd.read_csv(tile.paths["validation"] / 'Evolution_data.csv')
         Pixel_data = pd.read_csv(tile.paths["validation"] / 'Pixel_data.csv')
         Pixel_data.insert(Pixel_data.shape[-1],"Tile", tuile)
 
         Pixel_data.to_csv(main_directory / "All_Results" / 'Pixel_data.csv', mode='a', index=False,header=not((main_directory / "All_Results" / 'Pixel_data.csv').exists()))
         Evolution_data.to_csv(main_directory / "All_Results" / 'Evolution_data.csv', mode='a', index=False,header=not((main_directory / "All_Results" / 'Evolution_data.csv').exists()))
-     
+                
+
         print('\r', tuile, " | ", len(tuiles)-tuile_index-1, " remaining", sep='', end='', flush=True) if tuile_index != (len(tuiles) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
 
     
