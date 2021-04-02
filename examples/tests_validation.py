@@ -10,6 +10,7 @@ from examples.process_tile import process_tiles
 from examples.copy_validation_data import copy_validation_data
 import shutil
 import os
+from pathlib import Path
 
 dep_path = "/mnt/fordead/Data/Vecteurs/Departements/departements-20140306-100m.shp"
 tuiles = ["T31UFQ", "T31UFR", "T31UGP", "T31UGQ", "T31TGL"]
@@ -20,7 +21,7 @@ vi = "NDVI"
 
 for threshold_anomaly in [0.1,0.13,0.16]:
     main_directory = "/mnt/fordead/Out/"+vi
-    os.mkdir(main_directory)
+    Path(main_directory).mkdir(parents=True, exist_ok=True)   
     process_tiles(main_directory = main_directory, sentinel_directory = sentinel_directory, tuiles = tuiles, forest_mask_source = "BDFORET", extent_shape_path = None,
                     dep_path = dep_path, bdforet_dirpath = bdforet_dirpath, list_forest_type =  ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], path_oso = None, list_code_oso = None, #compute_forest_mask arguments
                     lim_perc_cloud = 0.4, vi = vi, sentinel_source = "THEIA", apply_source_mask = False, #compute_masked_vegetationindex arguments
@@ -36,7 +37,7 @@ vi = "NDWI"
 
 for threshold_anomaly in [0.12,0.14,0.16]:
     main_directory = "/mnt/fordead/Out/"+vi
-    os.mkdir(main_directory)
+    Path(main_directory).mkdir(parents=True, exist_ok=True)   
     process_tiles(main_directory = main_directory, sentinel_directory = sentinel_directory, tuiles = tuiles, forest_mask_source = "BDFORET", extent_shape_path = None,
                     dep_path = dep_path, bdforet_dirpath = bdforet_dirpath, list_forest_type =  ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], path_oso = None, list_code_oso = None, #compute_forest_mask arguments
                     lim_perc_cloud = 0.4, vi = vi, sentinel_source = "THEIA", apply_source_mask = False, #compute_masked_vegetationindex arguments
@@ -49,7 +50,7 @@ for threshold_anomaly in [0.12,0.14,0.16]:
 
 threshold_anomaly = 0.15
 main_directory = "/mnt/fordead/Out/"+vi
-os.mkdir(main_directory)
+Path(main_directory).mkdir(parents=True, exist_ok=True)   
 process_tiles(main_directory = main_directory, sentinel_directory = sentinel_directory, tuiles = tuiles, forest_mask_source = "BDFORET", extent_shape_path = None,
                 dep_path = dep_path, bdforet_dirpath = bdforet_dirpath, list_forest_type =  ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], path_oso = None, list_code_oso = None, #compute_forest_mask arguments
                 lim_perc_cloud = 0.4, vi = vi, sentinel_source = "THEIA", apply_source_mask = False, #compute_masked_vegetationindex arguments
@@ -63,7 +64,7 @@ shutil.copytree(main_directory+"/All_Results", "/mnt/fordead/Out/"+vi+"_"+str(th
 vi = "CRSWIR"
 main_directory = "/mnt/fordead/Out/"+vi
 threshold_anomaly = 0.15
-os.mkdir(main_directory)
+Path(main_directory).mkdir(parents=True, exist_ok=True)   
 process_tiles(main_directory = main_directory, sentinel_directory = sentinel_directory, tuiles = tuiles, forest_mask_source = "BDFORET", extent_shape_path = None,
                 dep_path = dep_path, bdforet_dirpath = bdforet_dirpath, list_forest_type =  ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], path_oso = None, list_code_oso = None, #compute_forest_mask arguments
                 lim_perc_cloud = 0.4, vi = vi, sentinel_source = "THEIA", apply_source_mask = False, #compute_masked_vegetationindex arguments
@@ -77,7 +78,7 @@ shutil.copytree(main_directory+"/All_Results", "/mnt/fordead/Out/"+vi+"_"+str(th
 threshold_anomaly = 0.16
 vi = "CRSWIR"
 main_directory = "/mnt/fordead/Out/"+vi
-os.mkdir(main_directory)
+Path(main_directory).mkdir(parents=True, exist_ok=True)   
 process_tiles(main_directory = main_directory, sentinel_directory = sentinel_directory, tuiles = tuiles, forest_mask_source = "BDFORET", extent_shape_path = None,
                 dep_path = dep_path, bdforet_dirpath = bdforet_dirpath, list_forest_type =  ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], path_oso = None, list_code_oso = None, #compute_forest_mask arguments
                 lim_perc_cloud = 0.4, vi = vi, sentinel_source = "THEIA", apply_source_mask = False, #compute_masked_vegetationindex arguments
