@@ -35,7 +35,7 @@ def copy_validation_data(main_directory, tuiles): #Decline_detection argument
             tile.delete_dirs("pixel_data")
             tile.add_path("pixel_data", main_directory / "All_Results" / 'Pixel_data.csv')
             
-            file = open(main_directory / "All_Results" / 'parameters', "a") 
+            file = open(main_directory / "All_Results" / 'parameters.txt', "a") 
             for parameter in tile.parameters:
                 file.write(parameter + " : " +  str(tile.parameters[parameter]) + "\n")
             file.close()
