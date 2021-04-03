@@ -32,7 +32,7 @@ for threshold_anomaly in [0.1,0.13,0.16]:
     copy_validation_data(main_directory, tuiles)
     shutil.copytree(main_directory+"/All_Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly)) 
     for tile in tuiles:
-        shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly))+"/"+tile
+        shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly)+"/"+tile)
     
 
 vi = "NDWI"
@@ -50,7 +50,7 @@ for threshold_anomaly in [0.12,0.14,0.16]:
     copy_validation_data(main_directory, tuiles)
     shutil.copytree(main_directory+"/All_Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly)) 
     for tile in tuiles:
-        shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly))+"/"+tile
+        shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly)+"/"+tile)
 threshold_anomaly = 0.15
 main_directory = "/mnt/fordead/Out/"+vi
 Path(main_directory).mkdir(parents=True, exist_ok=True)   
@@ -62,9 +62,9 @@ process_tiles(main_directory = main_directory, sentinel_directory = sentinel_dir
                 start_date_results = '2015-06-23', end_date_results = '2022-06-23', results_frequency = "M", multiple_files = False,
                 correct_vi = True, validation = True)
 copy_validation_data(main_directory, tuiles)
-shutil.copytree(main_directory+"/All_Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly))+"_corrected"
+shutil.copytree(main_directory+"/All_Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly)+"_corrected")
 for tile in tuiles:
-    shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly))+"_corrected"+"/"+tile
+    shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly)+"_corrected"+"/"+tile)
     
 vi = "CRSWIR"
 main_directory = "/mnt/fordead/Out/"+vi
@@ -78,9 +78,9 @@ process_tiles(main_directory = main_directory, sentinel_directory = sentinel_dir
                 start_date_results = '2015-06-23', end_date_results = '2022-06-23', results_frequency = "M", multiple_files = False,
                 correct_vi = True, validation = True)
 copy_validation_data(main_directory, tuiles)
-shutil.copytree(main_directory+"/All_Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly))+"_corrected"
+shutil.copytree(main_directory+"/All_Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly)+"_corrected")
 for tile in tuiles:
-    shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly))+"_corrected"+"/"+tile
+    shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly)+"_corrected"+"/"+tile)
 
 threshold_anomaly = 0.16
 vi = "CRSWIR"
@@ -96,4 +96,4 @@ process_tiles(main_directory = main_directory, sentinel_directory = sentinel_dir
 copy_validation_data(main_directory, tuiles)
 shutil.copytree(main_directory+"/All_Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly))
 for tile in tuiles:
-    shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly))+"/"+tile
+    shutil.copytree(main_directory+"/"+tile+"/Results", "/mnt/fordead/Out/"+vi+"_"+str(threshold_anomaly)+"/"+tile)
