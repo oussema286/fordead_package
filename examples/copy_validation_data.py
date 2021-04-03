@@ -24,7 +24,7 @@ def parse_command_line():
 def copy_validation_data(main_directory, tuiles): #Decline_detection argument
 
     # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
-    main_directory = "D:/Documents/Deperissement/Output"    
+    # main_directory = "D:/Documents/Deperissement/Output"    
     main_directory = Path(main_directory)
     
     for tuile_index, tuile in enumerate(tuiles):
