@@ -36,6 +36,7 @@ def copy_validation_data(main_directory, tuiles): #Decline_detection argument
             tile.add_path("pixel_data", main_directory / "All_Results" / 'Pixel_data.csv')
             
             del tile.parameters["list_forest_type"]
+            print(tile.parameters)
             parameters = pd.DataFrame(data=tile.parameters)
             parameters = parameters.transpose()
             parameters.insert(0,"parameter",parameters.index)
