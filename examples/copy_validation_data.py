@@ -35,13 +35,10 @@ def copy_validation_data(main_directory, tuiles): #Decline_detection argument
             tile.delete_dirs("pixel_data")
             tile.add_path("pixel_data", main_directory / "All_Results" / 'Pixel_data.csv')
             
-            del tile.parameters["list_forest_type"]
-            print(tile.parameters)
-            parameters = pd.DataFrame(data=tile.parameters)
-            parameters = parameters.transpose()
-            parameters.insert(0,"parameter",parameters.index)
-            parameters=parameters.rename(columns={0: "value"})
-            parameters.to_csv(main_directory / "All_Results" / 'parameters.csv', mode='w', index=False,header=True)
+            file = open(main_directory / "All_Results" / 'parameters', "a") 
+            for parameter in tile.parameters:
+                file.write(parameter + " : " +  str(tile.parameters[parameter]) + "\n")
+            file.close()
 
         Evolution_data = pd.read_csv(tile.paths["validation"] / 'Evolution_data.csv')
         Pixel_data = pd.read_csv(tile.paths["validation"] / 'Pixel_data.csv')
