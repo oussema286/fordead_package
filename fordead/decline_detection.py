@@ -88,7 +88,7 @@ def detection_decline_validation(decline_data, anomalies, mask, date_index, rast
     dates_changes_validation = decline_data["first_date"].where(changing_pixels).data[raster_binary_validation_data]
 
     decline_data["count"] = xr.where(changing_pixels, 0,decline_data["count"])
-    decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1) & ~decline_data["state"], date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+    decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1), date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
    
     
     return decline_data, dates_changes_validation
@@ -126,7 +126,7 @@ def detection_decline(decline_data, anomalies, mask, date_index):
     decline_data["first_date"] = xr.where(changing_pixels, decline_data["first_date_unconfirmed"], decline_data["first_date"]) #First_date saved if confirmed
 
     decline_data["count"] = xr.where(changing_pixels, 0,decline_data["count"])
-    decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1) & ~decline_data["state"], date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+    decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1), date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
 
     return decline_data
 

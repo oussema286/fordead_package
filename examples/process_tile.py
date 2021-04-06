@@ -47,7 +47,7 @@ def parse_command_line():
     parser.add_argument("--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
     parser.add_argument("--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
     parser.add_argument("--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
-    parser.add_argument("--date_lim_training", dest = "date_lim_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
+    parser.add_argument("--max_last_date_training", dest = "max_last_date_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
     
     parser.add_argument("--start_date_results", dest = "start_date_results",type = str,default = '2015-06-23', help = "Date de début pour l'export des résultats")
     parser.add_argument("--end_date_results", dest = "end_date_results",type = str,default = "2022-01-01", help = "Date de fin pour l'export des résultats")
@@ -65,7 +65,7 @@ def parse_command_line():
 def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source, extent_shape_path,
                   dep_path, bdforet_dirpath, list_forest_type, path_oso, list_code_oso, #compute_forest_mask arguments
                   lim_perc_cloud, vi, sentinel_source, apply_source_mask, #compute_masked_vegetationindex arguments
-                  min_last_date_training, date_lim_training, nb_min_date,#Train_model arguments
+                  min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
                   threshold_anomaly,
                   start_date_results, end_date_results, results_frequency, multiple_files,
                   correct_vi, validation):
@@ -119,6 +119,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================
             
         train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+                    max_last_date_training = max_last_date_training,
                     nb_min_date = nb_min_date, correct_vi = correct_vi)
         file = open(logpath, "a") 
         file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
@@ -129,6 +130,9 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             decline_detection_validation(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
                               ground_obs_path = Path("/mnt/fordead/Data/Vecteurs/ObservationsTerrain") / ("scolyte"+tuile[1:]+".shp"),
                               threshold_anomaly = threshold_anomaly)
+            # decline_detection_validation(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+            #                   ground_obs_path = Path("C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/scolyte31UGP.shp"),
+            #                   threshold_anomaly = threshold_anomaly)
         else:
             decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
                                           threshold_anomaly = threshold_anomaly)
