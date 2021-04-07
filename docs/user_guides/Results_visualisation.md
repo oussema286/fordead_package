@@ -9,11 +9,11 @@ Les paramètres en entrée sont :
 - **data_directory** : Le chemin du dossier dans lequel sont écrits les résultats déjà calculés, et dans lequel seront sauvegardés les timelapses
 - **obs_terrain_path** : Optionnel, chemin du shapefile contenant les observations terrain, avec les colonnes "scolyte1", "organisme" et "date". "scolyte1" peut prendre les valeurs  "C", "V", "R", "S", "I", "G" ou "X".
 - **shape_path** : Chemin d'un shapefile contenant des polygones ou des points utilisés pour définir la zone des timelapses
-- **coordinates** : Couple de valeurs x,y, dans le système de projection de la tuile, utilisés pour définir la zone du timelapse. (format : `(x,y)`)
-- **buffer** : Longueur utilisée pour étendre la zone du timelapse à partir des points ou des polygones.
+- **x** : Coordonnée x dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.
+- **y** : Coordonnée y dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.- **buffer** : Longueur utilisée pour étendre la zone du timelapse à partir des points ou des polygones.
 - **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du polygone ou point si **shape_path** est utilisé. (Par défault : "id")
-
-Les paramètres indispensables sont **data_directory** ainsi que **shape_path** ou **coordinates**.
+- **buffer** : Zone tampon autour des polygones ou des points pour définir l'étendue du timelapse.
+Les paramètres indispensables sont **data_directory** ainsi que **shape_path** ou **x** et **y**.
 
 #### SORTIES
 Les sorties sont dans le dossier data_directory/Timelapses, avec pour chaque polygone ou point un fichier .html avec comme nom de fichier la valeur dans la colonne **name_column** si réalisés à partir de **shape_path**, ou x_y.html si réalisé à partir de coordonnées.
@@ -47,7 +47,7 @@ create_timelapse(data_directory = <data_directory>,shape_path = <shape_path>, bu
 #### A partir de coordonnées
 ```bash
 from fordead.visualisation.create_timelapse import create_timelapse
-create_timelapse(data_directory = <data_directory>,coordinates = (x,y), buffer = 100)
+create_timelapse(data_directory = <data_directory>, x = <x>, y = <y>, buffer = 100)
 ```
 ### A partir de l'invité de commande
 ```bash
