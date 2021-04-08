@@ -36,7 +36,10 @@ def compute_confidence_index(
     
     tile.add_path("confidence_index", tile.data_directory / "Confidence_Index" / "confidence_index.tif")
     tile.add_path("confidence_class", tile.data_directory / "Confidence_Index" / "confidence_class.shp")
- 
+    
+    # if tile.paths["confidence_index"].exists():
+    #     confidence_index = xr.open_rasterio(tile.paths["confidence_index"])
+    # else:
     forest_mask = import_forest_mask(tile.paths["ForestMask"], chunks = 1280)
     valid_area = import_forest_mask(tile.paths["valid_area_mask"], chunks = 1280)
     soil_data = import_soil_data(tile.paths, chunks = 1280)
@@ -51,10 +54,10 @@ def compute_confidence_index(
 
     predicted_vi=prediction_vegetation_index(coeff_model,tile.dates)
     
-    confidence_index = (stack_vi - predicted_vi).where(relevant_area & ~stack_masks & decline_dates).mean(dim="Time").compute()
+    confidence_index = (stack_vi - predicted_vi).where(~stack_masks & decline_dates).mean(dim="Time").compute()
     print("confidence_index computed : %s secondes ---" % (time.time() - start_time))
     start_time = time.time()
-    Nb_dates = (~stack_masks).where(relevant_area & ~stack_masks & decline_dates).sum(dim="Time").compute()
+    Nb_dates = (~stack_masks).where(~stack_masks & decline_dates).sum(dim="Time").compute()
     print("Nb_dates computed : %s secondes ---" % (time.time() - start_time))
     
     digitized = np.digitize(confidence_index,bins_classes)
