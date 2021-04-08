@@ -478,7 +478,7 @@ def import_forest_mask(forest_mask_path,chunks = None):
     return forest_mask.astype(bool)
 
 
-def import_stackedmaskedVI(tuile,max_date=None,chunks = None):
+def import_stackedmaskedVI(tuile,min_date = None, max_date=None,chunks = None):
     """
     Imports 3D arrays of the vegetation index series and masks
 
@@ -500,23 +500,26 @@ def import_stackedmaskedVI(tuile,max_date=None,chunks = None):
 
     """
     
-    if max_date==None:
-        filter_dates=False
-        max_date=""
+    if max_date is None and min_date is None:
+        dates = [date for date in tuile.paths["VegetationIndex"]]
+    elif max_date is None and min_date is not None:
+        dates = [date for date in tuile.paths["VegetationIndex"] if date >= min_date]
+    elif max_date is not None and min_date is None:
+        dates = [date for date in tuile.paths["VegetationIndex"] if date <= max_date]
     else:
-        filter_dates=True
+        dates = [date for date in tuile.paths["VegetationIndex"]if date >= min_date & date <= max_date]
         
-    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in tuile.paths["VegetationIndex"] if date <= max_date or not(filter_dates)]
+    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in dates]
     stack_vi=xr.concat(list_vi,dim="Time")
-    stack_vi=stack_vi.assign_coords(Time=[date for date in tuile.paths["VegetationIndex"].keys() if date <= max_date or not(filter_dates)])
+    stack_vi=stack_vi.assign_coords(Time=[date for date in dates])
     stack_vi=stack_vi.squeeze("band")
     stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
     # stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
 
     
-    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in tuile.paths["Masks"] if date <= max_date or not(filter_dates)]
+    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in dates]
     stack_masks=xr.concat(list_mask,dim="Time")
-    stack_masks=stack_masks.assign_coords(Time=[date for date in tuile.paths["Masks"].keys() if date <= max_date or not(filter_dates)]).astype(bool)
+    stack_masks=stack_masks.assign_coords(Time=[date for date in dates]).astype(bool)
     stack_masks=stack_masks.squeeze("band")
     stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
     # stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
