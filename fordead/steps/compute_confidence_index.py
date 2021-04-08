@@ -76,4 +76,4 @@ def compute_confidence_index(
     gp_results.to_file(tile.paths["confidence_class"])
     tile.save_info()
     
-compute_confidence_index("D:/Documents/Deperissement/Output/ZoneEtude",0.2)
+# compute_confidence_index("D:/Documents/Deperissement/Output/ZoneEtude",0.2)
