@@ -13,6 +13,10 @@ import xarray as xr
 import rasterio
 from affine import Affine
 import geopandas as gp
+import dask.array as da
+
+from fordead.decline_detection import prediction_vegetation_index
+
 
 def write_tif(data_array, attributes, path, nodata = None):
     """
@@ -192,3 +196,31 @@ def get_state_at_date(state_code,relevant_area,attrs):
     
     period_end_results.crs = attrs["crs"].replace("+init=","")
     return period_end_results
+
+def vectorizing_confidence_class(confidence_index, Nb_dates, relevant_area, bins_classes, classes, attrs):
+    digitized = np.digitize(confidence_index,bins_classes)
+    digitized[Nb_dates==3]=0
+    geoms_class = list(
+                {'properties': {'class_index': v}, 'geometry': s}
+                for i, (s, v) 
+                in enumerate(
+                    rasterio.features.shapes(digitized.astype(np.uint8), 
+                                             mask = relevant_area.data, 
+                                             transform=Affine(*attrs["transform"]))))
+    
+    gp_results = gp.GeoDataFrame.from_features(geoms_class)
+    gp_results.class_index=gp_results.class_index.astype(int)
+    gp_results.insert(1,"class",classes[gp_results.class_index])
+    gp_results.crs = attrs["crs"].replace("+init=","")
+    gp_results = gp_results.drop(columns=['class_index'])
+    return gp_results
+
+def compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, tile):
+    indexes = xr.DataArray(da.ones(stack_masks.shape,dtype=np.uint16, chunks=stack_masks.chunks), stack_masks.coords) * xr.DataArray(range(stack_masks.sizes["Time"])+np.argmax(tile.dates>tile.parameters["min_last_date_training"]), coords={"Time" : stack_masks.Time},dims=["Time"])   
+    decline_dates = (indexes > decline_data["first_date"])
+
+    predicted_vi=prediction_vegetation_index(coeff_model,tile.dates)
+    
+    confidence_index = (stack_vi - predicted_vi).where(~stack_masks & decline_dates).mean(dim="Time").compute()
+    Nb_dates = (~stack_masks).where(~stack_masks & decline_dates).sum(dim="Time").compute()
+    return confidence_index, Nb_dates
