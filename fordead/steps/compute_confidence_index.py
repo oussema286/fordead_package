@@ -9,12 +9,13 @@ from fordead.ImportData import import_stackedmaskedVI, import_decline_data, Tile
 import xarray as xr
 import numpy as np
 from fordead.writing_data import write_tif, vectorizing_confidence_class, compute_confidence_index
-
+import time 
 def classify_declining_area(
     data_directory,
     threshold_index
     ):
     print("Computing confidence index")
+    start_time = time.time()
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"threshold_index" : threshold_index})
@@ -30,7 +31,8 @@ def classify_declining_area(
 
     relevant_area = (forest_mask & valid_area & decline_data["state"] & ~soil_data["state"]).compute()
 
-    if tile.paths["confidence_index"].exists():
+    # if tile.paths["confidence_index"].exists():
+    if False:
         confidence_index = xr.open_rasterio(tile.paths["confidence_index"]).squeeze(dim="band")
         Nb_dates = xr.open_rasterio(tile.paths["Nb_dates"]).squeeze(dim="band")
     else:
@@ -45,5 +47,6 @@ def classify_declining_area(
     confidence_class = vectorizing_confidence_class(confidence_index, Nb_dates, relevant_area, [threshold_index], np.array(["Stress/scolyte vert","scolyte rouge"]), tile.raster_meta["attrs"])
     confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
+    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
     
 classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude",0.3)
