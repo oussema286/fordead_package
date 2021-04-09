@@ -6,9 +6,10 @@ Created on Wed Apr  7 16:40:16 2021
 """
 
 from fordead.ImportData import import_stackedmaskedVI, import_decline_data, TileInfo, import_forest_mask, import_soil_data, import_coeff_model
+from fordead.writing_data import write_tif, vectorizing_confidence_class, compute_confidence_index
+
 import xarray as xr
 import numpy as np
-from fordead.writing_data import write_tif, vectorizing_confidence_class, compute_confidence_index
 def classify_declining_area(
     data_directory,
     threshold_index,
@@ -46,4 +47,4 @@ def classify_declining_area(
     confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
     
-# classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude",0.3)
+classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.25)

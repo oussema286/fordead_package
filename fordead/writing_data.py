@@ -16,6 +16,7 @@ import geopandas as gp
 import dask.array as da
 
 from fordead.decline_detection import prediction_vegetation_index
+from fordead.masking_vi import get_dict_vi
 
 
 def write_tif(data_array, attributes, path, nodata = None):
@@ -221,6 +222,13 @@ def compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, r
 
     predicted_vi=prediction_vegetation_index(coeff_model,tile.dates)
     
-    confidence_index = (stack_vi - predicted_vi).where(relevant_area & ~stack_masks & decline_dates).mean(dim="Time").compute()
+    dict_vi = get_dict_vi(tile.parameters["path_dict_vi"])
+        
+    if dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "+":
+        confidence_index = (stack_vi - predicted_vi).where(relevant_area & ~stack_masks & decline_dates).mean(dim="Time").compute()
+    elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
+        confidence_index = (predicted_vi - stack_vi).where(relevant_area & ~stack_masks & decline_dates).mean(dim="Time").compute()
+        
+        
     Nb_dates = (~stack_masks).where(relevant_area & ~stack_masks & decline_dates).sum(dim="Time").compute()
     return confidence_index, Nb_dates
