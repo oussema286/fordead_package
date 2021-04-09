@@ -12,7 +12,8 @@ from fordead.writing_data import write_tif, vectorizing_confidence_class, comput
 import time 
 def classify_declining_area(
     data_directory,
-    threshold_index
+    threshold_index,
+    chunks = 1280
     ):
     print("Computing confidence index")
     start_time = time.time()
@@ -24,10 +25,10 @@ def classify_declining_area(
     tile.add_path("confidence_class", tile.data_directory / "Confidence_Index" / "confidence_class.shp")
     tile.add_path("Nb_dates", tile.data_directory / "Confidence_Index" / "Nb_dates.tif")
     
-    forest_mask = import_forest_mask(tile.paths["ForestMask"], chunks = 1280)
-    valid_area = import_forest_mask(tile.paths["valid_area_mask"], chunks = 1280)
-    soil_data = import_soil_data(tile.paths, chunks = 1280)
-    decline_data = import_decline_data(tile.paths, chunks = 1280)
+    forest_mask = import_forest_mask(tile.paths["ForestMask"], chunks = chunks)
+    valid_area = import_forest_mask(tile.paths["valid_area_mask"], chunks = chunks)
+    soil_data = import_soil_data(tile.paths, chunks = chunks)
+    decline_data = import_decline_data(tile.paths, chunks = chunks)
 
     relevant_area = (forest_mask & valid_area & decline_data["state"] & ~soil_data["state"]).compute()
 
@@ -36,10 +37,10 @@ def classify_declining_area(
         confidence_index = xr.open_rasterio(tile.paths["confidence_index"]).squeeze(dim="band")
         Nb_dates = xr.open_rasterio(tile.paths["Nb_dates"]).squeeze(dim="band")
     else:
-        coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = 1280)
-        stack_vi, stack_masks = import_stackedmaskedVI(tile, min_date = tile.parameters["min_last_date_training"], chunks = 1280)
+        coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = chunks)
+        stack_vi, stack_masks = import_stackedmaskedVI(tile, min_date = tile.parameters["min_last_date_training"], chunks = chunks)
         
-        confidence_index, Nb_dates = compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, tile)
+        confidence_index, Nb_dates = compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, relevant_area, tile)
 
         write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
         write_tif(Nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["Nb_dates"])

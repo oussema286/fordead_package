@@ -215,12 +215,12 @@ def vectorizing_confidence_class(confidence_index, Nb_dates, relevant_area, bins
     gp_results = gp_results.drop(columns=['class_index'])
     return gp_results
 
-def compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, tile):
+def compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, relevant_area, tile):
     indexes = xr.DataArray(da.ones(stack_masks.shape,dtype=np.uint16, chunks=stack_masks.chunks), stack_masks.coords) * xr.DataArray(range(stack_masks.sizes["Time"])+np.argmax(tile.dates>tile.parameters["min_last_date_training"]), coords={"Time" : stack_masks.Time},dims=["Time"])   
     decline_dates = (indexes > decline_data["first_date"])
 
     predicted_vi=prediction_vegetation_index(coeff_model,tile.dates)
     
-    confidence_index = (stack_vi - predicted_vi).where(~stack_masks & decline_dates).mean(dim="Time").compute()
-    Nb_dates = (~stack_masks).where(~stack_masks & decline_dates).sum(dim="Time").compute()
+    confidence_index = (stack_vi - predicted_vi).where(relevant_area & ~stack_masks & decline_dates).mean(dim="Time").compute()
+    Nb_dates = (~stack_masks).where(relevant_area & ~stack_masks & decline_dates).sum(dim="Time").compute()
     return confidence_index, Nb_dates
