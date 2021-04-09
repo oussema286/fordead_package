@@ -49,4 +49,4 @@ def classify_declining_area(
     tile.save_info()
     print("Temps d execution : %s secondes ---" % (time.time() - start_time))
     
-classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude",0.3)
+# classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude",0.3)
