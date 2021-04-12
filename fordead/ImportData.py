@@ -401,6 +401,14 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
                                         float(raster[dict(x=-1,y=-1)].coords["y"])-raster.attrs["transform"][0]/2,
                                         float(raster[dict(x=-1,y=-1)].coords["x"])+raster.attrs["transform"][0]/2,
                                         float(raster[dict(x=0,y=0)].coords["y"])+raster.attrs["transform"][0]/2])}
+    
+    raster_meta["attrs"]["transform"] = (raster_meta["attrs"]["transform"][0],
+                                         raster_meta["attrs"]["transform"][1],
+                                         raster_meta["extent"][0],
+                                         raster_meta["attrs"]["transform"][3],
+                                         raster_meta["attrs"]["transform"][4],
+                                         raster_meta["extent"][3])
+
     return raster_meta
     
 
