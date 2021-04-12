@@ -10,6 +10,7 @@ from fordead.writing_data import write_tif, vectorizing_confidence_class, comput
 
 import xarray as xr
 import numpy as np
+
 def classify_declining_area(
     data_directory,
     threshold_index,
@@ -19,7 +20,9 @@ def classify_declining_area(
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"threshold_index" : threshold_index})
-    
+  
+    tile.delete_dirs("confidence_index")
+
     tile.add_path("confidence_index", tile.data_directory / "Confidence_Index" / "confidence_index.tif")
     tile.add_path("confidence_class", tile.data_directory / "Confidence_Index" / "confidence_class.shp")
     tile.add_path("Nb_dates", tile.data_directory / "Confidence_Index" / "Nb_dates.tif")
@@ -38,13 +41,17 @@ def classify_declining_area(
         coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = chunks)
         stack_vi, stack_masks = import_stackedmaskedVI(tile, min_date = tile.parameters["min_last_date_training"], chunks = chunks)
         
-        confidence_index, Nb_dates = compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, relevant_area, tile)
+        confidence_index = compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, relevant_area, tile).compute()
 
-        write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
-        write_tif(Nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["Nb_dates"])
+        write_tif(confidence_index.confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
+        write_tif(confidence_index.Nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["Nb_dates"])
     
-    confidence_class = vectorizing_confidence_class(confidence_index, Nb_dates, relevant_area, [threshold_index], np.array(["Stress/scolyte vert","scolyte rouge"]), tile.raster_meta["attrs"])
+    confidence_class = vectorizing_confidence_class(confidence_index.confidence_index, confidence_index.Nb_dates, relevant_area, [threshold_index], np.array(["Stress/scolyte vert","scolyte rouge"]), tile.raster_meta["attrs"])
     confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
     
-classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.25)
+# classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.25)
+import time
+start_time = time.time()
+classify_declining_area("E:/Deperissement/Out/ZoneStressLarge", 0.25)
+print("Temps d execution : %s secondes ---" % (time.time() - start_time))
