@@ -10,6 +10,7 @@ from fordead.writing_data import write_tif, vectorizing_confidence_class, comput
 
 import xarray as xr
 import numpy as np
+import time
 
 def classify_declining_area(
     data_directory,
@@ -17,12 +18,11 @@ def classify_declining_area(
     chunks = 320
     ):
     print("Computing confidence index")
+    start_time = time.time()
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"threshold_index" : threshold_index})
   
-    tile.delete_dirs("confidence_index")
-
     tile.add_path("confidence_index", tile.data_directory / "Confidence_Index" / "confidence_index.tif")
     tile.add_path("confidence_class", tile.data_directory / "Confidence_Index" / "confidence_class.shp")
     tile.add_path("Nb_dates", tile.data_directory / "Confidence_Index" / "Nb_dates.tif")
@@ -49,7 +49,7 @@ def classify_declining_area(
     confidence_class = vectorizing_confidence_class(data_anomalies.confidence_index, data_anomalies.Nb_dates, relevant_area, [threshold_index], np.array(["Stress/scolyte vert","scolyte rouge"]), tile.raster_meta["attrs"])
     confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
-    
+    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
 # classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.25)
 # import time
 # start_time = time.time()
