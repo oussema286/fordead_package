@@ -224,25 +224,15 @@ def compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, r
     
     dict_vi = get_dict_vi(tile.parameters["path_dict_vi"])
         
-    # if dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "+":
-    #     confidence_index = (stack_vi - predicted_vi).where(relevant_area & ~stack_masks & decline_dates).mean(dim="Time").compute()
-    # elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
-    #     confidence_index = (predicted_vi - stack_vi).where(relevant_area & ~stack_masks & decline_dates).mean(dim="Time").compute()
-    
-    # confidence_index = (stack_vi - predicted_vi).where(relevant_area & ~stack_masks & decline_dates).mean(dim="Time").compute()
     if dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "+":
         diff = (stack_vi - predicted_vi).reset_coords("coeff",drop = True)
     elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
         diff = (predicted_vi - stack_vi).reset_coords("coeff",drop = True)
-        
-    confidence_index = xr.map_blocks(test_confidence, diff, args=[~stack_masks, decline_dates],
+    # confidence_index = diff.where(relevant_area & ~stack_masks & decline_dates).mean(dim="Time").compute()
+
+    data_anomalies = xr.map_blocks(test_confidence, diff, args=[~stack_masks, decline_dates],
                                      template = xr.Dataset({"confidence_index": decline_data["first_date"],"Nb_dates": decline_data["first_date"]}))
-    
-    # diff.reset_coords("coeff",drop = True)
-    
-    # confidence_index=confidence_index.compute()
-    # Nb_dates = (~stack_masks).where(relevant_area & ~stack_masks & decline_dates).sum(dim="Time").compute()
-    return confidence_index
+    return data_anomalies
 
 def test_confidence(diff,mask,decline_dates):
     # test = diff*mask*np.cumsum(decline_dates)/np.sum(decline_dates)

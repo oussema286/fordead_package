@@ -14,7 +14,7 @@ import numpy as np
 def classify_declining_area(
     data_directory,
     threshold_index,
-    chunks = 1280
+    chunks = 320
     ):
     print("Computing confidence index")
     tile = TileInfo(data_directory)
@@ -35,23 +35,23 @@ def classify_declining_area(
     relevant_area = (forest_mask & valid_area & decline_data["state"] & ~soil_data["state"]).compute()
 
     if tile.paths["confidence_index"].exists():
-        confidence_index = xr.open_rasterio(tile.paths["confidence_index"]).squeeze(dim="band")
-        Nb_dates = xr.open_rasterio(tile.paths["Nb_dates"]).squeeze(dim="band")
+        data_anomalies = xr.Dataset({"confidence_index": xr.open_rasterio(tile.paths["confidence_index"]).squeeze(dim="band"),
+                                     "Nb_dates": xr.open_rasterio(tile.paths["Nb_dates"]).squeeze(dim="band")})
     else:
         coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = chunks)
         stack_vi, stack_masks = import_stackedmaskedVI(tile, min_date = tile.parameters["min_last_date_training"], chunks = chunks)
         
-        confidence_index = compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, relevant_area, tile).compute()
+        data_anomalies = compute_confidence_index(stack_vi, stack_masks, decline_data, coeff_model, relevant_area, tile).compute()
 
-        write_tif(confidence_index.confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
-        write_tif(confidence_index.Nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["Nb_dates"])
+        write_tif(data_anomalies.confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
+        write_tif(data_anomalies.Nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["Nb_dates"])
     
-    confidence_class = vectorizing_confidence_class(confidence_index.confidence_index, confidence_index.Nb_dates, relevant_area, [threshold_index], np.array(["Stress/scolyte vert","scolyte rouge"]), tile.raster_meta["attrs"])
+    confidence_class = vectorizing_confidence_class(data_anomalies.confidence_index, data_anomalies.Nb_dates, relevant_area, [threshold_index], np.array(["Stress/scolyte vert","scolyte rouge"]), tile.raster_meta["attrs"])
     confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
     
 # classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.25)
-import time
-start_time = time.time()
-classify_declining_area("E:/Deperissement/Out/ZoneStressLarge", 0.25)
-print("Temps d execution : %s secondes ---" % (time.time() - start_time))
+# import time
+# start_time = time.time()
+# classify_declining_area("E:/Deperissement/Out/ZoneStressLarge", 0.2)
+# print("Temps d execution : %s secondes ---" % (time.time() - start_time))
