@@ -691,9 +691,15 @@ def initialize_soil_data(shape,coords):
     
     soil_data=xr.Dataset({"state": xr.DataArray(state_soil, coords=coords),
                          "first_date": xr.DataArray(first_date_soil, coords=coords),
-                         "count" : xr.DataArray(count_soil, coords=coords)})
-    soil_data=soil_data.squeeze("band")
+                         "count" : xr.DataArray(count_soil, coords=coords)}).squeeze("band")
     return soil_data
+
+def initialize_confidence_data(shape,coords):
+    
+    nb_dates=xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords)
+    sum_diff=xr.DataArray(np.zeros(shape,dtype=np.float), coords=coords)
+
+    return nb_dates, sum_diff
 
 def import_masked_vi(dict_paths, date, chunks = None):
     """
