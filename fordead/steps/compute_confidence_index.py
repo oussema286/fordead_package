@@ -71,5 +71,5 @@ def classify_declining_area(
 # classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.25)
 # import time
 # start_time = time.time()
-classify_declining_area("E:/Deperissement/Out/ZoneStressLarge", 0.2)
+# classify_declining_area("E:/Deperissement/Out/ZoneStressLarge", 0.2)
 # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
