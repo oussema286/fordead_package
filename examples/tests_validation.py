@@ -89,6 +89,7 @@ if correct_vi:
     name_dir = vi+"_"+str(threshold_anomaly)+"_corrected"
 else:
     name_dir = vi+"_"+str(threshold_anomaly)
+Path(name_dir).mkdir(parents=True, exist_ok=True)   
 process_tiles(main_directory = name_dir, sentinel_directory = sentinel_directory, tuiles = tuiles, forest_mask_source = "BDFORET", extent_shape_path = None,
                 dep_path = dep_path, bdforet_dirpath = bdforet_dirpath, list_forest_type =  ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], path_oso = None, list_code_oso = None, #compute_forest_mask arguments
                 lim_perc_cloud = 0.4, vi = vi, sentinel_source = "THEIA", apply_source_mask = False, #compute_masked_vegetationindex arguments
@@ -105,6 +106,7 @@ if correct_vi:
     name_dir = vi+"_"+str(threshold_anomaly)+"_corrected"
 else:
     name_dir = vi+"_"+str(threshold_anomaly)
+Path(name_dir).mkdir(parents=True, exist_ok=True)   
 process_tiles(main_directory = name_dir, sentinel_directory = sentinel_directory, tuiles = tuiles, forest_mask_source = "BDFORET", extent_shape_path = None,
                 dep_path = dep_path, bdforet_dirpath = bdforet_dirpath, list_forest_type =  ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], path_oso = None, list_code_oso = None, #compute_forest_mask arguments
                 lim_perc_cloud = 0.4, vi = vi, sentinel_source = "THEIA", apply_source_mask = False, #compute_masked_vegetationindex arguments
@@ -121,6 +123,7 @@ if correct_vi:
     name_dir = vi+"_"+str(threshold_anomaly)+"_corrected"
 else:
     name_dir = vi+"_"+str(threshold_anomaly)
+Path(name_dir).mkdir(parents=True, exist_ok=True)   
 process_tiles(main_directory = name_dir, sentinel_directory = sentinel_directory, tuiles = tuiles, forest_mask_source = "BDFORET", extent_shape_path = None,
                 dep_path = dep_path, bdforet_dirpath = bdforet_dirpath, list_forest_type =  ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], path_oso = None, list_code_oso = None, #compute_forest_mask arguments
                 lim_perc_cloud = 0.4, vi = vi, sentinel_source = "THEIA", apply_source_mask = False, #compute_masked_vegetationindex arguments
@@ -136,6 +139,7 @@ if correct_vi:
     name_dir = vi+"_"+str(threshold_anomaly)+"_corrected"
 else:
     name_dir = vi+"_"+str(threshold_anomaly)
+Path(name_dir).mkdir(parents=True, exist_ok=True)   
 process_tiles(main_directory = name_dir, sentinel_directory = sentinel_directory, tuiles = tuiles, forest_mask_source = "BDFORET", extent_shape_path = None,
                 dep_path = dep_path, bdforet_dirpath = bdforet_dirpath, list_forest_type =  ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], path_oso = None, list_code_oso = None, #compute_forest_mask arguments
                 lim_perc_cloud = 0.4, vi = vi, sentinel_source = "THEIA", apply_source_mask = False, #compute_masked_vegetationindex arguments
