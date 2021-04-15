@@ -41,23 +41,23 @@ def classify_declining_area(
         
     coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = chunks)
     
-    first_date = decline_data["first_date"].where(relevant_area).min()
+    first_date = decline_data["first_date"].where(relevant_area).min().compute()
     
-    tile.dates[int(first_date)]
     for date_index, date in enumerate(tile.dates):
         if date_index >= first_date:
             print(date)
-            masked_vi = import_masked_vi(tile.paths,date)
+            masked_vi = import_masked_vi(tile.paths,date,chunks = chunks)
             predicted_vi=prediction_vegetation_index(coeff_model,[date])
             
             if dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "+":
-                diff = (masked_vi["vegetation_index"] - predicted_vi).squeeze("Time")
+                diff = (masked_vi["vegetation_index"] - predicted_vi).squeeze("Time").compute()
             elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
-                diff = (predicted_vi - masked_vi["vegetation_index"]).squeeze("Time")
+                diff = (predicted_vi - masked_vi["vegetation_index"]).squeeze("Time").compute()
                         
-            declining_pixels = (decline_data["first_date"] >= date_index) & ~masked_vi["mask"]
+            declining_pixels = ((decline_data["first_date"] >= date_index) & ~masked_vi["mask"]).compute()
             nb_dates = nb_dates + declining_pixels
             sum_diff = sum_diff + diff*declining_pixels*nb_dates #Try compare with where
+            del masked_vi, predicted_vi, diff, declining_pixels
             
     confidence_index = sum_diff/(nb_dates*(nb_dates+1)/2)
     
