@@ -19,7 +19,7 @@ def classify_declining_area(
     threshold_index,
     chunks = None
     ):
-    print("Computing confidence index")
+    # print("Computing confidence index")
     start_time = time.time()
     tile = TileInfo(data_directory)
     tile = tile.import_info()
@@ -50,7 +50,6 @@ def classify_declining_area(
         print("Computing confidence index")
         for date_index, date in enumerate(tile.dates):
             if date_index >= first_date:
-                print(date)
                 masked_vi = import_masked_vi(tile.paths,date,chunks = chunks)
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
                 
@@ -63,6 +62,8 @@ def classify_declining_area(
                 nb_dates = nb_dates + declining_pixels
                 sum_diff = sum_diff + diff*declining_pixels*nb_dates #Try compare with where
                 del masked_vi, predicted_vi, diff, declining_pixels
+                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
+
             
         confidence_index = sum_diff/(nb_dates*(nb_dates+1)/2)
         tile.last_date_confidence_index = date
