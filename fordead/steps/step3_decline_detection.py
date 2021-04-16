@@ -81,6 +81,7 @@ def decline_detection(
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("AnomaliesDir","state_decline" ,"periodic_results_decline","result_files","timelapse","series") #Deleting previous detection results if they exist
         if hasattr(tile, "last_computed_anomaly"): delattr(tile, "last_computed_anomaly")
+        if hasattr(tile, "last_date_confidence_index"): delattr(tile, "last_date_confidence_index")
     if vi==None : vi = tile.parameters["vi"]
     if path_dict_vi==None : path_dict_vi = tile.parameters["path_dict_vi"] if "path_dict_vi" in tile.parameters else None
     

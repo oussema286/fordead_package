@@ -701,6 +701,13 @@ def initialize_confidence_data(shape,coords):
 
     return nb_dates, sum_diff
 
+def import_confidence_data(dict_paths, chunks = None):
+    
+    confidence_index=xr.open_rasterio(dict_paths["confidence_index"], chunks = chunks).squeeze("band")
+    nb_dates=xr.open_rasterio(dict_paths["nb_dates"], chunks = chunks).squeeze("band")
+
+    return confidence_index, nb_dates
+
 def import_masked_vi(dict_paths, date, chunks = None):
     """
     Imports masked vegetation index

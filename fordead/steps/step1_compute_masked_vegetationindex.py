@@ -125,6 +125,7 @@ def compute_masked_vegetationindex(
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_decline", "state_soil", "valid_area_mask" ,"periodic_results_decline","result_files","timelapse","series")
         if hasattr(tile, "last_computed_anomaly"): delattr(tile, "last_computed_anomaly")
+        if hasattr(tile, "last_date_confidence_index"): delattr(tile, "last_date_confidence_index")
         if hasattr(tile, "dates"): delattr(tile, "dates")
         
     # All SENTINEL data in the input directory is detected, and paths are added to the TileInfo object. For example, after this operation tile.paths["Sentinel"]["YYYY-MM-DD"]["B2"] brings up the path to the B2 band file of the specified date?

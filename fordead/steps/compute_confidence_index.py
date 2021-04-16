@@ -5,11 +5,10 @@ Created on Wed Apr  7 16:40:16 2021
 @author: Raphael Dutrieux
 """
 
-from fordead.ImportData import import_masked_vi, import_decline_data, TileInfo, import_forest_mask, import_soil_data, import_coeff_model, initialize_confidence_data
-from fordead.writing_data import write_tif, vectorizing_confidence_class, compute_confidence_index
+from fordead.ImportData import import_masked_vi, import_decline_data, TileInfo, import_forest_mask, import_soil_data, import_confidence_data, import_coeff_model, initialize_confidence_data
+from fordead.writing_data import write_tif, vectorizing_confidence_class
 from fordead.decline_detection import prediction_vegetation_index
 from fordead.masking_vi import get_dict_vi
-import scipy.special
 
 # import xarray as xr
 import numpy as np
@@ -38,37 +37,44 @@ def classify_declining_area(
     relevant_area = (forest_mask & valid_area & decline_data["state"] & ~soil_data["state"]).compute()
     dict_vi = get_dict_vi(tile.parameters["path_dict_vi"])
     nb_dates, sum_diff = initialize_confidence_data(forest_mask.shape,forest_mask.coords)
-        
+
     coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = chunks)
     
     first_date = decline_data["first_date"].where(relevant_area).min().compute()
-    
-    for date_index, date in enumerate(tile.dates):
-        if date_index >= first_date:
-            print(date)
-            masked_vi = import_masked_vi(tile.paths,date,chunks = chunks)
-            predicted_vi=prediction_vegetation_index(coeff_model,[date])
+    Importing = (tile.dates[-1] == tile.last_date_confidence_index) if hasattr(tile, "last_date_confidence_index") else False
+
+    if  Importing:
+        print("Importing confidence index")
+        confidence_index, nb_dates = import_confidence_data(tile.paths)
+    else:
+        print("Computing confidence index")
+        for date_index, date in enumerate(tile.dates):
+            if date_index >= first_date:
+                print(date)
+                masked_vi = import_masked_vi(tile.paths,date,chunks = chunks)
+                predicted_vi=prediction_vegetation_index(coeff_model,[date])
+                
+                if dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "+":
+                    diff = (masked_vi["vegetation_index"] - predicted_vi).squeeze("Time").compute()
+                elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
+                    diff = (predicted_vi - masked_vi["vegetation_index"]).squeeze("Time").compute()
+                            
+                declining_pixels = ((decline_data["first_date"] >= date_index) & ~masked_vi["mask"]).compute()
+                nb_dates = nb_dates + declining_pixels
+                sum_diff = sum_diff + diff*declining_pixels*nb_dates #Try compare with where
+                del masked_vi, predicted_vi, diff, declining_pixels
             
-            if dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "+":
-                diff = (masked_vi["vegetation_index"] - predicted_vi).squeeze("Time").compute()
-            elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
-                diff = (predicted_vi - masked_vi["vegetation_index"]).squeeze("Time").compute()
-                        
-            declining_pixels = ((decline_data["first_date"] >= date_index) & ~masked_vi["mask"]).compute()
-            nb_dates = nb_dates + declining_pixels
-            sum_diff = sum_diff + diff*declining_pixels*nb_dates #Try compare with where
-            del masked_vi, predicted_vi, diff, declining_pixels
-            
-    confidence_index = sum_diff/(nb_dates*(nb_dates+1)/2)
-    
-    write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
-    write_tif(nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["nb_dates"])
+        confidence_index = sum_diff/(nb_dates*(nb_dates+1)/2)
+        tile.last_date_confidence_index = date
+        write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
+        write_tif(nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["nb_dates"])
     
     confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, [threshold_index], np.array(["Stress/scolyte vert","scolyte rouge"]), tile.raster_meta["attrs"])
     confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
     print("Temps d execution : %s secondes ---" % (time.time() - start_time))
-# classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.25)
+    
+# classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.1)
 # import time
 # start_time = time.time()
 # classify_declining_area("E:/Deperissement/Out/ZoneStressLarge", 0.2)
