@@ -32,7 +32,7 @@ def parse_command_line():
     parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection")
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
-    parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid")
+    parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a binary raster with the extent and resolution of the computed area, or None in which case all pixels will be considered valid")
     parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
@@ -151,7 +151,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
         #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
         #                   name_column = "id")
-        vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
+        # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
         
         
         

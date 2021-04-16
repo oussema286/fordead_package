@@ -4,7 +4,7 @@ Cette étape permet de calculer le masque forêt et ainsi définir les zones d'i
 #### ENTRÉES
 Les paramètres en entrée sont :
 - **data_directory** : Le chemin du dossier de sortie dans lequel sera écrit le masque forêt
-- **forest_mask_source** : Source du masque forêt, peut être "BDFORET" pour utiliser la BD Forêt de l'IGN,  "OSO" pour utiliser la carte d'occupation des sols du CESBIO, ou None pour ne pas utiliser de masque forêt et étendre la zone d'intérêt à l'ensemble des pixels
+- **forest_mask_source** : Source du masque forêt, peut être "BDFORET" pour utiliser la BD Forêt de l'IGN,  "OSO" pour utiliser la carte d'occupation des sols du CESBIO, le chemin d'un raster binaire à l'extent et la résolution de la zone utilisée valant 1 sur les pixels d'intérêt, ou None pour ne pas utiliser de masque forêt et étendre la zone d'intérêt à l'ensemble des pixels
 - **dep_path** : Chemin d'un shapefile des départements français contenant le code insee dans un champ code_insee, seulement utile si forest_mask_source vaut "BDFORET"
 - **bdforet_dirpath** : Chemin du dossier contenant la BD Forêt de l'IGN avec un dossier par département. Seulement utile si forest_mask_source vaut "BDFORET"
 - **list_forest_type** : Liste des types de peuplements à garder dans le masque forêt, correspond au CODE_TFV de la BD Forêt. Seulement utile si forest_mask_source vaut "BDFORET"
@@ -44,6 +44,11 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Cette étape peut également être réalisée indépendamment du reste de la chaîne de traitement, en renseignant le paramètre **path_example_raster**, afin d'obtenir un masque forêt binaire. Sinon, le paramètre **path_example_raster** est automatiquement déterminé à partir des résultats des étapes précédentes afin que le masque forêt corresponde à la zone étudiée.
 > **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
 
+### A partir du chemin d'un raster binaire
+- Import du fichier 
+Cette option est donnée pour les utilisateurs voulant créer leur propre masque par d'autres moyens et l'utiliser dans la chaîne de traitement. Il sera ré-écrit dans le dossier data_directory.
+ > **_Fonctions utilisées :_** [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_forest_mask)
+ 
 ### A partir de la BDFORET de l'IGN
 - Importation de la BDFORET des départements intersectant la zone d'étude
 - Filtre à partir des types de peuplements séléctionnés
