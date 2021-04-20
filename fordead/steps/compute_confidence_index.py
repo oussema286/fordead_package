@@ -41,8 +41,8 @@ def classify_declining_area(
     coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = chunks)
     
     first_date = decline_data["first_date"].where(relevant_area).min().compute()
-    Importing = (tile.dates[-1] == tile.last_date_confidence_index) if hasattr(tile, "last_date_confidence_index") else False
-
+    # Importing = (tile.dates[-1] == tile.last_date_confidence_index) if hasattr(tile, "last_date_confidence_index") else False
+    Importing = False
     if  Importing:
         print("Importing confidence index")
         confidence_index, nb_dates = import_confidence_data(tile.paths)
@@ -58,7 +58,7 @@ def classify_declining_area(
                 elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
                     diff = (predicted_vi - masked_vi["vegetation_index"]).squeeze("Time").compute()
                             
-                declining_pixels = ((decline_data["first_date"] >= date_index) & ~masked_vi["mask"]).compute()
+                declining_pixels = ((decline_data["first_date"] <= date_index) & ~masked_vi["mask"]).compute()
                 nb_dates = nb_dates + declining_pixels
                 sum_diff = sum_diff + diff*declining_pixels*nb_dates #Try compare with where
                 del masked_vi, predicted_vi, diff, declining_pixels
@@ -78,5 +78,5 @@ def classify_declining_area(
 # classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.1)
 # import time
 # start_time = time.time()
-# classify_declining_area("E:/Deperissement/Out/ZoneStressLarge", 0.2)
+# classify_declining_area("E:/Deperissement/Out/ZoneStress", 0.2)
 # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
