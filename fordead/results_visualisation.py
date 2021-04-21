@@ -21,6 +21,25 @@ from fordead.ImportData import import_resampled_sen_stack, import_soil_data, imp
 
 
 def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"]):
+    """
+    Imports stack of bands, clipped with extent
+
+    Parameters
+    ----------
+    tile : TileInfo object
+        TileInfo objects with paths attribute which is a dictionnary containing file paths to SENTINEL (tile.paths["Sentinel"][YYYY-MM-DD] returns a dictionnary where keys are band names and values are the paths to the files)
+    extent : list or 1D array, optional
+        Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
+    bands : list, optional
+        List of bands. The default is ["B4","B3","B2"].
+
+    Returns
+    -------
+    stack_rgb : xarray DataArray
+        DataArray with dimensions (x,y,Time,band)
+
+    """
+    
     list_rgb = [import_resampled_sen_stack(tile.paths["Sentinel"][date], bands,extent = extent) for date in tile.dates]
     stack_rgb = xr.concat(list_rgb,dim="Time")
     stack_rgb=stack_rgb.assign_coords(Time=tile.dates)
@@ -28,6 +47,23 @@ def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"]):
     return stack_rgb
 
 def polygon_from_coordinate_and_radius(coordinates, radius, crs):
+    """
+    Creates rectangular polygon from coordinates and a radius
+
+    Parameters
+    ----------
+    coordinates : list or tuple
+        [x,y] list
+    radius : int
+    crs : str
+        crs as understood by geopandas.GeoDataFrame
+
+    Returns
+    -------
+    polygon : geopandas.GeoDataFrame
+
+    """
+    
     lon_point_list = [coordinates[0]-radius,coordinates[0]+radius,coordinates[0]+radius,coordinates[0]-radius,coordinates[0]-radius,coordinates[0]-radius]
     lat_point_list = [coordinates[1]+radius,coordinates[1]+radius,coordinates[1]-radius,coordinates[1]-radius,coordinates[1]+radius,coordinates[1]-radius]
     

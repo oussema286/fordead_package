@@ -157,6 +157,11 @@ class TileInfo:
             pickle.dump(self, f)
     
     def print_info(self):
+        """
+        Prints parameters, dates used, and last computed date for anomalies.
+
+        """
+        
         if hasattr(self, "parameters"):
             print(" PARAMETRES\n")
             for parameter in self.parameters:
@@ -218,7 +223,7 @@ class TileInfo:
         """
         Parameters
         ----------
-        path_dir : pathlib.WindowsPath
+        path_dir : str
             Directory containing files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
     
         Returns
@@ -240,20 +245,25 @@ class TileInfo:
         
     def getdict_paths(self,
                       path_vi, path_masks):
+        """
+        Adds paths to vegetation index files and mask files to TileInfo object, along with the list of dates.
+
+        Parameters
+        ----------
+        path_vi : str
+            Directory containing vegetation index files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
+        path_masks : str
+            Directory containing mask files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
+
+
+        """
         
         
         self.getdict_datepaths("VegetationIndex",path_vi)
         self.getdict_datepaths("Masks",path_masks)
         self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
             
-    def add_path(self, key, path):
-        #Transform to WindowsPath if not done already
-        path=Path(path)
-        #Creates missing directories
-        path.parent.mkdir(parents=True, exist_ok=True)    
-        #Saves paths in the object
-        self.paths[key] = path
-        
+
     def add_parameters(self, parameters):
         """
         Adds attribute 'parameters' to TileInfo object which contains dictionnary of parameters and their values.
@@ -278,17 +288,53 @@ class TileInfo:
                 else:#If unknown parameters
                     self.parameters["Overwrite"]=True
             self.parameters.update(parameters)
+            
+    def add_path(self, key, path):
+        """
+        Adds path to TileInfo object and creates parent directories if they don't exist already
+        Path can then by retrieved with self.paths[key] where self is the TileInfo object name.
+
+        Parameters
+        ----------
+        key : str
+            Key for the paths dictionnary.
+        path : str
+            Path to add to the dictionnary.
+        """
+        
+        #Transform to Path if not done already
+        path=Path(path)
+        #Creates missing directories
+        path.parent.mkdir(parents=True, exist_ok=True)    
+        #Saves paths in the object
+        self.paths[key] = path
         
     def add_dirpath(self, key, path):
+        """
+        Adds path to a directory to TileInfo object and creates parent directories if they don't exist already
+        Path can then by retrieved with self.paths[key] where self is the TileInfo object name.
+
+        Parameters
+        ----------
+        key : str
+            Key for the paths dictionnary.
+        path : str
+            Path to add to the dictionnary.
+        """
         #Transform to WindowsPath if not done already
         path=Path(path)
         #Creates missing directories
-        path.mkdir(parents=True, exist_ok=True)    
+        path.mkdir(parents=True, exist_ok=True)
         #Saves paths in the object
         self.paths[key] = path
 
 
     def search_new_dates(self):
+        """
+        Checks if there are new dates in vegetation index and mask directories, adds the paths and list of dates to the TileInfo object.
+
+        """
+        
         self.getdict_datepaths("VegetationIndex",self.paths["VegetationIndexDir"])
         self.getdict_datepaths("Masks",self.paths["MaskDir"])
         
@@ -373,6 +419,26 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
         return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
 
 def get_source_mask(band_paths, sentinel_source, extent = None):
+    """
+    Imports source mask and converts it to binary. Keeps only 0 in THEIA mask, and only 4 and 5 in Scihub and PEPS mask.
+
+    Parameters
+    ----------
+    band_paths : dict
+        Dictionnary where keys are band names, and values are their paths.
+    sentinel_source : str
+        Sentinel source (THEIA, Scihub or PEPS).
+    extent : list or 1D array, optional
+        Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
+
+    Returns
+    -------
+    binary_mask : xarray DataArray
+        Binary array with value 1 when pixel is masked.
+
+    """
+    
+    
     source_mask = import_resampled_sen_stack(band_paths, ["Mask"], interpolation_order = 0, extent = extent)
     if sentinel_source=="THEIA":
         binary_mask = source_mask>0
@@ -381,6 +447,24 @@ def get_source_mask(band_paths, sentinel_source, extent = None):
     return binary_mask
 
 def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = None):
+    """
+    From a raster path or a raster, extracts all metadata and returns it in a dictionnary. If extent_shape_path is given, the metadata from the raster clipped with the shape is returned
+
+    Parameters
+    ----------
+    raster_path : str, optional
+        path of a raster. The default is None.
+    raster : xarray DataArray, optional
+        xarray DataArray opened with xr.open_rasterio. The default is None.
+    extent_shape_path : str, optional
+        Path to a shapefile with a single polygon. The default is None.
+
+    Returns
+    -------
+    raster_meta : dict
+        Dictionnary containing all metadata (dims, coords, attrs, sizes, shape, extent).
+
+    """
     if raster_path != None:
         raster = xr.open_rasterio(raster_path)
     raster.attrs["crs"] = raster.attrs["crs"].replace("+init=","")
@@ -582,7 +666,7 @@ def import_decline_data(dict_paths, chunks = None):
     Parameters
     ----------
     dict_paths : dict
-        Dictionnary containg the keys "state_decline", "first_date_decline" and "count_decline" whose values are the paths to the corresponding decline data file.
+        Dictionnary containg the keys "state_decline", "first_date_decline", "first_date_unconfirmed_decline" and "count_decline" whose values are the paths to the corresponding decline data file.
     chunks : int, optional
         Chunk size for import as dask array. The default is None.
 
@@ -620,8 +704,8 @@ def initialize_decline_data(shape,coords):
     Returns
     -------
     decline_data : xarray DataSet or dask DataSet
-        DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
-        For all three arrays, all pixels are intitialized at zero.
+        DataSet containing four DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly when it has be confirmed through 3 successive anomalies, "first_date_unconfirmed" containing the first anomaly date index before it's confirmed, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
+        For all four arrays, all pixels are intitialized at zero.
 
 
     """
@@ -724,6 +808,22 @@ def import_masked_vi(dict_paths, date, chunks = None):
 
 
 def import_stacked_anomalies(paths_anomalies, chunks = None):
+    """
+    Imports all stacked anomalies
+
+    Parameters
+    ----------
+    dict_paths : str
+        Dictionnary where keys are dates in the format "YYYY-MM-DD" and values are the paths to the raster file containing anomaly data.
+    chunks : int, optional
+        Chunk size for import as dask array. The default is None.
+
+    Returns
+    -------
+    stack_anomalies : xarray DataArray
+        3D binary DataArray with value True where there are anomalies, with Time coordinates.
+
+    """
     list_anomalies=[xr.open_rasterio(paths_anomalies[date], chunks = chunks) for date in paths_anomalies]
     stack_anomalies=xr.concat(list_anomalies,dim="Time")
     stack_anomalies=stack_anomalies.assign_coords(Time=[date for date in paths_anomalies.keys()])

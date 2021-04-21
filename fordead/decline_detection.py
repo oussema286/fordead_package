@@ -83,10 +83,11 @@ def detection_decline(decline_data, anomalies, mask, date_index):
     
     Parameters
     ----------
-    decline_data : Dataset with three arrays : 
+    decline_data : Dataset with four arrays : 
         "count" which is the number of successive anomalies, 
         "state" which is True where pixels are detected as declining, False where they are considered healthy.
-        "first date" which contains the index of the date of the first anomaly.
+        "first date" which contains the index of the date of the first anomaly, when confirmed by 3 successive anomalies.
+        "first date_unconfirmed" which contains the index of the date of the first anomaly, even if not yet confirmed by 3 successive anomalies.
     anomalies : array (x,y) (bool)
         Array, pixel value is True if an anomaly is detected.
     mask : array (x,y) (bool)
@@ -97,7 +98,7 @@ def detection_decline(decline_data, anomalies, mask, date_index):
     Returns
     -------
     decline_data : Dataset
-        Dataset with the three arrays updated with the results from the date being analysed
+        Dataset with the four arrays updated with the results from the date being analysed
 
     """
    
