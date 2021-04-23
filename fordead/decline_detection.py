@@ -83,11 +83,10 @@ def detection_decline(decline_data, anomalies, mask, date_index):
     
     Parameters
     ----------
-    decline_data : Dataset with four arrays : 
+    decline_data : Dataset with three arrays : 
         "count" which is the number of successive anomalies, 
         "state" which is True where pixels are detected as declining, False where they are considered healthy.
-        "first date" which contains the index of the date of the first anomaly, when confirmed by 3 successive anomalies.
-        "first date_unconfirmed" which contains the index of the date of the first anomaly, even if not yet confirmed by 3 successive anomalies.
+        "first date" which contains the index of the date of the first anomaly.
     anomalies : array (x,y) (bool)
         Array, pixel value is True if an anomaly is detected.
     mask : array (x,y) (bool)
@@ -98,20 +97,19 @@ def detection_decline(decline_data, anomalies, mask, date_index):
     Returns
     -------
     decline_data : Dataset
-        Dataset with the four arrays updated with the results from the date being analysed
+        Dataset with the three arrays updated with the results from the date being analysed
 
     """
    
     decline_data["count"] = xr.where(~mask & (anomalies!=decline_data["state"]),decline_data["count"]+1,decline_data["count"])
     decline_data["count"] = xr.where(~mask & (anomalies==decline_data["state"]),0,decline_data["count"])
     
-    changing_pixels = ~mask & (decline_data["count"]==3)
-    decline_data["state"] = xr.where(changing_pixels, ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
-    decline_data["first_date"] = xr.where(changing_pixels, decline_data["first_date_unconfirmed"], decline_data["first_date"]) #First_date saved if confirmed
-
-    decline_data["count"] = xr.where(changing_pixels, 0,decline_data["count"])
-    decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1) & ~decline_data["state"], date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+    decline_data["state"] = xr.where(~mask & (decline_data["count"]==3), ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
+        
+    decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
+    decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & ~decline_data["state"], date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
 
     
     return decline_data
+
 

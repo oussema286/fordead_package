@@ -666,7 +666,7 @@ def import_decline_data(dict_paths, chunks = None):
     Parameters
     ----------
     dict_paths : dict
-        Dictionnary containg the keys "state_decline", "first_date_decline", "first_date_unconfirmed_decline" and "count_decline" whose values are the paths to the corresponding decline data file.
+        Dictionnary containg the keys "state_decline", "first_date_decline" and "count_decline" whose values are the paths to the corresponding decline data file.
     chunks : int, optional
         Chunk size for import as dask array. The default is None.
 
@@ -678,12 +678,10 @@ def import_decline_data(dict_paths, chunks = None):
     """
     
     state_decline = xr.open_rasterio(dict_paths["state_decline"],chunks = chunks).astype(bool)
-    first_date_unconfirmed_decline = xr.open_rasterio(dict_paths["first_date_unconfirmed_decline"],chunks = chunks)
     first_date_decline = xr.open_rasterio(dict_paths["first_date_decline"],chunks = chunks)
     count_decline = xr.open_rasterio(dict_paths["count_decline"],chunks = chunks)
     
     decline_data=xr.Dataset({"state": state_decline,
-                     "first_date_unconfirmed": first_date_unconfirmed_decline,
                      "first_date": first_date_decline,
                      "count" : count_decline})
     decline_data=decline_data.squeeze("band")
@@ -704,18 +702,22 @@ def initialize_decline_data(shape,coords):
     Returns
     -------
     decline_data : xarray DataSet or dask DataSet
-        DataSet containing four DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly when it has be confirmed through 3 successive anomalies, "first_date_unconfirmed" containing the first anomaly date index before it's confirmed, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
-        For all four arrays, all pixels are intitialized at zero.
+        DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
+        For all three arrays, all pixels are intitialized at zero.
 
 
     """
     
-    decline_data=xr.Dataset({"state": xr.DataArray(np.zeros(shape,dtype=bool), coords=coords),
-                         "first_date_unconfirmed": xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords),
-                         "first_date":  xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords),
-                         "count" : xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords)})
+    count_decline= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
+    first_date_decline=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
+    state_decline=np.zeros(shape,dtype=bool)
+    
+    decline_data=xr.Dataset({"state": xr.DataArray(state_decline, coords=coords),
+                         "first_date": xr.DataArray(first_date_decline, coords=coords),
+                         "count" : xr.DataArray(count_decline, coords=coords)})
     
     return decline_data
+
 
 
 def import_soil_data(dict_paths, chunks = None):
