@@ -119,7 +119,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================
 
         compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                            forest_mask_source = forest_mask_source,
+                            # forest_mask_source = forest_mask_source,
+                            forest_mask_source = "D:/Documents/Deperissement/Output/Forest_Mask.tif",
                             dep_path = dep_path,
                             bdforet_dirpath = bdforet_dirpath,
                             path_oso = path_oso,

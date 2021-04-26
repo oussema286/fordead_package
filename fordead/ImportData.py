@@ -412,6 +412,24 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
     return raster_meta
     
 
+def clip_xarray(array, extent):
+    """
+    Clips xarray with x,y coordinates to an extent.
+
+    Parameters
+    ----------
+    band_paths : xarray DataArray
+        DataArray with x and y coordinates
+    extent : list or 1D array, optional
+        Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
+
+    Returns
+    -------
+    xarray DataArray
+        DataArray clipped to the given extent
+
+    """
+    return array.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
 
 def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, extent = None):
     """
@@ -452,7 +470,7 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
                                                            "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x+5, num=stack_bands[band_index].sizes["x"]*2)},
                                                    dims=["band","y","x"])
         if extent is not None:
-            stack_bands[band_index] = stack_bands[band_index].loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+            stack_bands[band_index] = clip_xarray(stack_bands[band_index], extent)
 
     concatenated_stack_bands= xr.concat(stack_bands,dim="band")
     concatenated_stack_bands.coords["band"] = list_bands
@@ -480,8 +498,7 @@ def import_forest_mask(forest_mask_path,chunks = None):
         Binary array containing True if pixels are inside the region of interest.
 
     """
-    forest_mask = xr.open_rasterio(forest_mask_path,chunks = chunks)
-    forest_mask=forest_mask[0,:,:]
+    forest_mask = xr.open_rasterio(forest_mask_path,chunks = chunks).squeeze("band")
     # forest_mask=forest_mask.rename({"band" : "Mask"})
     return forest_mask.astype(bool)
 
