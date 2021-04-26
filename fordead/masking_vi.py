@@ -74,8 +74,7 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
         Boolean DataArray containing True where pixels are in the selected forest types.
 
     """
-    example_raster = xr.open_rasterio(example_path)
-    example_raster=example_raster.sel(band=1)
+    example_raster = xr.open_rasterio(example_path).squeeze("band")
     example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
         
     bdforet_paths, tile_extent = bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath) #List of paths to relevant BD foret shapefiles. Can be replaced with home-made list if your data structure is different

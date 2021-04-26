@@ -5,14 +5,15 @@ Created on Fri Nov 27 18:20:18 2020
 @author: Raphael Dutrieux
 """
 import click
-from fordead.ImportData import TileInfo
+from fordead.ImportData import TileInfo, import_forest_mask, get_raster_metadata, clip_xarray
 from fordead.masking_vi import rasterize_bdforet, clip_oso, raster_full
 from fordead.writing_data import write_tif
+from pathlib import Path
 
 @click.command(name='forest_mask')
 @click.option("-o", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
 @click.option("-f", "--forest_mask_source",  type=str, default=None,
-                    help="Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid", show_default=True)
+                    help="Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a binary raster with the resolution of the computed area, or None in which case all pixels will be considered valid", show_default=True)
 @click.option("--dep_path",  type=str,
                     help="Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'", show_default=True)
 @click.option("--bdforet_dirpath",  type=str,
@@ -80,7 +81,7 @@ def compute_forest_mask(data_directory,
     data_directory : str
         Path of the output directory
     forest_mask_source : str
-        Source of the forest mask, accepts 'BDFORET', 'OSO', or None in which case all pixels will be considered valid
+        Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a binary raster with the resolution of the computed area, or None in which case all pixels will be considered valid
     list_forest_type : list
         List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'
     dep_path : str
@@ -92,7 +93,7 @@ def compute_forest_mask(data_directory,
     list_code_oso : list
         List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'
     path_example_raster : str
-        Path to raster from which to copy the extent, resolution, CRS...
+        Path to raster from which to copy the extent, CRS...
 
     Returns
     -------
@@ -110,7 +111,12 @@ def compute_forest_mask(data_directory,
     if tile.paths["ForestMask"].exists():
         print("Forest mask already calculated")
     else:
-        if forest_mask_source=="BDFORET":
+        if Path(forest_mask_source).is_file():
+            print("Importing " + forest_mask_source)
+            forest_mask = clip_xarray(array = import_forest_mask(forest_mask_source), 
+                                      extent = get_raster_metadata(path_example_raster)["extent"])
+            
+        elif forest_mask_source=="BDFORET":
             print("Computing forest mask from BDFORET")
             forest_mask = rasterize_bdforet(path_example_raster, dep_path, bdforet_dirpath, list_forest_type = list_forest_type)
             
@@ -121,7 +127,7 @@ def compute_forest_mask(data_directory,
         elif forest_mask_source==None:
             print("No mask used, computing forest mask with every pixel marked as True")
             forest_mask = raster_full(path_example_raster, fill_value = 1, dtype = bool)
-            
+        
         else:
             print("Unrecognized forest_mask_source")
 
