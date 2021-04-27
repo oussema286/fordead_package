@@ -157,6 +157,11 @@ class TileInfo:
             pickle.dump(self, f)
     
     def print_info(self):
+        """
+        Prints parameters, dates used, and last computed date for anomalies.
+
+        """
+        
         if hasattr(self, "parameters"):
             print(" PARAMETRES\n")
             for parameter in self.parameters:
@@ -171,7 +176,7 @@ class TileInfo:
             print("\n\n" + " Last computed anomaly : \n")
             print(self.last_computed_anomaly)
         else:
-            print(" Anomalies not computed")
+            print("Anomalies not computed")
     
 
     def delete_dirs(self,*key_paths):
@@ -194,6 +199,7 @@ class TileInfo:
                     shutil.rmtree(self.paths[key_path])
                 elif self.paths[key_path].is_file():
                     shutil.rmtree(self.paths[key_path].parent)
+                      
    
     def delete_files(self,*key_paths):
         """
@@ -218,7 +224,7 @@ class TileInfo:
         """
         Parameters
         ----------
-        path_dir : pathlib.WindowsPath
+        path_dir : str
             Directory containing files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
     
         Returns
@@ -240,20 +246,25 @@ class TileInfo:
         
     def getdict_paths(self,
                       path_vi, path_masks):
+        """
+        Adds paths to vegetation index files and mask files to TileInfo object, along with the list of dates.
+
+        Parameters
+        ----------
+        path_vi : str
+            Directory containing vegetation index files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
+        path_masks : str
+            Directory containing mask files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
+
+
+        """
         
         
         self.getdict_datepaths("VegetationIndex",path_vi)
         self.getdict_datepaths("Masks",path_masks)
         self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
             
-    def add_path(self, key, path):
-        #Transform to WindowsPath if not done already
-        path=Path(path)
-        #Creates missing directories
-        path.parent.mkdir(parents=True, exist_ok=True)    
-        #Saves paths in the object
-        self.paths[key] = path
-        
+
     def add_parameters(self, parameters):
         """
         Adds attribute 'parameters' to TileInfo object which contains dictionnary of parameters and their values.
@@ -278,17 +289,53 @@ class TileInfo:
                 else:#If unknown parameters
                     self.parameters["Overwrite"]=True
             self.parameters.update(parameters)
+            
+    def add_path(self, key, path):
+        """
+        Adds path to TileInfo object and creates parent directories if they don't exist already
+        Path can then by retrieved with self.paths[key] where self is the TileInfo object name.
+
+        Parameters
+        ----------
+        key : str
+            Key for the paths dictionnary.
+        path : str
+            Path to add to the dictionnary.
+        """
+        
+        #Transform to Path if not done already
+        path=Path(path)
+        #Creates missing directories
+        path.parent.mkdir(parents=True, exist_ok=True)    
+        #Saves paths in the object
+        self.paths[key] = path
         
     def add_dirpath(self, key, path):
+        """
+        Adds path to a directory to TileInfo object and creates parent directories if they don't exist already
+        Path can then by retrieved with self.paths[key] where self is the TileInfo object name.
+
+        Parameters
+        ----------
+        key : str
+            Key for the paths dictionnary.
+        path : str
+            Path to add to the dictionnary.
+        """
         #Transform to WindowsPath if not done already
         path=Path(path)
         #Creates missing directories
-        path.mkdir(parents=True, exist_ok=True)    
+        path.mkdir(parents=True, exist_ok=True)
         #Saves paths in the object
         self.paths[key] = path
 
 
     def search_new_dates(self):
+        """
+        Checks if there are new dates in vegetation index and mask directories, adds the paths and list of dates to the TileInfo object.
+
+        """
+        
         self.getdict_datepaths("VegetationIndex",self.paths["VegetationIndexDir"])
         self.getdict_datepaths("Masks",self.paths["MaskDir"])
         
@@ -298,7 +345,7 @@ class TileInfo:
         # if hasattr(self, 'dates'):
         #     self.dates = np.array(list(self.paths["VegetationIndex"].keys())) >
         # self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
-        
+
         
         
 def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
@@ -372,15 +419,27 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     else:
         return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
 
-def get_source_mask(band_paths, sentinel_source, extent = None):
-    source_mask = import_resampled_sen_stack(band_paths, ["Mask"], interpolation_order = 0, extent = extent)
-    if sentinel_source=="THEIA":
-        binary_mask = source_mask>0
-    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
-        binary_mask = ~source_mask.isin([4,5])
-    return binary_mask
+
 
 def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = None):
+    """
+    From a raster path or a raster, extracts all metadata and returns it in a dictionnary. If extent_shape_path is given, the metadata from the raster clipped with the shape is returned
+
+    Parameters
+    ----------
+    raster_path : str, optional
+        path of a raster. The default is None.
+    raster : xarray DataArray, optional
+        xarray DataArray opened with xr.open_rasterio. The default is None.
+    extent_shape_path : str, optional
+        Path to a shapefile with a single polygon. The default is None.
+
+    Returns
+    -------
+    raster_meta : dict
+        Dictionnary containing all metadata (dims, coords, attrs, sizes, shape, extent).
+
+    """
     if raster_path != None:
         raster = xr.open_rasterio(raster_path)
     raster.attrs["crs"] = raster.attrs["crs"].replace("+init=","")
@@ -412,6 +471,24 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
     return raster_meta
     
 
+def clip_xarray(array, extent):
+    """
+    Clips xarray with x,y coordinates to an extent.
+
+    Parameters
+    ----------
+    band_paths : xarray DataArray
+        DataArray with x and y coordinates
+    extent : list or 1D array, optional
+        Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
+
+    Returns
+    -------
+    xarray DataArray
+        DataArray clipped to the given extent
+
+    """
+    return array.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
 
 def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, extent = None):
     """
@@ -452,7 +529,7 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
                                                            "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x+5, num=stack_bands[band_index].sizes["x"]*2)},
                                                    dims=["band","y","x"])
         if extent is not None:
-            stack_bands[band_index] = stack_bands[band_index].loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+            stack_bands[band_index] = clip_xarray(stack_bands[band_index], extent)
 
     concatenated_stack_bands= xr.concat(stack_bands,dim="band")
     concatenated_stack_bands.coords["band"] = list_bands
@@ -480,8 +557,7 @@ def import_forest_mask(forest_mask_path,chunks = None):
         Binary array containing True if pixels are inside the region of interest.
 
     """
-    forest_mask = xr.open_rasterio(forest_mask_path,chunks = chunks)
-    forest_mask=forest_mask[0,:,:]
+    forest_mask = xr.open_rasterio(forest_mask_path,chunks = chunks).squeeze("band")
     # forest_mask=forest_mask.rename({"band" : "Mask"})
     return forest_mask.astype(bool)
 
@@ -597,12 +673,10 @@ def import_decline_data(dict_paths, chunks = None):
     """
     
     state_decline = xr.open_rasterio(dict_paths["state_decline"],chunks = chunks).astype(bool)
-    first_date_unconfirmed_decline = xr.open_rasterio(dict_paths["first_date_unconfirmed_decline"],chunks = chunks)
     first_date_decline = xr.open_rasterio(dict_paths["first_date_decline"],chunks = chunks)
     count_decline = xr.open_rasterio(dict_paths["count_decline"],chunks = chunks)
     
     decline_data=xr.Dataset({"state": state_decline,
-                     "first_date_unconfirmed": first_date_unconfirmed_decline,
                      "first_date": first_date_decline,
                      "count" : count_decline})
     decline_data=decline_data.squeeze("band")
@@ -629,12 +703,16 @@ def initialize_decline_data(shape,coords):
 
     """
     
-    decline_data=xr.Dataset({"state": xr.DataArray(np.zeros(shape,dtype=bool), coords=coords),
-                         "first_date_unconfirmed": xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords),
-                         "first_date":  xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords),
-                         "count" : xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords)})
+    count_decline= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
+    first_date_decline=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
+    state_decline=np.zeros(shape,dtype=bool)
+    
+    decline_data=xr.Dataset({"state": xr.DataArray(state_decline, coords=coords),
+                         "first_date": xr.DataArray(first_date_decline, coords=coords),
+                         "count" : xr.DataArray(count_decline, coords=coords)})
     
     return decline_data
+
 
 
 def import_soil_data(dict_paths, chunks = None):
@@ -740,6 +818,22 @@ def import_masked_vi(dict_paths, date, chunks = None):
 
 
 def import_stacked_anomalies(paths_anomalies, chunks = None):
+    """
+    Imports all stacked anomalies
+
+    Parameters
+    ----------
+    dict_paths : str
+        Dictionnary where keys are dates in the format "YYYY-MM-DD" and values are the paths to the raster file containing anomaly data.
+    chunks : int, optional
+        Chunk size for import as dask array. The default is None.
+
+    Returns
+    -------
+    stack_anomalies : xarray DataArray
+        3D binary DataArray with value True where there are anomalies, with Time coordinates.
+
+    """
     list_anomalies=[xr.open_rasterio(paths_anomalies[date], chunks = chunks) for date in paths_anomalies]
     stack_anomalies=xr.concat(list_anomalies,dim="Time")
     stack_anomalies=stack_anomalies.assign_coords(Time=[date for date in paths_anomalies.keys()])

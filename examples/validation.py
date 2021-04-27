@@ -96,8 +96,6 @@ def validation(main_directory,validation_data_directory, tiles):
         raster_id_validation_data=get_rasterized_validation_data(validation_data_directory / ("scolyte"+tile_name[1:]+".shp"), raster_metadata, False)
         raster_binary_validation_data = (raster_id_validation_data!=0) & valid_area_mask.data
         nb_pixels = np.sum(raster_binary_validation_data)
-        # raster_binary_validation_data = (raster_id_validation_data!=0)
-        # nb_pixels = np.sum(raster_binary_validation_data)
 
         invalid_area_in_obs = (raster_id_validation_data!=0) & ~valid_area_mask
         write_tif(invalid_area_in_obs, raster_metadata["attrs"],nodata = 0, path = main_directory / 'invalid_area_in_obs.tif')

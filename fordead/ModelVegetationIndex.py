@@ -8,6 +8,9 @@ import xarray as xr
 import numpy as np
 import dask.array as da
 import datetime
+from scipy.linalg import lstsq
+from fordead.ImportData import import_forest_mask, import_masked_vi
+
 
 def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
     """
@@ -45,7 +48,7 @@ def compute_HarmonicTerms(DateAsNumber):
     return np.array([1,np.sin(2*np.pi*DateAsNumber/365.25), np.cos(2*np.pi*DateAsNumber/365.25),np.sin(2*2*np.pi*DateAsNumber/365.25),np.cos(2*2*np.pi*DateAsNumber/365.25)])
 
 
-def model_vi(stack_vi, stack_masks):      
+def model_vi(stack_vi, stack_masks, one_dim = False):      
 
     """
     Models periodic vegetation index for each pixel.  
@@ -67,9 +70,13 @@ def model_vi(stack_vi, stack_masks):
     DatesNumbers = [(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]
     
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in DatesNumbers])
-    coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms})
-    coeff_model['coeff'] = range(1,6) # coordinate values as recorded in .tif bands
-
+    if not one_dim:
+        coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms})
+        coeff_model['coeff'] = range(1,6) # coordinate values as recorded in .tif bands
+    else:
+        p, _, _, _ = lstsq(HarmonicTerms[~stack_masks], stack_vi.where(~stack_masks,drop=True))
+        coeff_model = xr.DataArray(p, coords={"coeff" : range(1,6)},dims=["coeff"])
+        
     return coeff_model
 
 def censored_lstsq(B, M, A):
@@ -183,3 +190,109 @@ def censored_lstsq(B, M, A):
     out = out.reshape([A.shape[1]] + list(shape[1:]))
     # del B, M, rhs, T
     return out
+
+def prediction_vegetation_index(coeff_model,date_list):
+    """
+    Predicts the vegetation index from the model coefficients and the date
+    
+    Parameters
+    ----------
+    coeff_model : array (5,x,y)
+        Array containing the five coefficients of the vegetation index model for each pixel
+    date : str
+        Date in the format "YYYY-MM-DD"
+
+    Returns
+    -------
+    predicted_vi : array (x,y)
+        Array containing predicted vegetation index from the model
+
+    """
+        
+    date_as_number_list=[(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in date_list]
+    harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in date_as_number_list])
+    harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : date_list, "coeff" : range(1, 6)},dims=["Time", "coeff"])
+    
+    predicted_vi = sum(coeff_model * harmonic_terms)
+    return predicted_vi
+
+def model_vi_correction(stack_vi, stack_masks, dict_paths):
+    """
+    Corrects stacked vegetation index using large scale vegetation index median value.
+    A periodic model is fitted on the median vegetation index of unmasked pixels within the forest mask. The difference between the prediction of this model and these large scale median values is used as a correction term to correct the vegetation index.
+    This is meant to take into account changes affecting all pixels equally which are not linked with a decline.
+
+    Parameters
+    ----------
+    stack_vi : array (Time,x,y)
+        array containing uncorrected vegetation index data
+    stack_masks : array (Time,x,y)
+        Array (boolean) containing mask data.
+    dict_paths : dict
+        Dictionnary containing vegetation index path for each date, and "ForestMask" key linking to the path of the pixels of interest.
+
+    Returns
+    -------
+    stack_vi : array (Time,x,y)
+        Array containing corrected vegetation index data
+    large_scale_model : xarray (coeff: 5)
+        Array containing the five coefficients of the large scale median vegetation index model
+    correction_vi : xarray (Time)
+        Array containing the correction terms for each date which were added to the vegetation index for its correction
+
+    """
+    
+    forest_mask = import_forest_mask(dict_paths["ForestMask"])
+    median_vi=[]
+    for date in stack_vi.Time.data:
+        masked_vi = import_masked_vi(dict_paths, date)
+        try:
+            median_vi += [float(masked_vi["vegetation_index"].where(forest_mask & ~masked_vi["mask"],drop =True).median())]
+        except ValueError:
+            median_vi += [0]
+    median_vi = xr.DataArray(np.array(median_vi), coords=stack_vi.Time.coords)
+    large_scale_model = model_vi(median_vi, median_vi==0, one_dim = True)
+    predicted_median_vi = prediction_vegetation_index(large_scale_model,median_vi.Time.data)
+    correction_vi = (predicted_median_vi - median_vi).where(median_vi!=0,0)
+    stack_vi = stack_vi + correction_vi
+    
+    return stack_vi, large_scale_model, correction_vi
+
+def correct_vi_date(masked_vi, forest_mask, large_scale_model, date, correction_vi):
+    """
+    Corrects single date vegetation index using large scale vegetation index median value previously computed.
+    The difference between the prediction of the model and the large scale median value is used as a correction term for the vegetation index.
+    This is meant to take into account changes affecting all pixels equally which are not linked with a decline.
+
+    Parameters
+    ----------
+    masked_vi : xarray DataSet
+        DataSet containing two DataArrays, "vegetation_index" containing uncorrected vegetation index values, and "mask" containing mask values.
+    xarray DataArray
+        Binary array containing True if pixels are inside the region of interest.
+    large_scale_model : xarray (coeff: 5)
+        Array containing the five coefficients of the large scale median vegetation index model
+    date : str
+        Date in the format "YYYY-MM-DD"
+    correction_vi : xarray (Time)
+        Array containing the correction terms for each date which were added to the vegetation index for its correction
+
+    Returns
+    -------
+    masked_vi : xarray DataSet
+        DataSet containing two DataArrays, "vegetation_index" containing corrected vegetation index values, and "mask" containing mask values.
+    correction_vi : xarray (Time)
+        Array containing the correction terms for each date, with added correction term of the date used in the function.
+
+    """
+    
+    if date not in correction_vi.Time:
+        median_vi = masked_vi["vegetation_index"].where(forest_mask & ~masked_vi["mask"]).median(dim=["x","y"])
+        if np.isnan(median_vi):
+            date_correction_vi = xr.DataArray(0, coords={"Time" : [date]},dims=["Time"])
+        else:
+            date_correction_vi = prediction_vegetation_index(large_scale_model,[date]) - median_vi
+        correction_vi = xr.concat((correction_vi,date_correction_vi),dim = 'Time')
+
+    masked_vi["vegetation_index"] = masked_vi["vegetation_index"] + correction_vi.sel(Time = date)
+    return masked_vi["vegetation_index"], correction_vi

@@ -19,8 +19,8 @@ import numpy as np
 #   IMPORT LIBRAIRIES PERSO
 # =============================================================================
 
-from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata, get_source_mask
-from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula
+from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
+from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula, get_source_mask
 from fordead.writing_data import write_tif
 
 #%% =============================================================================
@@ -123,7 +123,8 @@ def compute_masked_vegetationindex(
   
     # If parameters added differ from previously used parameters, all previous computation results are deleted
     if tile.parameters["Overwrite"] : 
-        tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_decline", "state_soil", "valid_area_mask" ,"periodic_results_decline","result_files","timelapse","series")
+        tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_decline", "state_soil" ,"periodic_results_decline","result_files","timelapse","series")
+        tile.delete_files("valid_area_mask")
         if hasattr(tile, "last_computed_anomaly"): delattr(tile, "last_computed_anomaly")
         if hasattr(tile, "last_date_confidence_index"): delattr(tile, "last_date_confidence_index")
         if hasattr(tile, "dates"): delattr(tile, "dates")
@@ -157,19 +158,21 @@ def compute_masked_vegetationindex(
         else:
             soil_data = initialize_soil_data(tile.raster_meta["shape"],tile.raster_meta["coords"])
 
-        bands, formula = get_bands_and_formula(vi, path_dict_vi, forced_bands = ["B2","B3","B4","B11","B8A"]) #Selects only relevant bands depending on used vegetation index plus forced_bands used in masks
+        tile.used_bands, tile.vi_formula = get_bands_and_formula(vi, path_dict_vi, forced_bands = ["B2","B3","B4","B11","B8A"]) #Selects only relevant bands depending on used vegetation index plus forced_bands used in masks
     
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
+                
+                
                 # Resample and import SENTINEL data
-                stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])
+                stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], tile.used_bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])
                 # Compute masks
                 mask = compute_masks(stack_bands, soil_data, date_index)
                 if apply_source_mask:
                     mask = mask | get_source_mask(tile.paths["Sentinel"][date], sentinel_source, extent = tile.raster_meta["extent"]) #Masking with source mask if option chosen
                     
                 # Compute vegetation index
-                vegetation_index = compute_vegetation_index(stack_bands, formula = formula)
+                vegetation_index = compute_vegetation_index(stack_bands, formula = tile.vi_formula)
 
                 # Masking invalid values (division by zero)
                 invalid_values = vegetation_index.isnull() | np.isinf(vegetation_index)
@@ -180,11 +183,16 @@ def compute_masked_vegetationindex(
                 write_tif(vegetation_index, tile.raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
                 write_tif(mask, tile.raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
                 del vegetation_index, mask
+                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
+            
         #Writing soil data 
         write_tif(soil_data["state"], tile.raster_meta["attrs"],tile.paths["state_soil"],nodata=0)
         write_tif(soil_data["first_date"], tile.raster_meta["attrs"],tile.paths["first_date_soil"],nodata=0)
         write_tif(soil_data["count"], tile.raster_meta["attrs"],tile.paths["count_soil"],nodata=0)
-    
+
+    #Add paths to vi and mask to TileInfo object
+    tile.getdict_paths(path_vi = tile.paths["VegetationIndexDir"],
+                        path_masks = tile.paths["MaskDir"])
     #Saving TileInfo object
     tile.save_info()
     
