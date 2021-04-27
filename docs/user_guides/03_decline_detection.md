@@ -47,6 +47,13 @@ Les coefficients du modèle de prédiction de l'indice de végétation sont impo
 #### Imports de l'indice de végétation calculé et du masque
 > **_Fonctions utilisées :_** [import_masked_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_masked_vi)
 
+### (OPTIONNEL - si **correct_vi** vaut True lors de [l'étape précédente de calcul du modèle](https://fordead.gitlab.io/fordead_package/docs/user_guides/03_train_model/) Correction de l'indice de végétation à partir de l'indice de végétation médian des pixels d'intérêts non masqués à l'échelle de la zone complète
+- Masquage des pixels n'appartenant pas à la zone d'intérêt, ou masqués
+- Calcul de la médiane de l'indice de végétation de l'ensemble de la zone
+- Calcul d'un terme de correction, par différence entre la médiane calculée et la prédiction du modèle calculé lors de l'étape précédente à partir de la médiane calculée pour l'ensemble des dates
+- Application du terme de correction en l'ajoutant à la valeur de l'indice de végétation de l'ensemble des pixels
+> **_Fonctions utilisées :_** [correct_vi_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#correct_vi_date)
+
 #### Prédiction de l'indice de végétation à la date donnée.
 L'indice de végétation est prédit à partir des coefficients du modèle.
 > **_Fonctions utilisées :_** [prediction_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/decline_detection/#prediction_vegetation_index)

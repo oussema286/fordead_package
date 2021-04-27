@@ -70,14 +70,16 @@ def get_rasterized_validation_data(path_shape, raster_metadata, ground_obs_erosi
 
 
 @click.command(name='decline_detection_validation')
-@click.option("-d", "--data_directory",  type=str, help="Dossier avec les données")
+@click.option("-d", "--data_directory",  type=str, help="Path of the output directory")
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
-                    help="Seuil minimum pour détection d'anomalies", show_default=True)
+                    help="Minimum threshold for anomaly detection", show_default=True)
 @click.option("--vi",  type=str, default=None,
                     help="Chosen vegetation index, only useful if step1 was skipped", show_default=True)
 @click.option("--path_dict_vi",  type=str, default=None,
                     help="Path of text file to add vegetation index formula, only useful if step1 was skipped", show_default=True)
-@click.option("--ground_obs_path",  type=str, help = "Dossier contenant les shapefiles de données de validation")
+@click.option("--name_column",  type=str, default="Id",
+                    help="Name of the column containing the ID of the ground observation polygon", show_default=True)
+@click.option("--ground_obs_path",  type=str, help = "Path to the shapefile containing ground observation polygons")
 @click.option("--ground_obs_erosion",  type=str, help = "If True, keeps only polygons with 'IndSur'==1 and apply 10m erosion. Else, keeps all polygons and apply 10m dilation")
 def cli_decline_detection_validation(
     data_directory,
@@ -89,7 +91,7 @@ def cli_decline_detection_validation(
     path_dict_vi = None,
     ):
     """
-    Produce the anomaly detection from the model
+    Produce the anomaly detection from the model, along with exporting as two .csv files data relating to pixels within the ground_obs_path shapefile.
     \f
     Parameters
     ----------
@@ -118,17 +120,24 @@ def decline_detection_validation(
     path_dict_vi = None
     ):
     """
-    Produce the anomaly detection from the model
+    Produce the anomaly detection from the model, along with exporting as two .csv files data relating to pixels within the ground_obs_path shapefile.
     \f
     Parameters
     ----------
-    data_directory
-    ground_obs_path
-    ground_obs_erosion
-    name_column
-    threshold_anomaly
-    vi
-    path_dict_vi
+    data_directory: str
+        Path of the output directory
+    ground_obs_path: str
+        Path to the shapefile containing ground observation polygons
+    ground_obs_erosion: bool
+        If True, keeps only polygons with 'IndSur'==1 and apply 10m erosion. Else, keeps all polygons and apply 10m dilation
+    name_column: str
+        Name of the column containing the ID of the ground observation polygon
+    threshold_anomaly: float
+        Minimum threshold for anomaly detection
+    vi: str
+        Chosen vegetation index, only useful if step1 was skipped
+    path_dict_vi: str
+        Path of text file to add vegetation index formula, only useful if step1 was 
 
     Returns
     -------
