@@ -5,39 +5,8 @@ Created on Mon Nov  2 09:34:34 2020
 @author: Raphael Dutrieux
 """
 
-import datetime
-from fordead.ModelVegetationIndex import compute_HarmonicTerms
 from fordead.masking_vi import get_dict_vi
 import xarray as xr
-
-import numpy as np
-
-def prediction_vegetation_index(coeff_model,date_list):
-    """
-    Predicts the vegetation index from the model coefficients and the date
-    
-    Parameters
-    ----------
-    coeff_model : array (5,x,y)
-        Array containing the five coefficients of the vegetation index model for each pixel
-    date : str
-        Date in the format "YYYY-MM-DD"
-
-    Returns
-    -------
-    predicted_vi : array (x,y)
-        Array containing predicted vegetation index from the model
-
-    """
-        
-    date_as_number_list=[(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in date_list]
-    harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in date_as_number_list])
-    harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : date_list, "coeff" : range(1, 6)},dims=["Time", "coeff"])
-    
-    predicted_vi = sum(coeff_model * harmonic_terms)
-    return predicted_vi
-
-
 
 def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, path_dict_vi = None):
     """
@@ -77,6 +46,24 @@ def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, p
             
     return anomalies
 
+
+
+def detection_decline_validation(decline_data, anomalies, mask, date_index, raster_binary_validation_data):
+   
+    decline_data["count"] = xr.where(~mask & (anomalies!=decline_data["state"]),decline_data["count"]+1,decline_data["count"])
+    decline_data["count"] = xr.where(~mask & (anomalies==decline_data["state"]),0,decline_data["count"])
+    
+    changing_pixels = ~mask & (decline_data["count"]==3)
+    decline_data["state"] = xr.where(changing_pixels, ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
+    decline_data["first_date"] = xr.where(changing_pixels, decline_data["first_date_unconfirmed"], decline_data["first_date"]) #First_date saved if confirmed
+    dates_changes_validation = decline_data["first_date"].where(changing_pixels).data[raster_binary_validation_data]
+
+    decline_data["count"] = xr.where(changing_pixels, 0,decline_data["count"])
+    decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1), date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+   
+    return decline_data, dates_changes_validation
+
+
 def detection_decline(decline_data, anomalies, mask, date_index):
     """
     Updates decline data using anomalies. Successive anomalies are counted for pixels considered healthy, and successive dates without anomalies are counted for pixels considered declining. The state of the pixel changes when the count reaches 3.
@@ -107,9 +94,8 @@ def detection_decline(decline_data, anomalies, mask, date_index):
     decline_data["state"] = xr.where(~mask & (decline_data["count"]==3), ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
         
     decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
-    decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & ~decline_data["state"], date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+    decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & (~decline_data["state"]), date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
 
-    
     return decline_data
 
 

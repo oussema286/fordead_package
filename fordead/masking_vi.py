@@ -74,7 +74,13 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
         Boolean DataArray containing True where pixels are in the selected forest types.
 
     """
+<<<<<<< HEAD
     example_raster = xr.open_rasterio(example_path).squeeze("band")
+=======
+    
+    example_raster = xr.open_rasterio(example_path)
+    example_raster=example_raster.sel(band=1)
+>>>>>>> validation
     example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
         
     bdforet_paths, tile_extent = bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath) #List of paths to relevant BD foret shapefiles. Can be replaced with home-made list if your data structure is different
@@ -320,6 +326,12 @@ def compute_masks(stack_bands, soil_data, date_index):
     
     return mask
 
+def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
+    formula = get_dict_vi(path_dict_vi)[vi]["formula"]
+    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
+    bands = list(set(forced_bands + ["B"+band for band in re.findall(match_string, formula)]))
+    return bands, formula
+
 def get_dict_vi(path_dict_vi = None):
     """
     Imports dictionnary containing formula of vegetation indices, as well as the way it changes in case of decline
@@ -352,6 +364,7 @@ def get_dict_vi(path_dict_vi = None):
         dict_vi.update(d)
     return dict_vi
 
+
 def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
     """
     From the vegetation index used, infers which bands are necessary. Formula of vegetation index is also returned. A list of bands which are also necessary can be added.
@@ -380,7 +393,35 @@ def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
     match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
     bands = list(set(forced_bands + ["B"+band for band in re.findall(match_string, formula)]))
     return bands, formula
+
     
+def get_source_mask(band_paths, sentinel_source, extent = None):
+    """
+    Imports source mask and converts it to binary. Keeps only 0 in THEIA mask, and only 4 and 5 in Scihub and PEPS mask.
+
+    Parameters
+    ----------
+    band_paths : dict
+        Dictionnary where keys are band names, and values are their paths.
+    sentinel_source : str
+        Sentinel source (THEIA, Scihub or PEPS).
+    extent : list or 1D array, optional
+        Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
+
+    Returns
+    -------
+    binary_mask : xarray DataArray
+        Binary array with value 1 when pixel is masked.
+
+    """
+    
+    
+    source_mask = import_resampled_sen_stack(band_paths, ["Mask"], interpolation_order = 0, extent = extent)
+    if sentinel_source=="THEIA":
+        binary_mask = source_mask>0
+    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
+        binary_mask = ~source_mask.isin([4,5])
+    return binary_mask
 
 def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_dict_vi = None):
     """

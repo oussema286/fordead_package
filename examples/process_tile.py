@@ -7,6 +7,7 @@ Created on Tue Nov 17 12:02:24 2020
 
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
+from fordead.steps.step3_decline_detection_validation import decline_detection_validation
 from fordead.steps.step3_decline_detection import decline_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step5_export_results import export_results
@@ -22,7 +23,6 @@ import time
 import datetime
 
 
-
 def parse_command_line():
     # execute only if run as a script
     parser = argparse.ArgumentParser()
@@ -35,9 +35,9 @@ def parse_command_line():
     parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a binary raster with the extent and resolution of the computed area, or None in which case all pixels will be considered valid")
     parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
-    parser.add_argument("-k", "--remove_outliers", dest = "remove_outliers", action="store_false",default = True, help = "Si activé, garde les outliers dans les deux premières années")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
-    
+    parser.add_argument("--nb_min_date", dest = "nb_min_date",type = int,default = 10, help = "Nombre minimum de dates valides pour modéliser l'indice de végétation")
+
     parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--list_forest_type", dest = "list_forest_type",type = str,default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
@@ -46,14 +46,16 @@ def parse_command_line():
 
     parser.add_argument("--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
     parser.add_argument("--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
-    parser.add_argument("--threshold_outliers", dest = "threshold_outliers",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     parser.add_argument("--min_last_date_training", dest = "min_last_date_training",type = str,default = "2018-01-01", help = "Première date de la détection")
-    parser.add_argument("--date_lim_training", dest = "date_lim_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
+    parser.add_argument("--max_last_date_training", dest = "max_last_date_training",type = str,default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
     
     parser.add_argument("--start_date_results", dest = "start_date_results",type = str,default = '2015-06-23', help = "Date de début pour l'export des résultats")
     parser.add_argument("--end_date_results", dest = "end_date_results",type = str,default = "2022-01-01", help = "Date de fin pour l'export des résultats")
     parser.add_argument("--results_frequency", dest = "results_frequency",type = str,default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
+
+    parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
+    parser.add_argument("--validation", dest = "validation", action="store_true",default = False, help = "If activated, exports validation results")
 
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
@@ -63,20 +65,20 @@ def parse_command_line():
 def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source, extent_shape_path,
                   dep_path, bdforet_dirpath, list_forest_type, path_oso, list_code_oso, #compute_forest_mask arguments
                   lim_perc_cloud, vi, sentinel_source, apply_source_mask, #compute_masked_vegetationindex arguments
-                  remove_outliers, threshold_outliers, min_last_date_training, date_lim_training, #Train_model arguments
+                  min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
                   threshold_anomaly,
-                  start_date_results, end_date_results, results_frequency, multiple_files): #Decline_detection argument
+                  start_date_results, end_date_results, results_frequency, multiple_files,
+                  correct_vi, validation):
 
-    # main_directory = "/mnt/fordead/Out"
-    # sentinel_directory = "/mnt/fordead/Data/SENTINEL/"
-    # main_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/output_detection"
-    # sentinel_directory = "C:/Users/admin/Documents/Deperissement/fordead_data/input_sentinel"
-    # sentinel_directory = "G:/Deperissement/Data/SENTINEL/"
-    # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/zone_timelapse.shp"
+
+    # main_directory = "E:/Deperissement/Out"
+    # sentinel_directory = "E:/Deperissement/Data/SENTINEL"
+    # extent_shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ZoneStress.shp"
+
         
     # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
     # main_directory = "D:/Documents/Deperissement/Output"    
-    
+
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
     logpath = main_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")
@@ -84,6 +86,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     file.close()
     
     for tuile in tuiles:
+        print(tuile)
         file = open(logpath, "a") 
         file.write("Tuile : " + tuile + "\n") ; start_time = time.time()
         file.close()
@@ -98,29 +101,13 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
-# =====================================================================================================================
-
-        train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                    nb_min_date = 10)
-                    # path_masks = main_directory / tuile / "Mask",
-                    # path_vi = main_directory / tuile / "VegetationIndex")
-        # print(str(time.time() - start_time))
-        file = open(logpath, "a") 
-        file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
-# =====================================================================================================================    
-    
         
-        decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-                          threshold_anomaly = threshold_anomaly)
-        file = open(logpath, "a") 
-        file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
 # =====================================================================================================================
 
+        # print("Computing forest mask")
         compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                            # forest_mask_source = forest_mask_source,
-                            forest_mask_source = "D:/Documents/Deperissement/Output/Forest_Mask.tif",
+                            forest_mask_source = forest_mask_source,
+                            # forest_mask_source = "D:/Documents/Deperissement/Output/Forest_Mask.tif",
                             dep_path = dep_path,
                             bdforet_dirpath = bdforet_dirpath,
                             path_oso = path_oso,
@@ -128,10 +115,36 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
+# =====================================================================================================================
+            
+        train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+                    max_last_date_training = max_last_date_training,
+                    nb_min_date = nb_min_date, correct_vi = correct_vi)
+        file = open(logpath, "a")
+        file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+        file.close()
+# =====================================================================================================================    
+    
+        if validation:
+            decline_detection_validation(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+                              ground_obs_path = Path("/mnt/fordead/Data/Vecteurs/ObservationsTerrain") / ("scolyte"+tuile[1:]+".shp"),
+                              threshold_anomaly = threshold_anomaly)
+            # decline_detection_validation(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+            #                   ground_obs_path = Path("C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/scolyte31UGP.shp"),
+            #                   threshold_anomaly = threshold_anomaly)
+        else:
+            decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+                                          threshold_anomaly = threshold_anomaly)
+        # decline_detection_validation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+        #                   ground_obs_path = Path("C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/points_visualisation.shp"),
+        #                   threshold_anomaly = threshold_anomaly,
+        #                   ground_obs_erosion = False, name_column = "id")
+        file = open(logpath, "a")
+        file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+        file.close()
+
 # # =====================================================================================================================
 
-#         # print("Computing forest mask")
-        
         export_results(
             data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
             start_date = start_date_results,
@@ -140,14 +153,11 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             export_soil = True,
             multiple_files = multiple_files
             )
-        file = open(logpath, "a") 
+        file = open(logpath, "a")
         file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
         file.close()
                 
-        # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-        #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
-        #                   coordinates = (765113,5312227), buffer = 400)
-        
+
         # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
         #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
         #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
@@ -156,7 +166,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         
         
         
-    tile = TileInfo(main_directory / tuile)
+    tile = TileInfo(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile)
     tile = tile.import_info()
     file = open(logpath, "a") 
     for parameter in tile.parameters:

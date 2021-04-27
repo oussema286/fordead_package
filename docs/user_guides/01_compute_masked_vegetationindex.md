@@ -5,9 +5,10 @@ Les paramètres en entrée sont :
 
 - **input_directory** : le chemin du dossier correspondant à une tuile ou une zone contenant un dossier par date SENTINEL contenant les différentes bandes. Les dossiers doivent contenir la date correspondante dans leur nom sous un des formats suivants : YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY ou DDMMYYYY. Les fichiers des bandes doivent contenir le nom de la bande correspondante (B2 ou B02, B3 ou B03, etc...).
 - **data_directory** : Le chemin du dossier de sortie, dans lequel seront écrit les indices de végétations et masques
-- **lim_perc_cloud** : Le pourcentage maximum de nuages. Si le pourcentage de nuage de la date SENTINEL, calculé à partir de la classification du fournisseur, est supérieur à ce seuil, la date est ignorée.
+- **lim_perc_cloud** : Le pourcentage maximum de nuages. Si le pourcentage de nuage de la date SENTINEL, calculé à partir de la classification du fournisseur, est supérieur à ce seuil, la date est ignorée. Si défini comme -1, l'ensemble des dates sont utilisées quel que soit leur ennuagement, et le masque du fournisseur n'est pas nécessaire.
 - **interpolation_order** : Ordre d'interpolation pour le passage des bandes de 20m de résolution à 10m. 0 : plus proche voisin, 1 : linéaire, 2 : bilinéaire, 3 : cubique
 - **sentinel_source** : Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'
+- **apply_source_mask** : Si activé, le masque du fournisseur est également utilisé pour masquer les données
 - **vi** : Indice de végétation utilisé
 - **extent_shape_path** : Chemin d'un shapefile contenant un polygone utilisé pour restreindre les calculs à une zone. Si non renseigné, le calcul est appliqué à l'ensemble de la tuile
 - **path_dict_vi** : Chemin d'un fichier texte permettant d'ajouter des indices de végétations utilisables. Si non renseigné, uniquement les indices prévus dans le package sont utilisable (CRSWIR, NDVI). Le fichier examples/ex_dict_vi.txt donne l'exemple du formattage de ce fichier. Il s'agit de renseigner son nom, sa formule, et "+" ou "-" selon si l'indice augmente en cas de déperissement, ou si il diminue.
@@ -81,7 +82,8 @@ On ajoute les voiles nuages plus fins $`\frac{B3}{B8A+B4+B3} >0.15`$ ET $`B2 >40
 
 ##### Aggrégation des masques
 Aggrégation des ombres, des nuages, des pixels hors de la fauchée, du sol nu, des anomalies de sol nu.
-Si apply_source_mask vaut True, le masque fournisseur est également appliqué.
+Si **apply_source_mask** vaut True, le masque fournisseur est également appliqué.
+ > **_Fonctions utilisées :_** [get_source_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#get_source_mask)
 
 ### Calcul de l'indice de végétation
 L'indice de végétation choisi est calculé.

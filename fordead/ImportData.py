@@ -176,7 +176,7 @@ class TileInfo:
             print("\n\n" + " Last computed anomaly : \n")
             print(self.last_computed_anomaly)
         else:
-            print(" Anomalies not computed")
+            print("Anomalies not computed")
     
 
     def delete_dirs(self,*key_paths):
@@ -199,6 +199,7 @@ class TileInfo:
                     shutil.rmtree(self.paths[key_path])
                 elif self.paths[key_path].is_file():
                     shutil.rmtree(self.paths[key_path].parent)
+                      
    
     def delete_files(self,*key_paths):
         """
@@ -344,7 +345,7 @@ class TileInfo:
         # if hasattr(self, 'dates'):
         #     self.dates = np.array(list(self.paths["VegetationIndex"].keys())) >
         # self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
-        
+
         
         
 def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
@@ -418,33 +419,7 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     else:
         return float(NbCloudyPixels/NbPixels) #Number of cloudy pixels divided by number of pixels in the satellite swath
 
-def get_source_mask(band_paths, sentinel_source, extent = None):
-    """
-    Imports source mask and converts it to binary. Keeps only 0 in THEIA mask, and only 4 and 5 in Scihub and PEPS mask.
 
-    Parameters
-    ----------
-    band_paths : dict
-        Dictionnary where keys are band names, and values are their paths.
-    sentinel_source : str
-        Sentinel source (THEIA, Scihub or PEPS).
-    extent : list or 1D array, optional
-        Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
-
-    Returns
-    -------
-    binary_mask : xarray DataArray
-        Binary array with value 1 when pixel is masked.
-
-    """
-    
-    
-    source_mask = import_resampled_sen_stack(band_paths, ["Mask"], interpolation_order = 0, extent = extent)
-    if sentinel_source=="THEIA":
-        binary_mask = source_mask>0
-    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
-        binary_mask = ~source_mask.isin([4,5])
-    return binary_mask
 
 def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = None):
     """

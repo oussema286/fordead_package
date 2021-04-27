@@ -286,7 +286,7 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
             plt.axvline(x=date_coupe, color='black', linewidth=3, linestyle=":",label="Détection de coupe")
             plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nPixel coupé, détection le " + str(date_coupe.astype("datetime64[D]")),size=15)
     else:
-        pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
+        if (~pixel_series.mask).any(): pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
         plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\n Not enough dates to compute a model",size=15)
          
     [plt.axvline(x=datetime.datetime.strptime(str(year)+"-01-01", '%Y-%m-%d'),color="black") for year in np.arange(pixel_series.isel(Time = 0).Time.data.astype('datetime64[Y]'), (pixel_series.isel(Time = -1).Time.data + np.timedelta64(35,'D')).astype('datetime64[Y]')+1) if str(year)!="2015"]
@@ -299,6 +299,7 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
     return fig
 
 def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies):
+    
     xy_first_detection_date_index = int(first_detection_date_index.sel(x = X, y = Y,method = "nearest"))
     xy_soil_data = soil_data.sel(x = X, y = Y,method = "nearest")
     xy_stack_masks = stack_masks.sel(x = X, y = Y,method = "nearest")
@@ -306,14 +307,17 @@ def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detect
     if xy_first_detection_date_index!=0:
         xy_anomalies = anomalies.sel(x = X, y = Y,method = "nearest")
         xy_decline_data = decline_data.sel(x = X, y = Y,method = "nearest")
-        
-    pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
-    pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
-    if xy_first_detection_date_index!=0:
         anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
         pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
         pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
         yy = (harmonic_terms * coeff_model.sel(x = X, y = Y,method = "nearest").compute()).sum(dim="coeff")
+    else:
+        xy_decline_data=None
+        xy_anomalies = None
+        yy = None
+    pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
+    pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
+        
     return pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index
     
 def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies):

@@ -13,6 +13,7 @@ import random
 import geopandas as gp
 import xarray as xr
 import click
+import matplotlib
 import matplotlib.pyplot as plt
 
 from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
@@ -103,12 +104,17 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     
     harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in xx])
     harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : xxDate, "coeff" : [1,2,3,4,5]},dims=["Time","coeff"])
+    
+    if tile.parameters["correct_vi"]:
+        stack_vi = stack_vi + tile.correction_vi
+  
     stack_vi.coords["Time"] = tile.dates.astype("datetime64[D]")
-
+    stack_masks.coords["Time"] = tile.dates.astype("datetime64[D]")
 
     if shape_path is not None:
+        matplotlib.use('Agg')
         shape = gp.read_file(shape_path)
-        shape = shape.to_crs(crs = stack_vi.crs.replace("+init=",""))
+        shape = shape.to_crs(crs = tile.raster_meta["attrs"]["crs"])
         
         for point_index in range(len(shape)):
             id_point = shape.iloc[point_index][name_column]
@@ -124,6 +130,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                 print("Pixel outside forest mask")
     else:
         #Initialiser X,Y
+        # matplotlib.use('TkAgg')
         PixelsToChoose = np.where(forest_mask)
         PixelID=random.randint(0,PixelsToChoose[0].shape[0])
         X=PixelsToChoose[0][PixelID]
