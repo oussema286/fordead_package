@@ -14,6 +14,7 @@ import geopandas as gp
 import pandas as pd
 import rasterio
 from scipy import ndimage
+from fordead.ImportData import import_resampled_sen_stack
 
 def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
     """
@@ -74,13 +75,7 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
         Boolean DataArray containing True where pixels are in the selected forest types.
 
     """
-<<<<<<< HEAD
     example_raster = xr.open_rasterio(example_path).squeeze("band")
-=======
-    
-    example_raster = xr.open_rasterio(example_path)
-    example_raster=example_raster.sel(band=1)
->>>>>>> validation
     example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
         
     bdforet_paths, tile_extent = bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath) #List of paths to relevant BD foret shapefiles. Can be replaced with home-made list if your data structure is different
@@ -326,11 +321,6 @@ def compute_masks(stack_bands, soil_data, date_index):
     
     return mask
 
-def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
-    formula = get_dict_vi(path_dict_vi)[vi]["formula"]
-    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
-    bands = list(set(forced_bands + ["B"+band for band in re.findall(match_string, formula)]))
-    return bands, formula
 
 def get_dict_vi(path_dict_vi = None):
     """
