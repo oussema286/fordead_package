@@ -127,12 +127,12 @@ def decline_detection(
                 decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
                 
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
+                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
                 del masked_vi, predicted_vi, anomalies
         tile.last_computed_anomaly = new_dates[-1]
                 
         #Writing decline data to rasters
         write_tif(decline_data["state"], first_detection_date_index.attrs,tile.paths["state_decline"],nodata=0)
-        write_tif(decline_data["first_date_unconfirmed"], first_detection_date_index.attrs,tile.paths["first_date_unconfirmed_decline"],nodata=0)
         write_tif(decline_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_decline"],nodata=0)
         write_tif(decline_data["count"], first_detection_date_index.attrs,tile.paths["count_decline"],nodata=0)
         
