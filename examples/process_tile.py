@@ -68,7 +68,6 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   correct_vi):
 
 
-
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
     logpath = main_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")
