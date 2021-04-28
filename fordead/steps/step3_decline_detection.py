@@ -90,7 +90,6 @@ def decline_detection(
     
     tile.add_path("state_decline", tile.data_directory / "DataDecline" / "state_decline.tif")
     tile.add_path("first_date_decline", tile.data_directory / "DataDecline" / "first_date_decline.tif")
-    tile.add_path("first_date_unconfirmed_decline", tile.data_directory / "DataDecline" / "first_date_unconfirmed_decline.tif")
     tile.add_path("count_decline", tile.data_directory / "DataDecline" / "count_decline.tif")
     
     #Verify if there are new SENTINEL dates
