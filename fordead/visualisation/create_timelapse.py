@@ -38,7 +38,8 @@ def timelapse():
 @click.option("--x", type = int, help = "Coordinate x in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile")
 @click.option("--y", type = int, help = "Coordinate y in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile")
 @click.option("--buffer", type = int, default = 100, help = "Buffer around polygons or points for the extent of the timelapse")
-def cli_create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id", x = None, y = None, buffer = 100):
+@click.option("--max_date", type = str, default = None, help = "Last date used in the timelapse")
+def cli_create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id", x = None, y = None, buffer = 100, max_date = None):
     """
     Create timelapse allowing navigation through Sentinel-2 dates with detection results superimposed.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons or points with a column containing a unique ID used to name the export. 
@@ -55,10 +56,11 @@ def cli_create_timelapse(data_directory, obs_terrain_path = None, shape_path = N
     x
     y
     buffer
+    max_date
 
 
     """
-    create_timelapse(data_directory, obs_terrain_path, shape_path, name_column, x, y, buffer)
+    create_timelapse(data_directory, obs_terrain_path, shape_path, name_column, x, y, buffer, max_date)
 
 #%% =============================================================================
 #   MAIN CODE
@@ -76,7 +78,7 @@ DictCol={'C' : "white",
 #         2 : "black",
 #         3 : "blue"}
 
-def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id",  x = None, y = None, buffer = 100):
+def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id",  x = None, y = None, buffer = 100, max_date = None):
     """
     Create timelapse allowing navigation through Sentinel-2 dates with detection results superimposed.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons with a column containing a unique ID used to name the export. 
@@ -100,6 +102,8 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
         Coordinate y in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile. The default is None.
     buffer : int, optional
         Buffer around polygons or points for the extent of the timelapse. The default is 100.
+    max_date: str
+        Last date used in the timelapse
 
     """
     
@@ -133,7 +137,7 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
         
         # if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()):
         print("Creating timelapse | Id : " + NameFile)
-        fig = CreateTimelapse(Shape.geometry.buffer(buffer),tile,DictCol, obs_terrain_path)
+        fig = CreateTimelapse(Shape.geometry.buffer(buffer),tile,DictCol, obs_terrain_path, max_date)
         plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=False)
 
 
