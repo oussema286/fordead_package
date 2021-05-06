@@ -119,7 +119,7 @@ def train_model(
    
         detection_dates, first_detection_date_index = get_detection_dates(stack_masks,
                                               min_last_date_training = min_last_date_training,
-                                              nb_min_date = 10)
+                                              nb_min_date = nb_min_date)
         
         
         #Fusion du masque forêt et des zones non utilisables par manque de données
