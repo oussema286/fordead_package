@@ -162,7 +162,6 @@ def compute_masked_vegetationindex(
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
                 
-                
                 # Resample and import SENTINEL data
                 stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], tile.used_bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])
                 # Compute masks

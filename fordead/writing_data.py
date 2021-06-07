@@ -13,6 +13,7 @@ import xarray as xr
 import rasterio
 from affine import Affine
 import geopandas as gp
+from scipy import ndimage
 
 def write_tif(data_array, attributes, path, nodata = None):
     """
@@ -83,16 +84,19 @@ def get_bins(start_date,end_date,frequency,dates):
         bins_as_date = pd.DatetimeIndex(dates)
     else:
         bins_as_date=pd.date_range(start=start_date, end = end_date, freq=frequency)
+
     # bins_as_date = bins_as_date.insert(0,datetime.datetime.strptime(start_date, '%Y-%m-%d'))
     # bins_as_date = bins_as_date.insert(len(bins_as_date),datetime.datetime.strptime(end_date, '%Y-%m-%d'))
     bins_as_datenumber = (bins_as_date-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days  
     
     bin_min = max((datetime.datetime.strptime(start_date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days, (datetime.datetime.strptime(dates[0], '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days)
     bin_max = min((datetime.datetime.strptime(end_date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days, (datetime.datetime.strptime(dates[-1], '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days)
-    
-    bins_as_date = bins_as_date[np.logical_and(bins_as_datenumber>=bin_min,bins_as_datenumber<=bin_max)]
-    bins_as_datenumber = bins_as_datenumber[np.logical_and(bins_as_datenumber>=bin_min,bins_as_datenumber<=bin_max)]
 
+    kept_bins = ndimage.binary_dilation(np.logical_and(bins_as_datenumber>=bin_min,bins_as_datenumber<=bin_max),iterations=1,structure=np.array([False,True,True])) #Kept bins are those within bin_min and bin_max plus one bin after bin_max
+
+    bins_as_date = bins_as_date[kept_bins]
+    bins_as_datenumber = bins_as_datenumber[kept_bins]
+    
     return bins_as_date, bins_as_datenumber
 
 def convert_dateindex_to_datenumber(dataset, dates):
