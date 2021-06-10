@@ -49,11 +49,8 @@ def classify_declining_area(
 
     coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = chunks)
     
-    first_date = decline_data["first_date"].where((forest_mask & valid_area & decline_data["state"]).compute()).min().compute()
-    print(int(decline_data["first_date"].sel(x = 721093, y = 5447298,method = "nearest")))
-
-    # Importing = (tile.dates[-1] == tile.last_date_confidence_index) if hasattr(tile, "last_date_confidence_index") else False
-    Importing = False
+    first_date = decline_data["first_date"].where(relevant_area).min().compute()
+    Importing = (tile.dates[-1] == tile.last_date_confidence_index) if hasattr(tile, "last_date_confidence_index") else False
     if  Importing:
         print("Importing confidence index")
         confidence_index, nb_dates = import_confidence_data(tile.paths)
@@ -73,14 +70,10 @@ def classify_declining_area(
                 
                 
                 declining_pixels = ((decline_data["first_date"] <= date_index) & ~masked_vi["mask"]).compute()
-                print(date_index)
-                print(bool(declining_pixels.sel(x = 721093, y = 5447298,method = "nearest")))
-                print(bool(~masked_vi["mask"].sel(x = 721093, y = 5447298,method = "nearest")))
-                input("Press Enter to continue...")
                 nb_dates = nb_dates + declining_pixels
                 sum_diff = sum_diff + diff*declining_pixels*nb_dates #Try compare with where
                 del masked_vi, predicted_vi, diff, declining_pixels
-                # print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
+                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
 
             
         confidence_index = sum_diff/(nb_dates*(nb_dates+1)/2)
