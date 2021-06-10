@@ -7,13 +7,22 @@ Created on Wed Apr  7 16:40:16 2021
 
 from fordead.ImportData import import_masked_vi, import_decline_data, TileInfo, import_forest_mask, import_soil_data, import_confidence_data, import_coeff_model, initialize_confidence_data
 from fordead.writing_data import write_tif, vectorizing_confidence_class
-from fordead.decline_detection import prediction_vegetation_index
 from fordead.masking_vi import get_dict_vi
-from fordead.ModelVegetationIndex import correct_vi_date
+from fordead.ModelVegetationIndex import correct_vi_date, prediction_vegetation_index
 
-# import xarray as xr
 import numpy as np
-import time
+import click
+
+@click.command(name='ind_conf')
+@click.option("-o", "--data_directory", type = str, help = "Path of the output directory")
+@click.option("--threshold", type = float, default = 0.265, help = "Threshold used to classify declining stages", show_default=True)
+@click.option("--chunks", type = int, default = None, help = "Chunk size for dask computation", show_default=True)
+def cli_classify_declining_area(
+    data_directory,
+    threshold,
+    chunks = None
+    ):
+    classify_declining_area(data_directory,threshold,chunks)
 
 def classify_declining_area(
     data_directory,
@@ -21,7 +30,6 @@ def classify_declining_area(
     chunks = None
     ):
     # print("Computing confidence index")
-    start_time = time.time()
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     tile.add_parameters({"threshold_confidence_index" : threshold_confidence_index})
@@ -75,10 +83,6 @@ def classify_declining_area(
     confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, [threshold_confidence_index], np.array(["Stress/scolyte vert","scolyte rouge"]), tile.raster_meta["attrs"])
     confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
-    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
     
-# classify_declining_area("D:/Documents/Deperissement/Output/ZoneEtude", 0.1)
-# import time
-# start_time = time.time()
-# classify_declining_area("E:/Deperissement/Out/ZoneStress", 0.2)
-# print("Temps d execution : %s secondes ---" % (time.time() - start_time))
+if __name__ == '__main__':
+    cli_classify_declining_area()

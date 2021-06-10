@@ -15,7 +15,7 @@ from affine import Affine
 import geopandas as gp
 import dask.array as da
 
-from fordead.decline_detection import prediction_vegetation_index
+from fordead.ModelVegetationIndex import prediction_vegetation_index
 from fordead.masking_vi import get_dict_vi
 
 
