@@ -67,8 +67,14 @@ def classify_declining_area(
                     diff = (masked_vi["vegetation_index"] - predicted_vi).squeeze("Time").compute()
                 elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
                     diff = (predicted_vi - masked_vi["vegetation_index"]).squeeze("Time").compute()
-                            
+                
+                
                 declining_pixels = ((decline_data["first_date"] <= date_index) & ~masked_vi["mask"]).compute()
+                print(date_index)
+                print(decline_data["first_date"].sel(x = 721093, y = 5447298,method = "nearest"))
+                print(declining_pixels.sel(x = 721093, y = 5447298,method = "nearest"))
+                print(~masked_vi["mask"].sel(x = 721093, y = 5447298,method = "nearest"))
+
                 nb_dates = nb_dates + declining_pixels
                 sum_diff = sum_diff + diff*declining_pixels*nb_dates #Try compare with where
                 del masked_vi, predicted_vi, diff, declining_pixels
