@@ -50,7 +50,8 @@ def classify_declining_area(
     coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = chunks)
     
     first_date = decline_data["first_date"].where(relevant_area).min().compute()
-    Importing = (tile.dates[-1] == tile.last_date_confidence_index) if hasattr(tile, "last_date_confidence_index") else False
+    # Importing = (tile.dates[-1] == tile.last_date_confidence_index) if hasattr(tile, "last_date_confidence_index") else False
+    Importing = False
     if  Importing:
         print("Importing confidence index")
         confidence_index, nb_dates = import_confidence_data(tile.paths)
