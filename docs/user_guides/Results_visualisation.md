@@ -13,6 +13,9 @@ Les paramètres en entrée sont :
 - **y** : Coordonnée y dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.- **buffer** : Longueur utilisée pour étendre la zone du timelapse à partir des points ou des polygones.
 - **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du polygone ou point si **shape_path** est utilisé. (Par défault : "id")
 - **buffer** : Zone tampon autour des polygones ou des points pour définir l'étendue du timelapse.
+- **max_date** : Exclut du timelapse l'ensemble des dates Sentinel-2 après cette date (format : "AAAA-MM-JJ"). Par défaut, le timelapse utilise l'ensemble des dates Sentinel-2 disponibles.
+- **zip_results** : Si True, les fichiers html contenant les timelapses sont transférés dans un fichier zip compressé.
+
 Les paramètres indispensables sont **data_directory** ainsi que **shape_path** ou **x** et **y**.
 
 #### SORTIES
