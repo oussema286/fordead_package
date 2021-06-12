@@ -773,6 +773,25 @@ def initialize_soil_data(shape,coords):
     return soil_data
 
 def initialize_confidence_data(shape,coords):
+    """
+    Initializes data relating to confidence index
+
+    Parameters
+    ----------
+    shape : tuple
+        Tuple with sizes for the resulting array 
+    coords : Coordinates attribute of xarray DataArray
+        Coordinates y and x
+
+    Returns
+    -------
+    nb_dates : xarray DataArray (x,y)
+        Number of unmasked sentinel dates since the first anomaly for each pixel.
+    sum_diff : xarray DataArray (x,y)
+        Cumulative sum of differences between the vegetation index and its prediction for each date.
+
+    """
+    
     
     nb_dates=xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords)
     sum_diff=xr.DataArray(np.zeros(shape,dtype=np.float), coords=coords)
@@ -780,7 +799,21 @@ def initialize_confidence_data(shape,coords):
     return nb_dates, sum_diff
 
 def import_confidence_data(dict_paths, chunks = None):
-    
+    """
+    Imports data relating to confidence index
+
+    Parameters
+    ----------
+    dict_paths : dict
+        Dictionnary containing keys "confidence_index" and "nb_dates" whose values are the paths to the rasters.
+    Returns
+    -------
+    confidence_index : xarray DataArray (x,y)
+        Confidence index
+    nb_dates : xarray DataArray (x,y)
+        Number of unmasked sentinel dates since the first anomaly for each pixel.
+
+    """
     confidence_index=xr.open_rasterio(dict_paths["confidence_index"], chunks = chunks).squeeze("band")
     nb_dates=xr.open_rasterio(dict_paths["nb_dates"], chunks = chunks).squeeze("band")
 

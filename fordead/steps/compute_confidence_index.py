@@ -22,17 +22,46 @@ def cli_classify_declining_area(
     threshold,
     chunks = None
     ):
+    """
+    Computes an index meant to describe the intensity of the detected decline. The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly in pixels detected as declining. For each date used, the weight corresponds to the number of the date (1, 2, 3, etc... from the first anomaly).
+    In case of decline, the intensity of anomalies often goes up, so later dates have more weight.
+    Then, pixels are classified into two decline stages based on this index. Pixels with only three anomalies or an index inferior to the set threshold are classified as "Stressed / early stage", the rest are classified as "Late stage". The results are vectorized and saved in data_directory/Confidence_Index directory.
+  
+    Parameters
+    ----------
+    data_directory
+    threshold
+    chunks
+
+    """
+    
     classify_declining_area(data_directory,threshold,chunks)
 
 def classify_declining_area(
     data_directory,
-    threshold_confidence_index,
+    threshold,
     chunks = None
     ):
+    """
+    Computes an index meant to describe the intensity of the detected decline. The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly in pixels detected as declining. For each date used, the weight corresponds to the number of the date (1, 2, 3, etc... from the first anomaly).
+    In case of decline, the intensity of anomalies often goes up, so later dates have more weight.
+    Then, pixels are classified into two decline stages based on this index. Pixels with only three anomalies or an index inferior to the set threshold are classified as "Stressed / early stage", the rest are classified as "Late stage". The results are vectorized and saved in data_directory/Confidence_Index directory.
+
+    Parameters
+    ----------
+    data_directory : str
+        Path of the output directory
+    threshold : float
+        Threshold used to classify decline stages.
+    chunks : int, optional
+        Chunk size for dask computation, has to be used for large datasets. The default is None.
+
+    """
+    
     # print("Computing confidence index")
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    tile.add_parameters({"threshold_confidence_index" : threshold_confidence_index})
+    tile.add_parameters({"threshold" : threshold})
   
     tile.add_path("confidence_index", tile.data_directory / "Confidence_Index" / "confidence_index.tif")
     tile.add_path("confidence_class", tile.data_directory / "Confidence_Index" / "confidence_class.shp")
@@ -68,7 +97,6 @@ def classify_declining_area(
                 elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
                     diff = (predicted_vi - masked_vi["vegetation_index"]).squeeze("Time").compute()
                 
-                
                 declining_pixels = ((decline_data["first_date"] <= date_index) & ~masked_vi["mask"]).compute()
                 nb_dates = nb_dates + declining_pixels
                 sum_diff = sum_diff + diff*declining_pixels*nb_dates #Try compare with where
@@ -81,7 +109,7 @@ def classify_declining_area(
         write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
         write_tif(nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["nb_dates"])
     
-    confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, [threshold_confidence_index], np.array(["Stress/scolyte vert","scolyte rouge"]), tile.raster_meta["attrs"])
+    confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, [threshold], np.array(["Stress/stade précoce","stade avancé"]), tile.raster_meta["attrs"])
     confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
     

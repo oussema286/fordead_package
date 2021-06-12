@@ -57,7 +57,7 @@ def parse_command_line():
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
     parser.add_argument("--validation", dest = "validation", action="store_true",default = False, help = "If activated, exports validation results")
-    parser.add_argument("--threshold_confidence_index", dest = "threshold_confidence_index",type = float,default = 0.2, help = "Seuil pour la classification à partir de l'indice de confiance")
+    parser.add_argument("--threshold_confidence_index", dest = "threshold_confidence_index",type = float,default = 0.265, help = "Seuil pour la classification à partir de l'indice de confiance")
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -158,9 +158,13 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a")
         file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
         file.close()
-                
-        classify_declining_area(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, threshold_confidence_index)
-
+           
+        file = open(logpath, "a")
+        classify_declining_area(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+                                threshold_confidence_index,
+                                chunks = 1280)
+        file.write("Classify declining area : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
+        file.close()
         # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
         #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
         #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",

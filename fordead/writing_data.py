@@ -203,9 +203,34 @@ def get_state_at_date(state_code,relevant_area,attrs):
     period_end_results.crs = attrs["crs"].replace("+init=","")
     return period_end_results
 
-def vectorizing_confidence_class(confidence_index, Nb_dates, relevant_area, bins_classes, classes, attrs):
+def vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, bins_classes, classes, attrs):
+    """
+    Classifies pixels in the relevant area into decline classes based on the confidence index and the number of unmasked dates since the first anomaly. 
+    
+    Parameters
+    ----------
+    confidence_index : xarray DataArray (x,y) (float)
+        Confidence index.
+    nb_dates : xarray DataArray (x,y) (int)
+        number of unmasked dates since the first anomaly.
+    relevant_area : xarray DataArray (x,y) (bool)
+        Array with True where pixels will be vectorized, and False where ignored.
+    bins_classes : list of float
+        List of bins to classify pixels based on confidence_index
+    classes : list of str
+        List with names of classes (length of classes must be length of bins_classes + 1)
+    attrs : dict
+        Dictionnary containing 'tranform' and 'crs' to create the vector.
+
+    Returns
+    -------
+    gp_results : geopandas geodataframe
+        Polygons from pixels in the relevant areacontaining the decline class.
+
+    """
+    
     digitized = np.digitize(confidence_index,bins_classes)
-    digitized[Nb_dates==3]=0
+    digitized[nb_dates==3]=0
     geoms_class = list(
                 {'properties': {'class_index': v}, 'geometry': s}
                 for i, (s, v) 
