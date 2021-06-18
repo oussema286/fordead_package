@@ -106,7 +106,7 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
     buffer : int, optional
         Buffer around polygons or points for the extent of the timelapse. The default is 100.
     max_date: str
-        Last date used in the timelapse
+        Last date used in the timelapse, if None all dates available are used.
     zip_results: bool
         If True, transfers the timelapse to a zip file "Timelapses.zip" in data_directory/Timelapses directory
     """
