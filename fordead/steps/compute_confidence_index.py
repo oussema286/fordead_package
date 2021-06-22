@@ -108,10 +108,8 @@ def classify_declining_area(
         tile.last_date_confidence_index = date
         write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
         write_tif(nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["nb_dates"])
-    confidence_index = confidence_index*relevant_area
-    write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
-    # confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, [threshold], np.array(["Stress/stade précoce","stade avancé"]), tile.raster_meta["attrs"])
-    # confidence_class.to_file(tile.paths["confidence_class"])
+    confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, [threshold], np.array(["Stress/stade précoce","stade avancé"]), tile.raster_meta["attrs"])
+    confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
     
 if __name__ == '__main__':
