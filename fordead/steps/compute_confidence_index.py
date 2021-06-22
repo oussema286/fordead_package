@@ -104,7 +104,7 @@ def classify_declining_area(
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
 
             
-        confidence_index = sum_diff/(nb_dates*(nb_dates+1)/2)
+        confidence_index = (sum_diff/(nb_dates*(nb_dates+1)/2))*relevant_area
         tile.last_date_confidence_index = date
         write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
         write_tif(nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["nb_dates"])
