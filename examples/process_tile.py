@@ -147,17 +147,17 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 
 # # =====================================================================================================================
 
-        # export_results(
-        #     data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-        #     start_date = start_date_results,
-        #     end_date = end_date_results,
-        #     frequency= results_frequency,
-        #     export_soil = True,
-        #     multiple_files = multiple_files
-        #     )
-        # file = open(logpath, "a")
-        # file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
-        # file.close()
+        export_results(
+            data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+            start_date = start_date_results,
+            end_date = end_date_results,
+            frequency= results_frequency,
+            export_soil = True,
+            multiple_files = multiple_files
+            )
+        file = open(logpath, "a")
+        file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
+        file.close()
            
         file = open(logpath, "a")
         classify_declining_area(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
