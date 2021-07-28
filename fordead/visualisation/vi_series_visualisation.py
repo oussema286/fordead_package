@@ -121,13 +121,16 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
             geometry_point = shape.iloc[point_index]["geometry"]
             print(id_point)
             
-            if forest_mask.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest"):
+            
+            if geometry_point.x < tile.raster_meta["extent"][0] or geometry_point.x > tile.raster_meta["extent"][2] or geometry_point.y < tile.raster_meta["extent"][1] or geometry_point.y > tile.raster_meta["extent"][3]:
+                print("Pixel outside extent of the region of interest")
+            elif not(forest_mask.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")):
+                print("Pixel outside forest mask")
+            else:
                 pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_coordinates(geometry_point.x,geometry_point.y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"], ymin,ymax)
                 fig.savefig(tile.paths["series"] / (str(id_point) + ".png"))
                 plt.close()
-            else:
-                print("Pixel outside forest mask")
     else:
         #Initialiser X,Y
         # matplotlib.use('TkAgg')
@@ -172,13 +175,16 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                     raise Exception("Index or coordinate mode incorrect. Type 'c' for coordinate mode, 'i' for index mode")
                     
                 #PLOTTING
-                if xy_forest_mask:
+                    
+                if X < tile.raster_meta["extent"][0] or X > tile.raster_meta["extent"][2] or Y < tile.raster_meta["extent"][1] or Y > tile.raster_meta["extent"][3]:
+                    print("Pixel outside extent of the region of interest")
+                elif not(xy_forest_mask):
+                    print("Pixel outside forest mask")
+                else:
                     fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
                     fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
                     plt.show()
                     plt.close()
-                else:
-                    print("Pixel outside forest mask")
     
 if __name__ == '__main__':
     # print(dictArgs)

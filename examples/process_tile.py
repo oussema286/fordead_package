@@ -141,7 +141,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
         #                   name_column = "id", max_date = None, zip_results = True)
         # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
-        
+        # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2, shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/points_visualisation.shp")
+
         
         
     tile = TileInfo(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile)
