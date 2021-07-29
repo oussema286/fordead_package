@@ -11,7 +11,8 @@ docker-ci:
     - export VERSION=`grep __version__ fordead/_version.py| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
     - echo $CI_REGISTRY_IMAGE
     - echo $VERSION
-    - docker build -t $CI_REGISTRY_IMAGE:$VERSION .
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest -t $CI_REGISTRY_IMAGE:$VERSION .
     - docker push $CI_REGISTRY_IMAGE:$VERSION
   only:
     - docker_ci
