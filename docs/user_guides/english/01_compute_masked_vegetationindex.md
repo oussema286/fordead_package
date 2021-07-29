@@ -1,4 +1,4 @@
-# STEP 1: Compute vegetation indices and masks for each SENTINEL-2 date
+# STEP 1 : Compute vegetation indices and masks for each SENTINEL-2 date
 
 #### INPUTS
 The input parameters are:
@@ -44,21 +44,21 @@ See detailed documentation on the [site](https://fordead.gitlab.io/fordead_packa
 
 ## How it works
 
-![Diagram_step1](Diagrams/Diagram_step1.png "Diagram_step1")
+![Diagramme_step1](Diagrams/Diagramme_step1.png "Diagramme_step1")
 
-### Importing of previous results, deletion of obsolete results
+### Importing information on previous processes, deletion of obsolete results
 Informations related to the previous processes, if any, are imported (parameters, data paths, used dates...). If the parameters used have been modified, all the results from this step onwards are deleted. Thus, unless the parameters have been modified, the calculations are only performed on the new SENTINEL dates.
-**_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), methods of the TileInfo class [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+> **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), methods of the TileInfo class [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
 
 ### Filtering out overly cloudy dates
 The cloudiness of each SENTINEL date is calculated from the provider's mask.
-> Functions used:_** [get_cloudiness()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#get_cloudiness), [get_date_cloudiness_perc()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#get_date_cloudiness_perc)
+ > **_Functions used:_** [get_cloudiness()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#get_cloudiness), [get_date_cloudiness_perc()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#get_date_cloudiness_perc)
 
 We then use only the new dates in the **input_directory** folder with a cloudiness lower than **lim_perc_cloud**.
 
 ### Importing and resampling of the SENTINEL data
- - The bands of interest of the filtered dates are imported and resampled to 10m
-> Functions used:_** [import_resampled_sen_stack()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_resampled_sen_stack)
+The bands of interest of the filtered dates are imported and resampled to 10m
+ > **_Functions used:_** [import_resampled_sen_stack()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_resampled_sen_stack)
 
 ### Computing mask
 The mask is computed for each date, in four steps:
@@ -69,11 +69,11 @@ Detection of soil anomalies : (B11 > 1250) AND (B2 < 600) AND ((B3 + B4) > 800)
 Detection of shadows: 0 in any of the bands
 Detection of areas outside the satellite swath: Value less than 0 in any of the bands (should have the value -10000 for THEIA data) 
 Invalids : aggregation of the shadow mask, out of swath mask and highly visible clouds (B2 >= 600)
- **_Functions used:_** [get_pre_masks()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#get_pre_masks)
+ > **_Functions used:_** [get_pre_masks()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#get_pre_masks)
 
 ##### Bare ground detection
 Pixels are detected as bare ground if they have three consecutive dates with soil anomalies (soil_anomaly is True), without counting invalid dates.
- **_Functions used:_** [detect_soil()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#detect_soil)
+ > **_Functions used:_** [detect_soil()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#detect_soil)
 
 ##### Cloud detection
 To detect clouds, we take the set of highly visible clouds (B2 > 700), then add the thinner clouds $`\frac{B3}{B8A+B4+B3} >0.15`$ AND $`B2 >400`$.
@@ -91,4 +91,4 @@ The selected vegetation index is calculated.
 
 ### Writing the results
 The vegetation indices, masks and ground detection data are written. All parameters, data paths and dates used are also saved.
- **_Functions used:_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), TileInfo method [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#save_info)
+ > **_Functions used:_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), TileInfo method [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#save_info)

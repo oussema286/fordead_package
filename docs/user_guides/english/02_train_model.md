@@ -1,74 +1,73 @@
-## ÉTAPE 2 : Apprentissage par modélisation de l'indice de végétation pixel par pixel à partir des premières dates
-Cette étape permet le calcul d'un modèle à partir des premières dates SENTINEL, considérées comme représentatives du comportement saisonnier normal de l'indice de végétation. Ce modèle permet de prédire la valeur de l'indice de végétation à n'importe quelle date.
+## STEP 2: Training a model of the vegetation index pixel by pixel from the first dates
+In this step, a model is trained from the first SENTINEL dates, which are considered representative of the normal seasonal behavior of the vegetation index. This model can then be used to predict the value of the vegetation index at any date.
 
-#### ENTRÉES
-Les paramètres en entrée sont :
-- **data_directory** : Le chemin du dossier de sortie dans lequel sera écrit les coefficients du modèle.
-- **nb_min_date** : Nombre minimum de dates valides pour calculer un modèle
-- **min_last_date_training** : Date au format AAAA-MM-JJ à partir de laquelle les dates SENTINEL ne sont plus utilisées pour l'apprentissage, tant qu'il y a au moins nb_min_date dates valides pour le pixel
-- **max_last_date_training** : Date au format AAAA-MM-JJ jusqu'à laquelle les dates SENTINEL peuvent être utilisées pour l'apprentissage afin d'atteindre le nombre de nb_min_date dates valides
-- **path_vi** : Chemin du dossier contenant un raster pour chaque date où l'indice de végétation est calculé pour chaque pixel. Inutile de le renseigner si les informations proviennent de l'étape 1, auquel cas le chemin est contenu dans le fichier TileInfo.
-- **path_masks** : Chemin du dossier contenant un raster binaire pour chaque date où les pixels masqués valent 1, et les pixels valides 0. Inutile de le renseigner si les informations proviennent de l'étape 1, auquel cas le chemin est contenu dans le fichier TileInfo.
-- **correct_vi** : Si activé, l'indice de végétation est corrigé à partir de l'indice de végétation médian des pixels d'intérêts non masqués à l'échelle de la zone complète. Si activé, [l'étape de définition de la zone d'intérêt](https://fordead.gitlab.io/fordead_package/docs/user_guides/04_compute_forest_mask/) doit donc être réalisée avant cette étape. Cela permet de corriger des effets s'appliquant à l'ensemble du peuplement, non nécessairement liés à un dépérissement.
-Les coefficients du modèle sont calculés pour chaque pixel. Pour chaque pixel, uniquement les dates non masquées sont utilisées. Si il y a nb_min_date dates valides à la date max_last_date_training, l'apprentissage s'arrête à cette date. Si le nombre de date de dates valides atteint nb_min_date entre à une date située entre min_last_date_training et max_last_date_training, l'apprentissage s'arrête à cette date. Si le nombre de date de dates valides n'atteint pas nb_min_date à la date max_last_date_training, le pixel est sorti de l'étude et ne sera pas associé à un modèle.
-Cette méthode permet, dans le cas d'une crise sanitaire relativement ancienne comme le scolyte, de commencer la détection dès 2018 si l'on dispose de suffisamment de dates valides au début de l'année, tout permettant l'étude de pixels dans des situations de détection plus délicates simplement en réalisant l'apprentissage sur une période plus longue pour récupérer d'autres dates valides. Il parait difficile de terminer l'apprentissage avant 2018, car le modèle périodique étant annuel, l'utilisation d'au moins deux ans de données SENTINEL-2 parait obligatoire.
+#### INPUTS
+The input parameters are:
+- **data_directory**: The path to the output folder where the model coefficients will be written.
+- **nb_min_date** : Minimum number of valid dates to calculate a model
+- **min_last_date_training**: The date in YYYY-MM-DD format after which SENTINEL dates are no longer used for training, as long as there are at least nb_min_date dates valid for the pixel
+- **max_last_date_training**: Date in YYYY-MM-DD format until which SENTINEL dates can be used for training to reach the number of nb_min_date valid dates
+- **path_vi**: Path to the folder containing the vegetation index raster for each date. This parameter is optionnal if these raster were calculated through the first step of this package, in which case the path is imported through the TileInfo file.
+- **path_masks** : Path to the folder containing a binary raster for each date where the masked pixels are 1, and the valid pixels 0. This parameter is optionnal if these raster were calculated through the [first step of this package](https://gitlab.com/fordead/fordead_package/-/blob/translation_doc/docs/user_guides/english/01_compute_masked_vegetationindex.md), in which case the path is imported through the TileInfo file.
+- **correct_vi** : If True, the vegetation index is corrected using the median vegetation index of the unmasked pixels of interest at the scale of the whole area. If enabled, [the area of interest definition step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/) must therefore be performed before this step. This allows for correction of large scale effects, not necessarily related to declining trees.
+The model coefficients are calculated for each pixel. For each pixel, only unmasked dates are used. If there are nb_min_date valid dates at the max_last_date_training, the training stops at this date. If the number of valid dates reaches nb_min_date at a date between min_last_date_training and max_last_date_training, the training stops at this date. If the number of valid dates does not reach nb_min_date at max_last_date_training, the pixel dropped and will not be associated to a model.
+This method allows, in the case of a relatively ancient source of anomalies such as the bark beetle crisis, to start the detection as early as 2018 if there are enough valid dates at the beginning of the year, while allowing the study of pixels in situations with less data available simply by performing the training over a longer period to retrieve other valid dates. It is not recommended to end the training before 2018, because since the periodic model is annual, the use of at least two years of SENTINEL-2 data is advised.
 
-#### SORTIES
-Les sorties de cette deuxième étape, dans le dossier data_directory, sont :
-- Dans le dossier **DataModel**, deux fichiers :
-    - **first_detection_date_index.tif**, un raster qui contient l'index de la première date qui sera utilisée pour la détection de déperissement. Il permet de savoir pour chaque pixel quelles dates ont été utilisées pour l'apprentissage et lesquelles sont utilisées pour la détection.
-    - **coeff_model.tif**, un stack à 5 bandes, une pour chaque coefficient du modèle de l'indice de végétation.
-- Dans le dossier **ForestMask**, le raster binaire **valid_area_mask.tif** qui vaut 1 pour les pixels où le modèle a pu être calculé, 0 si il n'y avait pas assez de dates valides
-- Le fichier TileInfo est mis à jour.
+#### OUTPUTS
+The outputs of this second step, in the data_directory folder, are:
+- In the **DataModel** folder, two files:
+    - **first_detection_date_index.tif**, a raster that contains the index of the first date that will be used for detection. It allows to know for each pixel which dates were used for training and which ones are used for detection.
+    - **coeff_model.tif**, a stack with 5 bands, one for each coefficient of the vegetation index model.
+- In the **ForestMask** directory, the binary raster **valid_area_mask.tif** which is 1 for pixels where the model could be computed, 0 if there were not enough valid dates.
+- The TileInfo file is updated.
 
-## Utilisation
-### A partir d'un script
+## How to use
+### From a script
 
 ```bash
 from fordead.steps.step2_train_model import train_model
 train_model(data_directory = <data_directory>)
 ```
 
-### A partir de la ligne de commande
+### From the command line
 
 ```bash
 fordead train_model [OPTIONS]
 ```
 
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-train_model)
+See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-train_model)
 
-## Détail du fonctionnement
+## How it works
 
 ![Diagramme_step2](Diagrams/Diagramme_step2.png "Diagramme_step2")
 
-### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
-Avant tout, si la chaîne de traitement a déjà été utilisée sur la zone, les informations relatives à ces calculs sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, les résultats des calculs antérieurs sont supprimés et recalculés avec les nouveaux paramètres. Il est possible de commencer le traitement à cette étape si des indices de végétations et masques ont déjà été calculés pour chaque date.
-> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+### Importing information on previous processes and deleting obsolete results if they exist
+First, if the processing chain has already been used on the area, the information related to these calculations is imported (parameters, data paths, dates used...). If the parameters used have been modified, the results of previous calculations are deleted from this step onwards and recalculated with the new parameters. It is possible to skip the first step and start the process at this stage if the vegetation index and mask have already been calculated for each date through another method.
+> **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), methods of the TileInfo class [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
 
-### Import de l'ensemble des données d'indices de végétation et masques jusqu'à **min_last_date_training**
-> **_Fonctions utilisées :_** [import_stackedmaskedVI()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_stackedmaskedvi)
+### Importing the vegetation index and mask for each date up to **min_last_date_training**
+> **_Functions used:_** [import_stackedmaskedVI()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_stackedmaskedvi)
 
-### (OPTIONNEL - si **correct_vi** vaut True) Correction de l'indice de végétation à partir de l'indice de végétation médian des pixels d'intérêts non masqués à l'échelle de la zone complète
-- Masquage des pixels n'appartenant pas à la zone d'intérêt, ou masqués
-- Calcul de la médiane de l'indice de végétation de l'ensemble de la zone pour chaque date jusque **max_last_date_training**
-- Ajustement d'un modèle harmonique sur ces médianes, ce modèle doit donc rendre compte du comportement normal de l'indice de végétation sur l'ensemble des peuplements d'intérêt de la zone.
-- Calcul d'un terme de correction pour chaque date, par différence entre la prédiction du modèle à la date donnée et la médiane calculée correspondante
-- Application des termes de corrections de chaque date en l'ajoutant à la valeur de l'indice de végétation de l'ensemble des pixels de la date.
-> **_Fonctions utilisées :_** [model_vi_correction()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#model_vi_correction)
+### (OPTIONAL - if **correct_vi** is True) Correction of the vegetation index from the median vegetation index of the unmasked pixels of interest at the scale of the whole area
+- Pixels not belonging to the area of interest or masked are dropped
+- Calculation of the median vegetation index of the whole area for each date until **max_last_date_training**.
+- Fitting of a harmonic model on these medians, this model must therefore account for the normal behavior of the vegetation index on the entire area of interest.
+- Calculation of a correction term for each date, by substracting the model prediction at the given date and the corresponding calculated median
+- Application of the correction terms for each date by adding it to the value of the vegetation index of all the pixels of the date.
+> **_Functions used:_** [model_vi_correction()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#model_vi_correction)
 
-### Détermination des dates utilisées pour l'apprentissage
-La date de début de détection peut être différent entre chaque pixels. Pour chaque pixel, l'apprentissage du modèle doit se faire sur au moins **nb_min_date** dates, et au moins sur l'ensemble des dates antérieures à **min_last_date_training**. Si il n'y a pas au moins **nb_min_date** à la date **max_last_date_training**, le pixel est abandonné. Cela permet de commencer la détection au plus tôt si cela est possible, tout en conservant un maximum de pixels en permettant un début de détection plus tardif sur les zones avec moins de dates valides.
-> **_Fonctions utilisées :_** [get_detection_dates()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#get_detection_dates)
+### Identifying the dates used for training
+The starting date of detection can be different between each pixel. For each pixel, the model must be trained on at least **nb_min_date** dates, and at least on all dates prior to **min_last_date_training**. If there are not at least **nb_min_date** at **max_last_date_training**, the pixel is dropped. This allows to start the detection as soon as possible if it is possible, while keeping a maximum of pixels by allowing a later start of detection on areas with less valid dates.
+> **_Functions used:_** [get_detection_dates()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#get_detection_dates)
 
-### Modélisation du comportement de l'indice de végétation
-Pour chaque pixel, un modèle est ajusté sur les dates d'apprentissage. Le modèle utilisé est le suivant :
+### Modeling the behavior of the vegetation index
+For each pixel, a model is fitted on the training dates. The model used is the following:
 ```math
 a1 + b1\sin{\frac{2\pi t}{T}} + b2\cos{\frac{2\pi t}{T}} + b3\sin{\frac{4\pi t}{T}} + b4\cos{\frac{4\pi t}{T}}
 ```
-Cette étape consiste à déterminer les coefficients a1, b1, b2, b3 et b4 pour chaque pixel.
-maximum de pixels en permettant un début de détection plus tardif sur les zones avec moins de dates valides.
-> **_Fonctions utilisées :_** [model_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#model_vi)
+This step consists in computing the coefficients a1, b1, b2, b3 and b4 for each pixel.
+> **_Functions used:_** [model_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#model_vi)
 
- ### Ecriture des résultats
-Les coefficients du modèle, l'index de la première date utilisée pour la détection et le masque des pixels valides car ayant suffisamment de dates SENTINEL pour le calcul du modèle sont écrits sous forme de rasters.
- > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif)
+ ### Writing the results
+The coefficients of the model, the index of the first date used for detection and the mask of the pixels that are valid because they have enough Sentinel dates for the calculation of the model are written as rasters.
+> **_Functions used:_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif)
