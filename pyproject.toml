@@ -26,7 +26,7 @@ template_dir = "templates/pdocs"
 
 [tool.portray.mkdocs]
     site_name = "fordead"
-    extra_css = ['docs/style.css']
+    extra_css = ['docs/style.css', 'examples/style.css']
     edit_uri = '-/edit/master/'
 
     extra_javascript = ['https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML']
