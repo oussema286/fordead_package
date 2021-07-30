@@ -29,7 +29,7 @@ pages:
 #    - pip install git+https://github.com/RaphaelDutrieux/portray python-markdown-math mdx-breakless-lists mkdocs-click
     - pip install -e .
     - portray as_html -c pyproject_doc.toml
-#    - mv site public
+    - mv site public
   artifacts:
     paths:
      - public
