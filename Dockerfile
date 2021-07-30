@@ -9,4 +9,4 @@ shell ["/bin/bash", "--login", "-c"]
 run conda init bash
 # run echo "conda activate fordead" >> ~/.bashrc
 run conda env list
-# run conda activate fordead && conda env list && pip install git+https://github.com/RaphaelDutrieux/portray python-markdown-math mdx-breakless-lists mkdocs-click
+run conda activate fordead && conda env list && pip install git+https://github.com/RaphaelDutrieux/portray python-markdown-math mdx-breakless-lists mkdocs-click
