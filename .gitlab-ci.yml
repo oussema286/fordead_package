@@ -22,8 +22,8 @@ pages:
   stage: deploy
   image: $CI_REGISTRY/fordead/fordead_package:1.2.1
   script:
-#    - conda init bash
-#    - source ~/.bashrc
+    - conda init bash
+    - source ~/.bashrc
     - conda activate fordead
     - python -V  # Print out python version for debugging
 #    - pip install git+https://github.com/RaphaelDutrieux/portray python-markdown-math mdx-breakless-lists mkdocs-click
