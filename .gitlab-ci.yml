@@ -27,7 +27,7 @@ pages:
     - conda activate fordead
     - python -V  # Print out python version for debugging
 #    - pip install git+https://github.com/RaphaelDutrieux/portray python-markdown-math mdx-breakless-lists mkdocs-click
-    - pip install .
+    - pip install -e .
     - portray as_html -c pyproject.toml
 #    - mv site public
   artifacts:
