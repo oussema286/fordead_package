@@ -72,7 +72,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
                   threshold_anomaly,
                   start_date_results, end_date_results, results_frequency, multiple_files,
-                  correct_vi, validation, threshold_confidence_index):
+                  correct_vi, validation):
 
 
     # main_directory = "E:/Deperissement/Out"
