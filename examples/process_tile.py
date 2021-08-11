@@ -57,7 +57,10 @@ def parse_command_line():
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
     parser.add_argument("--validation", dest = "validation", action="store_true",default = False, help = "If activated, exports validation results")
-    parser.add_argument("--threshold_confidence_index", dest = "threshold_confidence_index",type = float,default = 0.265, help = "Seuil pour la classification à partir de l'indice de confiance")
+    # parser.add_argument('--threshold_list', nargs='+',default = [0.2, 0.265], help="Liste des seuils utilisés pour classer les stades de dépérissement par discrétisation de l'indice de confiance")
+    # parser.add_argument('--classes_list', nargs='+',default = ["Faible anomalie","Forte anomalie"], help="Liste des noms des classes pour la discrétisation de l'indice de confiance. Si threshold_list a une longueur n, classes_list doit avoir une longueur n+1")
+
+    
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -161,7 +164,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
            
         file = open(logpath, "a")
         classify_declining_area(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-                                threshold_confidence_index,
+                                threshold_list = [0.2,0.265],
+                                classes_list = ["Faible anomalie","Moyenne anomalie","Forte anomalie"],
                                 chunks = 1280)
         file.write("Classify declining area : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
         file.close()

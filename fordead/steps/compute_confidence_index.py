@@ -15,11 +15,13 @@ import click
 
 @click.command(name='ind_conf')
 @click.option("-o", "--data_directory", type = str, help = "Path of the output directory")
-@click.option("--threshold", type = float, default = 0.265, help = "Threshold used to classify declining stages", show_default=True)
+@click.option("--threshold_list", type = list, default = [0.265], help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
+@click.option("--classes_list", type = list, default = ["Faible anomalie","Forte anomalie"], help = "List of classes names, if threshold_list has n values, classes_list must have n+1 values", show_default=True)
 @click.option("--chunks", type = int, default = None, help = "Chunk size for dask computation", show_default=True)
 def cli_classify_declining_area(
     data_directory,
-    threshold,
+    threshold_list,
+    classes_list,
     chunks = None
     ):
     """
@@ -30,29 +32,33 @@ def cli_classify_declining_area(
     Parameters
     ----------
     data_directory
-    threshold
+    threshold_list
+    classes_list
     chunks
 
     """
     
-    classify_declining_area(data_directory,threshold,chunks)
+    classify_declining_area(data_directory,threshold_list,classes_list,chunks)
 
 def classify_declining_area(
     data_directory,
-    threshold,
+    threshold_list,
+    classes_list,
     chunks = None
     ):
     """
     Computes an index meant to describe the intensity of the detected decline. The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly in pixels detected as declining. For each date used, the weight corresponds to the number of the date (1, 2, 3, etc... from the first anomaly).
     In case of decline, the intensity of anomalies often goes up, so later dates have more weight.
-    Then, pixels are classified into two decline stages based on this index. Pixels with only three anomalies or an index inferior to the set threshold are classified as "Stressed / early stage", the rest are classified as "Late stage". The results are vectorized and saved in data_directory/Confidence_Index directory.
+    Then, pixels are classified into classes, based on the discretization of the confidence index using threshold_list as bins. Pixels with only three anomalies are classified as the lowest class, because 3 anomalies are not considered enough to calculate a meaningful index. The results are vectorized and saved in data_directory/Confidence_Index directory.
 
     Parameters
     ----------
     data_directory : str
         Path of the output directory
-    threshold : float
-        Threshold used to classify decline stages.
+    threshold_list : list
+        List of thresholds used as bins to discretize the confidence index into several classes
+    classes_list : list
+        List of classes names, if threshold_list has n values, classes_list must have n+1 values
     chunks : int, optional
         Chunk size for dask computation, has to be used for large datasets. The default is None.
 
@@ -61,7 +67,7 @@ def classify_declining_area(
     # print("Computing confidence index")
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    tile.add_parameters({"threshold" : threshold})
+    tile.add_parameters({"threshold_list" : threshold_list})
   
     tile.add_path("confidence_index", tile.data_directory / "Confidence_Index" / "confidence_index.tif")
     tile.add_path("confidence_class", tile.data_directory / "Confidence_Index" / "confidence_class.shp")
@@ -108,7 +114,7 @@ def classify_declining_area(
         tile.last_date_confidence_index = date
         write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
         write_tif(nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["nb_dates"])
-    confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, [threshold], np.array(["Faible anomalie","Forte anomalie"]), tile.raster_meta["attrs"])
+    confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, threshold_list, np.array(classes_list), tile.raster_meta["attrs"])
     confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
     
