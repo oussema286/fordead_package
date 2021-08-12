@@ -18,8 +18,8 @@
 
 [[tool.portray.extra_markdown_extensions]]
     [tool.portray.extra_markdown_extensions.mdx_math]
-        enable_dollar_delimiter = True
-        use_gitlab_delimiters=True
+        enable_dollar_delimiter = 1
+        use_gitlab_delimiters = 1
 [[tool.portray.extra_markdown_extensions]]
     [tool.portray.extra_markdown_extensions.toc]
         toc_depth = 5
