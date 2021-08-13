@@ -87,6 +87,13 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
     forest_mask = rasterize_polygons_binary(bd_foret, example_raster)
     return forest_mask
 
+def rasterize_vector(vector_path, example_path):
+    example_raster = xr.open_rasterio(example_path).squeeze("band")
+    example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
+    vector = gp.read_file(vector_path)
+    forest_mask = rasterize_polygons_binary(vector, example_raster)
+    return forest_mask
+
 def rasterize_polygons_binary(polygons, example_raster):
     """
     Rasterizes polygons into binary raster
