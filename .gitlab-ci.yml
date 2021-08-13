@@ -1,17 +1,34 @@
 stages:
   - deploy
+## docker build does not end within the 1h limit
+## thus it was build locally and transfered manually
+#docker-ci:
+#  stage: deploy
+#  image: docker:19.03.8
+#  services:
+#    - docker:19.03.8-dind
+#  script:
+#    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#    - export VERSION=`grep __version__ fordead/_version.py| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
+#    - echo $CI_REGISTRY_IMAGE
+#    - echo $VERSION
+#    - docker pull $CI_REGISTRY_IMAGE:latest || true
+#    - docker build --cache-from $CI_REGISTRY_IMAGE:latest -t $CI_REGISTRY_IMAGE:$VERSION .
+#    - docker push $CI_REGISTRY_IMAGE:$VERSION
+#  only:
+#    - docker_ci
 
 pages:
   stage: deploy
-  image: $CI_REGISTRY/fordead/fordead_package
+  image: $CI_REGISTRY/fordead/fordead_package:1.2.0
   script:
     - conda init bash
     - source ~/.bashrc
     - conda activate fordead
     - python -V  # Print out python version for debugging
-    - pip install git+https://github.com/floriandeboissieu/portray python-markdown-math mdx-breakless-lists mkdocs-click
-    - pip install .
-    - portray as_html -c pyproject.toml
+#    - pip install git+https://github.com/RaphaelDutrieux/portray python-markdown-math mdx-breakless-lists mkdocs-click
+    - pip install -e .
+    - portray as_html -c pyproject_doc.toml
     - mv site public
   artifacts:
     paths:
