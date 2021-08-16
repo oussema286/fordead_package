@@ -37,9 +37,9 @@ The polygons appear at the date of the first anomaly, if confirmed with 3 succes
 If the field observation data are also displayed, move the mouse over these polygons to obtain their information: | <organization from which the data originated> : <observation date>. The color depends on the observed declining stage.
 It is also possible to zoom in on the desired area by holding down the click while delimiting an area. It is then possible to zoom out by double clicking on the image. Passing the mouse over a pixel also allows you to obtain its information:
 
-x : coordinates in x
-y : coordinates in y
-z : [<reflectance in red>,<reflectance in green>,<reflectance in blue>], that is to say the value of the corresponding SENTINEL band at the given date.
+- x : coordinates in x
+- y : coordinates in y
+- z : `[<reflectance in red>,<reflectance in green>,<reflectance in blue>]`, that is to say the value of the corresponding SENTINEL band at the given date.
 
 ## How to use
 ### From a script

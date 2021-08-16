@@ -36,9 +36,9 @@ Les résultats apparaissent à partir de la première anomalie, confirmée par l
 Si les données d'observation sur le terrain sont également affichées, passer la souris sur ces polygones pour obtenir leurs informations :  | <organisme à l'origine de la donnée> : <date d'observation>. La couleur dépend du stade observé.
 Il est également possible de zoomer sur la zone souhaitée en maintenant le clique appuyé tout en délimitant une zone. Il est ensuite possible de dézoomer en double cliquant sur l'image. Passer la souris sur un pixel permet également d'obtenir ses informations :
 
-x : coordonnées en x
-y : coordonnées en y
-z : [<réflectance dans le rouge>,<réflectance dans le vert>,<réflectance dans le bleu>], c'est à dire la valeur de la bande SENTINEL correspondante à la date donnée.
+- x : coordonnées en x
+- y : coordonnées en y
+- z : `[<réflectance dans le rouge>,<réflectance dans le vert>,<réflectance dans le bleu>]`, c'est à dire la valeur de la bande SENTINEL correspondante à la date donnée.
 
 ## Utilisation
 ### A partir d'un script
