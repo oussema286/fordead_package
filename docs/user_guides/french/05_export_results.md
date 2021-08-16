@@ -6,7 +6,7 @@ Les paramètres en entrée sont :
 - **data_directory** : Le chemin du dossier de sortie dans lequel sera écrit les résultats
 - **start_date** : Date de début, au format AAAA-MM-JJ
 - **end_date** : Date de fin, au format AAAA-MM-JJ
-- **frequency** : Fréquence à laquelle les résultats sont exportés. Peut être "sentinel", auquel cas la fréquence correspond aux dates SENTINEL, ou une fréquence telle qu'acceptée par la fonction pandas.date_range (ex : 'M' (tous les mois), '3M' (tous les trois mois), '15D' (tous les 15 jours)")
+- **frequency** : Fréquence utilisée pour agréger les résultats. Peut être "sentinel", auquel cas les périodes utilisées pour agréger les résultats correspondent au temps entre les dates SENTINEL disponibles, peut également être une fréquence telle qu'acceptée par la fonction pandas.date_range (ex : 'M' (tous les mois), '3M' (tous les trois mois), '15D' (tous les 15 jours)")
 - **export_soil** : Si True, les résultats relatifs à la détection de sol nu/coupes sont exportés également.
 - **multiple_files** : Si True, un shapefile sera exporté par période, où chaque polygone correspond à l'état de la zone à la fin de la période. Sinon, un seul shapefile est exporté et les polygones contiennent la période à laquelle la première anomalie a été détecté.
 

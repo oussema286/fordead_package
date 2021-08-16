@@ -10,9 +10,9 @@ Les paramètres en entrée sont :
 - **obs_terrain_path** : Optionnel, chemin du shapefile contenant les observations terrain, avec les colonnes "scolyte1", "organisme" et "date". "scolyte1" peut prendre les valeurs  "C", "V", "R", "S", "I", "G" ou "X".
 - **shape_path** : Chemin d'un shapefile contenant des polygones ou des points utilisés pour définir la zone des timelapses
 - **x** : Coordonnée x dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.
-- **y** : Coordonnée y dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.- **buffer** : Longueur utilisée pour étendre la zone du timelapse à partir des points ou des polygones.
-- **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du polygone ou point si **shape_path** est utilisé. (Par défault : "id")
+- **y** : Coordonnée y dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.
 - **buffer** : Zone tampon autour des polygones ou des points pour définir l'étendue du timelapse.
+- **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du polygone ou point si **shape_path** est utilisé. (Par défault : "id")
 - **max_date** : Exclut du timelapse l'ensemble des dates Sentinel-2 après cette date (format : "AAAA-MM-JJ"). Par défaut, le timelapse utilise l'ensemble des dates Sentinel-2 disponibles.
 - **zip_results** : Si True, les fichiers html contenant les timelapses sont transférés dans un fichier zip compressé.
 
@@ -61,7 +61,6 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 ## Créer des graphes montrant l'évolution de la série temporelle
 #### ENTRÉES
 Les paramètres en entrée sont :
-data_directory, shape_path = None, ymin = 0, ymax = 2, chunks = None
 
 - **data_directory** : Le chemin du dossier dans lequel sont écrits les résultats déjà calculés, et dans lequel seront sauvegardés les graphes
 - **shape_path** : Chemin d'un shapefile contenant les points où les graphiques seront réalisés.

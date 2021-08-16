@@ -1,99 +1,98 @@
-# Visualisation des résultats
-Le package contient également deux outils de visualisation des résultats. Le premier permet de réaliser un timelapse permettant de visualiser les résultats à chaque date Sentinel-2 utilisée, avec en fond les données Sentinel-2 en RGB, avec un slider pour naviguer entre les différentes dates.
-Le deuxième permet de visualiser pour un pixel en particulier la série temporelle de l'indice de végétation avec le modèle associé, le seuil de détection d'anomalies et les détections associées.
+# Visualization of results
+The package also contains two tools to visualize the results. The first one allows to make a timelapse to visualize the results at each Sentinel-2 date used, with the Sentinel-2 data in RGB in the background and a slider to navigate between the different dates.
+The second one allows to visualize for a particular pixel the time series of the vegetation index with the associated model, the anomaly detection threshold and the associated detections.
 
-## Créer des timelapses
-#### ENTRÉES
-Les paramètres en entrée sont :
+## Create timelapses
+#### INPUTS
+The input parameters are :
 
-- **data_directory** : Le chemin du dossier dans lequel sont écrits les résultats déjà calculés, et dans lequel seront sauvegardés les timelapses
-- **obs_terrain_path** : Optionnel, chemin du shapefile contenant les observations terrain, avec les colonnes "scolyte1", "organisme" et "date". "scolyte1" peut prendre les valeurs  "C", "V", "R", "S", "I", "G" ou "X".
-- **shape_path** : Chemin d'un shapefile contenant des polygones ou des points utilisés pour définir la zone des timelapses
-- **x** : Coordonnée x dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.
-- **y** : Coordonnée y dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.- **buffer** : Longueur utilisée pour étendre la zone du timelapse à partir des points ou des polygones.
-- **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du polygone ou point si **shape_path** est utilisé. (Par défault : "id")
-- **buffer** : Zone tampon autour des polygones ou des points pour définir l'étendue du timelapse.
-- **max_date** : Exclut du timelapse l'ensemble des dates Sentinel-2 après cette date (format : "AAAA-MM-JJ"). Par défaut, le timelapse utilise l'ensemble des dates Sentinel-2 disponibles.
-- **zip_results** : Si True, les fichiers html contenant les timelapses sont transférés dans un fichier zip compressé.
+- **data_directory**: The path of the folder in which the already calculated results are written, and in which the timelapses will be saved
+- **observations_terrain_path** : Optional, path of the shapefile containing the field observations, with the columns "scolyte1", "organisme" and "date". "Scolyte1" can take the values "C", "V", "R", "S", "I", "G" or "X".
+- **shape_path** : Path of a shapefile containing polygons or points used to define the timelapse areas. Not used if the timelapse is defined from coordinates through the **x** and **y** parameters.
+- **x** : x coordinate in the projection system of the Sentinel-2 tile, used as the center of the area to visualize as timelapse. Not used if the timelapse is defined from a shapefile by the **shape_path** parameter.
+- **y** : y coordinate in the projection system of the Sentinel-2 tile, used as the center of the area to visualize as timelapse. Not used if the timelapse is defined from a shapefile by the **shape_path** parameter.
+- **buffer** : Buffer zone around the polygons or points to define the timelapse extent.
+- **name_column** : Name of the column containing the id or unique name of the polygon or point if **shape_path** is used. (Default: "id")
+- **max_date** : Exclude from the timelapse all Sentinel-2 dates after this date (format : "YYYY-MM-DD"). By default, the timelapse uses all available Sentinel-2 dates.
+- **zip_results**: If True, the html files containing the timelapses are transferred in a compressed zip file.
 
-Les paramètres indispensables sont **data_directory** ainsi que **shape_path** ou **x** et **y**.
+Required parameters are **data_directory** and either **shape_path** or **x** and **y**.
 
-#### SORTIES
-Les sorties sont dans le dossier data_directory/Timelapses, avec pour chaque polygone ou point un fichier .html avec comme nom de fichier la valeur dans la colonne **name_column** si réalisés à partir de **shape_path**, ou x_y.html si réalisé à partir de coordonnées.
+#### OUTPUTS
+The outputs are in the folder data_directory/Timelapses, with for each polygon or point a .html file with as file name the value in the column **name_column** if made using **shape_path**, or x_y.html if made using **x** and **y** coordinates.
+If zip_results is True, a Timelapses.zip file containing the html files is also created. Zipping html files greatly reduce their size.
 
-Cet outil peut ne pas fonctionner sur des zones trop larges, il est recommandé d'éviter de lancer cette opération sur des zones de plus d'une vingtaine de km².
+This tool may not work on large areas, it is recommended to avoid launching this operation on areas larger than 20 km².
 
-#### ANALYSE
-Le slider permet de se déplacer temporellement de date SENTINEL en date SENTINEL
-L'image correspond aux bandes RGB des données SENTINEL
-Les résultats apparaissent sous forme de polygones :
-- Polygones noirs : sol nu
-- Polygones jaunes : zones détectées comme dépérissantes
-- Polygones bleus : zones détectées comme coupe sanitaire (zones détectées comme sol-nu après avoir été détectées comme dépérissantes)
+#### ANALYSIS
+The slider allows you to move temporally from SENTINEL date to SENTINEL date
+The image corresponds to the RGB bands of the SENTINEL data
+The results appear as polygons:
+- Black polygons: bare ground
+- Yellow polygons: areas detected as declining
+- Blue polygons: areas detected as sanitary cuts (areas detected as bare soil after being detected as declining)
 
-Les résultats apparaissent à partir de la première anomalie, confirmée par la suite. Les fausses détections liées à un stress hydrique temporaire et corrigées par la suite n'apparaissent pas. De même, pour les dernières , il peut y avoir des anomalies n'apparaissant pas encore par manque de  valides pour confirmer la détection.
+The polygons appear at the date of the first anomaly, if confirmed with 3 successive anomalies, and if there is no return to normal with 3 successive dates without anomalies afterwards. So false detections related to temporary water stress which are subsequently corrected do not appear. Also, in the last dates, there may be anomalies not appearing yet due to the lack of future data to confirm the detection.
 
-Si les données d'observation sur le terrain sont également affichées, passer la souris sur ces polygones pour obtenir leurs informations :  | <organisme à l'origine de la donnée> : <date d'observation>. La couleur dépend du stade observé.
-Il est également possible de zoomer sur la zone souhaitée en maintenant le clique appuyé tout en délimitant une zone. Il est ensuite possible de dézoomer en double cliquant sur l'image. Passer la souris sur un pixel permet également d'obtenir ses informations :
+If the field observation data are also displayed, move the mouse over these polygons to obtain their information: | <organization from which the data originated> : <observation date>. The color depends on the observed declining stage.
+It is also possible to zoom in on the desired area by holding down the click while delimiting an area. It is then possible to zoom out by double clicking on the image. Passing the mouse over a pixel also allows you to obtain its information:
 
-x : coordonnées en x
-y : coordonnées en y
-z : [<réflectance dans le rouge>,<réflectance dans le vert>,<réflectance dans le bleu>], c'est à dire la valeur de la bande SENTINEL correspondante à la date donnée.
+x : coordinates in x
+y : coordinates in y
+z : [<reflectance in red>,<reflectance in green>,<reflectance in blue>], that is to say the value of the corresponding SENTINEL band at the given date.
 
-## Utilisation
-### A partir d'un script
-#### A partir d'un shapefile contenant les zones d'intérêt
+## How to use
+### From a script
+#### From a shapefile containing the areas of interest
 ```bash
 from fordead.visualisation.create_timelapse import create_timelapse
-create_timelapse(data_directory = <data_directory>,shape_path = <shape_path>, buffer = 100, name_column = "id")
+create_timelapse(data_directory = <data_directory>, shape_path = <shape_path>, buffer = 100, name_column = "id")
 ```
-#### A partir de coordonnées
+#### From coordinates
 ```bash
 from fordead.visualisation.create_timelapse import create_timelapse
 create_timelapse(data_directory = <data_directory>, x = <x>, y = <y>, buffer = 100)
 ```
-### A partir de l'invité de commande
+### From the command prompt
 ```bash
 fordead timelapse [OPTIONS]
 ```
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-timelapse)
+See detailed documentation at [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-timelapse)
 
-## Créer des graphes montrant l'évolution de la série temporelle
-#### ENTRÉES
-Les paramètres en entrée sont :
-data_directory, shape_path = None, ymin = 0, ymax = 2, chunks = None
+## Create graphs showing the evolution of the time series
+#### INPUTS
+The input parameters are:
 
-- **data_directory** : Le chemin du dossier dans lequel sont écrits les résultats déjà calculés, et dans lequel seront sauvegardés les graphes
-- **shape_path** : Chemin d'un shapefile contenant les points où les graphiques seront réalisés.
-- **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du point (Par défaut : "id")
-- **ymin** : ymin limite du graphe, à adapter à l'indice de végétation utilisé (Par défaut : 0)
-- **ymax** : ymax limite du graphe, à adapter à l'indice de végétation utilisé (Par défaut : 2)
-- **chunks** : int, Si les résultats utilisés ont été calculés à large échelle, donner une taille de chunks (ex : 1280) permet d'importer les données de manière à sauvegarder la RAM. 
+- **data_directory**: The path of the folder in which the already computed results are written, and in which the graphs will be saved
+- **shape_path** : Path of a shapefile containing the points where the graphs will be made.
+- **name_column** : Name of the column containing the identifier or unique name of the point (default : "id")
+- **ymin** : ymin limit of the graph, to be adapted to the vegetation index used (Default : 0)
+- **ymax** : ymax limit of the graph, to be adapted to the vegetation index used (default : 2)
+- **chunks** : int, If the results used were calculated on a large scale such as a tile, giving a chunk size (e.g. 1280)  allows to import the data much faster, and saves RAM.
 
-#### SORTIES
-Les sorties sont dans le dossier data_directory/SeriesTemporelles, avec pour chaque point un fichier .png avec comme nom de fichier la valeur dans la colonne **name_column**.
+#### OUTPUTS
+The outputs are in the folder data_directory/SeriesTemporelles, with for each point a .png file with as file name the value in the column **name_column**.
 
-
-## Utilisation
-### A partir d'un script
-#### A partir d'un shapefile contenant les zones d'intérêt
+## How to use
+### From a script
+#### From a shapefile containing the areas of interest
 ```bash
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
-vi_series_visualisation(data_directory = <data_directory>, shape_path = <shape_path>, name_column = "id", ymin = 0, ymax = 2, chunks = 100)
+vi_series_visualization(data_directory = <data_directory>, shape_path = <shape_path>, name_column = "id", ymin = 0, ymax = 2, chunks = 100)
 ```
-#### A partir de coordonnées
+#### From coordinates
 ```bash
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
-vi_series_visualisation(data_directory = <data_directory>, ymin = 0, ymax = 2, chunks = 100)
+vi_series_visualization(data_directory = <data_directory>, ymin = 0, ymax = 2, chunks = 100)
 ```
-Dans ce mode, l'utilisateur peut choisir de donner des coordonnées X et Y dans le système projection des données Sentinel-2 utilisées.
-Il est également possible de donner l'indice du pixel en partant du (xmin,ymax), utile si un timelapse a été crée sur l'ensemble de la zone calculée auquel cas l'indice correspond aux coordonnées dans le timelapse.
+In this mode, the user can choose to give X and Y coordinates in the projection system of the Sentinel-2 data used.
+It is also possible to give the pixel index starting from (xmin,ymax), useful if a timelapse has been created over the whole computed area in which case the index corresponds to the coordinates in the timelapse.
 
-### A partir de l'invité de commande
+### From the command prompt
 ```bash
 fordead graph_series [OPTIONS]
 ```
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-graph_series)
+See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-graph_series)
 
-#### EXEMPLE
+#### EXAMPLE
 ![graph_example](Diagrams/graph_example.png "graph_example")
