@@ -44,11 +44,6 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Cette étape peut également être réalisée indépendamment du reste de la chaîne de traitement, en renseignant le paramètre **path_example_raster**, afin d'obtenir un masque forêt binaire. Sinon, le paramètre **path_example_raster** est automatiquement déterminé à partir des résultats des étapes précédentes afin que le masque forêt corresponde à la zone étudiée.
 > **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
 
-### A partir du chemin d'un raster binaire
-- Import du fichier 
-Cette option est donnée pour les utilisateurs voulant créer leur propre masque par d'autres moyens et l'utiliser dans la chaîne de traitement. Il sera ré-écrit dans le dossier data_directory.
- > **_Fonctions utilisées :_** [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_forest_mask)
- 
 ### A partir de la BDFORET de l'IGN
 - Importation de la BDFORET des départements intersectant la zone d'étude
 - Filtre à partir des types de peuplements séléctionnés
@@ -61,7 +56,8 @@ Cette option est donnée pour les utilisateurs voulant créer leur propre masque
  > **_Fonctions utilisées :_** [clip_oso()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#clip_oso)
 
 ### A partir d'un raster binaire
- - Si forest_mask_source est un chemin vers un fichier existant, ce fichier est importé.
+Cette option est donnée pour les utilisateurs voulant créer leur propre masque par d'autres moyens et l'utiliser dans la chaîne de traitement. Il sera ré-écrit dans le dossier data_directory.
+ - Si forest_mask_source est un chemin vers un fichier existant, ce fichier est importé. Ce fichier doit être un raster binaire avec la valeur 1 là où sont les pixels d'intérêt.
  - Le fichier est découpé à l'extent de la zone d'étude, ou du fichier au chemin path_example_raster
  > **_Fonctions utilisées :_** [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_forest_mask), [clip_xarray()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#clip_xarray)
 

@@ -147,7 +147,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         
     tile = TileInfo(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile)
     tile = tile.import_info()
-    file = open(logpath, "a") 
+    file = open(logpath, "a")
     for parameter in tile.parameters:
         file.write(parameter + " : " +  str(tile.parameters[parameter]) + "\n")
     file.close()
