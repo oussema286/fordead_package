@@ -17,7 +17,7 @@ pip install .
 
 ## Forest disturbance detection
 
-![diagramme_general](docs/user_guides/Diagrams/Diagramme_general.png "diagramme_general")
+![diagramme_general_english](docs/user_guides/english/Diagrams/Diagramme_general.png "diagramme_general_english")
 
 The detection of Forest disturbance is done in five steps.
 - [The calculation of vegetation indices and masks for each SENTINEL-2 date](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)
@@ -49,7 +49,7 @@ pip install .
 
 ## Utilisation pour la détection de déperissement
 
-![diagramme_general](docs/user_guides/Diagrams/Diagramme_general.png "diagramme_general")
+![diagramme_general_french](docs/user_guides/french/Diagrams/Diagramme_general.png "diagramme_general_french")
 
 La détection du déperissement se fait en cinq étapes.
 - [Le calcul des indices de végétation et des masques pour chaque date SENTINEL-2](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)

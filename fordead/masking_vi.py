@@ -88,6 +88,22 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
     return forest_mask
 
 def rasterize_vector(vector_path, example_path):
+    """
+    Creates binary raster mask from a vector, such as a shapefile containing polygons
+
+    Parameters
+    ----------
+    vector_path : str
+        Path to a vector containing polygons delimiting the areas of interest
+    example_path : str
+        Path to a raster from which to copy the extent and resolution for the mask
+
+    Returns
+    -------
+    forest_mask : xarray DataArray
+        Boolean DataArray containing True where pixels are in the polygons with the vector file.
+    """
+    
     example_raster = xr.open_rasterio(example_path).squeeze("band")
     example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
     vector = gp.read_file(vector_path)
