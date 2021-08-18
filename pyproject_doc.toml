@@ -42,7 +42,7 @@ template_dir = "templates/pdocs"
 #         name = "bootstrap"
 
 [tool.portray.mkdocs.theme]
-name = "material"
+name = "readthedocs"
 palette = {primary = "blue grey", accent = "pink"}
 
 [tool.portray.mkdocs.theme.icon]
