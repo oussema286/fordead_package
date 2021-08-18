@@ -43,7 +43,7 @@ def cli_compute_forest_mask(data_directory,
                         ):
     """
     Compute forest mask from IGN's BDFORET or CESBIO's OSO map
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/04_compute_forest_mask/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/
     \f
     Parameters
     ----------

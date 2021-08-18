@@ -76,7 +76,7 @@ def get_bins(start_date,end_date,frequency,dates):
     bins_as_date : numpy array
         Bins as an array of dates in the format 'YYYY-MM-DD'
     bins_as_datenumber : numpy array
-        Bins as an array of integers corresponding to the number of days since "2015-06-23"
+        Bins as an array of integers corresponding to the number of days since "2015-01-01"
 
     """
     
@@ -87,10 +87,10 @@ def get_bins(start_date,end_date,frequency,dates):
 
     # bins_as_date = bins_as_date.insert(0,datetime.datetime.strptime(start_date, '%Y-%m-%d'))
     # bins_as_date = bins_as_date.insert(len(bins_as_date),datetime.datetime.strptime(end_date, '%Y-%m-%d'))
-    bins_as_datenumber = (bins_as_date-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days  
+    bins_as_datenumber = (bins_as_date-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days  
     
-    bin_min = max((datetime.datetime.strptime(start_date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days, (datetime.datetime.strptime(dates[0], '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days)
-    bin_max = min((datetime.datetime.strptime(end_date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days, (datetime.datetime.strptime(dates[-1], '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days)
+    bin_min = max((datetime.datetime.strptime(start_date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days, (datetime.datetime.strptime(dates[0], '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days)
+    bin_max = min((datetime.datetime.strptime(end_date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days, (datetime.datetime.strptime(dates[-1], '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days)
 
     kept_bins = ndimage.binary_dilation(np.logical_and(bins_as_datenumber>=bin_min,bins_as_datenumber<=bin_max),iterations=1,structure=np.array([False,True,True])) #Kept bins are those within bin_min and bin_max plus one bin after bin_max
 
@@ -101,7 +101,7 @@ def get_bins(start_date,end_date,frequency,dates):
 
 def convert_dateindex_to_datenumber(dataset, dates):
     """
-    Converts array containing dates as an index to an array containing dates as the number of days since "2015-06-23" or to a no data value if masked
+    Converts array containing dates as an index to an array containing dates as the number of days since "2015-01-01" or to a no data value if masked
 
     Parameters
     ----------
@@ -114,11 +114,11 @@ def convert_dateindex_to_datenumber(dataset, dates):
     Returns
     -------
     results_date_number : xarray DataArray
-        DataArray with dates as the number of days since "2015-06-23", or no data value of 99999999
+        DataArray with dates as the number of days since "2015-01-01", or no data value of 99999999
 
     """
     
-    used_dates_numbers = (pd.to_datetime(dates)-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days
+    used_dates_numbers = (pd.to_datetime(dates)-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days
     results_date_number = used_dates_numbers[dataset.first_date.data.ravel()]
     results_date_number = np.reshape(np.array(results_date_number),dataset.first_date.shape)
     results_date_number[~dataset.state.data] = 99999999
@@ -133,11 +133,11 @@ def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_d
     Parameters
     ----------
     first_date_number : array
-        Array containing dates as the number of days since "2015-06-23"
+        Array containing dates as the number of days since "2015-01-01"
     bins_as_date : array
         Array containing dates used as bins in the format "YYYY-MM-JJ"
     bins_as_datenumber : array
-        Array containing dates used as bins, as the number of days since "2015-06-23" 
+        Array containing dates used as bins, as the number of days since "2015-01-01" 
     relevant_area : array
         Mask where pixels with value False will be ignored.
     attrs : dict

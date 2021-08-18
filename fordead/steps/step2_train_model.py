@@ -34,7 +34,7 @@ def cli_train_model(
     """
     Uses first SENTINEL dates to train a periodic vegetation index model capable of predicting the vegetation index at any date.
     If there aren't nb_min_date at min_last_date_training, later dates between min_last_date_training and max_last_date_training can be used.
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/02_train_model/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/
     
     \f
 
@@ -66,7 +66,7 @@ def train_model(
     """
     Uses first SENTINEL dates to train a periodic vegetation index model capable of predicting the vegetation index at any date.
     If there aren't nb_min_date at min_last_date_training, later dates between min_last_date_training and max_last_date_training can be used.
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/02_train_model/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/
     \f
 
     Parameters

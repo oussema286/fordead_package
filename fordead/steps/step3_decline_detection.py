@@ -31,7 +31,7 @@ def cli_decline_detection(
     Detects anomalies by comparing the vegetation index and its prediction from the model. 
     Detects declining pixels when there are 3 successive anomalies. If pixels detected as declining have 3 successive dates without anomalies, they are considered healthy again.
     Anomalies and decline data are written in the data_directory
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/03_decline_detection/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_decline_detection/
     \f
     Parameters
     ----------
@@ -57,7 +57,7 @@ def decline_detection(
     Detects anomalies by comparing the vegetation index and its prediction from the model. 
     Detects declining pixels when there are 3 successive anomalies. If pixels detected as declining have 3 successive dates without anomalies, they are considered healthy again.
     Anomalies and decline data are written in the data_directory
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/03_decline_detection/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_decline_detection/
     
     \f
     Parameters

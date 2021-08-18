@@ -60,7 +60,7 @@ def export_results(
     ):
     """
     Writes results in the chosen period, form and using chosen frequency.
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/05_export_results/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_export_results/
     \f
 
     Parameters

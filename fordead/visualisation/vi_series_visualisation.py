@@ -36,7 +36,7 @@ def cli_vi_series_visualisation(data_directory, shape_path = None, name_column =
     From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
     If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
-    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
+    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
     The graphs are exported in the data_directory/TimeSeries directory as png files.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
     \f
@@ -63,7 +63,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
     If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
-    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
+    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
     The graphs are exported in the data_directory/TimeSeries directory as png files.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
     
@@ -88,7 +88,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     
     # IMPORTING ALL DATA
     stack_vi, stack_masks = import_stackedmaskedVI(tile,chunks = chunks)
-    stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
+    stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
     coeff_model = import_coeff_model(tile.paths["coeff_model"],chunks = chunks)
     first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
     soil_data = import_soil_data(tile.paths,chunks = chunks)
@@ -100,7 +100,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     tile.add_dirpath("series", tile.data_directory / "TimeSeries")
     tile.save_info()
     xx = np.array(range(int(stack_vi.DateNumber.min()), int(stack_vi.DateNumber.max())))
-    xxDate=[np.datetime64(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in xx]
+    xxDate=[np.datetime64(datetime.datetime.strptime("2015-01-01", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in xx]
     
     harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in xx])
     harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : xxDate, "coeff" : [1,2,3,4,5]},dims=["Time","coeff"])
