@@ -1,8 +1,0 @@
-/* La règle CSS !important permet de spécifier que la propriété est la plus importante
-dans votre feuille CSS en lui donnant un poids plus important.
-Sinon renommer le fichier zzz.css pour que ce soit le dernier pris en compte
-*/
-p {
-  text-align: justify !important;
-  text-justify: inter-word !important;
-}
