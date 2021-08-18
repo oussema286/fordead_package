@@ -371,7 +371,10 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
     path_cloudiness= Path(path_cloudiness)
     cloudiness = TileInfo(path_cloudiness.parent)
     if path_cloudiness.exists():
-        cloudiness=cloudiness.import_info(path_cloudiness)
+        try:
+            cloudiness=cloudiness.import_info(path_cloudiness)
+        except:
+            path_cloudiness.unlink()
     if not(hasattr(cloudiness, 'perc_cloud')):
         cloudiness.perc_cloud={}
     for date in dict_path_bands:
