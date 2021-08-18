@@ -9,8 +9,8 @@ Created on Tue Nov  3 16:21:15 2020
 # =============================================================================
 
 import click
-from fordead.ImportData import import_stackedmaskedVI, TileInfo
-from fordead.ModelVegetationIndex import get_detection_dates, model_vi, model_vi_correction
+from fordead.import_data import import_stackedmaskedVI, TileInfo
+from fordead.model_spectral_index import get_detection_dates, model_vi, model_vi_correction
 from fordead.writing_data import write_tif
 
 

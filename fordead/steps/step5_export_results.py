@@ -6,7 +6,7 @@ Created on Fri Dec 18 11:32:57 2020
 """
 
 import click
-from fordead.ImportData import import_decline_data, TileInfo, import_forest_mask, import_soil_data
+from fordead.import_data import import_decline_data, TileInfo, import_forest_mask, import_soil_data
 from fordead.writing_data import get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date
 
 @click.command(name='export_results')

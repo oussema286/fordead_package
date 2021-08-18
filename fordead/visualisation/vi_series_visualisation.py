@@ -16,8 +16,8 @@ import click
 import matplotlib
 import matplotlib.pyplot as plt
 
-from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
-from fordead.ModelVegetationIndex import compute_HarmonicTerms
+from fordead.import_data import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
+from fordead.model_spectral_index import compute_HarmonicTerms
 from fordead.results_visualisation import select_pixel_from_coordinates, select_pixel_from_indices, plot_temporal_series
 
 @click.group()

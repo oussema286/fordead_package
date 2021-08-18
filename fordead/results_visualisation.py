@@ -17,7 +17,7 @@ import matplotlib.dates as mdates
 import datetime
 
 from fordead.masking_vi import get_dict_vi
-from fordead.ImportData import import_resampled_sen_stack, import_soil_data, import_decline_data, import_forest_mask
+from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_decline_data, import_forest_mask
 
 
 def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = None):

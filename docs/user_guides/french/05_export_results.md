@@ -47,11 +47,11 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...) afin de pouvoir importer l'ensemble des résultats.
-> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info)
+> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info)
 
 ### Import des résultats de la détection 
 Les résultats des étapes précedentes sont importées.
-> **_Fonctions utilisées :_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_soil_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_decline_data), [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_forest_mask)
+> **_Fonctions utilisées :_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_soil_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_decline_data), [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_forest_mask)
 
 ### Détermination des périodes pour aggréger les résultats
 Les résultats seront donné par aggrégation selon la période à laquelle surviennent les premières anomalies à la fois pour la détection de sol et de déperissement. Ces périodes sont déterminées à partir de la fréquence indiquée par le paramètre **frequency**, la date de début **start_date** et la date de fin **end_date**. Les périodes avant la première date SENTINEL utilisée, ou après la dernière, si elles existent, sont retirées puisqu'elles ne peuvent correspondre à aucun résultat.

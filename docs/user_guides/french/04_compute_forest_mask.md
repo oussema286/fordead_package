@@ -70,7 +70,7 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Cette étape peut également être réalisée indépendamment du reste de la chaîne de traitement, en renseignant le paramètre **path_example_raster**, afin d'obtenir un masque forêt binaire. Sinon, le paramètre **path_example_raster** est automatiquement déterminé à partir des résultats des étapes précédentes afin que le masque forêt corresponde à la zone étudiée.
-> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#delete_dirs)
 
 ### Depuis un vecteur
 - Import d'un vecteur, par exemple un shapefile contenant des polygones
@@ -82,7 +82,7 @@ Les informations relatives aux traitements précédents sont importés (paramèt
 Cette option est donnée pour les utilisateurs voulant créer leur propre masque par d'autres moyens et l'utiliser dans la chaîne de traitement. Il sera ré-écrit dans le dossier data_directory.
  - Si forest_mask_source est un chemin vers un fichier existant, ce fichier est importé. Ce fichier doit être un raster binaire avec la valeur 1 là où sont les pixels d'intérêt.
  - Le fichier est découpé à l'extent de la zone d'étude, ou du fichier au chemin path_example_raster
- > **_Fonctions utilisées :_** [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_forest_mask), [clip_xarray()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#clip_xarray)
+ > **_Fonctions utilisées :_** [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_forest_mask), [clip_xarray()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#clip_xarray)
 
 
 ### A partir de la BDFORET de l'IGN
@@ -103,6 +103,6 @@ Cette option est donnée pour les utilisateurs voulant créer leur propre masque
 
 ### Ecriture des résultats
 Le masque forêt est écrit, et son chemin sauvegardé dans l'object TileInfo.
- > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#save_info)
+ > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#save_info)
 
 

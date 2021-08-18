@@ -19,7 +19,7 @@ import numpy as np
 #   IMPORT LIBRAIRIES PERSO
 # =============================================================================
 
-from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
+from fordead.import_data import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
 from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula, get_source_mask
 from fordead.writing_data import write_tif
 

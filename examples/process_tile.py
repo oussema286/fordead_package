@@ -14,7 +14,7 @@ from fordead.steps.step5_export_results import export_results
 from fordead.visualisation.create_timelapse import create_timelapse
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
 
-from fordead.ImportData import TileInfo
+from fordead.import_data import TileInfo
 
 from pathlib import Path
 import argparse

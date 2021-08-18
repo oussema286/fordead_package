@@ -47,11 +47,11 @@ See detailed documentation on the [site](https://fordead.gitlab.io/fordead_packa
 
 ### Importing information on previous processes and deleting obsolete results if they exist
 The information about the previous steps is imported (parameters, data paths, used dates...).
-> **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), methods of the TileInfo class [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info)
+> **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), methods of the TileInfo class [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info)
 
 ### Importing the results of the detection 
 The results of the previous steps are imported.
-> **_Functions used:_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_soil_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_decline_data), [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_forest_mask)
+> **_Functions used:_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_soil_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_decline_data), [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_forest_mask)
 
 ### Determining the periods for aggregating the results
 The results will be aggregated according to the time period at which the first anomalies occur for both soil and decline detection. These periods are determined from the frequency indicated by the parameter **frequency**, the start date **start_date** and the end date **end_date**. Periods before the first SENTINEL date used, or after the last one, if they exist, are ignored since they cannot correspond to any result.

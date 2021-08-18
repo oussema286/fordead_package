@@ -14,7 +14,7 @@ import geopandas as gp
 import pandas as pd
 import rasterio
 from scipy import ndimage
-from fordead.ImportData import import_resampled_sen_stack
+from fordead.import_data import import_resampled_sen_stack
 
 def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
     """

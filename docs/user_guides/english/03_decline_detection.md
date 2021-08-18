@@ -36,23 +36,23 @@ See detailed documentation on the [site](https://fordead.gitlab.io/fordead_packa
 
 ### Importing information on previous processes and deleting obsolete results if they exist
 The informations about the previous processes are imported (parameters, data paths, used dates...). If the parameters used have been modified, all the results from this step onwards are deleted. Thus, unless the parameters have been modified or this is the first time this step is performed, the detection of forest disturbance is updated using only with the new SENTINEL dates.
-> **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), TileInfo class methods [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+> **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), TileInfo class methods [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#delete_dirs)
 
 ### Importing the results of the previous steps
 The coefficients of the vegetation index prediction model are imported, as well as the array containing the index of the first date used for the detection. The arrays containing the information related to the detection of forest disturbances (state of the pixels, number of successive anomalies, index of the date of the first anomaly) are initialized if the step is used for the first time, or imported if it is an update of the detection.
-> **_Functions used:_** [import_coeff_model()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_coeff_model), [import_first_detection_date_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_first_detection_date_index), [initialize_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#initialize_decline_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_decline_data)
+> **_Functions used:_** [import_coeff_model()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_coeff_model), [import_first_detection_date_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_first_detection_date_index), [initialize_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#initialize_decline_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_decline_data)
 
 ### For each date not already used for decline detection:
 
 #### Import of the calculated vegetation index and the mask
-> **_Functions used:_** [import_masked_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_masked_vi)
+> **_Functions used:_** [import_masked_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_masked_vi)
 
 ### (OPTIONAL - if **correct_vi** is True in [previous model calculation step](https://fordead.gitlab.io/fordead_package/docs/user_guides/03_train_model/) Correction of the vegetation index using the median vegetation index of the unmasked pixels of interest across the entire area
 - Masking of the pixels not belonging to the area of interest, or masked
 - Calculation of the median vegetation index on the remaining pixels of the whole area
 - Calculation of a correction term, by difference between the calculated median and the prediction of the model calculated during the previous step from the median calculated for all the dates
 - Application of the correction term by adding it to the value of the vegetation index of every pixel
-> **_Functions used:_** [correct_vi_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#correct_vi_date)
+> **_Functions used:_** [correct_vi_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/model_spectral_index/#correct_vi_date)
 
 #### Prediction of the vegetation index at the given date.
 The vegetation index is predicted from the model coefficients.

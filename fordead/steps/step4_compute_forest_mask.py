@@ -5,7 +5,7 @@ Created on Fri Nov 27 18:20:18 2020
 @author: Raphael Dutrieux
 """
 import click
-from fordead.ImportData import TileInfo, import_forest_mask, get_raster_metadata, clip_xarray
+from fordead.import_data import TileInfo, import_forest_mask, get_raster_metadata, clip_xarray
 from fordead.masking_vi import rasterize_bdforet, clip_oso, raster_full, rasterize_vector
 from fordead.writing_data import write_tif
 from pathlib import Path

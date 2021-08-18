@@ -25,7 +25,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 # =============================================================================
 
 from fordead.results_visualisation import CreateTimelapse
-from fordead.ImportData import TileInfo
+from fordead.import_data import TileInfo
 
 @click.group()
 def timelapse():

@@ -2,7 +2,7 @@ The following code describe a simple script to compute a temporal series of vege
 
 The first step is to import the relevant functions from the modules
 ```bash
-from fordead.ImportData import TileInfo, get_band_paths, import_resampled_sen_stack
+from fordead.import_data import TileInfo, get_band_paths, import_resampled_sen_stack
 from fordead.masking_vi import compute_vegetation_index
 from fordead.writing_data import write_tif
 ```
@@ -56,7 +56,7 @@ Then the computed vegetation_index can be written on the disk :
 ## Complete script
 
 ```bash
-from fordead.ImportData import TileInfo, get_band_paths, import_resampled_sen_stack
+from fordead.import_data import TileInfo, get_band_paths, import_resampled_sen_stack
 from fordead.masking_vi import compute_vegetation_index
 from fordead.writing_data import write_tif
 

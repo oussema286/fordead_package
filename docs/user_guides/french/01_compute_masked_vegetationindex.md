@@ -48,17 +48,17 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des résultats précédents, suppression des résultats obsolètes 
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Ainsi, à moins que les paramètres aient été modifiés, uniquement les calculs suivants sont uniquement réalisés sur les nouvelles dates SENTINEL.
-> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#delete_dirs)
 
 ### Filtre des dates trop ennuagées
 L'ennuagement de chaque date SENTINEL est calculé à partir du masque fournisseur.
-> **_Fonctions utilisées :_** [get_cloudiness()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#get_cloudiness), [get_date_cloudiness_perc()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#get_date_cloudiness_perc)
+> **_Fonctions utilisées :_** [get_cloudiness()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#get_cloudiness), [get_date_cloudiness_perc()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#get_date_cloudiness_perc)
 
 On utilise ensuite uniquement les nouvelles dates dans le dossier **input_directory** dont l'ennuagement est inférieur à **lim_perc_cloud**.
 
 ### Import et ré-échantillonage des données SENTINEL
  - Les bandes d'intérêts de ces dates sont importées et ré-échantillonnées à 10m 
-> **_Fonctions utilisées :_** [import_resampled_sen_stack()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_resampled_sen_stack)
+> **_Fonctions utilisées :_** [import_resampled_sen_stack()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_resampled_sen_stack)
 
 ### Création du masque
 La création du masque pour chaque date se fait en quatre étapes :
@@ -91,4 +91,4 @@ L'indice de végétation choisi est calculé.
 
 ### Ecriture des résultats
 Les indices de végétations, masques et données de détection du sol sont écrits. L'ensemble des paramètres, chemins des données et dates utilisées sont aussi sauvegardés.
- > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#save_info)
+ > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#save_info)

@@ -2,7 +2,7 @@ The following script describes how to use the basic methods of TileInfo objects,
 
 The first step is to import the class function from the module.
 ```bash
-from fordead.ImportData import TileInfo
+from fordead.import_data import TileInfo
 ```
 Create TileInfo Object using the path of the directory where you want information stored
 ```bash

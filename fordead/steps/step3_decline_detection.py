@@ -7,10 +7,10 @@ Created on Mon Nov  2 09:25:23 2020
 
 
 import click
-from fordead.ImportData import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask
+from fordead.import_data import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask
 from fordead.writing_data import write_tif
 from fordead.decline_detection import detection_anomalies, detection_decline
-from fordead.ModelVegetationIndex import prediction_vegetation_index, correct_vi_date
+from fordead.model_spectral_index import prediction_vegetation_index, correct_vi_date
 
 
 @click.command(name='decline_detection')

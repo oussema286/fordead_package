@@ -43,10 +43,10 @@ See detailed documentation on the [site](https://fordead.gitlab.io/fordead_packa
 
 ### Importing information on previous processes and deleting obsolete results if they exist
 First, if the processing chain has already been used on the area, the information related to these calculations is imported (parameters, data paths, dates used...). If the parameters used have been modified, the results of previous calculations are deleted from this step onwards and recalculated with the new parameters. It is possible to skip the first step and start the process at this stage if the vegetation index and mask have already been calculated for each date through another method.
-> **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), methods of the TileInfo class [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+> **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), methods of the TileInfo class [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#delete_dirs)
 
 ### Importing the vegetation index and mask for each date up to **min_last_date_training**
-> **_Functions used:_** [import_stackedmaskedVI()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_stackedmaskedvi)
+> **_Functions used:_** [import_stackedmaskedVI()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_stackedmaskedvi)
 
 ### (OPTIONAL - if **correct_vi** is True) Correction of the vegetation index from the median vegetation index of the unmasked pixels of interest at the scale of the whole area
 - Pixels not belonging to the area of interest or masked are dropped
@@ -54,11 +54,11 @@ First, if the processing chain has already been used on the area, the informatio
 - Fitting of a harmonic model on these medians, this model must therefore account for the normal behavior of the vegetation index on the entire area of interest.
 - Calculation of a correction term for each date, by substracting the model prediction at the given date and the corresponding calculated median
 - Application of the correction terms for each date by adding it to the value of the vegetation index of all the pixels of the date.
-> **_Functions used:_** [model_vi_correction()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#model_vi_correction)
+> **_Functions used:_** [model_vi_correction()](https://fordead.gitlab.io/fordead_package/reference/fordead/model_spectral_index/#model_vi_correction)
 
 ### Identifying the dates used for training
 The starting date of detection can be different between each pixel. For each pixel, the model must be trained on at least **nb_min_date** dates, and at least on all dates prior to **min_last_date_training**. If there are not at least **nb_min_date** at **max_last_date_training**, the pixel is dropped. This allows to start the detection as soon as possible if it is possible, while keeping a maximum of pixels by allowing a later start of detection on areas with less valid dates.
-> **_Functions used:_** [get_detection_dates()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#get_detection_dates)
+> **_Functions used:_** [get_detection_dates()](https://fordead.gitlab.io/fordead_package/reference/fordead/model_spectral_index/#get_detection_dates)
 
 ### Modeling the behavior of the vegetation index
 For each pixel, a model is fitted on the training dates. The model used is the following:
@@ -66,7 +66,7 @@ For each pixel, a model is fitted on the training dates. The model used is the f
 a1 + b1\sin{\frac{2\pi t}{T}} + b2\cos{\frac{2\pi t}{T}} + b3\sin{\frac{4\pi t}{T}} + b4\cos{\frac{4\pi t}{T}}
 ```
 This step consists in computing the coefficients a1, b1, b2, b3 and b4 for each pixel.
-> **_Functions used:_** [model_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#model_vi)
+> **_Functions used:_** [model_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/model_spectral_index/#model_vi)
 
  ### Writing the results
 The coefficients of the model, the index of the first date used for detection and the mask of the pixels that are valid because they have enough Sentinel dates for the calculation of the model are written as rasters.

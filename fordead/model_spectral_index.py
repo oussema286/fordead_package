@@ -9,7 +9,7 @@ import numpy as np
 import dask.array as da
 import datetime
 from scipy.linalg import lstsq
-from fordead.ImportData import import_forest_mask, import_masked_vi
+from fordead.import_data import import_forest_mask, import_masked_vi
 
 
 def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
