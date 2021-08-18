@@ -32,7 +32,7 @@ from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_ve
 input_directory = "<MyWorkingDirectory>/study_area"
 data_directory = "<output directory>"
 ```
-> **_NOTE :_** Il est préférable d'utiliser "/" plutôt que "\" à l'écriture des chemins afin d'éviter les soucis.
+> **_NOTE :_** Use "/" instead of "\" when writing paths
 
 - To run the function :
 ```bash
