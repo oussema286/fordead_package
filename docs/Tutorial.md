@@ -5,7 +5,7 @@ This tutorial will walk you through the use of the package _fordead_, a python p
 ## Requirements
 ### Package installation 
 If the package is not already installed, follow the instructions of the [installation guide](https://fordead.gitlab.io/fordead_package/). 
-If it is already installed, simply launch your command prompt and activate the environment with the command `conda activate fordead_env`
+If it is already installed, simply launch the command prompt and activate the environment with the command `conda activate <environment name>`
 
 ### Downloading the tutorial dataset
 
@@ -17,3 +17,33 @@ The analysis can be performed at the scale of a Sentinel tile, but for this tuto
 - Open this script with the editor of your choice
 
 #### Step 1 : Computing the spectral index and a mask for each SENTINEL-2 date
+
+The first step is to calculate the spectral index and the mask for each date. The mask corresponds to the invalid pixels, which can correspond to clouds, snow, shade, pixels out of the satellite swath or bare ground...
+You can find the guide for this step [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/).
+
+##### Running this step from a script
+To run this step, add to the script :
+- to import the function :
+```bash
+from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
+```
+- To choose parameters :
+```bash
+input_directory = "<MyWorkingDirectory>/study_area"
+data_directory = "<output directory>"
+```
+> **_NOTE :_** Il est préférable d'utiliser "/" plutôt que "\" à l'écriture des chemins afin d'éviter les soucis.
+
+- To run the function :
+```bash
+compute_masked_vegetationindex(input_directory = input_directory, data_directory = data_directory)
+```
+To run the python script from the command prompt, first go to the directory of the script with the following command :
+```bash
+cd <path of directory containing the script>
+```
+Then run the script :
+```bash
+python detection_scolytes.py
+```
+
