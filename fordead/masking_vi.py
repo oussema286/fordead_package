@@ -334,7 +334,7 @@ def compute_masks(stack_bands, soil_data, date_index):
     
     # Compute soil
     soil_data = detect_soil(soil_data, soil_anomaly, invalid, date_index)
-        
+
     # Compute clouds
     clouds = detect_clouds(stack_bands, soil_data["state"], soil_anomaly)
     

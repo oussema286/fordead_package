@@ -86,10 +86,10 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         start_time = time.time()
         
         compute_masked_vegetationindex(input_directory = sentinel_directory / tuile,
-                                        data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-                                        lim_perc_cloud = lim_perc_cloud, vi = vi,
-                                        sentinel_source = sentinel_source, apply_source_mask = apply_source_mask,
-                                        extent_shape_path = extent_shape_path)
+                                       data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+                                       lim_perc_cloud = lim_perc_cloud, vi = vi,
+                                       sentinel_source = sentinel_source, apply_source_mask = apply_source_mask,
+                                       extent_shape_path = extent_shape_path)
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
