@@ -83,10 +83,12 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path, max_date):
         
         #Récupération des données raster
         extent = shape.total_bounds
+        
+        if tile.parameters["soil_detection"]:
+            soil_data = import_soil_data(tile.paths)
+            soil_data = soil_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
 
-        soil_data = import_soil_data(tile.paths)
         decline_data = import_decline_data(tile.paths)
-        soil_data = soil_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         decline_data = decline_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         forest_mask = import_forest_mask(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         
@@ -122,9 +124,11 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path, max_date):
                 
 
                 detected = (decline_data["first_date"] <= dateIndex) & decline_data["state"]
-                soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
-                affected=detected+2*soil
-                
+                if tile.parameters["soil_detection"]:
+                    soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
+                    affected=detected+2*soil
+                else:
+                    affected=detected
                 
                 # valid_area = 
                 affected = affected.where(forest_mask,0)

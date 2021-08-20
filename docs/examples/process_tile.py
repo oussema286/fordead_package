@@ -67,10 +67,10 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   start_date_results, end_date_results, results_frequency, multiple_files,
                   correct_vi):
 
-    # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
-    # main_directory = "D:/Documents/Deperissement/Output"    
-
-
+    sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
+    main_directory = "D:/Documents/Deperissement/Output"    
+    soil_detection = False
+    
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
     logpath = main_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")
@@ -89,7 +89,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                                        data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
                                        lim_perc_cloud = lim_perc_cloud, vi = vi,
                                        sentinel_source = sentinel_source, apply_source_mask = apply_source_mask,
-                                       extent_shape_path = extent_shape_path)
+                                       extent_shape_path = extent_shape_path,
+                                       soil_detection = soil_detection)
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
@@ -128,7 +129,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             start_date = start_date_results,
             end_date = end_date_results,
             frequency= results_frequency,
-            export_soil = True,
+            export_soil = soil_detection,
             multiple_files = multiple_files
             )
         file = open(logpath, "a")
@@ -136,14 +137,13 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
                 
 
-        # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-        #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
-        #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
-        #                   name_column = "id", max_date = None, zip_results = True)
+        create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+                          shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
+                          obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
+                          name_column = "id", max_date = None, zip_results = True)
         # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
         # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2, shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/points_visualisation.shp")
 
-        
         
     tile = TileInfo(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile)
     tile = tile.import_info()

@@ -20,7 +20,7 @@ import numpy as np
 # =============================================================================
 
 from fordead.import_data import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
-from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula, get_source_mask
+from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula, get_source_mask, compute_user_mask
 from fordead.writing_data import write_tif
 
 #%% =============================================================================
@@ -80,6 +80,8 @@ def compute_masked_vegetationindex(
     interpolation_order = 0,
     sentinel_source = "THEIA",
     apply_source_mask = False,
+    soil_detection = True,
+    formula_mask = "(B2 >= 700)",
     vi = "CRSWIR",
     extent_shape_path=None,
     path_dict_vi = None
@@ -119,7 +121,7 @@ def compute_masked_vegetationindex(
     tile = tile.import_info()
     
     # Parameters used are added to the TileInfo Object
-    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "interpolation_order" : interpolation_order, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi, "extent_shape_path" : extent_shape_path, "path_dict_vi" : path_dict_vi})
+    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "interpolation_order" : interpolation_order, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi, "extent_shape_path" : extent_shape_path, "path_dict_vi" : path_dict_vi, "soil_detection" : soil_detection,"formula_mask" : formula_mask})
   
     # If parameters added differ from previously used parameters, all previous computation results are deleted
     if tile.parameters["Overwrite"] : 
@@ -135,9 +137,10 @@ def compute_masked_vegetationindex(
     #Adding directories for ouput. Directories are created and their paths added to the TileInfo object.
     tile.add_dirpath("VegetationIndexDir", tile.data_directory / "VegetationIndex")
     tile.add_dirpath("MaskDir", tile.data_directory / "Mask")
-    tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
-    tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
-    tile.add_path("count_soil", tile.data_directory / "DataSoil" / "count_soil.tif")
+    if soil_detection:
+        tile.add_path("state_soil", tile.data_directory / "DataSoil" / "state_soil.tif")
+        tile.add_path("first_date_soil", tile.data_directory / "DataSoil" / "first_date_soil.tif")
+        tile.add_path("count_soil", tile.data_directory / "DataSoil" / "count_soil.tif")
         
     #Computing cloudiness percentage for each date
     cloudiness = get_cloudiness(Path(input_directory) / "cloudiness", tile.paths["Sentinel"], sentinel_source) if lim_perc_cloud != -1 else dict(zip(tile.paths["Sentinel"], [-1]*len(tile.paths["Sentinel"]))) #Returns dictionnary with cloud percentage for each date, except if lim_perc_cloud is set as 1, in which case cloud percentage is -1 for every date so source mask is not used and every date is used 
@@ -149,44 +152,49 @@ def compute_masked_vegetationindex(
     else:
         print("Computing masks and vegetation index : " + str(len(new_dates))+ " new dates")
         
-        tile.raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0]["B2"], extent_shape_path = extent_shape_path)  #Imports all raster metadata from one band. 
-
+        tile.raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0][next(x for x in list(tile.paths["Sentinel"].values())[0] if x in ["B2","B3","B4","B8"])], #path of first 10m resolution band found
+                                               extent_shape_path = extent_shape_path)  #Imports all raster metadata from one band. 
+        
         #Import or initialize data for the soil mask
-        if tile.paths["state_soil"].exists():
-            soil_data = import_soil_data(tile.paths)
-        else:
-            soil_data = initialize_soil_data(tile.raster_meta["shape"],tile.raster_meta["coords"])
+        if soil_detection:
+            if tile.paths["state_soil"].exists():
+                soil_data = import_soil_data(tile.paths)
+            else:
+                soil_data = initialize_soil_data(tile.raster_meta["shape"],tile.raster_meta["coords"])
 
-        tile.used_bands, tile.vi_formula = get_bands_and_formula(vi, path_dict_vi, forced_bands = ["B2","B3","B4","B11","B8A"]) #Selects only relevant bands depending on used vegetation index plus forced_bands used in masks
+        tile.used_bands, tile.vi_formula = get_bands_and_formula(vi, path_dict_vi, forced_bands = ["B2","B3","B4"] if soil_detection else get_bands_and_formula(formula = formula_mask)[0]) #Selects only relevant bands depending on used vegetation index plus forced_bands used in masks
 
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
                 
                 # Resample and import SENTINEL data
                 stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], tile.used_bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])
-                # Compute masks
-                mask = compute_masks(stack_bands, soil_data, date_index)
+                
+                # Compute vegetation index
+                vegetation_index = compute_vegetation_index(stack_bands, formula = tile.vi_formula)
+                invalid_values = vegetation_index.isnull() | np.isinf(vegetation_index)
+                vegetation_index = vegetation_index.where(~invalid_values,0)
+                
+                # Compute mask
+                if soil_detection:
+                    mask = compute_masks(stack_bands, soil_data, date_index)
+                else:
+                    mask = compute_user_mask(stack_bands, formula_mask)
+                mask = mask | invalid_values
                 if apply_source_mask:
                     mask = mask | get_source_mask(tile.paths["Sentinel"][date], sentinel_source, extent = tile.raster_meta["extent"]) #Masking with source mask if option chosen
                     
-                # Compute vegetation index
-                vegetation_index = compute_vegetation_index(stack_bands, formula = tile.vi_formula)
-
-                # Masking invalid values (division by zero)
-                invalid_values = vegetation_index.isnull() | np.isinf(vegetation_index)
-                vegetation_index = vegetation_index.where(~invalid_values,0)
-                mask = mask | invalid_values
-                
                 #Writing vegetation index and mask
                 write_tif(vegetation_index, tile.raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".tif"),nodata=0)
                 write_tif(mask, tile.raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
                 del vegetation_index, mask
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
             
-        #Writing soil data 
-        write_tif(soil_data["state"], tile.raster_meta["attrs"],tile.paths["state_soil"],nodata=0)
-        write_tif(soil_data["first_date"], tile.raster_meta["attrs"],tile.paths["first_date_soil"],nodata=0)
-        write_tif(soil_data["count"], tile.raster_meta["attrs"],tile.paths["count_soil"],nodata=0)
+        if soil_detection:
+            #Writing soil data 
+            write_tif(soil_data["state"], tile.raster_meta["attrs"],tile.paths["state_soil"],nodata=0)
+            write_tif(soil_data["first_date"], tile.raster_meta["attrs"],tile.paths["first_date_soil"],nodata=0)
+            write_tif(soil_data["count"], tile.raster_meta["attrs"],tile.paths["count_soil"],nodata=0)
 
     #Add paths to vi and mask to TileInfo object
     tile.getdict_paths(path_vi = tile.paths["VegetationIndexDir"],

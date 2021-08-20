@@ -329,7 +329,6 @@ def compute_masks(stack_bands, soil_data, date_index):
 
     """
     
-    
     soil_anomaly, shadows, outside_swath, invalid = get_pre_masks(stack_bands)
     
     # Compute soil
@@ -340,10 +339,17 @@ def compute_masks(stack_bands, soil_data, date_index):
     
     #Combine all masks
     mask = shadows | clouds | outside_swath | soil_data['state'] | soil_anomaly
-    # mask.plot()
-    
+
     return mask
 
+def compute_user_mask(stack_bands, formula_mask):
+
+    shadows = (stack_bands==0).any(dim = "band")
+    outside_swath = stack_bands.isel(band=0)<0
+    user_mask = compute_vegetation_index(stack_bands, formula = formula_mask)
+    mask = shadows | outside_swath | user_mask
+        
+    return mask
 
 def get_dict_vi(path_dict_vi = None):
     """
@@ -377,8 +383,10 @@ def get_dict_vi(path_dict_vi = None):
         dict_vi.update(d)
     return dict_vi
 
+def remove_0_from_match(matchobj):
+    return re.sub(r'0',"",matchobj.group(0))
 
-def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
+def get_bands_and_formula(vi = "CRSWIR", formula = None, path_dict_vi = None,forced_bands = []):
     """
     From the vegetation index used, infers which bands are necessary. Formula of vegetation index is also returned. A list of bands which are also necessary can be added.
 
@@ -386,6 +394,8 @@ def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
     ----------
     vi : str
         Name of vegetation index, see get_dict_vi documentation to know available vegetation indices. A formula can be given instead The default is "CRSWIR".
+    formula : str
+        Formula as can be used in the function [compute_vegetation_index](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)
     path_dict_vi : str, optional
         Path of the text file. 
         Each line of the text file corresponds to an index, in the format "INDEX_NAME FORMULA SIGN".
@@ -401,10 +411,11 @@ def get_bands_and_formula(vi, path_dict_vi,forced_bands = []):
         Formula of the vegetation index as found in the path_dict_vi file, and as used in compute_vegetation_index function.
 
     """
-    
-    formula = get_dict_vi(path_dict_vi)[vi]["formula"]
-    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"    
-    bands = list(set(forced_bands + ["B"+band for band in re.findall(match_string, formula)]))
+    if formula is None:
+        formula = get_dict_vi(path_dict_vi)[vi]["formula"]
+    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"
+    formula = re.sub(match_string, remove_0_from_match, formula)
+    bands = list(set([forced_band.replace("0","") for forced_band in forced_bands] + ["B"+band for band in re.findall(match_string, formula)]))
     return bands, formula
 
     
@@ -435,6 +446,8 @@ def get_source_mask(band_paths, sentinel_source, extent = None):
     elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
         binary_mask = ~source_mask.isin([4,5])
     return binary_mask
+
+
 
 def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_dict_vi = None):
     """
@@ -467,8 +480,8 @@ def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_di
         formula = dict_vegetation_index[vi]["formula"]
 
     match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})" # B + un chiffre + une lettre OU B + deux chiffres OU B + un chiffre
+    formula = re.sub(match_string, remove_0_from_match, formula) #Removes 0 from band name (B03 -> B3)
     p = re.compile(match_string)
     code_formula = p.sub(r'stack_bands.sel(band= "B\1")', formula)
-    
     return eval(code_formula)
 
