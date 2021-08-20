@@ -39,7 +39,7 @@ def parse_command_line():
 
     parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
-    parser.add_argument("--list_forest_type", dest = "list_forest_type",type = str,default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+    parser.add_argument("--list_forest_type", dest = "list_forest_type", nargs='+',default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--path_oso", dest = "path_oso",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/OCS_2017_CESBIO.tif", help = "Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
     parser.add_argument("--list_code_oso", dest = "list_code_oso",type = str,default = [17], help = "List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'")
 
