@@ -102,6 +102,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                             forest_mask_source = forest_mask_source,
                             dep_path = dep_path,
                             bdforet_dirpath = bdforet_dirpath,
+                            list_forest_type = list_forest_type,
                             path_oso = path_oso,
                             list_code_oso = list_code_oso)
         file = open(logpath, "a") 
