@@ -34,6 +34,8 @@ from fordead.writing_data import write_tif
 @click.option("--interpolation_order", type = int,default = 0, help ="interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique", show_default=True)
 @click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
 @click.option("--apply_source_mask",  is_flag=True, help = "If True, applies the mask from SENTINEL-data supplier", show_default=True)
+@click.option("--soil_detection",  is_flag=True, help = "If True, bare ground is detected and used as mask, but the process has not been tested on other data than THEIA data in France (see https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/). If False, mask from formula_mask is applied.", show_default=True)
+@click.option("--formula_mask", type = str,default = "(B2 >= 700)", help = "formula whose result would be binary, as described here https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index. Is only used if soil_detection is False.", show_default=True)
 @click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
 @click.option("--extent_shape_path", type = str,default = None, help = "Path of shapefile used as extent of detection, if None, the whole tile is used", show_default=True)
 @click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
@@ -44,13 +46,17 @@ def cli_compute_masked_vegetationindex(
     interpolation_order = 0,
     sentinel_source = "THEIA",
     apply_source_mask = False,
+    soil_detection = False, 
+    formula_mask = "(B2 >= 700)",
     vi = "CRSWIR",
     extent_shape_path=None,
     path_dict_vi = None
     ):
     """
     Computes masks and masked vegetation index for each SENTINEL date under a cloudiness threshold.
-    Masks include shadows, clouds, soil, pixels ouside satellite swath, and the mask from SENTINEL data provider if the option is chosen.
+    The mask includes pixels ouside satellite swath, some shadows, and the mask from SENTINEL data provider if the option is chosen.
+    Also, if soil detection is activated, the mask includes bare ground detection and cloud detection, but the process might only be adapted to THEIA data in France's coniferous forests.
+    If it is not activated, then the user can choose a mask of his own using the formula_mask parameter.
     Results are written in the chosen directory.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/
     \f
@@ -62,6 +68,8 @@ def cli_compute_masked_vegetationindex(
     interpolation_order
     sentinel_source
     apply_source_mask
+    soil_detection
+    formula_mask
     vi
     extent_shape_path
     path_dict_vi
@@ -70,7 +78,7 @@ def cli_compute_masked_vegetationindex(
     -------
 
     """
-    compute_masked_vegetationindex(input_directory,data_directory, lim_perc_cloud, interpolation_order, sentinel_source, apply_source_mask, vi, extent_shape_path, path_dict_vi)
+    compute_masked_vegetationindex(input_directory,data_directory, lim_perc_cloud, interpolation_order, sentinel_source, apply_source_mask, soil_detection, formula_mask, vi, extent_shape_path, path_dict_vi)
 
 
 def compute_masked_vegetationindex(
@@ -106,6 +114,10 @@ def compute_masked_vegetationindex(
         Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'
     apply_source_mask : bool
         If True, applies the mask from SENTINEL-data supplier
+    soil_detection : bool
+        If True, bare ground is detected and used as mask, but the process has not been tested on other data than THEIA data in France (see https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/). If False, mask from formula_mask is applied.
+    formula_mask : str
+        formula whose result would be binary, as described here https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index. Is only used if soil_detection is False.
     vi : str
         Chosen vegetation index
     extent_shape_path : str

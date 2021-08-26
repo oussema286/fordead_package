@@ -9,7 +9,9 @@ The input parameters are:
 - **interpolation_order** : Interpolation order for the conversion of the bands from a 20m resolution to a 10m resolution. 0 : nearest neighbor, 1 : linear, 2 : bilinear, 3 : cubic
 - **sentinel_source** : Provider of the data among 'THEIA' and 'Scihub' and 'PEPS'.
 - **apply_source_mask** : If True, the mask of the provider is also used to mask the data
-- **vi** : Vegetation index used
+- **soil_detection** : If True, bare ground is detected and used as mask, but the process might not be adapted to other situations than THEIA data on France's coniferous forests. If False, mask from formula_mask is applied.
+- **formula_mask** : formula whose result would be binary, format described [here](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index). Is only used if soil_detection is False.
+- **vi** : Vegetation index used, can be one of the indices provided in the package (CRSWIR, NDVI, NDWI), or any spectral index can be added using the path_dict_vi parameter.
 - **extent_shape_path** : Path of a shapefile containing a polygon used to restrict the calculation to an area. If not provided, the calculation is applied to the whole tile
 - **path_dict_vi** : Path to a text file used to add potential vegetation indices. If not filled in, only the indices provided in the package can be used (CRSWIR, NDVI, NDWI). The file examples/ex_dict_vi.txt gives an example for how to format this file. One must fill the index's name, formula, and "+" or "-" according to whether the index increases or decreases when anomalies occur.
 
@@ -60,14 +62,30 @@ We then use only the new dates in the **input_directory** folder with a cloudine
 The bands of interest of the filtered dates are imported and resampled to 10m
  > **_Functions used:_** [import_resampled_sen_stack()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_resampled_sen_stack)
 
-### Computing mask
-The mask is computed for each date, in four steps:
- > **_Functions used :_** [compute_masks()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_masks)
+### Calculation of the vegetation index
+The selected vegetation index is calculated from the vegetation indices and formulas already provided in the package, or added through a text file whose path is corresponds to parameter **path_dict_vi** (see [get_dict_vi](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#get_dict_vi).
+ > **_Functions used :_** [compute_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)
+Invalid values (division by zero...) are changed to zero.
+
+### Computing the mask 
+
+#### Computing default masks
+The following masks are computed : 
+
+- Detection of some shadows: 0 in any of the bands
+- Detection of areas outside the satellite swath: Value less than 0 in any of the bands (should have the value -10000 for THEIA data) 
+- Invalid values of the vegetation index are also masked (division by zero...)
+
+If **apply_source_mask** is True, the provider's mask is also applied.
+ **_Functions used:_** [get_source_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#get_source_mask)
+ 
+The rest of the process depends on the selected mask mode, if soil_detection is True, the mask includes a detection of bare ground which might no be adapted depending on situations and Sentinel-2 data source.
+#### If soil_detection is True
+The mask for each date is computed in the three following steps.
+ > **_Fonctions utilisées :_** [compute_masks()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_masks)
 
 ##### Creation of the premask
 Detection of soil anomalies : (B11 > 1250) AND (B2 < 600) AND ((B3 + B4) > 800)
-Detection of shadows: 0 in any of the bands
-Detection of areas outside the satellite swath: Value less than 0 in any of the bands (should have the value -10000 for THEIA data) 
 Invalids : aggregation of the shadow mask, out of swath mask and highly visible clouds (B2 >= 600)
  > **_Functions used:_** [get_pre_masks()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#get_pre_masks)
 
@@ -82,12 +100,11 @@ Then, the pixels detected as bare ground or ground anomaly, with which there may
 
 ##### Aggregation of masks
 Aggregation of shadows, clouds, out of swath pixels, bare ground, bare ground anomalies.
-If **apply_source_mask** is True, the provider's mask is also applied.
- **_Functions used:_** [get_source_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#get_source_mask)
 
-### Calculation of the vegetation index
-The selected vegetation index is calculated.
- > **_Functions used :_** [compute_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)
+#### If soil_detection is False
+The mask defined by the user using the parameter **formula_mask** is added to the default masks.
+This formula must be a logical operation involving Sentinel-2 band names (ex : `"B2 > 600"`). It can also use logical operators, as would be used on xarrays, OR (`|`), AND (`&`) et NOT (`~`) (ex : `"(B2 > 600) & (B11 > 1000) | ~(B3 <= 500)"`)
+ > **_Fonctions utilisées :_** [compute_user_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_user_mask), [compute_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)
 
 ### Writing the results
 The vegetation indices, masks and ground detection data are written. All parameters, data paths and dates used are also saved.

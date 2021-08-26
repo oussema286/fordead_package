@@ -343,7 +343,23 @@ def compute_masks(stack_bands, soil_data, date_index):
     return mask
 
 def compute_user_mask(stack_bands, formula_mask):
+    """
+    Compute mask from single date SENTINEL data, using a logical operation formula involving Sentinel-2 bands, as well as two default masks:
+        any negative value in the first band of the stack is considered outside the satellite swath and masked
+        any pixel with a 0 value in any band is considered a shadow and masked
 
+    Parameters
+    ----------
+    stack_bands : xarray DataArray
+        3D xarray with band dimension
+    formula_mask : str
+        Logical operation involving Sentinel-2 bands, which can be named as B2, B3 etc... as well as B02, B03 and so on. See [compute_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index) for details.
+    Returns
+    -------
+    mask : xarray DataArray
+        Binary DataArray, holds True where pixels are masked. Is an aggregation of user defined mask, shadows and outside swath masks.
+
+    """
     shadows = (stack_bands==0).any(dim = "band")
     outside_swath = stack_bands.isel(band=0)<0
     user_mask = compute_vegetation_index(stack_bands, formula = formula_mask)
