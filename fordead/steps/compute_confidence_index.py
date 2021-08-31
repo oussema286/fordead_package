@@ -5,10 +5,10 @@ Created on Wed Apr  7 16:40:16 2021
 @author: Raphael Dutrieux
 """
 
-from fordead.ImportData import import_masked_vi, import_decline_data, TileInfo, import_forest_mask, import_soil_data, import_confidence_data, import_coeff_model, initialize_confidence_data
+from fordead.import_data import import_masked_vi, import_decline_data, TileInfo, import_forest_mask, import_soil_data, import_confidence_data, import_coeff_model, initialize_confidence_data
 from fordead.writing_data import write_tif, vectorizing_confidence_class
 from fordead.masking_vi import get_dict_vi
-from fordead.ModelVegetationIndex import correct_vi_date, prediction_vegetation_index
+from fordead.model_spectral_index import correct_vi_date, prediction_vegetation_index
 
 import numpy as np
 import click
