@@ -6,7 +6,7 @@ Created on Fri Dec 18 11:32:57 2020
 """
 
 import click
-from fordead.ImportData import import_decline_data, TileInfo, import_forest_mask, import_soil_data
+from fordead.import_data import import_decline_data, TileInfo, import_forest_mask, import_soil_data
 from fordead.writing_data import get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date
 
 @click.command(name='export_results')
@@ -60,7 +60,7 @@ def export_results(
     ):
     """
     Writes results in the chosen period, form and using chosen frequency.
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/05_export_results/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_export_results/
     \f
 
     Parameters

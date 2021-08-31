@@ -3,16 +3,23 @@
 # generate website with the following:
 # portray as_html -c pyproject.toml
 
+# Current pypoject.toml seems to make error with `pip install .`,
+# due to extra_markdown_extensions that is a list of values and tables...
+# And inline mixed array/table does not seem to work in portray...
+# Example (not working): extra_markdown_extensions = ['mdx_breakless_lists', 'mkdocs-click', mdx_math = {enable_dollar_delimiter = 1}]
+# The solution was to rename pyproject.toml to pyproject_doc.toml
+
 [tool.portray]
 #    docs_dir = "docs"
 # output_dir = "site"
 #    modules = ["fordead"]
-    modules = ["fordead.decline_detection", "fordead.ImportData", "fordead.masking_vi", "fordead.maja_fun", "fordead.ModelVegetationIndex", "fordead.writing_data"]
+    modules = ["fordead.decline_detection", "fordead.import_data", "fordead.masking_vi", "fordead.maja_fun", "fordead.model_spectral_index", "fordead.writing_data"]
     extra_markdown_extensions = ['mdx_breakless_lists', 'mkdocs-click']
 
 [[tool.portray.extra_markdown_extensions]]
     [tool.portray.extra_markdown_extensions.mdx_math]
         enable_dollar_delimiter = 1
+        use_gitlab_delimiters = 1
 [[tool.portray.extra_markdown_extensions]]
     [tool.portray.extra_markdown_extensions.toc]
         toc_depth = 5

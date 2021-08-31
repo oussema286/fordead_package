@@ -6,7 +6,7 @@ Les paramètres en entrée sont :
 - **data_directory** : Le chemin du dossier de sortie dans lequel sera écrit les résultats de la détection.
 - **threshold_anomaly** : Seuil à partir duquel la différence entre l'indice de végétation réel et prédit est considéré comme une anomalie
 - **vi** : Indice de végétation utilisé, il est inutile de le renseigner si l'étape [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/) a été utilisée.
-- **path_dict_vi** : Chemin d'un fichier texte permettant d'ajouter des indices de végétations utilisables. Si non renseigné, uniquement les indices prévus dans le package sont utilisable (CRSWIR, NDVI). Le fichier [examples/ex_dict_vi.txt](/examples/ex_dict_vi.txt) donne l'exemple du formattage de ce fichier. Il s'agit de renseigner son nom, sa formule, et "+" ou "-" selon si l'indice augmente en cas de déperissement, ou si il diminue. Il est également inutile de le renseigner si cela a été fait lors de l'étape [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/).
+- **path_dict_vi** : Chemin d'un fichier texte permettant d'ajouter des indices de végétations utilisables. Si non renseigné, uniquement les indices prévus dans le package sont utilisable (CRSWIR, NDVI, NDWI). Le fichier [examples/ex_dict_vi.txt](/examples/ex_dict_vi.txt) donne l'exemple du formattage de ce fichier. Il s'agit de renseigner son nom, sa formule, et "+" ou "-" selon si l'indice augmente en cas de déperissement, ou si il diminue. Il est également inutile de le renseigner si cela a été fait lors de l'étape [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/).
 
 
 #### SORTIES
@@ -36,23 +36,23 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Ainsi, à moins que les paramètres aient été modifiés ou que ce soit la première fois que ce traitement est réalisé, la détection du dépérissement est mise à jour uniquement avec les nouvelles dates SENTINEL.
-> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#delete_dirs)
+> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#delete_dirs)
 
 ### Imports des résultats des étapes précédentes
 Les coefficients du modèle de prédiction de l'indice de végétation sont importés, ainsi que l'array contenant l'index de la première date utilisée pour la détection. Les arrays contenant les informations liées à la détection de déperissement (État des pixels, nombre d'anomalies successives, index de la date de première anomalie) sont initialisés si l'étape est utilisée pour la première fois, ou importés si il s'agit d'une mise à jour de la détection.
-> **_Fonctions utilisées :_** [import_coeff_model()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_coeff_model), [import_first_detection_date_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_first_detection_date_index), [initialize_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#initialize_decline_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_decline_data)
+> **_Fonctions utilisées :_** [import_coeff_model()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_coeff_model), [import_first_detection_date_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_first_detection_date_index), [initialize_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#initialize_decline_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_decline_data)
 
 ### Pour chaque date non déjà utilisée pour la détection du dépérissement :
 
 #### Imports de l'indice de végétation calculé et du masque
-> **_Fonctions utilisées :_** [import_masked_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_masked_vi)
+> **_Fonctions utilisées :_** [import_masked_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_masked_vi)
 
 ### (OPTIONNEL - si **correct_vi** vaut True lors de [l'étape précédente de calcul du modèle](https://fordead.gitlab.io/fordead_package/docs/user_guides/03_train_model/) Correction de l'indice de végétation à partir de l'indice de végétation médian des pixels d'intérêts non masqués à l'échelle de la zone complète
 - Masquage des pixels n'appartenant pas à la zone d'intérêt, ou masqués
 - Calcul de la médiane de l'indice de végétation de l'ensemble de la zone
 - Calcul d'un terme de correction, par différence entre la médiane calculée et la prédiction du modèle calculé lors de l'étape précédente à partir de la médiane calculée pour l'ensemble des dates
 - Application du terme de correction en l'ajoutant à la valeur de l'indice de végétation de l'ensemble des pixels
-> **_Fonctions utilisées :_** [correct_vi_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/ModelVegetationIndex/#correct_vi_date)
+> **_Fonctions utilisées :_** [correct_vi_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/model_spectral_index/#correct_vi_date)
 
 #### Prédiction de l'indice de végétation à la date donnée.
 L'indice de végétation est prédit à partir des coefficients du modèle.
@@ -68,5 +68,5 @@ Les anomalies successives sont comptées, à partir de trois anomalies successiv
 
  ### Ecriture des résultats
 Les informations liées à la détection du dépérissement sont écrites. L'ensemble des paramètres, chemins des données et dates utilisées sont aussi sauvegardés.
- > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#save_info)
+ > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#save_info)
 

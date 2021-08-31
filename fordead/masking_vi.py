@@ -14,7 +14,8 @@ import geopandas as gp
 import pandas as pd
 import rasterio
 from scipy import ndimage
-from fordead.ImportData import import_resampled_sen_stack
+from fordead.import_data import import_resampled_sen_stack
+
 
 def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
     """
@@ -86,6 +87,29 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
     bd_foret=bd_foret[bd_foret['CODE_TFV'].isin(list_forest_type)]    
     
     forest_mask = rasterize_polygons_binary(bd_foret, example_raster)
+    return forest_mask
+
+def rasterize_vector(vector_path, example_path):
+    """
+    Creates binary raster mask from a vector, such as a shapefile containing polygons
+
+    Parameters
+    ----------
+    vector_path : str
+        Path to a vector containing polygons delimiting the areas of interest
+    example_path : str
+        Path to a raster from which to copy the extent and resolution for the mask
+
+    Returns
+    -------
+    forest_mask : xarray DataArray
+        Boolean DataArray containing True where pixels are in the polygons with the vector file.
+    """
+    
+    example_raster = xr.open_rasterio(example_path).squeeze("band")
+    example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
+    vector = gp.read_file(vector_path)
+    forest_mask = rasterize_polygons_binary(vector, example_raster)
     return forest_mask
 
 def rasterize_polygons_binary(polygons, example_raster):
@@ -312,7 +336,7 @@ def compute_masks(stack_bands, soil_data, date_index):
     
     # Compute soil
     soil_data = detect_soil(soil_data, soil_anomaly, invalid, date_index)
-        
+
     # Compute clouds
     clouds = detect_clouds(stack_bands, soil_data["state"], soil_anomaly)
     

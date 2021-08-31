@@ -19,7 +19,7 @@ import numpy as np
 #   IMPORT LIBRAIRIES PERSO
 # =============================================================================
 
-from fordead.ImportData import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
+from fordead.import_data import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
 from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula, get_source_mask
 from fordead.writing_data import write_tif
 
@@ -52,7 +52,7 @@ def cli_compute_masked_vegetationindex(
     Computes masks and masked vegetation index for each SENTINEL date under a cloudiness threshold.
     Masks include shadows, clouds, soil, pixels ouside satellite swath, and the mask from SENTINEL data provider if the option is chosen.
     Results are written in the chosen directory.
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/
     \f
     Parameters
     ----------
@@ -88,7 +88,7 @@ def compute_masked_vegetationindex(
     Computes masks and masked vegetation index for each SENTINEL date under a cloudiness threshold.
     Masks include shadows, clouds, soil, pixels ouside satellite swath, and the mask from SENTINEL data provider if the option is chosen.
     Results are written in the chosen directory.
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/
     
     Parameters
     ----------
@@ -159,10 +159,9 @@ def compute_masked_vegetationindex(
             soil_data = initialize_soil_data(tile.raster_meta["shape"],tile.raster_meta["coords"])
 
         tile.used_bands, tile.vi_formula = get_bands_and_formula(vi, path_dict_vi, forced_bands = ["B2","B3","B4","B11","B8A"]) #Selects only relevant bands depending on used vegetation index plus forced_bands used in masks
-    
+
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
-                
                 
                 # Resample and import SENTINEL data
                 stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], tile.used_bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])

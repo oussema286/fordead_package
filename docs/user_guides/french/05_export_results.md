@@ -6,7 +6,7 @@ Les paramètres en entrée sont :
 - **data_directory** : Le chemin du dossier de sortie dans lequel sera écrit les résultats
 - **start_date** : Date de début, au format AAAA-MM-JJ
 - **end_date** : Date de fin, au format AAAA-MM-JJ
-- **frequency** : Fréquence à laquelle les résultats sont exportés. Peut être "sentinel", auquel cas la fréquence correspond aux dates SENTINEL, ou une fréquence telle qu'acceptée par la fonction pandas.date_range (ex : 'M' (tous les mois), '3M' (tous les trois mois), '15D' (tous les 15 jours)")
+- **frequency** : Fréquence utilisée pour agréger les résultats. Peut être "sentinel", auquel cas les périodes utilisées pour agréger les résultats correspondent au temps entre les dates SENTINEL disponibles, peut également être une fréquence telle qu'acceptée par la fonction pandas.date_range (ex : 'M' (tous les mois), '3M' (tous les trois mois), '15D' (tous les 15 jours)")
 - **export_soil** : Si True, les résultats relatifs à la détection de sol nu/coupes sont exportés également.
 - **multiple_files** : Si True, un shapefile sera exporté par période, où chaque polygone correspond à l'état de la zone à la fin de la période. Sinon, un seul shapefile est exporté et les polygones contiennent la période à laquelle la première anomalie a été détecté.
 
@@ -47,18 +47,18 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...) afin de pouvoir importer l'ensemble des résultats.
-> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_info)
+> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info)
 
 ### Import des résultats de la détection 
 Les résultats des étapes précedentes sont importées.
-> **_Fonctions utilisées :_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_soil_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_decline_data), [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/ImportData/#import_forest_mask)
+> **_Fonctions utilisées :_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_soil_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_decline_data), [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_forest_mask)
 
 ### Détermination des périodes pour aggréger les résultats
 Les résultats seront donné par aggrégation selon la période à laquelle surviennent les premières anomalies à la fois pour la détection de sol et de déperissement. Ces périodes sont déterminées à partir de la fréquence indiquée par le paramètre **frequency**, la date de début **start_date** et la date de fin **end_date**. Les périodes avant la première date SENTINEL utilisée, ou après la dernière, si elles existent, sont retirées puisqu'elles ne peuvent correspondre à aucun résultat.
 > **_Fonctions utilisées :_** [get_bins()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_bins)
 
-### Conversion des dates de premières anomalies en nombre de jours depuis 2015-06-23
-Les dates de premières anomalies, stockées sous forme d'index parmi les dates utilisées, sont converties en nombre de jours depuis un jour de référence "2015-06-23" correspondant au lancement du premier satellite SENTINEL-2. Ainsi ces dates peuvent être comparées avec les limites des périodes déterminées précedemment.
+### Conversion des dates de premières anomalies en nombre de jours depuis 2015-01-01
+Les dates de premières anomalies, stockées sous forme d'index parmi les dates utilisées, sont converties en nombre de jours depuis un jour de référence "2015-01-01" correspondant au lancement du premier satellite SENTINEL-2. Ainsi ces dates peuvent être comparées avec les limites des périodes déterminées précedemment.
 > **_Fonctions utilisées :_** [convert_dateindex_to_datenumber()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#convert_dateindex_to_datenumber)
 
 ### Si export en plusieurs fichiers :

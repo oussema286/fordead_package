@@ -17,10 +17,10 @@ import matplotlib.dates as mdates
 import datetime
 
 from fordead.masking_vi import get_dict_vi
-from fordead.ImportData import import_resampled_sen_stack, import_soil_data, import_decline_data, import_forest_mask
+from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_decline_data, import_forest_mask
 
 
-def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"]):
+def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = None):
     """
     Imports stack of bands, clipped with extent
 
@@ -32,7 +32,8 @@ def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"]):
         Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
     bands : list, optional
         List of bands. The default is ["B4","B3","B2"].
-
+    dates : 1D array or list
+        List of dates to import, if None, all dates saved in "tile" TileInfo object are used
     Returns
     -------
     stack_rgb : xarray DataArray
@@ -40,9 +41,11 @@ def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"]):
 
     """
     
-    list_rgb = [import_resampled_sen_stack(tile.paths["Sentinel"][date], bands,extent = extent) for date in tile.dates]
+    if dates is None:
+        dates = tile.dates
+    list_rgb = [import_resampled_sen_stack(tile.paths["Sentinel"][date], bands,extent = extent) for date in dates]
     stack_rgb = xr.concat(list_rgb,dim="Time")
-    stack_rgb=stack_rgb.assign_coords(Time=tile.dates)
+    stack_rgb=stack_rgb.assign_coords(Time=dates)
     stack_rgb=stack_rgb.transpose("Time", 'y', 'x',"band")
     return stack_rgb
 
@@ -73,7 +76,7 @@ def polygon_from_coordinate_and_radius(coordinates, radius, crs):
 
 
 
-def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
+def CreateTimelapse(shape,tile,DictCol, obs_terrain_path, max_date):
         NbData=4
         fig = go.Figure()
         
@@ -93,7 +96,8 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
                                                 float(forest_mask[dict(x=-1,y=-1)].coords["x"])+forest_mask.attrs["transform"][0]/2,
                                                 float(forest_mask[dict(x=0,y=0)].coords["y"])+forest_mask.attrs["transform"][0]/2])
         
-        stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"])
+        dates = tile.dates[tile.dates <= max_date] if max_date is not None else tile.dates
+        stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = dates)
 
 #         #Récupération des données observations
         if obs_terrain_path is not None:
@@ -102,7 +106,7 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
         # CountInvalid=0
         valid_dates = xr.where(stack_rgb == -10000,True,False).sum(dim="x").sum(dim="y").sum(dim="band")/(stack_rgb.size / stack_rgb.sizes["Time"]) < 0.90
         nb_valid_dates = int(valid_dates.sum())
-        for dateIndex, date in enumerate(tile.dates):
+        for dateIndex, date in enumerate(dates):
             if valid_dates.sel(Time = date) == True:
                 fig.add_trace(
                     go.Image(
@@ -203,7 +207,7 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path):
         for i in range(nb_valid_dates):
             
             step = dict(
-                label = tile.dates[valid_dates][i],
+                label = dates[valid_dates][i],
                 method="restyle",
                 args=["visible", [False] * nb_valid_dates*NbData+[True]*Nb_ScolytesObs])
                 # args=["visible", [False] * (len(Day)+stackAtteint.shape[0]*3) + [True] * scolytes.shape[0] + [False] * stackMask.shape[0]] ,

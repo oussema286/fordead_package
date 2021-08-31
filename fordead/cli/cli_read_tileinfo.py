@@ -1,5 +1,5 @@
 import click
-from fordead.ImportData import TileInfo
+from fordead.import_data import TileInfo
 
 @click.group()
 def cli():

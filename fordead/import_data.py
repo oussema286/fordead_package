@@ -371,7 +371,10 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
     path_cloudiness= Path(path_cloudiness)
     cloudiness = TileInfo(path_cloudiness.parent)
     if path_cloudiness.exists():
-        cloudiness=cloudiness.import_info(path_cloudiness)
+        try:
+            cloudiness=cloudiness.import_info(path_cloudiness)
+        except:
+            path_cloudiness.unlink()
     if not(hasattr(cloudiness, 'perc_cloud')):
         cloudiness.perc_cloud={}
     for date in dict_path_bands:
@@ -598,7 +601,7 @@ def import_stackedmaskedVI(tuile,min_date = None, max_date=None,chunks = None):
     stack_vi=stack_vi.assign_coords(Time=dates)
     stack_vi=stack_vi.squeeze("band")
     stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
-    # stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
+    # stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
 
     
     list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in dates]
@@ -606,7 +609,7 @@ def import_stackedmaskedVI(tuile,min_date = None, max_date=None,chunks = None):
     stack_masks=stack_masks.assign_coords(Time=dates).astype(bool)
     stack_masks=stack_masks.squeeze("band")
     stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
-    # stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
+    # stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
 
     return stack_vi, stack_masks
 
@@ -872,7 +875,7 @@ def import_stacked_anomalies(paths_anomalies, chunks = None):
     stack_anomalies=stack_anomalies.assign_coords(Time=[date for date in paths_anomalies.keys()])
     stack_anomalies=stack_anomalies.squeeze("band")
     stack_anomalies=stack_anomalies.chunk({"Time": -1,"x" : chunks,"y" : chunks})
-    # stack_anomalies["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_anomalies["Time"])]))
+    # stack_anomalies["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_anomalies["Time"])]))
     return stack_anomalies.astype(bool)
 
 

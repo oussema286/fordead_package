@@ -5,8 +5,8 @@ Created on Fri Nov 27 18:20:18 2020
 @author: Raphael Dutrieux
 """
 import click
-from fordead.ImportData import TileInfo, import_forest_mask, get_raster_metadata, clip_xarray
-from fordead.masking_vi import rasterize_bdforet, clip_oso, raster_full
+from fordead.import_data import TileInfo, import_forest_mask, get_raster_metadata, clip_xarray
+from fordead.masking_vi import rasterize_bdforet, clip_oso, raster_full, rasterize_vector
 from fordead.writing_data import write_tif
 from pathlib import Path
 
@@ -23,8 +23,10 @@ from pathlib import Path
                     help="List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'", show_default=True)
 @click.option("--path_oso",  type=str,
                     help="Path to soil occupation raster, only used if forest_mask_source = 'OSO' ", show_default=True)
-@click.option("--list_code_oso",  type=str, default=[32],
+@click.option("--list_code_oso",  type=str, default=[17],
                     help="List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'", show_default=True)
+@click.option("--vector_path",  type=str,
+                    help="path of shapefile whose polygons will be rasterized as a binary raster with resolution, extent and crs of the raster at path_example_raster. Only used if forest_mask_source = 'vector'", show_default=True)
 @click.option("--path_example_raster",  type=str, default=None,
                     help="Path to raster from which to copy the extent, resolution, CRS...", show_default=True)
 def cli_compute_forest_mask(data_directory,
@@ -36,12 +38,12 @@ def cli_compute_forest_mask(data_directory,
                         
                         path_oso = None,
                         list_code_oso = [32],
-                        
+                        vector_path = None,
                         path_example_raster = None
                         ):
     """
     Compute forest mask from IGN's BDFORET or CESBIO's OSO map
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/04_compute_forest_mask/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/
     \f
     Parameters
     ----------
@@ -52,6 +54,7 @@ def cli_compute_forest_mask(data_directory,
     bdforet_dirpath
     path_oso
     list_code_oso
+    vector_path
     path_example_raster
 
     Returns
@@ -69,8 +72,8 @@ def compute_forest_mask(data_directory,
                         bdforet_dirpath = None,
                         
                         path_oso = None,
-                        list_code_oso = [32],
-                        
+                        list_code_oso = [17],
+                        vector_path = None,
                         path_example_raster = None
                         ):
     """
@@ -92,6 +95,8 @@ def compute_forest_mask(data_directory,
         Path to soil occupation raster, only used if forest_mask_source = 'OSO'
     list_code_oso : list
         List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'
+    vector_path : str
+        path of shapefile whose polygons will be rasterized as a binary raster with resolution, extent and crs of the raster at path_example_raster. Only used if forest_mask_source = "vector"
     path_example_raster : str
         Path to raster from which to copy the extent, CRS...
 
@@ -117,7 +122,11 @@ def compute_forest_mask(data_directory,
     if tile.paths["ForestMask"].exists():
         print("Forest mask already calculated")
     else:
-        if Path(forest_mask_source).is_file():
+        if forest_mask_source is None:
+            print("No mask used, computing forest mask with every pixel marked as True")
+            forest_mask = raster_full(path_example_raster, fill_value = 1, dtype = bool)
+            
+        elif Path(forest_mask_source).is_file():
             print("Importing " + forest_mask_source)
             forest_mask = clip_xarray(array = import_forest_mask(forest_mask_source), 
                                       extent = get_raster_metadata(path_example_raster)["extent"])
@@ -130,10 +139,9 @@ def compute_forest_mask(data_directory,
             print("Computing forest mask from OSO")
             forest_mask = clip_oso(path_oso, path_example_raster, list_code_oso)
             
-        elif forest_mask_source==None:
-            print("No mask used, computing forest mask with every pixel marked as True")
-            forest_mask = raster_full(path_example_raster, fill_value = 1, dtype = bool)
-        
+        elif forest_mask_source == "vector":
+            forest_mask = rasterize_vector(vector_path, path_example_raster)
+            
         else:
             print("Unrecognized forest_mask_source")
 

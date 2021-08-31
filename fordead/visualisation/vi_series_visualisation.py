@@ -16,8 +16,8 @@ import click
 import matplotlib
 import matplotlib.pyplot as plt
 
-from fordead.ImportData import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
-from fordead.ModelVegetationIndex import compute_HarmonicTerms
+from fordead.import_data import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
+from fordead.model_spectral_index import compute_HarmonicTerms
 from fordead.results_visualisation import select_pixel_from_coordinates, select_pixel_from_indices, plot_temporal_series
 
 @click.group()
@@ -36,7 +36,7 @@ def cli_vi_series_visualisation(data_directory, shape_path = None, name_column =
     From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
     If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
-    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
+    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
     The graphs are exported in the data_directory/TimeSeries directory as png files.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
     \f
@@ -63,7 +63,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
     If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
-    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
+    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
     The graphs are exported in the data_directory/TimeSeries directory as png files.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
     
@@ -88,7 +88,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     
     # IMPORTING ALL DATA
     stack_vi, stack_masks = import_stackedmaskedVI(tile,chunks = chunks)
-    stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-06-23', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
+    stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
     coeff_model = import_coeff_model(tile.paths["coeff_model"],chunks = chunks)
     first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
     soil_data = import_soil_data(tile.paths,chunks = chunks)
@@ -100,7 +100,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     tile.add_dirpath("series", tile.data_directory / "TimeSeries")
     tile.save_info()
     xx = np.array(range(int(stack_vi.DateNumber.min()), int(stack_vi.DateNumber.max())))
-    xxDate=[np.datetime64(datetime.datetime.strptime("2015-06-23", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in xx]
+    xxDate=[np.datetime64(datetime.datetime.strptime("2015-01-01", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in xx]
     
     harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in xx])
     harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : xxDate, "coeff" : [1,2,3,4,5]},dims=["Time","coeff"])
@@ -121,13 +121,16 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
             geometry_point = shape.iloc[point_index]["geometry"]
             print(id_point)
             
-            if forest_mask.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest"):
+            
+            if geometry_point.x < tile.raster_meta["extent"][0] or geometry_point.x > tile.raster_meta["extent"][2] or geometry_point.y < tile.raster_meta["extent"][1] or geometry_point.y > tile.raster_meta["extent"][3]:
+                print("Pixel outside extent of the region of interest")
+            elif not(forest_mask.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")):
+                print("Pixel outside forest mask")
+            else:
                 pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_coordinates(geometry_point.x,geometry_point.y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"], ymin,ymax)
                 fig.savefig(tile.paths["series"] / (str(id_point) + ".png"))
                 plt.close()
-            else:
-                print("Pixel outside forest mask")
     else:
         #Initialiser X,Y
         # matplotlib.use('TkAgg')
@@ -172,13 +175,16 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                     raise Exception("Index or coordinate mode incorrect. Type 'c' for coordinate mode, 'i' for index mode")
                     
                 #PLOTTING
-                if xy_forest_mask:
+                    
+                if X < tile.raster_meta["extent"][0] or X > tile.raster_meta["extent"][2] or Y < tile.raster_meta["extent"][1] or Y > tile.raster_meta["extent"][3]:
+                    print("Pixel outside extent of the region of interest")
+                elif not(xy_forest_mask):
+                    print("Pixel outside forest mask")
+                else:
                     fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
                     fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
                     plt.show()
                     plt.close()
-                else:
-                    print("Pixel outside forest mask")
     
 if __name__ == '__main__':
     # print(dictArgs)
