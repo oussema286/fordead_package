@@ -44,12 +44,31 @@ The steps in this package can also be ran from the command invite. The command `
 ```bash
 fordead masked_vi -i <MyWorkingDirectory>/study_area -o <output directory> -n 0.4 --interpolation_order 0 --sentinel_source THEIA --formula_mask "(B2 > 600)" --vi NDWI --apply_source_mask
 ```
-Note that if the same parameters are used, the Sentinel-2 dates already computed are ignored. However, if you change any parameter, all previous results are deleted and calculated again. If new Sentinel-2 data are added in the **input_directory**, it is computed as long as it is more recent than the last computed Sentinel-2 date.
+Note that if the same parameters are used, the Sentinel-2 dates already computed are ignored. However, if you change any parameter, all previous results are deleted and calculated again. If new Sentinel-2 data are added in the **input_directory**, it is computed as long as it is more recent than the last computed Sentinel-2 date. This way of saving information on previous processes and paths is done using fordead's [TileInfo](https://fordead.gitlab.io/fordead_package/docs/examples/ex_tileinfo_object/) class, of which an object is saved in the data_directory and is retrieved each time a process is launched.
 
+#### Step 2 : Training a vegetation index model pixel by pixel from the first dates
 
+In this second step, early Sentinel-2 dates are considered representative of the normal seasonal behavior of the vegetation index, thus they are used to compute a model of the vegetation index which can then be used to predict its expected value at any date of the year. Such a model probably depends on many factors, forest density, composition, topography, and so on... So a different model is computed for each pixel to take these differences into account. The periodic model used to fit the training dates is the following:
+```math
+a1 + b1\sin{\frac{2\pi t}{T}} + b2\cos{\frac{2\pi t}{T}} + b3\sin{\frac{4\pi t}{T}} + b4\cos{\frac{4\pi t}{T}}
+```
+This step's complete guide can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/).
 
+##### Running this step using a script
 
+To run this step, simply add the following lines to the script :
+```python
+from fordead.steps.step2_train_model import train_model
+train_model(data_directory = data_directory, nb_min_date = 10, min_last_date_training="2018-01-01", max_last_date_training="2018-06-01")
+```
 
+The model will be trained on all Sentinel-2 dates until **min_last_date_training**. If there are not **nb_min_date** valid dates on **min_last_date_training**, the first **nb_min_date** valid dates are used unless this number is not reach at **max_last_date_training** in which case the pixel is dropped and no model will be calculated. This allows, for example in the case of a relatively ancient source of anomalies such as the bark beetle crisis, to start the detection as early as 2018 if there are enough valid dates at the beginning of the year, while allowing the study of pixels in situations with less data available simply by performing the training over a longer period to retrieve other valid dates. It is not recommended to end the training before 2018, because since the periodic model is annual, the use of at least two years of SENTINEL-2 data is advised.
 
+##### Outputs
 
+The outputs of this second step, in the data_directory folder, are:
+- In the **DataModel** folder, two files:
+    - **first_detection_date_index.tif**, a raster that contains the index of the first date that will be used for detection. It allows to know for each pixel which dates were used for training and which ones are used for detection.
+    - **coeff_model.tif**, a stack with 5 bands, one for each coefficient of the vegetation index model.
+- In the **ForestMask** directory, the binary raster **valid_area_mask.tif** which is 1 for pixels where the model could be computed, 0 if there were not enough valid dates.
 
