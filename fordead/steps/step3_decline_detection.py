@@ -14,7 +14,7 @@ from fordead.model_spectral_index import prediction_vegetation_index, correct_vi
 
 
 @click.command(name='decline_detection')
-@click.option("-d", "--data_directory",  type=str, help="Path of the output directory")
+@click.option("-o", "--data_directory",  type=str, help="Path of the output directory")
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
                     help="Minimum threshold for anomaly detection", show_default=True)
 @click.option("--vi",  type=str, default=None,

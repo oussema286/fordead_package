@@ -15,10 +15,10 @@ from fordead.writing_data import write_tif
 
 
 @click.command(name='train_model')
-@click.option("-d", "--data_directory", type = str, help = "Path of the output directory")
+@click.option("-o", "--data_directory", type = str, help = "Path of the output directory")
 @click.option("--nb_min_date", type = int,default = 10, help = "Minimum number of valid dates to compute a vegetation index model for the pixel", show_default=True)
-@click.option("-s", "--min_last_date_training", type = str,default = "2018-01-01", help = "First date that can be used for detection", show_default=True)
-@click.option("-e", "--max_last_date_training", type = str,default = "2018-06-01", help = "Last date that can be used for training", show_default=True)
+@click.option("--min_last_date_training", type = str,default = "2018-01-01", help = "First date that can be used for detection", show_default=True)
+@click.option("--max_last_date_training", type = str,default = "2018-06-01", help = "Last date that can be used for training", show_default=True)
 @click.option("--correct_vi",  is_flag=True, help = "If True, corrects vi using large scale median vi", show_default=True)
 @click.option("--path_vi", type = str,default = None, help = "Path of directory containing vegetation indices for each date. If None, the information has to be saved from a previous step", show_default=True)
 @click.option("--path_masks", type = str,default = None, help = "Path of directory containing masks for each date.  If None, the information has to be saved from a previous step", show_default=True)

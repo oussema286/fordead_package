@@ -127,7 +127,7 @@ def compute_masked_vegetationindex(
 
     """
     if extent_shape_path is not None: data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
-    
+
     # Creation of TileInfo object. If it already exists in the specified directory, it is imported. 
     tile = TileInfo(data_directory)
     tile = tile.import_info()

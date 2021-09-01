@@ -18,12 +18,12 @@ from pathlib import Path
                     help="Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'", show_default=True)
 @click.option("--bdforet_dirpath",  type=str,
                     help="Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'", show_default=True)
-@click.option("--list_forest_type",  type=str,
+@click.option("--list_forest_type", multiple=True, type=str,
                     default=["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"],
                     help="List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'", show_default=True)
 @click.option("--path_oso",  type=str,
                     help="Path to soil occupation raster, only used if forest_mask_source = 'OSO' ", show_default=True)
-@click.option("--list_code_oso",  type=str, default=[17],
+@click.option("--list_code_oso", multiple=True,  type=int, default=[17],
                     help="List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'", show_default=True)
 @click.option("--vector_path",  type=str,
                     help="path of shapefile whose polygons will be rasterized as a binary raster with resolution, extent and crs of the raster at path_example_raster. Only used if forest_mask_source = 'vector'", show_default=True)
@@ -61,7 +61,7 @@ def cli_compute_forest_mask(data_directory,
     -------
 
     """
-    compute_forest_mask(data_directory, forest_mask_source, list_forest_type, dep_path, bdforet_dirpath, path_oso, list_code_oso, path_example_raster)
+    compute_forest_mask(data_directory, forest_mask_source, list_forest_type, dep_path, bdforet_dirpath, path_oso, list_code_oso, vector_path, path_example_raster)
 
 
 def compute_forest_mask(data_directory,
@@ -107,7 +107,7 @@ def compute_forest_mask(data_directory,
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    tile.add_parameters({"forest_mask_source" : forest_mask_source, "list_forest_type" : list_forest_type, "list_code_oso" : list_code_oso})
+    tile.add_parameters({"forest_mask_source" : forest_mask_source, "list_forest_type" : list_forest_type, "list_code_oso" : list_code_oso, "vector_path" : vector_path})
     if tile.parameters["Overwrite"] : 
         tile.delete_files("ForestMask" ,"periodic_results_decline","result_files","timelapse")
         #Si correction de l'indice de végétation, le calcul du masque forêt se fait en step2 et d'autres résultats doivent être supprimés
@@ -140,6 +140,7 @@ def compute_forest_mask(data_directory,
             forest_mask = clip_oso(path_oso, path_example_raster, list_code_oso)
             
         elif forest_mask_source == "vector":
+            print("Computing forest mask from vector")
             forest_mask = rasterize_vector(vector_path, path_example_raster)
             
         else:
