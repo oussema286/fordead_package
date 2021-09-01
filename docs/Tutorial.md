@@ -15,7 +15,7 @@ The analysis can be performed at the scale of a Sentinel tile, but for this tuto
 
 #### Step 1 : Computing the spectral index and a mask for each SENTINEL-2 date
 
-The first step is to calculate the vegetation index and a mask for each date. The mask corresponds to pixels that should not be used throughout the rest of the detection steps.
+The first step is to calculate the vegetation index and a mask for each date. The mask corresponds to pixels that should not be used throughout the rest of the detection steps. Sentinel-2 data will simply be recognized by the algorithm, as long as in the **input_directory**, each directory corresponds to a Sentinel-2 date, with the corresponding date in its name. In those directories, there should be a file for each Sentinel-2 band with the band name in the file name (B2 or B02, and so on...).
 You can find the guide for this step [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/).
 
 ##### Running this step using a script
@@ -62,7 +62,11 @@ from fordead.steps.step2_train_model import train_model
 train_model(data_directory = data_directory, nb_min_date = 10, min_last_date_training="2018-01-01", max_last_date_training="2018-06-01")
 ```
 
-The model will be trained on all Sentinel-2 dates until **min_last_date_training**. If there are not **nb_min_date** valid dates on **min_last_date_training**, the first **nb_min_date** valid dates are used unless this number is not reach at **max_last_date_training** in which case the pixel is dropped and no model will be calculated. This allows, for example in the case of a relatively ancient source of anomalies such as the bark beetle crisis, to start the detection as early as 2018 if there are enough valid dates at the beginning of the year, while allowing the study of pixels in situations with less data available simply by performing the training over a longer period to retrieve other valid dates. It is not recommended to end the training before 2018, because since the periodic model is annual, the use of at least two years of SENTINEL-2 data is advised.
+The model will be trained on all Sentinel-2 dates until **min_last_date_training**. If there are not **nb_min_date** valid dates on **min_last_date_training**, the first **nb_min_date** valid dates are used unless this number is not reach at **max_last_date_training** in which case the pixel is dropped and no model will be calculated. This allows, for example in the case of a relatively ancient source of anomalies such as the bark beetle crisis, to start the detection as early as 2018 if there are enough valid dates at the beginning of the year, while allowing the study of pixels in situations with less data available simply by performing the training over a longer period to retrieve other valid dates. 
+
+It is not recommended to end the training before 2018, because since the periodic model is annual, the use of at least two years of SENTINEL-2 data is advised.
+
+This step can also be used if you skipped the first step and computed a vegetation index and a mask for each date through your own means, simply by filling in the parameters **path_vi** and **path_masks** with the corresponding directories.
 
 ##### Outputs
 
@@ -71,4 +75,72 @@ The outputs of this second step, in the data_directory folder, are:
     - **first_detection_date_index.tif**, a raster that contains the index of the first date that will be used for detection. It allows to know for each pixel which dates were used for training and which ones are used for detection.
     - **coeff_model.tif**, a stack with 5 bands, one for each coefficient of the vegetation index model.
 - In the **ForestMask** directory, the binary raster **valid_area_mask.tif** which is 1 for pixels where the model could be computed, 0 if there were not enough valid dates.
+
+##### Running this step from the command invite
+
+This step can also be used from the command invite with the command :
+
+```bash
+fordead train_model -o <output directory> --nb_min_date 10 --min_last_date_training 2018-01-01 --max_last_date_training 2018-06-01
+```
+Again, if the model is already computed and no parameters were changed, the process is ignored. If parameters were changed, previous results from this step and subsequent steps are deleted and the model is computed anew.
+
+#### Step 3 : Detecting anomalies by comparing the vegetation index and its predicted value
+
+For each SENTINEL date not used for training, the actual vegetation index is compared to the vegetation index predicted from the model calculated in the previous step. If the difference exceeds a threshold, in the expected direction in case of anomaly, an anomaly is detected. For example, the NDWI goes down as stands suffer bark beetle attacks, so only low NDWI anomalies are registered. The pixel's state is only considered changed if three successive anomalies are detected, confirming them. This allows to ignore one time events of anomalies due to an imperfect mask, or temporary climatic events. If after anomalies have been confirmed, the pixel has three successive dates without anomalies, it returns to normal state. This allows the algorithm to auto-correct false detections based on new Sentinel-2 data, for example in the case of a drought period lasting long enough to get more than three successive anomalies.
+
+This step's complete guide can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_decline_detection/).
+
+##### Running this step using a script
+
+To run this step, simply add the following lines to the script :
+```python
+from fordead.steps.step3_decline_detection import decline_detection
+decline_detection(data_directory = data_directory, threshold_anomaly = 0.16)
+```
+
+##### Outputs
+
+The outputs of this step, in the data_directory folder, are :
+- In the **DataDecline** folder, three rasters:
+    - **count_decline** : the number of successive dates with anomalies
+    - **first_date_decline**: The index of the first date with an anomaly in the last series of anomalies
+    - **state_decline**: A binary raster whose value is 1 if the pixel is detected as declining (at least three successive anomalies)
+- In the **DataAnomalies** folder, a raster for each date **Anomalies_YYYY-MM-DD.tif** whose value is 1 where anomalies are detected.
+
+##### Running this step from the command invite
+
+This step can also be used from the command invite with the command :
+```bash
+fordead decline_detection -o <output directory> --threshold_anomaly 0.17
+```
+As always, if the model is already computed and no parameters were changed, the process is ignored. If parameters were changed, previous results from this step and subsequent steps are deleted and the model is computed anew.
+
+#### Step 4 : Creating a forest mask, which defines the areas of interest
+
+The previous steps compute results on every pixel, but to export results, it will become necessary to restrict the area of study to the vegetation of interest, in our case resinous forests. This steps aims at computing and saving a binary raster which will then be used to filter out pixels outside of these areas of interest. This can be done using a vector, which will be rasterized, or a binary raster which will be clipped but still needs to have the same resolution, and be aligned with the Sentinel-2 data, or no mask can be used. Other options are tied to data specific to France, using IGN's BDFORET or CESBIO's OSO map.
+
+In this tutorial, we will use a vector shapefile whose polygons will be rasterized as a binary raster, the complete guide can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/).
+
+##### Running this step using a script
+
+To run this step, simply add the following lines to the script :
+```python
+from fordead.steps.step4_compute_forest_mask import compute_forest_mask
+compute_forest_mask(data_directory, forest_mask_source = "vector", vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
+```
+
+##### Outputs
+
+The outputs of this fourth step, in the data_directory folder, are :
+- In the folder ForestMask, the binary raster Forest_Mask.tif which has the value 1 on the pixels of interest and 0 elsewhere.
+
+##### Running this step from the command invite
+
+This step can also be used from the command invite with the command :
+```bash
+fordead forest_mask -o <output directory> -f vector --vector_path <MyWorkingDirectory>/vector/area_interest.shp
+```
+
+> **_NOTE :_** Though this step is presented as the fourth, it can actually be used at any point, even on its own in which case the parameter **path_example_raster** is needed to give a raster from which to copy the extent, resolution, etc...
 
