@@ -13,7 +13,7 @@ The input parameters are:
 - **formula_mask** : formula whose result would be binary, format described [here](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index). Is only used if soil_detection is False.
 - **vi** : Vegetation index used, can be one of the indices provided in the package (CRSWIR, NDVI, NDWI), or any spectral index can be added using the path_dict_vi parameter.
 - **extent_shape_path** : Path of a shapefile containing a polygon used to restrict the calculation to an area. If not provided, the calculation is applied to the whole tile
-- **path_dict_vi** : Path to a text file used to add potential vegetation indices. If not filled in, only the indices provided in the package can be used (CRSWIR, NDVI, NDWI). The file examples/ex_dict_vi.txt gives an example for how to format this file. One must fill the index's name, formula, and "+" or "-" according to whether the index increases or decreases when anomalies occur.
+- **path_dict_vi** : Path to a text file used to add potential vegetation indices. If not filled in, only the indices provided in the package can be used (CRSWIR, NDVI, NDWI). The file [ex_dict_vi.txt](docs/examples/ex_dict_vi.txt) gives an example for how to format this file. One must fill the index's name, formula, and "+" or "-" according to whether the index increases or decreases when anomalies occur.
 
 Note : **input_directory** and **data_directory** have no default value and must be filled in. The **sentinel_source** must correspond to the provider of your data. The package has been almost exclusively tested with THEIA data.
 

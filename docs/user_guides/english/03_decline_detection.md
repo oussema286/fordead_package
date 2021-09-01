@@ -5,8 +5,8 @@ This step allows the detection of forest disturbance. For each SENTINEL date not
 The input parameters are :
 - **data_directory**: The path of the output folder where the detection results will be written.
 - **threshold_anomaly**: Threshold at which the difference between the actual and predicted vegetation index is considered as an anomaly
-- **vi**: Vegetation index used, it is not necessary to fill it in if the [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/) step has been used.
-- **path_dict_vi** : Path to a text file allowing to add usable vegetation indices. If not filled in, only the indices provided in the package are usable (CRSWIR, NDVI, NDWI). The file [examples/ex_dict_vi.txt](/examples/ex_dict_vi.txt) gives an example on how to format of this file. It is necessary to fill in its name, its formula, and "+" or "-" depending on whether the index's value increases or decreases in case of forest disturbances. It is also not necessary to fill it in if it has been done previously in the [_compute_masked_vegetationindex_] step (https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/).
+- **vi**: Vegetation index used, can be ignored if the [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/) step has been used.
+- **path_dict_vi** : Path to a text file allowing to add usable vegetation indices. If not filled in, only the indices provided in the package are usable (CRSWIR, NDVI, NDWI). The file [examples/ex_dict_vi.txt](/examples/ex_dict_vi.txt) gives an example on how to format of this file. It is necessary to fill in its name, its formula, and "+" or "-" depending on whether the index's value increases or decreases in case of forest disturbances. Can be ignored in if it has been done previously in the [_compute_masked_vegetationindex_ step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/).
 
 #### OUTPUTS
 The outputs of this step, in the data_directory folder, are :
