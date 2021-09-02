@@ -16,6 +16,7 @@ import rasterio
 from scipy import ndimage
 from fordead.import_data import import_resampled_sen_stack
 
+
 def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
     """
     Returns list of shapefile in the zone given by the raster, as well as the polygon extent of the raster
@@ -75,6 +76,7 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
         Boolean DataArray containing True where pixels are in the selected forest types.
 
     """
+
     example_raster = xr.open_rasterio(example_path).squeeze("band")
     example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
         

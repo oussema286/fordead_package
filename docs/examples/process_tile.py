@@ -10,6 +10,7 @@ from fordead.steps.step2_train_model import train_model
 from fordead.steps.step3_decline_detection import decline_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step5_export_results import export_results
+from fordead.steps.compute_confidence_index import classify_declining_area
 
 from fordead.visualisation.create_timelapse import create_timelapse
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
@@ -55,6 +56,9 @@ def parse_command_line():
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
+    # parser.add_argument('--threshold_list', nargs='+',default = [0.2, 0.265], help="Liste des seuils utilisés pour classer les stades de dépérissement par discrétisation de l'indice de confiance")
+    # parser.add_argument('--classes_list', nargs='+',default = ["Faible anomalie","Forte anomalie"], help="Liste des noms des classes pour la discrétisation de l'indice de confiance. Si threshold_list a une longueur n, classes_list doit avoir une longueur n+1")
+
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
     	dictArgs[key]=value
@@ -125,6 +129,16 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
 
 # # =====================================================================================================================
+        
+        file = open(logpath, "a")
+        classify_declining_area(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+                                threshold_list = [0.2,0.265],
+                                classes_list = ["Faible anomalie","Moyenne anomalie","Forte anomalie"],
+                                chunks = 1280)
+        file.write("Classify declining area : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
+        file.close()
+        
+# # =====================================================================================================================
 
         export_results(
             data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
@@ -134,10 +148,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             export_soil = soil_detection,
             multiple_files = multiple_files
             )
-        file = open(logpath, "a")
-        file.write("Export results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
-        file.close()
-                
+
+
 
         # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
         #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 

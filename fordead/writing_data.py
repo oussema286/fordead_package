@@ -13,7 +13,11 @@ import xarray as xr
 import rasterio
 from affine import Affine
 import geopandas as gp
+import dask.array as da
+from fordead.model_spectral_index import prediction_vegetation_index
+from fordead.masking_vi import get_dict_vi
 from scipy import ndimage
+
 
 def write_tif(data_array, attributes, path, nodata = None):
     """
@@ -197,7 +201,61 @@ def get_state_at_date(state_code,relevant_area,attrs):
                     rasterio.features.shapes(state_code.astype("uint8"), mask =  np.logical_and(relevant_area.data,state_code!=0).compute(), transform=Affine(*attrs["transform"]))))
     period_end_results = gp.GeoDataFrame.from_features(geoms)
     
-    period_end_results = period_end_results.replace([1, 2, 3], ["Atteint","Coupe","Coupe sanitaire"])
+    period_end_results = period_end_results.replace([1, 2, 3], ["Anomaly","Bare ground","Bare ground after anomaly"])
     
     period_end_results.crs = attrs["crs"].replace("+init=","")
     return period_end_results
+
+def vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, bins_classes, classes, attrs):
+    """
+    Classifies pixels in the relevant area into decline classes based on the confidence index and the number of unmasked dates since the first anomaly. 
+    
+    Parameters
+    ----------
+    confidence_index : xarray DataArray (x,y) (float)
+        Confidence index.
+    nb_dates : xarray DataArray (x,y) (int)
+        number of unmasked dates since the first anomaly.
+    relevant_area : xarray DataArray (x,y) (bool)
+        Array with True where pixels will be vectorized, and False where ignored.
+    bins_classes : list of float
+        List of bins to classify pixels based on confidence_index
+    classes : list of str
+        List with names of classes (length of classes must be length of bins_classes + 1)
+    attrs : dict
+        Dictionnary containing 'tranform' and 'crs' to create the vector.
+
+    Returns
+    -------
+    gp_results : geopandas geodataframe
+        Polygons from pixels in the relevant areacontaining the decline class.
+
+    """
+    
+    digitized = np.digitize(confidence_index,bins_classes)
+    digitized[nb_dates==3]=0
+    geoms_class = list(
+                {'properties': {'class_index': v}, 'geometry': s}
+                for i, (s, v) 
+                in enumerate(
+                    rasterio.features.shapes(digitized.astype(np.uint8), 
+                                             mask = relevant_area.data, 
+                                             transform=Affine(*attrs["transform"]))))
+    
+    gp_results = gp.GeoDataFrame.from_features(geoms_class)
+    gp_results.class_index=gp_results.class_index.astype(int)
+    gp_results.insert(1,"class",classes[gp_results.class_index])
+    gp_results.crs = attrs["crs"].replace("+init=","")
+    gp_results = gp_results.drop(columns=['class_index'])
+    return gp_results
+
+def union_confidence_class(periodic_results, path_confidence_class):
+    confidence_class = gp.read_file(path_confidence_class)
+    union = gp.overlay(periodic_results, confidence_class, how='union',keep_geom_type = True)
+    # union = union.explode()
+    # union = union[union.geom_type != 'Point']
+    # union = union[union.geom_type != 'MultiLineString']
+    # union = union[union.geom_type != 'LineString']
+    # union = union[union.geom_type != 'MultiPoint']
+    union = union.fillna("Bare ground")
+    return union

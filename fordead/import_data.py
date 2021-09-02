@@ -219,6 +219,23 @@ class TileInfo:
             if key_path in self.paths:
                 if self.paths[key_path].is_file():
                     self.paths[key_path].unlink()
+                 
+    def delete_attributes(self,*attrs):
+        """
+        Using keys to attributes of the TileInfo object, deletes those attributes if they exist.
+
+        Parameters
+        ----------
+        key_path : str
+            Key of attributes of the object
+
+        Returns
+        -------
+        None.
+
+        """
+        for attr in attrs:
+            if hasattr(self, attr): delattr(self, attr)
                     
     def getdict_datepaths(self, key, path_dir):
         """
@@ -565,7 +582,7 @@ def import_forest_mask(forest_mask_path,chunks = None):
     return forest_mask.astype(bool)
 
 
-def import_stackedmaskedVI(tuile,max_date=None,chunks = None):
+def import_stackedmaskedVI(tuile,min_date = None, max_date=None,chunks = None):
     """
     Imports 3D arrays of the vegetation index series and masks
 
@@ -587,23 +604,26 @@ def import_stackedmaskedVI(tuile,max_date=None,chunks = None):
 
     """
     
-    if max_date==None:
-        filter_dates=False
-        max_date=""
+    if max_date is None and min_date is None:
+        dates = [date for date in tuile.paths["VegetationIndex"]]
+    elif max_date is None and min_date is not None:
+        dates = [date for date in tuile.paths["VegetationIndex"] if date >= min_date]
+    elif max_date is not None and min_date is None:
+        dates = [date for date in tuile.paths["VegetationIndex"] if date <= max_date]
     else:
-        filter_dates=True
+        dates = [date for date in tuile.paths["VegetationIndex"]if date >= min_date & date <= max_date]
         
-    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in tuile.paths["VegetationIndex"] if date <= max_date or not(filter_dates)]
+    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in dates]
     stack_vi=xr.concat(list_vi,dim="Time")
-    stack_vi=stack_vi.assign_coords(Time=[date for date in tuile.paths["VegetationIndex"].keys() if date <= max_date or not(filter_dates)])
+    stack_vi=stack_vi.assign_coords(Time=dates)
     stack_vi=stack_vi.squeeze("band")
     stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
     # stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
 
     
-    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in tuile.paths["Masks"] if date <= max_date or not(filter_dates)]
+    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in dates]
     stack_masks=xr.concat(list_mask,dim="Time")
-    stack_masks=stack_masks.assign_coords(Time=[date for date in tuile.paths["Masks"].keys() if date <= max_date or not(filter_dates)]).astype(bool)
+    stack_masks=stack_masks.assign_coords(Time=dates).astype(bool)
     stack_masks=stack_masks.squeeze("band")
     stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
     # stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
@@ -769,9 +789,55 @@ def initialize_soil_data(shape,coords):
     
     soil_data=xr.Dataset({"state": xr.DataArray(state_soil, coords=coords),
                          "first_date": xr.DataArray(first_date_soil, coords=coords),
-                         "count" : xr.DataArray(count_soil, coords=coords)})
-    soil_data=soil_data.squeeze("band")
+                         "count" : xr.DataArray(count_soil, coords=coords)}).squeeze("band")
     return soil_data
+
+def initialize_confidence_data(shape,coords):
+    """
+    Initializes data relating to confidence index
+
+    Parameters
+    ----------
+    shape : tuple
+        Tuple with sizes for the resulting array 
+    coords : Coordinates attribute of xarray DataArray
+        Coordinates y and x
+
+    Returns
+    -------
+    nb_dates : xarray DataArray (x,y)
+        Number of unmasked sentinel dates since the first anomaly for each pixel.
+    sum_diff : xarray DataArray (x,y)
+        Cumulative sum of differences between the vegetation index and its prediction for each date.
+
+    """
+    
+    
+    nb_dates=xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords)
+    sum_diff=xr.DataArray(np.zeros(shape,dtype=np.float), coords=coords)
+
+    return nb_dates, sum_diff
+
+def import_confidence_data(dict_paths, chunks = None):
+    """
+    Imports data relating to confidence index
+
+    Parameters
+    ----------
+    dict_paths : dict
+        Dictionnary containing keys "confidence_index" and "nb_dates" whose values are the paths to the rasters.
+    Returns
+    -------
+    confidence_index : xarray DataArray (x,y)
+        Confidence index
+    nb_dates : xarray DataArray (x,y)
+        Number of unmasked sentinel dates since the first anomaly for each pixel.
+
+    """
+    confidence_index=xr.open_rasterio(dict_paths["confidence_index"], chunks = chunks).squeeze("band")
+    nb_dates=xr.open_rasterio(dict_paths["nb_dates"], chunks = chunks).squeeze("band")
+
+    return confidence_index, nb_dates
 
 def import_masked_vi(dict_paths, date, chunks = None):
     """
