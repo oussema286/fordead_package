@@ -181,7 +181,7 @@ def get_state_at_date(state_code,relevant_area,attrs):
     Parameters
     ----------
     state_code : array
-        Array to vectorize, in which value 0 is ignored, 1 is 'Atteint', 2 is "Coupe" and 3 is 'Coupe sanitaire'
+        Array to vectorize, in which value 0 is ignored, 1 is 'Anomaly', 2 is "Bare ground" and 3 is 'Bare ground after anomaly'
     relevant_area : array
         Mask where pixels with value False will be ignored.
     attrs : dict
@@ -190,7 +190,7 @@ def get_state_at_date(state_code,relevant_area,attrs):
     Returns
     -------
     period_end_results : geopandas dataframe
-        Polygons from vectorization of state_code, aggregated according to value "Atteint","Coupe", and "Coupe sanitaire"
+        Polygons from vectorization of state_code, aggregated according to value 'Anomaly', "Bare ground" and 'Bare ground after anomaly'
 
     """
     

@@ -18,7 +18,7 @@ import click
 @click.option("--threshold_list", type = list, default = [0.265], help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
 @click.option("--classes_list", type = list, default = ["Faible anomalie","Forte anomalie"], help = "List of classes names, if threshold_list has n values, classes_list must have n+1 values", show_default=True)
 @click.option("--chunks", type = int, default = None, help = "Chunk size for dask computation", show_default=True)
-def cli_classify_declining_area(
+def cli_compute_confidence_index(
     data_directory,
     threshold_list,
     classes_list,
@@ -38,9 +38,9 @@ def cli_classify_declining_area(
 
     """
     
-    classify_declining_area(data_directory,threshold_list,classes_list,chunks)
+    compute_confidence_index(data_directory,threshold_list,classes_list,chunks)
 
-def classify_declining_area(
+def compute_confidence_index(
     data_directory,
     threshold_list,
     classes_list,
@@ -126,5 +126,5 @@ def classify_declining_area(
     tile.save_info()
     
 if __name__ == '__main__':
-    cli_classify_declining_area()
+    cli_compute_confidence_index()
 

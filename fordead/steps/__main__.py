@@ -6,11 +6,11 @@ from fordead.steps.step1_compute_masked_vegetationindex import cli_compute_maske
 from fordead.steps.step2_train_model import cli_train_model
 from fordead.steps.step3_decline_detection import cli_decline_detection
 from fordead.steps.step4_compute_forest_mask import cli_compute_forest_mask
-from fordead.steps.step5_export_results import cli_export_results
+from fordead.steps.step6_export_results import cli_export_results
 from fordead.cli.cli_read_tileinfo import cli_read_tileinfo
 from fordead.visualisation.vi_series_visualisation import cli_vi_series_visualisation
 from fordead.visualisation.create_timelapse import cli_create_timelapse
-from fordead.steps.compute_confidence_index import cli_classify_declining_area
+from fordead.steps.step5_compute_confidence_index import cli_compute_confidence_index
 
 class OrderedGroup(click.Group):
     # ref: https://stackoverflow.com/questions/47972638/how-can-i-define-the-order-of-click-sub-commands-in-help
@@ -38,7 +38,7 @@ fordead.add_command(cli_export_results)
 fordead.add_command(cli_read_tileinfo)
 fordead.add_command(cli_vi_series_visualisation)
 fordead.add_command(cli_create_timelapse)
-fordead.add_command(cli_classify_declining_area)
+fordead.add_command(cli_compute_confidence_index)
 
 if __name__ == '__main__':  # pragma: no cover
     fordead()

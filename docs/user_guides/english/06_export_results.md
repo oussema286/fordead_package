@@ -7,28 +7,27 @@ The input parameters are :
 - **start_date**: Start date, in YYYY-MM-DD format
 - **end_date** : End date, in YYYY-MM-DD format
 - **frequency** : Frequency used to aggregate results. Can be "sentinel", in which case the periods used to aggregate results corresponds to the time between available SENTINEL dates, Can also be a frequency as accepted by the pandas.date_range function (e.g.: 'M' (every month), '3M' (every three months), '15D' (every 15 days)")
-- **export_soil**: If True, the results for bare soil/cuts detection are exported as well.
 - **multiple_files** : If True, one shapefile will be exported per period, where each polygon corresponds to the state of the area at the end of the period. Otherwise, only one shapefile is exported and the polygons contain the period when the first anomaly was detected.
+- **intersection_confidence_class** : If True, the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/) step must have been used, and the confidence class shapefile results will be intersected with the detection results
 
 #### OUTPUTS
 The outputs of this fifth step, in the folder data_directory/Results, are :
 - if **multiple_files** is False:
-    - the shapefile periodic_results_decline, whose polygons contain the time period when the first anomaly was detected for the declining areas. The areas reached before start_date or after end_date are ignored.
-    - if **export_soil** is enabled, the shapefile periodic_results_soil whose polygons contain the period when the first soil anomaly was detected for areas detected as bare soil/cut. Bare areas before start_date or after end_date are not shown.
+    - the shapefile periodic_results_decline, whose polygons contain the time period when the first anomaly was detected for the declining areas. The areas reached before start_date or after end_date are ignored. If **intersection_confidence_class** is True, the polygons also contain the anomaly intensity class as calculated in the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/) step. This class therefore contains the "final" state, calculated at the last available Sentinel-2 date. If bare ground is detected, the confidence index is not calculated and this final state becomes "Bare ground".
+    - if soil_detection was True in the [first step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/), the shapefile periodic_results_soil whose polygons contain the period when the first soil anomaly was detected for areas detected as bare soil/cut. Bare areas before start_date or after end_date are not shown.
 - if **multiple_files** is True :
-    - One shapefile per period whose name is the end date of the period (for example, with start_date = 2018-01-01, end_date = 2018-04-01 and frequency = "M", we will have the following files: 2018-01-30.shp, 2018-02-28.shp and 2018-03-31.shp. Each shapefile contains polygons corresponding to the stand state at the end of the period, even if the first anomalies occur before start_date. The status can be Attained, Cut or Sanitary Cut if export_soil is enabled, or simply "Attained" otherwise.
+    - One shapefile per period whose name is the end date of the period (for example, with start_date = 2018-01-01, end_date = 2018-04-01 and frequency = "M", we will have the following files: 2018-01-30.shp, 2018-02-28.shp and 2018-03-31.shp. Each shapefile contains polygons corresponding to the stand state at the end of the period, even if the first anomalies occur before start_date. The status can be 'Anomaly', "Bare ground" and 'Bare ground after anomaly' if soil_detection was True in the first step, or simply "Anomaly" otherwise.
 
 ## How to use
 ### From a script
 
 ```bash
-from fordead.steps.step5_export_results import export_results
+from fordead.steps.step6_export_results import export_results
 export_results(
     data_directory = <data_directory>,
     start_date = <start_date>,
     end_date = <end_date>,
     frequency= <frequency>,
-    export_soil = <export_soil>,
     multiple_files = <multiple_files>
     )
 ```
@@ -70,7 +69,8 @@ The dates of first anomalies, stored as indexes of the dates used, are converted
 ## If exported to a single file:
 - Pixels are aggregated according to the period in which the first anomaly occurs. 
 - The result is vectorized, ignoring the pixels with first anomalies outside the determined periods and the pixels outside the studied area (within the forest mask and having enough valid dates to model the vegetation index).
-> **_Functions used:_** [get_periodic_results_as_shapefile()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_periodic_results_as_shapefile)
+- If intersection_confidence_class is True, the results of the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/) step are intersected by union with the vector thus obtained. The polygons detected as confirmed anomalies without a confidence class can only come from the bare ground detection if it is activated, so these polygons take the "Bare ground" class.
+> **_Functions used:_** [get_periodic_results_as_shapefile()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_periodic_results_as_shapefile), [union_confidence_class()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#union_confidence_class)
 - The result vector is written in a single vector file where polygons contain the period when the first anomaly was detected. 
 
 If **export_soil** is True, the same operation is performed using the bare soil detection results and the results are written to a second vector file.

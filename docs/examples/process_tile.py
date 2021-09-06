@@ -9,8 +9,8 @@ from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_ve
 from fordead.steps.step2_train_model import train_model
 from fordead.steps.step3_decline_detection import decline_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
-from fordead.steps.step5_export_results import export_results
-from fordead.steps.compute_confidence_index import classify_declining_area
+from fordead.steps.step6_export_results import export_results
+from fordead.steps.step5_compute_confidence_index import compute_confidence_index
 
 from fordead.visualisation.create_timelapse import create_timelapse
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
@@ -131,7 +131,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # # =====================================================================================================================
         
         file = open(logpath, "a")
-        classify_declining_area(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+        compute_confidence_index(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
                                 threshold_list = [0.2,0.265],
                                 classes_list = ["Faible anomalie","Moyenne anomalie","Forte anomalie"],
                                 chunks = 1280)

@@ -9,27 +9,29 @@ Les paramètres en entrée sont :
 - **frequency** : Fréquence utilisée pour agréger les résultats. Peut être "sentinel", auquel cas les périodes utilisées pour agréger les résultats correspondent au temps entre les dates SENTINEL disponibles, peut également être une fréquence telle qu'acceptée par la fonction pandas.date_range (ex : 'M' (tous les mois), '3M' (tous les trois mois), '15D' (tous les 15 jours)")
 - **export_soil** : Si True, les résultats relatifs à la détection de sol nu/coupes sont exportés également.
 - **multiple_files** : Si True, un shapefile sera exporté par période, où chaque polygone correspond à l'état de la zone à la fin de la période. Sinon, un seul shapefile est exporté et les polygones contiennent la période à laquelle la première anomalie a été détecté.
+- **intersection_confidence_class** : Si True, l'étape [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/05_compute_confidence/) doit avoir été utilisée, et les résultats du fichier shapefile de classe de confiance seront intersectés avec les résultats de la détection.
 
 #### SORTIES
 Les sorties de cette cinquième étape, dans le dossier data_directory/Results, sont :
 - si **multiple_files** vaut False :
-    - le shapefile periodic_results_decline, dont les polygones contiennent la période à laquelle la première anomalie a été détecté pour les zones dépérissantes. Les zones atteintes avant start_date ou après end_date ne sont pas représentées.
-    - si export_soil est activé, le shapefile periodic_results_soil dont les polygones contiennent la période à laquelle la première anomalie de sol a été détecté pour les zones détectées comme sol nu/coupe. Les zones à nu avant start_date ou après end_date ne sont pas représentées.
+    - le shapefile periodic_results_decline, dont les polygones contiennent la période à laquelle la première anomalie a été détecté pour les zones dépérissantes. Si **intersection_confidence_class** vaut True, les polygones contiennent également la classe d'intensité d'anomalie telle que calculée lors de l'étape [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/05_compute_confidence/). Cette classe contient donc l'état "final", calculé à la dernière date Sentinel-2 disponible. Si le sol nu est détecté, l'indice de confiance n'est pas calculé et cet état final devient donc "Bare ground". Les zones atteintes avant start_date ou après end_date ne sont pas représentées.
+    - si soil_detection valait True lors de la [première étape](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/01_compute_masked_vegetationindex/), le shapefile periodic_results_soil dont les polygones contiennent la période à laquelle la première anomalie de sol a été détecté pour les zones détectées comme sol nu/coupe. Les zones à nu avant start_date ou après end_date ne sont pas représentées.
 - si **multiple_files** vaut True :
-    - Un shapefile par période dont le nom est la date de fin de la période (par exemple, avec start_date = 2018-01-01, end_date = 2018-04-01 et frequency = "M", on aura les fichiers suivants : 2018-01-30.shp, 2018-02-28.shp et 2018-03-31.shp. Chaque shapefile contient des polygones correspondant à l'état du peuplement à la fin de la période, même si les premières anomalies ont lieu avant start_date. L'état peut être Atteint, Coupe ou Coupe sanitaire si export_soil est activé, ou simplement "Atteint" sinon.
+    - Un shapefile par période dont le nom est la date de fin de la période (par exemple, avec start_date = 2018-01-01, end_date = 2018-04-01 et frequency = "M", on aura les fichiers suivants : 2018-01-30.shp, 2018-02-28.shp et 2018-03-31.shp. Chaque shapefile contient des polygones correspondant à l'état du peuplement à la fin de la période, même si les premières anomalies ont lieu avant start_date. L'état peut être 'Anomaly', "Bare ground" et 'Bare ground after anomaly' si si soil_detection valait True lors de la première étape, ou simplement "Anomaly" sinon.
 
 ## Utilisation
 ### A partir d'un script
 
 ```bash
-from fordead.steps.step5_export_results import export_results
+from fordead.steps.step6_export_results import export_results
 export_results(
     data_directory = <data_directory>,
     start_date = <start_date>,
     end_date = <end_date>,
     frequency= <frequency>,
     export_soil = <export_soil>,
-    multiple_files = <multiple_files>
+    multiple_files = <multiple_files>,
+	intersection_confidence_class = <intersection_confidence_class>
     )
 ```
 
@@ -70,7 +72,8 @@ Les dates de premières anomalies, stockées sous forme d'index parmi les dates 
 ## Si export en un seul fichier :
 - Les pixels sont aggrégés selon la période durant laquelle survient la première anomalie. 
 - Le résultat est vectorisé, en ignorant les pixels en dehors des périodes déterminées et les pixels en dehors de la zone étudiée (au sein du masque forêt et disposant d'assez de dates valides pour modéliser l'indice de végétation).
-> **_Fonctions utilisées :_** [get_periodic_results_as_shapefile()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_periodic_results_as_shapefile)
+- Si intersection_confidence_class vaut True, les résultats de l'étape [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/05_compute_confidence/) sont intersectés par union avec le vecteur ainsi obtenu. Les polygones détéctés comme dépérissants sans classe d'indice de confiance ne peuvent provenir que de la détection de sol nu si elle est activée, ces polygones prennent donc la classe "Bare ground".
+> **_Fonctions utilisées :_** [get_periodic_results_as_shapefile()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_periodic_results_as_shapefile), [union_confidence_class()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#union_confidence_class)
 - Le vecteur résultat est écrit en un unique fichier vectoriel donnant les résultats du déperissement.
 
 Si **export_soil** vaut True, la même opération est réalisée en utilisant les résultats de la détection de sol nu et les résultats sont écrits dans un second fichier vectoriel.
