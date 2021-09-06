@@ -144,3 +144,68 @@ fordead forest_mask -o <output directory> -f vector --vector_path <MyWorkingDire
 
 > **_NOTE :_** Though this step is presented as the fourth, it can actually be used at any point, even on its own in which case the parameter **path_example_raster** is needed to give a raster from which to copy the extent, resolution, etc...
 
+#### (OPTIONAL) Step 5 : Computing a confidence index to classify anomalies by severity
+
+This step is completely optional and aims at computing a confidence index whose value goes up as the registered anomalies increase in severity, thush it can be used to describe the intensity of the detected disturbance and possibly help to filter out potential false detections.  
+The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. For each date used, the weight corresponds to the number of unmasked dates from the first anomaly. In case of a disturbance, the intensity of anomalies often goes up which is why later dates have more weight. Since all Sentinel-2 dates are used, this index describes the state of the pixel at the last used Sentinel-2 date, and not the state at the moment of detection. The following picture illustrates the confidence index formula :
+
+![graph_ind_conf](user_guides/english/Diagrams/graph_ind_conf.png "graph_ind_conf")
+
+Then, pixels are classified into classes, based on the discretization of the confidence index using a list of thresholds. Pixels with only three anomalies are classified as the lowest class, because 3 anomalies might not be enough to calculate a meaningful index. The results are vectorized.
+
+This step's complete guide can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/).
+
+##### Running this step using a script
+
+To run this step, simply add the following lines to the script :
+```python
+from fordead.steps.step5_compute_confidence_index import compute_confidence_index
+compute_confidence_index(data_directory, threshold_list = [0.2,0.265], classes_list = ["Low anomaly","Moderate anomaly","High anomaly"])
+```
+
+##### Outputs
+
+The outputs of this fourth step, in the data_directory/Confidence_Index folder, are :
+- confidence_class.shp, the vectorized classification results in shapefile format, where pixels are grouped as polygons by class
+- confidence_index.tif, the raster containing the continous confidence index value
+- nb_dates.tif, the raster containing the number of unmasked dates since the first confirmed anomaly for each pixel
+
+##### Running this step from the command invite
+
+This step can also be used from the command invite with the command :
+```bash
+fordead ind_conf -o <output directory> -t 0.2 -t 0.265 -c "Low anomaly" -c "Moderate anomaly" -c "High anomaly"
+```
+
+> **_NOTE :_** If the confidence index was already calculated, you change the threshold list or classes list and it will simply import the results of the previous process. But if new Sentinel-2 dates were added, the step will compute the confidence index and erase previous results.
+
+#### Step 6 : Exporting results as a shapefile allowing to visualize the results with the desired time step
+
+This step's complete guide can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/06_export_results/).
+
+##### Running this step using a script
+
+To run this step, simply add the following lines to the script :
+```python
+from fordead.steps.step6_export_results import export_results
+export_results(data_directory = data_directory, frequency= "M", multiple_files = False, intersection_confidence_class = True)
+```
+
+##### Outputs
+
+The outputs of this fifth step, in the folder data_directory/Results, are :
+- if **multiple_files** is False:
+    - the shapefile periodic_results_decline, whose polygons contain the time period when the first anomaly was detected for the declining areas. The areas reached before start_date or after end_date are ignored. If **intersection_confidence_class** is True, the polygons also contain the anomaly intensity class as calculated in the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/) step. This class therefore contains the "final" state, calculated at the last available Sentinel-2 date. If bare ground is detected, the confidence index is not calculated and this final state becomes "Bare ground".
+    - if soil_detection was True in the [first step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/), the shapefile periodic_results_soil whose polygons contain the period when the first soil anomaly was detected for areas detected as bare soil/cut. Bare areas before start_date or after end_date are not shown.
+- if **multiple_files** is True :
+    - One shapefile per period whose name is the end date of the period (for example, with start_date = 2018-01-01, end_date = 2018-04-01 and frequency = "M", we will have the following files: 2018-01-30.shp, 2018-02-28.shp and 2018-03-31.shp. Each shapefile contains polygons corresponding to the stand state at the end of the period, even if the first anomalies occur before start_date. The status can be 'Anomaly', "Bare ground" and 'Bare ground after anomaly' if soil_detection was True in the first step, or simply "Anomaly" otherwise.
+
+
+##### Running this step from the command invite
+
+This step can also be used from the command invite with the command :
+```bash
+fordead export_results -o <output directory> --frequency M --intersection_confidence_class
+```
+
+> **_NOTE :_** 
