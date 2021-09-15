@@ -54,8 +54,26 @@ Home = "README.md"
 [[tool.portray.mkdocs.nav]]
 Installation = "docs/Installation.md"
 
-
-
+[[tool.portray.mkdocs.nav]]
+	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Step 1. Compute masked vegetation index" = "docs/Tutorial/01_compute_masked_vegetationindex.md"
+	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Step 2. Train model" = "docs/Tutorial/02_train_model.md"
+	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Step 3. Decline detection" = "docs/Tutorial/03_decline_detection.md"
+	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Step 4. Compute forest mask" = "docs/Tutorial/04_compute_forest_mask.md"
+	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Step 5. Compute confidence" = "docs/Tutorial/05_compute_confidence.md"
+	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Step 6. Export results" = "docs/Tutorial/06_export_results.md"
+	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Creating a timelapse" = "docs/user_guides/english/07_create_timelapse.md"
+	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Creating graphs" = "docs/user_guides/english/08_create_graphs.md"
+	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Updating detection" = "docs/user_guides/english/09_updating_detection.md"
+	
 [[tool.portray.mkdocs.nav]]
     [[tool.portray.mkdocs.nav."User guides".English]]
     "1. Compute masked vegetation index" = "docs/user_guides/english/01_compute_masked_vegetationindex.md"
@@ -72,10 +90,11 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav."User guides".English]]
     "Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
 	
-	[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
-    "Computing vegetation index" = "docs/examples/ex_computing_vegetation_index.md"
-	[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
-    "Using TileInfo object" = "docs/examples/ex_tileinfo_object.md"
+	[[tool.portray.mkdocs.nav."User guides".English]]
+		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
+		"Computing vegetation index" = "docs/examples/ex_computing_vegetation_index.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
+		"Using TileInfo object" = "docs/examples/ex_tileinfo_object.md"
 	
     [[tool.portray.mkdocs.nav."User guides".'Français']]
     "1. Calcul de l'indice de végétation et des masques" = "docs/user_guides/french/01_compute_masked_vegetationindex.md"
