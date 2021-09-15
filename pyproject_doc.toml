@@ -58,22 +58,26 @@ Home = "README.md"
     [[tool.portray.mkdocs.nav."User guides".English]]
     "2. Train model" = "docs/user_guides/english/02_train_model.md"
     [[tool.portray.mkdocs.nav."User guides".English]]
-    "1. Decline detection" = "docs/user_guides/english/03_decline_detection.md"    
+    "3. Decline detection" = "docs/user_guides/english/03_decline_detection.md"    
 	[[tool.portray.mkdocs.nav."User guides".English]]
-    "1. Compute forest mask" = "docs/user_guides/english/04_compute_forest_mask.md"    
+    "4. Compute forest mask" = "docs/user_guides/english/04_compute_forest_mask.md"    
 	[[tool.portray.mkdocs.nav."User guides".English]]
-    "1. Compute confidence" = "docs/user_guides/english/05_compute_confidence.md"
+    "5. Compute confidence" = "docs/user_guides/english/05_compute_confidence.md"
 	[[tool.portray.mkdocs.nav."User guides".English]]
-    "1. Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
-    [[tool.portray.mkdocs.nav."User guides".Français]]
-    "1. Compute masked vegetation index" = "docs/user_guides/french/01_compute_masked_vegetationindex.md"
-    [[tool.portray.mkdocs.nav."User guides".Français]]
-    "2. Train model" = "docs/user_guides/french/02_train_model.md"
-    [[tool.portray.mkdocs.nav."User guides".Français]]
-    "1. Decline detection" = "docs/user_guides/french/03_decline_detection.md"    
-	[[tool.portray.mkdocs.nav."User guides".Français]]
-    "1. Compute forest mask" = "docs/user_guides/french/04_compute_forest_mask.md"    
-	[[tool.portray.mkdocs.nav."User guides".Français]]
-    "1. Compute confidence" = "docs/user_guides/french/05_compute_confidence.md"
-	[[tool.portray.mkdocs.nav."User guides".Français]]
-    "1. Visualisation tools" = "docs/user_guides/french/Results_visualisation.md"
+    "6. Export results" = "docs/user_guides/english/06_export_results.md"
+	[[tool.portray.mkdocs.nav."User guides".English]]
+    "Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
+    [[tool.portray.mkdocs.nav."User guides".'Français']]
+    "1. Calcul de l'indice de végétation et des masques" = "docs/user_guides/french/01_compute_masked_vegetationindex.md"
+    [[tool.portray.mkdocs.nav."User guides".'Français']]
+    "2. Apprentissage du modèle" = "docs/user_guides/french/02_train_model.md"
+    [[tool.portray.mkdocs.nav."User guides".'Français']]
+    "3. Détection du dépérissement" = "docs/user_guides/french/03_decline_detection.md"    
+	[[tool.portray.mkdocs.nav."User guides".'Français']]
+    "4. Calcul du masque forêt" = "docs/user_guides/french/04_compute_forest_mask.md"    
+	[[tool.portray.mkdocs.nav."User guides".'Français']]
+    "5. Calcul de l'indice de confiance" = "docs/user_guides/french/05_compute_confidence.md"
+	[[tool.portray.mkdocs.nav."User guides".'Français']]
+    "6. Export des résultats" = "docs/user_guides/french/06_export_results.md"
+	[[tool.portray.mkdocs.nav."User guides".'Français']]
+    "Outils de visualisation" = "docs/user_guides/french/Results_visualisation.md"
