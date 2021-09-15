@@ -91,4 +91,3 @@ Tutorial = "docs/Tutorial.md"
 	[[tool.portray.mkdocs.nav."User guides"."Other tools"]]
     "Using TileInfo object" = "docs/examples/ex_tileinfo_object.md"
 
-"Command line" = "docs/cli.md"
