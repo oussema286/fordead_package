@@ -3,7 +3,7 @@
 Le package `fordead` a été développé pour la détection de changements en forêt à partir de série temporelles SENTINEL-2, en particulier dans un contexte de crise sanitaire du scolyte sur les épicéas. A partir de fonctions simplifiant l'utilisation de données satellites SENTINEL-2, il permet la cartographie des déperissements liés aux scolytes depuis 2018. Cependant, excepté les masques utilisés qui sont certainement trop spécifiques à l'étude de peuplements résineux, le reste des étapes du processus peuvent également être utilisées pour d'autres contextes. 
 
 ## Installation
-### Installation conda (recommended)
+### Installation conda
 
 Depuis l'invite de commande, placer vous dans le répertoire de votre choix et lancez les commandes suivantes :
 ```bash
@@ -13,6 +13,9 @@ conda env create --name fordead_env
 conda activate fordead_env
 pip install .
 ```
+
+## Tutoriel
+Un tutoriel pour bien commencer et essayer le package sur un jeu de données réduit est disponible [ici](https://fordead.gitlab.io/fordead_package/docs/Tutorial/00_Intro/).
 
 ## Utilisation pour la détection de déperissement
 

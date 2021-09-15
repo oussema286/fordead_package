@@ -1,4 +1,4 @@
-### Conda install (recommended)
+### Conda install
 
 From the command prompt, go to the directory of your choice and run the following commands:
 ```bash
