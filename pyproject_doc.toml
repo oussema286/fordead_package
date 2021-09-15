@@ -51,8 +51,9 @@ repo='fontawesome/brands/gitlab'
 
 [[tool.portray.mkdocs.nav]]
 Home = "README.md"
-
+[[tool.portray.mkdocs.nav]]
 Installation = "docs/Installation.md"
+[[tool.portray.mkdocs.nav]]
 Tutorial = "docs/Tutorial.md"
 
 [[tool.portray.mkdocs.nav]]
@@ -90,4 +91,6 @@ Tutorial = "docs/Tutorial.md"
     "Computing vegetation index" = "docs/examples/ex_computing_vegetation_index.md"
 	[[tool.portray.mkdocs.nav."User guides"."Other tools"]]
     "Using TileInfo object" = "docs/examples/ex_tileinfo_object.md"
-
+	
+[[tool.portray.mkdocs.nav]]
+"Command line" = "docs/cli.md"
