@@ -70,7 +70,7 @@ Les paramètres en entrée sont :
 - **chunks** : int, Si les résultats utilisés ont été calculés à large échelle, donner une taille de chunks (ex : 1280) permet d'importer les données de manière à sauvegarder la RAM. 
 
 #### SORTIES
-Les sorties sont dans le dossier data_directory/SeriesTemporelles, avec pour chaque point un fichier .png avec comme nom de fichier la valeur dans la colonne **name_column**.
+Les sorties sont dans le dossier data_directory/TimeSeries, avec pour chaque point un fichier .png avec comme nom de fichier la valeur dans la colonne **name_column**.
 
 
 ## Utilisation

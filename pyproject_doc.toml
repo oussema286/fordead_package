@@ -49,3 +49,10 @@ palette = {primary = "blue grey", accent = "pink"}
 repo='fontawesome/brands/gitlab'
 
 
+[[tool.portray.mkdocs.nav]]
+Home = "README.md"
+
+[[tool.portray.mkdocs.nav]]
+    [[tool.portray.mkdocs.nav."User guides"]]
+    "1. Compute masked vegetation index" = "docs/user_guides/english/01_compute_masked_vegetationindex.md"
+

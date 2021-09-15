@@ -66,7 +66,7 @@ The dates of first anomalies, stored as indexes of the dates used, are converted
 > **_Functions used:_** [get_state_at_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_state_at_date)
 - This vector is written for each of the periods using the period end date as the file name.
 
-## If exported to a single file:
+### If exported to a single file:
 - Pixels are aggregated according to the period in which the first anomaly occurs. 
 - The result is vectorized, ignoring the pixels with first anomalies outside the determined periods and the pixels outside the studied area (within the forest mask and having enough valid dates to model the vegetation index).
 - If intersection_confidence_class is True, the results of the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/) step are intersected by union with the vector thus obtained. The polygons detected as confirmed anomalies without a confidence class can only come from the bare ground detection if it is activated, so these polygons take the "Bare ground" class.

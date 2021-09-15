@@ -71,19 +71,19 @@ The input parameters are:
 - **chunks** : int, If the results used were calculated on a large scale such as a tile, giving a chunk size (e.g. 1280)  allows to import the data much faster, and saves RAM.
 
 #### OUTPUTS
-The outputs are in the folder data_directory/SeriesTemporelles, with for each point a .png file with as file name the value in the column **name_column**.
+The outputs are in the folder data_directory/TimeSeries, with for each point a .png file with as file name the value in the column **name_column**.
 
 ## How to use
 ### From a script
 #### From a shapefile containing the areas of interest
 ```bash
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
-vi_series_visualization(data_directory = <data_directory>, shape_path = <shape_path>, name_column = "id", ymin = 0, ymax = 2, chunks = 100)
+vi_series_visualisation(data_directory = <data_directory>, shape_path = <shape_path>, name_column = "id", ymin = 0, ymax = 2, chunks = 100)
 ```
 #### From coordinates
 ```bash
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
-vi_series_visualization(data_directory = <data_directory>, ymin = 0, ymax = 2, chunks = 100)
+vi_series_visualisation(data_directory = <data_directory>, ymin = 0, ymax = 2, chunks = 100)
 ```
 In this mode, the user can choose to give X and Y coordinates in the projection system of the Sentinel-2 data used.
 It is also possible to give the pixel index starting from (xmin,ymax), useful if a timelapse has been created over the whole computed area in which case the index corresponds to the coordinates in the timelapse.
