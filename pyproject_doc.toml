@@ -53,6 +53,27 @@ repo='fontawesome/brands/gitlab'
 Home = "README.md"
 
 [[tool.portray.mkdocs.nav]]
-    [[tool.portray.mkdocs.nav."User guides"]]
+    [[tool.portray.mkdocs.nav."User guides".English]]
     "1. Compute masked vegetation index" = "docs/user_guides/english/01_compute_masked_vegetationindex.md"
-
+    [[tool.portray.mkdocs.nav."User guides".English]]
+    "2. Train model" = "docs/user_guides/english/02_train_model.md"
+    [[tool.portray.mkdocs.nav."User guides".English]]
+    "1. Decline detection" = "docs/user_guides/english/03_decline_detection.md"    
+	[[tool.portray.mkdocs.nav."User guides".English]]
+    "1. Compute forest mask" = "docs/user_guides/english/04_compute_forest_mask.md"    
+	[[tool.portray.mkdocs.nav."User guides".English]]
+    "1. Compute confidence" = "docs/user_guides/english/05_compute_confidence.md"
+	[[tool.portray.mkdocs.nav."User guides".English]]
+    "1. Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
+    [[tool.portray.mkdocs.nav."User guides".Français]]
+    "1. Compute masked vegetation index" = "docs/user_guides/french/01_compute_masked_vegetationindex.md"
+    [[tool.portray.mkdocs.nav."User guides".Français]]
+    "2. Train model" = "docs/user_guides/french/02_train_model.md"
+    [[tool.portray.mkdocs.nav."User guides".Français]]
+    "1. Decline detection" = "docs/user_guides/french/03_decline_detection.md"    
+	[[tool.portray.mkdocs.nav."User guides".Français]]
+    "1. Compute forest mask" = "docs/user_guides/french/04_compute_forest_mask.md"    
+	[[tool.portray.mkdocs.nav."User guides".Français]]
+    "1. Compute confidence" = "docs/user_guides/french/05_compute_confidence.md"
+	[[tool.portray.mkdocs.nav."User guides".Français]]
+    "1. Visualisation tools" = "docs/user_guides/french/Results_visualisation.md"
