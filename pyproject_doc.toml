@@ -52,6 +52,9 @@ repo='fontawesome/brands/gitlab'
 [[tool.portray.mkdocs.nav]]
 Home = "README.md"
 
+Installation = "docs/Installation.md"
+Tutorial = "docs/Tutorial.md"
+
 [[tool.portray.mkdocs.nav]]
     [[tool.portray.mkdocs.nav."User guides".English]]
     "1. Compute masked vegetation index" = "docs/user_guides/english/01_compute_masked_vegetationindex.md"
@@ -67,6 +70,11 @@ Home = "README.md"
     "6. Export results" = "docs/user_guides/english/06_export_results.md"
 	[[tool.portray.mkdocs.nav."User guides".English]]
     "Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
+	[[tool.portray.mkdocs.nav."User guides"."Other tools"]]
+    "Computing vegetation index" = "docs/examples/ex_computing_vegetation_index.md"
+	[[tool.portray.mkdocs.nav."User guides"."Other tools"]]
+    "Using TileInfo object" = "docs/examples/ex_tileinfo_object.md"
+	
     [[tool.portray.mkdocs.nav."User guides".'Français']]
     "1. Calcul de l'indice de végétation et des masques" = "docs/user_guides/french/01_compute_masked_vegetationindex.md"
     [[tool.portray.mkdocs.nav."User guides".'Français']]
@@ -81,3 +89,5 @@ Home = "README.md"
     "6. Export des résultats" = "docs/user_guides/french/06_export_results.md"
 	[[tool.portray.mkdocs.nav."User guides".'Français']]
     "Outils de visualisation" = "docs/user_guides/french/Results_visualisation.md"
+
+"Command line" = "docs/cli.md"
