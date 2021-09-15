@@ -1,10 +1,18 @@
 # fordead : a python package for forest change detection from SENTINEL-2 images
 
-Read this in french [here](https://gitlab.com/fordead/fordead_package/-/blob/master/README_fr.md)
+Read this in french [here](https://gitlab.com/fordead/fordead_package/-/blob/master/README_fr.md).
 
 The `fordead` package has been developed for the detection of changes in forests from SENTINEL-2 time series, in particular in the context of a bark beetle health crisis on spruce trees. Based on functions simplifying the use of SENTINEL-2 satellite data, it allows the mapping of bark beetle forest disturbances since 2018. However, except for the masks used which are certainly too specific to the study of coniferous forests, the rest of the process can probably be used for other issues. 
 
-## Forest disturbance detection
+## Installation
+
+The installation guide can be found [here](https://fordead.gitlab.io/fordead_package/docs/Installation/).
+
+## Tutorial
+
+A tutorial to get started and test the package on a small dataset can be found [here](https://fordead.gitlab.io/fordead_package/docs/Tutorial/00_Intro/).
+
+## Dieback detection
 
 ![diagramme_general_english](docs/user_guides/english/Diagrams/Diagramme_general.png "diagramme_general_english")
 
