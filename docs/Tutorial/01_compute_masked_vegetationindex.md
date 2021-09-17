@@ -29,6 +29,12 @@ fordead masked_vi -i <MyWorkingDirectory>/study_area -o <output directory> -n 0.
 Running this script will filter out all Sentinel-2 dates with a cloud percentage above **lim_perc_cloud**, and create two directories in your **data_directory** :
 - A "VegetationIndex" directory, containing the chosen vegetation index (in this case, CRSWIR) calculated for each remaining date using Sentinel-2 data interpolated at 10m resolution (in this case, `interpolation_order = 0` indicates nearest neighbour interpolation).
 - A "Mask" directory, containing the associated binary raster mask which corresponds to the two default masks (any negative value in the first band of the stack is considered outside the satellite swath and any pixel with a 0 value in any band is considered a shadow) associated to the **formula_mask** which is chosen by the user, as well as the mask provided by the Sentinel-2 data provider if **apply_source_mask** is True.
+![gif_mask1](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/Tutorial/Figures/gif_mask.gif "gif_mask")
+<img src="https://gitlab.com/fordead/fordead_package/-/blob/master/docs/Tutorial/Figures/gif_mask.gif"/> 
+
+![gif_mask](Figures/gif_mask.gif "gif_mask")
+<img src="Figures/gif_mask.gif"/> 
+<img src="Figures/gif_vegetation_index.gif" width="500"/>
 
 Vegetation index             |  Mask
 :-------------------------:|:-------------------------:
