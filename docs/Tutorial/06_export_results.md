@@ -25,9 +25,12 @@ fordead export_results -o <output directory> --frequency M --intersection_confid
 
 The outputs of this fifth step, in the folder data_directory/Results, is the shapefile periodic_results_decline, whose polygons contain the time period when the first anomaly was detected, as well as the confidence index class. 
 
-RGB Sentinel-2             |  Period of detection | Confidence class
-:-------------------------:|:-------------------------:|:-------------------------:
-![results_RGB](Figures/confidence_RGB.png "results_RGB")  |  ![detection_period](Figures/detection_period.png "detection_period") | ![detection_class](Figures/detection_class.png "detection_class")
+
+<div align="center"> <img src="Figures/confidence_RGB.png" alt="confidence_RGB" width="500"/> </div> 
+
+Period of detection | Confidence class
+:-------------------------:|:-------------------------:
+![detection_period](Figures/detection_period.png "detection_period") | ![detection_class](Figures/detection_class.png "detection_class")
 
 
 [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/07_create_timelapse)
