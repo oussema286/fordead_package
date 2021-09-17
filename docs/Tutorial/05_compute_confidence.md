@@ -34,6 +34,9 @@ The outputs of this fourth step, in the data_directory/Confidence_Index folder, 
 The following illustration shows the Sentinel-2 view, as well as the continuous confidence index raster, and then the discretized, vectorized confidence class for this example's detection. The Sentinel-2 date shown is the last date available (2019-09-20), since the confidence index shows the detected state of pixels at the last Sentinel-2 date used.
 
 ![confidence-2019-09-20](Figures/gif_confidence.gif "confidence-2019-09-20")
+![confidence-2019-09-202](Figures/gif_confidence2.gif "confidence-2019-09-202")
+![confidence-2019-09-203](Figures/gif_confidence.gif3 "confidence-2019-09-203")
+<img src="Figures/gif_confidence.gif" alt="gif_confidence4" width="200"/>
 
 > **_NOTE :_** If the confidence index was already calculated, you change the threshold list or classes list and it will simply import the results of the previous process. But if new Sentinel-2 dates were added, the step will compute the confidence index and erase previous results.
 
