@@ -14,15 +14,20 @@ from fordead.steps.step6_export_results import export_results
 export_results(data_directory = data_directory, frequency= "M", multiple_files = False, intersection_confidence_class = True)
 ```
 
-##### Outputs
-
-The outputs of this fifth step, in the folder data_directory/Results, is the shapefile periodic_results_decline, whose polygons contain the time period when the first anomaly was detected, as well as the confidence index class. 
-
 ##### Running this step from the command invite
 
 This step can also be used from the command invite with the command :
 ```bash
 fordead export_results -o <output directory> --frequency M --intersection_confidence_class
 ```
+
+##### Outputs
+
+The outputs of this fifth step, in the folder data_directory/Results, is the shapefile periodic_results_decline, whose polygons contain the time period when the first anomaly was detected, as well as the confidence index class. 
+
+RGB Sentinel-2             |  Period of detection | Confidence class
+:-------------------------:|:-------------------------:|:-------------------------:
+![results_RGB](Figures/confidence_RGB.jpg "results_RGB")  |  ![detection_period](Figures/detection_period.gif "detection_period")| ![detection_class](Figures/detection_class.png "detection_class"
+
 
 [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/07_create_timelapse)

@@ -246,6 +246,71 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path, max_date):
         return fig
 
 
+def plot_mask(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax):
+    """
+    Creates figure from all data
+
+    """
+    fig=plt.figure(figsize=(10,7))
+    ax = plt.gca()
+    formatter = mdates.DateFormatter("%b %Y")
+    ax.xaxis.set_major_formatter(formatter)
+    
+    plt.xticks(rotation=30)
+    if pixel_series.Soil.any() : pixel_series.where(pixel_series.Soil,drop=True).plot.line('k^', label='Coupe') 
+    
+    if xy_first_detection_date_index !=0:
+        pixel_series.where(pixel_series.training_date & ~pixel_series.mask,drop=True).plot.line("bo", label='Training')
+        if (~pixel_series.training_date & ~pixel_series.Anomaly).any() : pixel_series.where(~pixel_series.training_date & ~pixel_series.Anomaly,drop=True).plot.line("o",color = '#1fca3b', label='Detection dates') 
+  
+        
+    else:
+        if (~pixel_series.mask).any(): pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
+        plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\n Not enough dates to compute a model",size=15)
+         
+    [plt.axvline(x=datetime.datetime.strptime(str(year)+"-01-01", '%Y-%m-%d'),color="black") for year in np.arange(pixel_series.isel(Time = 0).Time.data.astype('datetime64[Y]'), (pixel_series.isel(Time = -1).Time.data + np.timedelta64(35,'D')).astype('datetime64[Y]')+1) if str(year)!="2015"]
+
+    plt.legend()
+    plt.ylim((ymin,ymax))
+    plt.xlabel("Date",size=15)
+    plt.ylabel(vi,size=15)
+        
+    return fig
+
+def plot_model(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax):
+    """
+    Creates figure from all data
+
+    """
+    fig=plt.figure(figsize=(10,7))
+    ax = plt.gca()
+    formatter = mdates.DateFormatter("%b %Y")
+    ax.xaxis.set_major_formatter(formatter)
+    
+    plt.xticks(rotation=30)
+    if pixel_series.Soil.any() : pixel_series.where(pixel_series.Soil,drop=True).plot.line('k^', label='Coupe') 
+    
+    if xy_first_detection_date_index !=0:
+        pixel_series.where(pixel_series.training_date & ~pixel_series.mask,drop=True).plot.line("bo", label='Training dates')
+        if (~pixel_series.training_date & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & ~pixel_series.mask,drop=True).plot.line("o",color = '#1fca3b', label='Detection dates') 
+        # if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask & ~pixel_series.Soil,drop=True).plot.line("r*", markersize=9, label='Dates avec anomalies') 
+  
+        #Plotting vegetation index model and anomaly threshold
+        yy.plot.line("b", label='Vegetation index model based on training dates')
+        plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y)),size=15)
+        
+    else:
+        if (~pixel_series.mask).any(): pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
+        plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\n Not enough dates to compute a model",size=15)
+         
+    [plt.axvline(x=datetime.datetime.strptime(str(year)+"-01-01", '%Y-%m-%d'),color="black") for year in np.arange(pixel_series.isel(Time = 0).Time.data.astype('datetime64[Y]'), (pixel_series.isel(Time = -1).Time.data + np.timedelta64(35,'D')).astype('datetime64[Y]')+1) if str(year)!="2015"]
+
+    plt.legend()
+    plt.ylim((ymin,ymax))
+    plt.xlabel("Date",size=15)
+    plt.ylabel(vi,size=15)
+        
+    return fig
 
 def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax):
     """
