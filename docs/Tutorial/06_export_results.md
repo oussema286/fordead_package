@@ -27,7 +27,7 @@ The outputs of this fifth step, in the folder data_directory/Results, is the sha
 
 RGB Sentinel-2             |  Period of detection | Confidence class
 :-------------------------:|:-------------------------:|:-------------------------:
-![results_RGB](Figures/confidence_RGB.jpg "results_RGB")  |  ![detection_period](Figures/detection_period.gif "detection_period")| ![detection_class](Figures/detection_class.png "detection_class"
+![results_RGB](Figures/confidence_RGB.png "results_RGB")  |  ![detection_period](Figures/detection_period.png "detection_period") | ![detection_class](Figures/detection_class.png "detection_class")
 
 
 [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/07_create_timelapse)
