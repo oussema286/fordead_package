@@ -85,7 +85,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     """
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    
+
     # IMPORTING ALL DATA
     stack_vi, stack_masks = import_stackedmaskedVI(tile,chunks = chunks)
     stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
@@ -186,6 +186,7 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                     print("Pixel outside forest mask")
                 else:
                     fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
+             
                     fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
                     plt.show()
                     plt.close()

@@ -252,7 +252,6 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
     Creates figure from all data
 
     """
-
     fig=plt.figure(figsize=(10,7))
     ax = plt.gca()
     formatter = mdates.DateFormatter("%b %Y")
@@ -262,37 +261,37 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
     if pixel_series.Soil.any() : pixel_series.where(pixel_series.Soil,drop=True).plot.line('k^', label='Coupe') 
     
     if xy_first_detection_date_index !=0:
-        pixel_series.where(pixel_series.training_date & ~pixel_series.mask,drop=True).plot.line("bo", label='Apprentissage')
-        if (~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask,drop=True).plot.line("o",color = '#1fca3b', label='Dates sans anomalies') 
-        if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask & ~pixel_series.Soil,drop=True).plot.line("r*", markersize=9, label='Dates avec anomalies') 
+        pixel_series.where(pixel_series.training_date & ~pixel_series.mask,drop=True).plot.line("bo", label='Training dates')
+        if (~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask,drop=True).plot.line("o",color = '#1fca3b', label='Normal dates') 
+        if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask & ~pixel_series.Soil,drop=True).plot.line("r*", markersize=9, label='Anomalies') 
   
         #Plotting vegetation index model and anomaly threshold
-        yy.plot.line("b", label='Modélisation du '+vi+' sur les dates d\'apprentissage')
+        yy.plot.line("b", label='Vegetation index model based on training dates')
         
         dict_vi = get_dict_vi(path_dict_vi)
         if dict_vi[vi]["decline_change_direction"] == "+":
-            (yy+threshold_anomaly).plot.line("b--", label='Seuil de détection des anomalies')
+            (yy+threshold_anomaly).plot.line("b--", label='Threshold for anomaly detection')
         elif dict_vi[vi]["decline_change_direction"] == "-":
-            (yy-threshold_anomaly).plot.line("b--", label='Seuil de détection des anomalies')
+            (yy-threshold_anomaly).plot.line("b--", label='Threshold for anomaly detection')
         
         
-        #Plotting vertical lines when decline or soil is detected
+        # Plotting vertical lines when decline or soil is detected
         if ~xy_decline_data["state"] & ~xy_soil_data["state"]:
-            plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nPixel sain",size=15)
+            plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nHealthy pixel",size=15)
         elif xy_decline_data["state"] & ~xy_soil_data["state"]:
             date_atteint = pixel_series.Time[int(xy_decline_data["first_date"])].data
-            plt.axvline(x=date_atteint, color='red', linewidth=3, linestyle=":",label="Détection de déperissement")
-            plt.title("X : " + str(int(pixel_series.x))+"    Y : " + str(int(pixel_series.y))+"\nPixel atteint, première anomalie le " + str(date_atteint.astype("datetime64[D]")),size=15)
+            plt.axvline(x=date_atteint, color='red', linewidth=3, linestyle=":",label="Dieback detection")
+            plt.title("X : " + str(int(pixel_series.x))+"    Y : " + str(int(pixel_series.y))+"\nDieback detected, first anomaly on " + str(date_atteint.astype("datetime64[D]")),size=15)
         elif xy_decline_data["state"] & xy_soil_data["state"]:
             date_atteint = pixel_series.Time[int(xy_decline_data["first_date"])].data
             date_coupe = pixel_series.Time[int(xy_soil_data["first_date"])].data
             plt.axvline(x=date_atteint, color="red", linewidth=3, linestyle=":")
             plt.axvline(x=date_coupe,color='black', linewidth=3, linestyle=":")
-            plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nPixel atteint, première anomalie le " + str(date_atteint.astype("datetime64[D]")) + ", coupé le " + str(date_coupe.astype("datetime64[D]")),size=15)
+            plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nDieback detected, first anomaly on " + str(date_atteint.astype("datetime64[D]")) + ", clear cut on " + str(date_coupe.astype("datetime64[D]")),size=15)
         else:
             date_coupe = pixel_series.Time[int(xy_soil_data["first_date"])].data
             plt.axvline(x=date_coupe, color='black', linewidth=3, linestyle=":",label="Détection de coupe")
-            plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nPixel coupé, détection le " + str(date_coupe.astype("datetime64[D]")),size=15)
+            plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nBare ground detected on " + str(date_coupe.astype("datetime64[D]")),size=15)
     else:
         if (~pixel_series.mask).any(): pixel_series.where(~pixel_series.mask,drop=True).plot.line("bo")
         plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\n Not enough dates to compute a model",size=15)
@@ -324,7 +323,7 @@ def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detect
         xy_anomalies = None
         yy = None
     pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
-    pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
+    pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks.data))
         
     return pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index
     
@@ -342,7 +341,7 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
         xy_decline_data=None
         xy_anomalies = None
     pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
-    pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks))
+    pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks.data))
     if xy_first_detection_date_index!=0:
         anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
         pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
