@@ -29,7 +29,7 @@ The outputs of this fifth step, in the folder data_directory/Results, is the sha
 
 Period of detection | Confidence class
 :-------------------------:|:-------------------------:
-![detection_period](Figures/detection_period.png "detection_period") | ![detection_class](Figures/detection_class.png "detection_class")
+![gif_results_original](Figures/gif_results_original.gif "gif_results_original") | ![gif_results_confidence](Figures/gif_results_confidence.gif "gif_results_confidence")
 
 
 [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/07_create_timelapse)
