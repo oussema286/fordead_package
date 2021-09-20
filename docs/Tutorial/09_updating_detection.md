@@ -34,4 +34,4 @@ As you can see, results can be updated using only the new Sentinel-2 dates, savi
 Original | Updated
 :-------------------------:|:-------------------------:
 ![graph_healthy](Figures/graph_healthy.png "graph_healthy") | ![graph_updated](Figures/graph_updated.png "graph_updated")
-![detection_period](Figures/detection_period.png "detection_period") | ![detection_period_updated](Figures/detection_period_updated.png "detection_period_updated")
+![gif_results_original](Figures/gif_results_original.gif "gif_results_original") | ![gif_results_updated](Figures/gif_results_updated.gif "gif_results_updated")
