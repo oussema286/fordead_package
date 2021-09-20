@@ -29,6 +29,10 @@ fordead graph_series  -o <output directory> --shape_path <MyWorkingDirectory>/ve
 
 The plots are saved in the folder data_directory/TimeSeries, with a .png file for each point with the value in the column **name_column** as file name. The y axis limits are set using **ymin** and **ymax** parameters.
 
+Healthy pixel | Attacked pixel
+:-------------------------:|:-------------------------:
+![graph_healthy](Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](Figures/graph_dieback.png "graph_dieback")
+
 > **_NOTE :_** The **chunks** parameter is not really necessary in this case, since we're working on a small area, but it is needed to reduce computation time in large datasets.
 
 [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/09_updating_detection)

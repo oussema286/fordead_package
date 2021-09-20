@@ -37,4 +37,8 @@ It is possible to zoom in on the desired area by holding down the click while de
 - y : coordinates in y
 - z : `[<reflectance in red>,<reflectance in green>,<reflectance in blue>]`, that is to say the value of the corresponding SENTINEL band at the given date.
 
+
+![gif_timelapse](Figures/gif_timelapse.gif "gif_timelapse")
+
+
 [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/08_create_graphs)

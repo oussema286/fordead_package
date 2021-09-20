@@ -68,11 +68,11 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
 	"Step 6. Export results" = "docs/Tutorial/06_export_results.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Creating a timelapse" = "docs/user_guides/english/07_create_timelapse.md"
+	"Creating a timelapse" = "docs/Tutorial/07_create_timelapse.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Creating graphs" = "docs/user_guides/english/08_create_graphs.md"
+	"Creating graphs" = "docs/Tutorial/08_create_graphs.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Updating detection" = "docs/user_guides/english/09_updating_detection.md"
+	"Updating detection" = "docs/Tutorial/09_updating_detection.md"
 	
 [[tool.portray.mkdocs.nav]]
     [[tool.portray.mkdocs.nav."User guides".English]]

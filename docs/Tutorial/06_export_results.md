@@ -25,8 +25,7 @@ fordead export_results -o <output directory> --frequency M --intersection_confid
 
 The outputs of this fifth step, in the folder data_directory/Results, is the shapefile periodic_results_decline, whose polygons contain the time period when the first anomaly was detected, as well as the confidence index class. 
 
-
-<div align="center"> <img src="Figures/confidence_RGB.png" alt="confidence_RGB" width="500"/> </div> 
+<img src="Figures/confidence_RGB.png" alt="confidence_RGB" width="500"/>
 
 Period of detection | Confidence class
 :-------------------------:|:-------------------------:
