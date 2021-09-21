@@ -35,5 +35,5 @@ The following figures show how the bark beetle attack progressed for the entire 
 
 Original | Updated
 :-------------------------:|:-------------------------:
-![graph_healthy](Figures/graph_healthy.png "graph_healthy") | ![graph_updated](Figures/graph_updated.png "graph_updated")
 ![gif_results_original](Figures/gif_results_original.gif "gif_results_original") | ![gif_results_updated](Figures/gif_results_updated.gif "gif_results_updated")
+![graph_healthy](Figures/graph_healthy.png "graph_healthy") | ![graph_updated](Figures/graph_updated.png "graph_updated")
