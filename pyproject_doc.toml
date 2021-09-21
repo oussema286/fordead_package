@@ -56,6 +56,8 @@ Installation = "docs/Installation.md"
 
 [[tool.portray.mkdocs.nav]]
 	[[tool.portray.mkdocs.nav.Tutorial]]
+	"Introduction" = "docs/Tutorial/00_Intro.md"
+	[[tool.portray.mkdocs.nav.Tutorial]]
 	"Step 1. Compute masked vegetation index" = "docs/Tutorial/01_compute_masked_vegetationindex.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
 	"Step 2. Train model" = "docs/Tutorial/02_train_model.md"

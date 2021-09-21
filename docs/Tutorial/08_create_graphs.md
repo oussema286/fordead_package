@@ -5,8 +5,11 @@ The second built-in visualisation tool allows to visualize for a particular pixe
 ### Creating graphs showing the time series evolution at pixel level
 
 This tool will create plots showing the vegetation index value for each Sentinel-2 date, as well as the vegetation index prediction model, the threshold used for anomaly detection, the period used for training... This allows to better understand how anomaly detection went for pixels of interest.
+Here you can see an example for a healthy pixel, and one attacked by bark beetles :
 
-![graph_example](user_guides/english/Diagrams/graph_example.png "graph_example")
+Healthy pixel | Attacked pixel
+:-------------------------:|:-------------------------:
+![graph_healthy](Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](Figures/graph_dieback.png "graph_dieback")
 
 It can be ran on a shapefile containing points if parameters **shape_path** and **name_column** are used. If those parameters are not used, the program will prompt the user to enter coordinates in the Sentinel-2 data CRS.  
 In this example, we will use a shapefile provided in the fordead_data repository.
@@ -28,10 +31,6 @@ fordead graph_series  -o <output directory> --shape_path <MyWorkingDirectory>/ve
 ##### Outputs
 
 The plots are saved in the folder data_directory/TimeSeries, with a .png file for each point with the value in the column **name_column** as file name. The y axis limits are set using **ymin** and **ymax** parameters.
-
-Healthy pixel | Attacked pixel
-:-------------------------:|:-------------------------:
-![graph_healthy](Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](Figures/graph_dieback.png "graph_dieback")
 
 > **_NOTE :_** The **chunks** parameter is not really necessary in this case, since we're working on a small area, but it is needed to reduce computation time in large datasets.
 

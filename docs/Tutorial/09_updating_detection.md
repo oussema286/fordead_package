@@ -3,7 +3,7 @@
 The dieback detection can be updated simply by adding new Sentinel-2 dates which can be very useful for monitoring vegetation. To illustrate this, copy the files from the directory **update_study_area** to the directory **study_area**, then run the entire script again.
 You can save results from the **Results**, **Timelapses** and **TimeSeries** in an other folder if you wish to compare them with the updated results which will overwrite them.
 
-Here, you can find the complete script :
+Here, you can find the complete script all in one place :
 ```python
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
@@ -30,6 +30,8 @@ vi_series_visualisation(data_directory = data_directory, shape_path = "<MyWorkin
 ```
 
 As you can see, results can be updated using only the new Sentinel-2 dates, saving on computation time. 
+
+The following figures show how the bark beetle attack progressed for the entire area, and for a single pixel :
 
 Original | Updated
 :-------------------------:|:-------------------------:

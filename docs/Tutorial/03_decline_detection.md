@@ -1,6 +1,6 @@
 #### Step 3 : Detecting anomalies by comparing the vegetation index and its predicted value
 
-For each SENTINEL date not used for training, the actual vegetation index is compared to the vegetation index predicted from the model calculated in the previous step. If the difference exceeds a threshold, in the expected direction in case of anomaly, an anomaly is detected. For example, the CRSWIR goes up as stands suffer bark beetle attacks, so only high CRSWIR anomalies are registered. The pixel's state is only considered changed if three successive anomalies are detected, confirming them. This allows to ignore one time events of anomalies due to an imperfect mask, or temporary climatic events. If after anomalies have been confirmed, the pixel has three successive dates without anomalies, it returns to normal state. This allows the algorithm to auto-correct false detections based on new Sentinel-2 data, for example in the case of a drought period lasting long enough to get more than three successive anomalies.
+For each SENTINEL date not used for training, the actual vegetation index is compared to the vegetation index predicted from the model calculated in the previous step. If the difference exceeds a threshold, in the expected direction in case of anomaly, an anomaly is detected. For example, the CRSWIR goes up as stands suffer bark beetle attacks, so only CRSWIR values higher than the norm are registered as anomalies. The pixel's state is only considered changed if three successive anomalies are detected, confirming them. This allows to ignore one time events of anomalies due to an imperfect mask, or temporary climatic events. If after anomalies have been confirmed, the pixel has three successive dates without anomalies, it returns to normal state. This allows the algorithm to auto-correct false detections based on new Sentinel-2 data, for example in the case of a drought period lasting long enough to get more than three successive anomalies.
 
 As an example, the following graph shows the time series of the vegetation index along with the threshold for anomaly detection, and the date of detection :
 
@@ -24,7 +24,7 @@ This step can also be used from the command invite with the command :
 ```bash
 fordead decline_detection -o <output directory> --threshold_anomaly 0.17
 ```
-As always, if the model is already computed and no parameters were changed, the process is ignored. If parameters were changed, previous results from this step and subsequent steps are deleted and the model is computed anew.
+> **_NOTE :_** As always, if the model is already computed and no parameters were changed, the process is ignored. If parameters were changed, previous results from this step and subsequent steps are deleted and the model is computed anew.
 
 ##### Outputs
 

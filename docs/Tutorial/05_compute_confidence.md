@@ -1,6 +1,6 @@
 #### (OPTIONAL) Step 5 : Computing a confidence index to classify anomalies by severity
 
-This step is completely optional and aims at computing a confidence index whose value goes up as the registered anomalies increase in severity, thush it can be used to describe the intensity of the detected disturbance and possibly help to filter out potential false detections.  
+This step is completely optional and aims at computing a confidence index whose value goes up as the registered anomalies increase in severity, thus it can be used to describe the intensity of the detected disturbance and possibly help to filter out potential false detections.  
 The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. For each date used, the weight corresponds to the number of unmasked dates from the first anomaly. In case of a disturbance, the intensity of anomalies often goes up which is why later dates have more weight. Since all Sentinel-2 dates are used, this index describes the state of the pixel at the last used Sentinel-2 date, and not the state at the moment of detection. The following picture illustrates the confidence index formula :
 
 ![graph_ind_conf](user_guides/english/Diagrams/graph_ind_conf.jpg "graph_ind_conf")
