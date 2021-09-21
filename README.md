@@ -1,4 +1,4 @@
-# fordead : a python package for forest change detection from SENTINEL-2 images
+# fordead : a python package for vegetation anomalies detection from SENTINEL-2 images
 
 Read in french [here](https://gitlab.com/fordead/fordead_package/-/blob/master/README_fr.md).
 
