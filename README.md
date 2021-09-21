@@ -21,6 +21,7 @@ It is possible to correct the vegetation index using a correction factor calcula
 All the documentation and user guides for these steps are available at the [documentation website](https://fordead.gitlab.io/fordead_package/).
 
 Here is an example of the result of these steps on a small area :
+
 Period of detection | Confidence class
 :-------------------------:|:-------------------------:
 ![gif_results_original](docs/Tutorial/Figures/gif_results_original.gif "gif_results_original") | ![gif_results_confidence](docs/Tutorial/Figures/gif_results_confidence.gif "gif_results_confidence")
