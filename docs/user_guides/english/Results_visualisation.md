@@ -60,6 +60,8 @@ fordead timelapse [OPTIONS]
 ```
 See detailed documentation at [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-timelapse)
 
+***
+
 ## Create graphs showing the evolution of the time series
 #### INPUTS
 The input parameters are:
@@ -74,16 +76,17 @@ The input parameters are:
 - **chunks** : int, If the results used were calculated on a large scale such as a tile, giving a chunk size (e.g. 1280)  allows to import the data much faster, and saves RAM.
 
 #### OUTPUTS
-The outputs are in the folder data_directory/TimeSeries, with for each point a .png file with as file name the value in the column **name_column**, or in the format __X<x_coord>_Y<y_coord>.png__ if coordinates are used.
+The outputs are in the folder data_directory/TimeSeries, with for each point a .png file with as file name the value in the column **name_column**, or in the format *Xx_coord_Yy_coord.png* if coordinates are used.
 
 ## How to use
 ### From a script
-#### From a shapefile containing the areas of interest
+#### From a shapefile containing the points of interest
 ```bash
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
 vi_series_visualisation(data_directory = <data_directory>, shape_path = <shape_path>, name_column = "id", ymin = 0, ymax = 2, chunks = 100)
 ```
 #### From coordinates
+Coordinates must be in the CRS of the Sentinel-2 tile.
 ```bash
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
 vi_series_visualisation(data_directory = <data_directory>, x = <x_coord>, y = <y_coord>, ymin = 0, ymax = 2, chunks = 100)

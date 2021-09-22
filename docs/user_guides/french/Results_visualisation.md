@@ -60,6 +60,8 @@ fordead timelapse [OPTIONS]
 ```
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-timelapse)
 
+***
+
 ## Créer des graphes montrant l'évolution de la série temporelle
 #### ENTRÉES
 Les paramètres en entrée sont :
@@ -74,7 +76,7 @@ Les paramètres en entrée sont :
 - **chunks** : int, Si les résultats utilisés ont été calculés à large échelle, donner une taille de chunks (ex : 1280) permet d'importer les données de manière à sauvegarder la RAM. 
 
 #### SORTIES
-Les sorties sont dans le dossier data_directory/TimeSeries, avec pour chaque point un fichier .png avec comme nom de fichier la valeur dans la colonne **name_column**, ou le format __X<x_coord>_Y<y_coord>.png__ si les coordonnées sont utilisées.
+Les sorties sont dans le dossier data_directory/TimeSeries, avec pour chaque point un fichier .png avec comme nom de fichier la valeur dans la colonne **name_column**, ou le format *Xx_coord_Yy_coord.png* si les coordonnées sont utilisées.
 
 ## Utilisation
 ### A partir d'un script
@@ -84,12 +86,12 @@ from fordead.visualisation.vi_series_visualisation import vi_series_visualisatio
 vi_series_visualisation(data_directory = <data_directory>, shape_path = <shape_path>, name_column = "id", ymin = 0, ymax = 2, chunks = 100)
 ```
 #### A partir de coordonnées
+Les coordonnées doivent être fournies dans le système de projection de la tuile Sentinel-2.
 ```bash
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
-vi_series_visualisation(data_directory = <data_directory>, ymin = 0, ymax = 2, chunks = 100)
+vi_series_visualisation(data_directory = <data_directory>, x = <x_coord>, y = <y_coord>, ymin = 0, ymax = 2, chunks = 100)
 ```
-Dans ce mode, l'utilisateur peut choisir de donner des coordonnées X et Y dans le système projection des données Sentinel-2 utilisées.
-Il est également possible de donner l'indice du pixel en partant du (xmin,ymax), utile si un timelapse a été crée sur l'ensemble de la zone calculée auquel cas l'indice correspond aux coordonnées dans le timelapse.
+
 
 #### Depuis boucle prompt
 Si ni **x** et **y**, ni **shape_path** ne sont donnés, l'utilisateur sera invité à donner soit des coordonnées X et Y dans le système de projection des données Sentinel-2 utilisées, soit les indices de pixels à partir de (xmin,ymax) de toute la zone, ce qui peut être utile si un timelapse a été créé sur toute la zone calculée, auquel cas l'indice correspond aux coordonnées dans le timelapse.
