@@ -110,7 +110,7 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
     zip_results: bool
         If True, transfers the timelapse to a zip file "Timelapses.zip" in data_directory/Timelapses directory
     """
-    
+    #%%
     
     tile = TileInfo(data_directory)
     tile = tile.import_info()
@@ -118,8 +118,8 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
     # if tile.parameters["Overwrite"] : tile.delete_dirs("timelapse") #Deleting previous detection results if they exist
     tile.add_dirpath("timelapse", tile.data_directory / "Timelapses")
     tile.save_info()
+    #%% Importing/creating ROI
     
-    #Importing/creating ROI
     if (x is not None) and (y is not None):
         print("Timelapse created from coordinates")
         ShapeInteret = gp.GeoDataFrame({"id" : [str(x)+"_"+str(y)]},geometry = gp.points_from_xy([x], [y]),crs =tile.raster_meta["attrs"]["crs"] )
@@ -130,14 +130,15 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
         ShapeInteret=ShapeInteret.to_crs(crs = tile.raster_meta["attrs"]["crs"])
     else:
         raise Exception("No shape_path or coordinates")
-        
-    #Creating timelapse(s)
+    #%% Creating zip file
+    
     if zip_results:
         if not (tile.paths["timelapse"] / "Timelapses.zip").exists():
             zipObj = ZipFile(tile.paths["timelapse"] / "Timelapses.zip", 'w', compression = ZIP_DEFLATED, compresslevel = 6)
         else:
             zipObj = ZipFile(tile.paths["timelapse"] / "Timelapses.zip", 'a', compression = ZIP_DEFLATED, compresslevel = 6)
-        
+    #%%Creating timelapses
+ 
     for ShapeIndex in range(ShapeInteret.shape[0]):
         Shape=ShapeInteret.iloc[ShapeIndex:(ShapeIndex+1)]
         try:
@@ -149,7 +150,9 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
         print("Creating timelapse | Id : " + NameFile)
         fig = CreateTimelapse(Shape.geometry.buffer(buffer),tile,DictCol, obs_terrain_path, max_date)
         plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=False)
-        if zip_results: zipObj.write(str(tile.paths["timelapse"] / (NameFile + ".html")),NameFile + ".html")
+        if zip_results: 
+            zipObj.write(str(tile.paths["timelapse"] / (NameFile + ".html")),NameFile + ".html") #Adding to zipfile
+            (tile.paths["timelapse"] / (NameFile + ".html")).unlink() #Removing html file
     if zip_results: zipObj.close()
 
 if __name__ == '__main__':

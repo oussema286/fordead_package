@@ -181,7 +181,7 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path, max_date):
             #     CountInvalid+=1
         fig.data[0].visible = True
         
-    
+
         
         # Visualisation données terrain
         if obs_terrain_path is not None:
