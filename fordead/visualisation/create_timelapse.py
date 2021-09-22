@@ -33,15 +33,16 @@ def timelapse():
     
 @timelapse.command(name='timelapse')
 @click.option("-o", "--data_directory", type = str, help = "Path of the directory containing results from the region of interest")
-@click.option("--obs_terrain_path", type = str, help = "Path of the shapefile with ground observations")
 @click.option("--shape_path", type = str, help = "Path of the shapefile of the area, or points, to convert to timelapse. Not used if timelapse made from x and y coordinates")
 @click.option("--name_column", type = str, default = "id", help = "Name of the column containing the name of the export. Not used if timelapse made from x and y coordinates", show_default=True)
 @click.option("--x", type = int, help = "Coordinate x in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile")
 @click.option("--y", type = int, help = "Coordinate y in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile")
 @click.option("--buffer", type = int, default = 100, help = "Buffer around polygons or points for the extent of the timelapse", show_default=True)
+@click.option("--vector_display_path", type = str, help = "Path of the shapefile with ground observations")
+@click.option("--hover_column_list", multiple=True, type=str, default=None, help="List of columns to display when hovering mouse over vectors of vector_display_path", show_default=True)
 @click.option("--max_date", type = str, default = None, help = "Last date used in the timelapse")
 @click.option("--zip_results",  is_flag=True, help = "If True, puts timelapses in a zip file", show_default=True)
-def cli_create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id", x = None, y = None, buffer = 100, max_date = None, zip_results = False):
+def cli_create_timelapse(data_directory, shape_path = None, name_column = "id", x = None, y = None, buffer = 100, vector_display_path = None, hover_column_list = None, max_date = None, zip_results = False):
     """
     Create timelapse allowing navigation through Sentinel-2 dates with detection results superimposed.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons or points with a column containing a unique ID used to name the export. 
@@ -52,18 +53,19 @@ def cli_create_timelapse(data_directory, obs_terrain_path = None, shape_path = N
     Parameters
     ----------
     data_directory
-    obs_terrain_path
     shape_path
     name_column
     x
     y
     buffer
+    vector_display_path
+    hover_column_list
     max_date
     zip_results
 
 
     """
-    create_timelapse(data_directory, obs_terrain_path, shape_path, name_column, x, y, buffer, max_date,zip_results)
+    create_timelapse(data_directory, shape_path, name_column, x, y, buffer, vector_display_path, hover_column_list, max_date,zip_results)
 
 #%% =============================================================================
 #   MAIN CODE
@@ -81,7 +83,7 @@ DictCol={'C' : "white",
 #         2 : "black",
 #         3 : "blue"}
 
-def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None, name_column = "id",  x = None, y = None, buffer = 100, max_date = None, zip_results = False):
+def create_timelapse(data_directory, shape_path = None, name_column = "id",  x = None, y = None, buffer = 100, vector_display_path = None, hover_column_list = None, max_date = None, zip_results = False):
     """
     Create timelapse allowing navigation through Sentinel-2 dates with detection results superimposed.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons with a column containing a unique ID used to name the export. 
@@ -93,8 +95,6 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
     ----------
     data_directory : str
         Path of the directory containing results from the region of interest.
-    obs_terrain_path : str, optional
-        Optionnal, Path of the shapefile with ground observations. The default is None.
     shape_path : str, optional
         Path of the shapefile of the area or points to convert to timelapse. Not used if timelapse made from x and y coordinates. The default is None.
     name_column : str, optional
@@ -105,6 +105,10 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
         Coordinate y in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile. The default is None.
     buffer : int, optional
         Buffer around polygons or points for the extent of the timelapse. The default is 100.
+    vector_display_path : str, optional
+        Optionnal, Path of a vector to display in the timelapse, ground observations, landmarks... The default is None.
+    hover_column_list : list, optional
+        Optionnal, list of columns to display when hovering mouse over vectors of vector_display_path.
     max_date: str
         Last date used in the timelapse, if None all dates available are used.
     zip_results: bool
@@ -148,7 +152,7 @@ def create_timelapse(data_directory, obs_terrain_path = None, shape_path = None,
         
         # if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()):
         print("Creating timelapse | Id : " + NameFile)
-        fig = CreateTimelapse(Shape.geometry.buffer(buffer),tile,DictCol, obs_terrain_path, max_date)
+        fig = CreateTimelapse(Shape.geometry.buffer(buffer),tile, vector_display_path, hover_column_list, max_date)
         plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=False)
         if zip_results: 
             zipObj.write(str(tile.paths["timelapse"] / (NameFile + ".html")),NameFile + ".html") #Adding to zipfile

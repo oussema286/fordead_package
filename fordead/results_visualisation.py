@@ -76,7 +76,7 @@ def polygon_from_coordinate_and_radius(coordinates, radius, crs):
 
 
 
-def CreateTimelapse(shape,tile,DictCol, obs_terrain_path, max_date):
+def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date):
         NbData=4
         fig = go.Figure()
         
@@ -101,10 +101,7 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path, max_date):
         dates = tile.dates[tile.dates <= max_date] if max_date is not None else tile.dates
         stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = dates)
 
-#         #Récupération des données observations
-        if obs_terrain_path is not None:
-            ScolytesObs=gp.read_file(obs_terrain_path,bbox=shape.envelope)
-            ScolytesObs=ScolytesObs.to_crs(crs=stack_rgb.crs)
+
         # CountInvalid=0
         valid_dates = xr.where(stack_rgb == -10000,True,False).sum(dim="x").sum(dim="y").sum(dim="band")/(stack_rgb.size / stack_rgb.sizes["Time"]) < 0.90
         nb_valid_dates = int(valid_dates.sum())
@@ -181,29 +178,46 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path, max_date):
             #     CountInvalid+=1
         fig.data[0].visible = True
         
-
         
-        # Visualisation données terrain
-        if obs_terrain_path is not None:
-            Nb_ScolytesObs = ScolytesObs.shape[0]
-            for ObsIndex in range(Nb_ScolytesObs):
-                
-                Obs=ScolytesObs.iloc[ObsIndex]
-                coords=Obs['geometry'].exterior.coords.xy
+        # Visualisation vector display
+        if vector_display_path is not None:
+            vector_display = gp.read_file(vector_display_path,bbox=shape.envelope).to_crs(crs=stack_rgb.crs).explode()
+            nb_vector_obj = vector_display.shape[0]
+            
+            if type(hover_column_list) is str: hover_column_list = [hover_column_list]
+            
+            for column in hover_column_list:
+                if column not in vector_display.columns:
+                    raise Exception(vector_display_path + " has no column '" + column + "'")
+            
+            for obj_index in range(nb_vector_obj):
+                obj = vector_display.iloc[obj_index]
+
+                if obj['geometry'].geom_type == "Point":
+                    mode = "markers"
+                    coords=obj['geometry'].coords.xy
+                elif obj['geometry'].geom_type == "LineString":
+                    mode = "lines"
+                    coords=obj['geometry'].coords.xy
+                elif obj['geometry'].geom_type == "Polygon":
+                    mode = "lines"
+                    coords=obj['geometry'].exterior.coords.xy
+                else:
+                    raise Exception("geom_type " + obj['geometry'].geom_type + " not supported")
+                    
                 x1=(coords[0]-np.array(int(stack_rgb.x.min())-5))/10-0.5
                 y1=(np.array(int(stack_rgb.y.max())+5)-coords[1])/10-0.5
 
-                
                 fig.add_trace(go.Scatter(
                 x=x1,
                 y=y1, 
-                mode='lines',
-                line_color=DictCol[Obs['scolyte1']],
-                name=Obs['scolyte1'] + " | " + Obs['organisme'] + " : " + Obs['date'],
-                hovertemplate=Obs['scolyte1'] + " | " + Obs['organisme'] + " : " + Obs['date']+ '<extra></extra>'
+                mode=mode,
+                line_color="darkviolet",
+                name=" | ".join([str(obj[column]) for column in hover_column_list]),
+                hovertemplate=" | ".join([str(obj[column]) for column in hover_column_list])
                 ))
         else:
-            Nb_ScolytesObs = 0
+            nb_vector_obj = 0
         
         
         #Slider  
@@ -213,7 +227,7 @@ def CreateTimelapse(shape,tile,DictCol, obs_terrain_path, max_date):
             step = dict(
                 label = dates[valid_dates][i],
                 method="restyle",
-                args=["visible", [False] * nb_valid_dates*NbData+[True]*Nb_ScolytesObs])
+                args=["visible", [False] * nb_valid_dates*NbData+[True]*nb_vector_obj])
                 # args=["visible", [False] * (len(Day)+stackAtteint.shape[0]*3) + [True] * scolytes.shape[0] + [False] * stackMask.shape[0]] ,
             
             step["args"][1][i*NbData] = True  # Toggle i'th trace to "visible"

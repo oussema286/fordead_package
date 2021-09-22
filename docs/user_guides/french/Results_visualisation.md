@@ -7,12 +7,13 @@ Le deuxième permet de visualiser pour un pixel en particulier la série tempore
 Les paramètres en entrée sont :
 
 - **data_directory** : Le chemin du dossier dans lequel sont écrits les résultats déjà calculés, et dans lequel seront sauvegardés les timelapses
-- **obs_terrain_path** : Optionnel, chemin du shapefile contenant les observations terrain, avec les colonnes "scolyte1", "organisme" et "date". "scolyte1" peut prendre les valeurs  "C", "V", "R", "S", "I", "G" ou "X".
 - **shape_path** : Chemin d'un shapefile contenant des polygones ou des points utilisés pour définir la zone des timelapses
+- **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du polygone ou point si **shape_path** est utilisé. (Par défault : "id")
 - **x** : Coordonnée x dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.
 - **y** : Coordonnée y dans le système de projection de la tuile Sentinel-2. Pas utilisé si le timelapse est défini à partir d'un shapefile par le paramètre **shape_path**.
 - **buffer** : Zone tampon autour des polygones ou des points pour définir l'étendue du timelapse.
-- **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du polygone ou point si **shape_path** est utilisé. (Par défault : "id")
+- **vector_display_path** : Optionnel, chemin d'un vecteur à afficher dans le timelapse, peut contenir des points, des lignes et des polygones.
+- **hover_column_list** : String ou liste de strings correspondant aux colonnes du fichier **vector_display_path**, dont les informations seront affichées en plaçant la souris sur ses objects. A utiliser seulement si **vector_display_path** est utilisé
 - **max_date** : Exclut du timelapse l'ensemble des dates Sentinel-2 après cette date (format : "AAAA-MM-JJ"). Par défaut, le timelapse utilise l'ensemble des dates Sentinel-2 disponibles.
 - **zip_results** : Si True, les fichiers html contenant les timelapses sont transférés dans un fichier zip compressé.
 
@@ -20,6 +21,7 @@ Les paramètres indispensables sont **data_directory** ainsi que **shape_path** 
 
 #### SORTIES
 Les sorties sont dans le dossier data_directory/Timelapses, avec pour chaque polygone ou point un fichier .html avec comme nom de fichier la valeur dans la colonne **name_column** si réalisés à partir de **shape_path**, ou x_y.html si réalisé à partir de coordonnées.
+Si zip_results vaut True, les timelapses crées sont zippés dans un fichier Timelapses.zip. Zipper les fichiers html réduit leur poids de 70%.
 
 Cet outil peut ne pas fonctionner sur des zones trop larges, il est recommandé d'éviter de lancer cette opération sur des zones de plus d'une vingtaine de km².
 
@@ -33,8 +35,8 @@ Les résultats apparaissent sous forme de polygones :
 
 Les résultats apparaissent à partir de la première anomalie, confirmée par la suite. Les fausses détections liées à un stress hydrique temporaire et corrigées par la suite n'apparaissent pas. De même, pour les dernières , il peut y avoir des anomalies n'apparaissant pas encore par manque de  valides pour confirmer la détection.
 
-Si les données d'observation sur le terrain sont également affichées, passer la souris sur ces polygones pour obtenir leurs informations :  | <organisme à l'origine de la donnée> : <date d'observation>. La couleur dépend du stade observé.
-Il est également possible de zoomer sur la zone souhaitée en maintenant le clique appuyé tout en délimitant une zone. Il est ensuite possible de dézoomer en double cliquant sur l'image. Passer la souris sur un pixel permet également d'obtenir ses informations :
+Si **vector_display_path** est renseigné, les points, lignes ou polygones à l'intérieur du shapefile sont affichés en violet foncé. L'utilisateur peut déplacer la souris sur les objets pour obtenir les informations des colonnes listées dans **hover_column_list**.
+Il est également possible de zoomer sur la zone souhaitée en maintenant le clic enfoncé tout en délimitant une zone. Il est ensuite possible de faire un zoom arrière en double-cliquant sur l'image. Passer la souris sur un pixel permet également d'obtenir ses informations :
 
 - x : coordonnées en x
 - y : coordonnées en y
@@ -63,15 +65,16 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 Les paramètres en entrée sont :
 
 - **data_directory** : Le chemin du dossier dans lequel sont écrits les résultats déjà calculés, et dans lequel seront sauvegardés les graphes
-- **shape_path** : Chemin d'un shapefile contenant les points où les graphiques seront réalisés.
-- **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du point (Par défaut : "id")
+- **x** : Coordonnée x dans le système de projection de la tuile Sentinel-2. Pas utilisé si le les points sont définis à partir d'un shapefile par le paramètre **shape_path**.
+- **y** : Coordonnée y dans le système de projection de la tuile Sentinel-2. Pas utilisé si le les points sont définis à partir d'un shapefile par le paramètre **shape_path**.
+- **shape_path** : Chemin d'un shapefile contenant les points où les graphiques seront réalisés. Pas utilisé si le les points sont définis à partir des paramètres **x** et **y**.
+- **name_column** : Nom de la colonne contenant l'identifiant ou nom unique du point (Par défaut : "id") si **shape_path** est utilisé.
 - **ymin** : ymin limite du graphe, à adapter à l'indice de végétation utilisé (Par défaut : 0)
 - **ymax** : ymax limite du graphe, à adapter à l'indice de végétation utilisé (Par défaut : 2)
 - **chunks** : int, Si les résultats utilisés ont été calculés à large échelle, donner une taille de chunks (ex : 1280) permet d'importer les données de manière à sauvegarder la RAM. 
 
 #### SORTIES
-Les sorties sont dans le dossier data_directory/TimeSeries, avec pour chaque point un fichier .png avec comme nom de fichier la valeur dans la colonne **name_column**.
-
+Les sorties sont dans le dossier data_directory/TimeSeries, avec pour chaque point un fichier .png avec comme nom de fichier la valeur dans la colonne **name_column**, ou le format __X<x_coord>_Y<y_coord>.png__ si les coordonnées sont utilisées.
 
 ## Utilisation
 ### A partir d'un script
@@ -88,6 +91,17 @@ vi_series_visualisation(data_directory = <data_directory>, ymin = 0, ymax = 2, c
 Dans ce mode, l'utilisateur peut choisir de donner des coordonnées X et Y dans le système projection des données Sentinel-2 utilisées.
 Il est également possible de donner l'indice du pixel en partant du (xmin,ymax), utile si un timelapse a été crée sur l'ensemble de la zone calculée auquel cas l'indice correspond aux coordonnées dans le timelapse.
 
+#### Depuis boucle prompt
+Si ni **x** et **y**, ni **shape_path** ne sont donnés, l'utilisateur sera invité à donner soit des coordonnées X et Y dans le système de projection des données Sentinel-2 utilisées, soit les indices de pixels à partir de (xmin,ymax) de toute la zone, ce qui peut être utile si un timelapse a été créé sur toute la zone calculée, auquel cas l'indice correspond aux coordonnées dans le timelapse.
+Après chaque tracé, l'utilisateur est invité à donner de nouvelles coordonnées. Entrez X = -1 pour terminer la boucle. Entrez <ENTER> pour qu'un pixel aléatoire dans la zone d'intérêt soit choisi.
+
+```bash
+from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
+vi_series_visualisation(data_directory = <data_directory>, ymin = 0, ymax = 2, chunks = 100)
+```
+
+> **_NOTE :_** Le paramètre **chunks** peut être ignoré seulement si la zone calculée est petite.
+
 ### A partir de l'invité de commande
 ```bash
 fordead graph_series [OPTIONS]
@@ -95,4 +109,4 @@ fordead graph_series [OPTIONS]
 Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-graph_series)
 
 #### EXEMPLE
-![graph_example](Diagrams/graph_example.png "graph_example")
+![anomaly_detection_X642135_Y5452255](Diagrams/anomaly_detection_X642135_Y5452255.png "anomaly_detection_X642135_Y5452255")

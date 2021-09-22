@@ -26,16 +26,19 @@ def graph_series():
     
 @graph_series.command(name='graph_series')
 @click.option("-o", "--data_directory", type = str, help = "Path of the directory containing results from the region of interest")
+@click.option("-x","--x", type = float, default = None, help = "x coordinate in the Sentinel-2 data CRS of the pixel of interest. Not used if shape_path parameter is used.")
+@click.option("-y","--y", type = float, default = None, help = "y coordinate in the Sentinel-2 data CRS of the pixel of interest. Not used if shape_path parameter is used.")
 @click.option("--shape_path", type = str, help = "Path to shapefile containing points whose data will be plotted. If None, indexes or coordinates for x and y can be given")
 @click.option("--name_column", type = str, default = "id", help = "Name of the column containing the name of the point, used to name the exported image. Not used if pixel is selected from indexes or coordinates")
 @click.option("--ymin", type = float, default = 0, help = "ymin limit of graph")
 @click.option("--ymax", type = float, default = 2, help = "ymax limit of graph")
 @click.option("--chunks", type = int, default = None, help = "Chunk length to import data as dask arrays and save RAM, advised if computed area in data_directory is large")
-def cli_vi_series_visualisation(data_directory, shape_path = None, name_column = "id", ymin = 0, ymax = 2, chunks = None):
+def cli_vi_series_visualisation(data_directory, x = None, y = None, shape_path = None, name_column = "id", ymin = 0, ymax = 2, chunks = None):
     """
     From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
-    If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
+    By specifying 'x' and 'y' parameters, it can be used with coordinates in the Sentinel-2 data CRS.
+    If neither shape_path or x and y parameters are specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
     The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
     The graphs are exported in the data_directory/TimeSeries directory as png files.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
@@ -43,6 +46,8 @@ def cli_vi_series_visualisation(data_directory, shape_path = None, name_column =
     Parameters
     ----------
     data_directory
+    x
+    y
     shape_path
     name_column
     ymin
@@ -53,16 +58,17 @@ def cli_vi_series_visualisation(data_directory, shape_path = None, name_column =
     -------
 
     """
-    vi_series_visualisation(data_directory, shape_path, name_column, ymin, ymax, chunks)
+    vi_series_visualisation(data_directory, x, y, shape_path, name_column, ymin, ymax, chunks)
 
 
 
-def vi_series_visualisation(data_directory, shape_path = None, name_column = "id", ymin = 0, ymax = 2, chunks = None):
+def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None, name_column = "id", ymin = 0, ymax = 2, chunks = None):
     
     """
     From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
-    If shape_path is not specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
+    By specifying 'x' and 'y' parameters, it can be used with coordinates in the Sentinel-2 data CRS.
+    If neither shape_path or x and y parameters are specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
     The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
     The graphs are exported in the data_directory/TimeSeries directory as png files.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
@@ -71,10 +77,14 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
     ----------
     data_directory : str
         Path of the directory containing results from the region of interest
+    x : int
+        x coordinate in the Sentinel-2 data CRS of the pixel of interest. Not used if shape_path parameter is used.
+    y : int
+        y coordinate in the Sentinel-2 data CRS of the pixel of interest. Not used if shape_path parameter is used.
     shape_path: str
-        Path to shapefile containing points whose data will be plotted. If None, indexes or coordinates for x and y can be given
+        Path to shapefile containing points whose data will be plotted. Not used if pixel is selected from x and y parameters
     name_column: str
-        Name of the column containing the name of the point, used to name the exported image. Not used if pixel is selected from indexes or coordinates
+        Name of the column containing the name of the point, used to name the exported image. Not used if pixel is selected from x and y parameters
     ymin: float
         ymin limit of graph
     ymax: float
@@ -135,6 +145,19 @@ def vi_series_visualisation(data_directory, shape_path = None, name_column = "id
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"], ymin,ymax)
                 fig.savefig(tile.paths["series"] / (str(id_point) + ".png"))
                 plt.close()
+    elif (x is not None) and (y is not None):
+        pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_coordinates(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
+        xy_forest_mask = forest_mask.sel(x = x, y = y,method = "nearest")
+
+        if x < tile.raster_meta["extent"][0] or x > tile.raster_meta["extent"][2] or y < tile.raster_meta["extent"][1] or y > tile.raster_meta["extent"][3]:
+            print("Pixel outside extent of the region of interest")
+        elif not(xy_forest_mask):
+            print("Pixel outside forest mask")
+        else:
+            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
+            fig.savefig(tile.paths["series"] / ("x"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
+            plt.show()
+            plt.close()
     else:
         #Initialiser X,Y
         # matplotlib.use('TkAgg')
