@@ -14,11 +14,12 @@ import geopandas as gp
 import xarray as xr
 import click
 import matplotlib
-import matplotlib.pyplot as plt
+from rasterio import Affine, transform
+import dask.array as da
 
 from fordead.import_data import TileInfo, import_stackedmaskedVI, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
 from fordead.model_spectral_index import compute_HarmonicTerms
-from fordead.results_visualisation import select_pixel_from_coordinates, select_pixel_from_indices, plot_temporal_series
+from fordead.results_visualisation import select_and_plot_time_series
 
 @click.group()
 def graph_series():
@@ -104,8 +105,8 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     if tile.parameters["soil_detection"]:
         soil_data = import_soil_data(tile.paths,chunks = chunks)
     else:
-        soil_data=xr.Dataset({"state": xr.DataArray(np.zeros(tile.raster_meta["shape"],dtype=bool), coords=tile.raster_meta["coords"])}).squeeze("band").chunk(chunks)
-
+        soil_data=xr.Dataset({"state": xr.DataArray(np.zeros(tile.raster_meta["shape"],dtype=bool), coords=tile.raster_meta["coords"])}).squeeze("band")
+        if chunks is not None: soil_data=xr.Dataset({"state": xr.DataArray(da.zeros(tile.raster_meta["shape"],dtype=bool,chunks = chunks), coords=tile.raster_meta["coords"])}).squeeze("band")
     decline_data = import_decline_data(tile.paths,chunks = chunks)
     forest_mask = import_forest_mask(tile.paths["ForestMask"],chunks = chunks)
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
@@ -134,85 +135,39 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
             id_point = shape.iloc[point_index][name_column]
             geometry_point = shape.iloc[point_index]["geometry"]
             print(id_point)
-            
-            
-            if geometry_point.x < tile.raster_meta["extent"][0] or geometry_point.x > tile.raster_meta["extent"][2] or geometry_point.y < tile.raster_meta["extent"][1] or geometry_point.y > tile.raster_meta["extent"][3]:
-                print("Pixel outside extent of the region of interest")
-            elif not(forest_mask.sel(x = geometry_point.x, y = geometry_point.y,method = "nearest")):
-                print("Pixel outside forest mask")
-            else:
-                pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_coordinates(geometry_point.x,geometry_point.y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
-                fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, int(geometry_point.x), int(geometry_point.y), yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"], ymin,ymax)
-                fig.savefig(tile.paths["series"] / (str(id_point) + ".png"))
-                plt.close()
+            y, x = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),geometry_point.x,geometry_point.y)
+            select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax, name_file = str(id_point))
     elif (x is not None) and (y is not None):
-        pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_coordinates(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
-        xy_forest_mask = forest_mask.sel(x = x, y = y,method = "nearest")
-
-        if x < tile.raster_meta["extent"][0] or x > tile.raster_meta["extent"][2] or y < tile.raster_meta["extent"][1] or y > tile.raster_meta["extent"][3]:
-            print("Pixel outside extent of the region of interest")
-        elif not(xy_forest_mask):
-            print("Pixel outside forest mask")
-        else:
-            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
-            fig.savefig(tile.paths["series"] / ("x"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
-            plt.show()
-            plt.close()
+        row, col = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),x,y)
+        select_and_plot_time_series(col, row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax)
     else:
-        #Initialiser X,Y
+        #Initialiser x,y
         # matplotlib.use('TkAgg')
         PixelsToChoose = np.where(forest_mask)
-        PixelID=random.randint(0,PixelsToChoose[0].shape[0])
-        X=PixelsToChoose[0][PixelID]
-        Y=PixelsToChoose[1][PixelID]
         
         mode = input("Type 'c' to input coordinates as coordinates in the system of projection of the tile\nType 'i' to input coordinates by positional indexing as using the pixel index from the top left hand corner\n[c/i]?")
-        
-        while X!=-1:
+        if mode not in ["c","i"]: raise Exception("Index or coordinate mode incorrect. Type 'c' for coordinate mode, 'i' for index mode")
+      
+        x=0
+        while x!=-1:
             
-            X=input("X ? ")
-            if X=="":
+            x=input("x ? ")
+            if x=="":
                 #PIXEL ALEATOIRE DANS LE MASQUE FORET
                 PixelID=random.randint(0,PixelsToChoose[0].shape[0])
-                X=PixelsToChoose[1][PixelID]
-                Y=PixelsToChoose[0][PixelID]
-                pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
-                fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
-                fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
-                plt.show()
-                plt.close()
-            elif X=="-1":
-                #ARRET SI X = -1
+                x=PixelsToChoose[1][PixelID]
+                y=PixelsToChoose[0][PixelID]
+                select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax)
+
+            elif x=="-1":
+                #ARRET SI x = -1
                 break
             else:
-                #CHOIX DU PIXEL
-                if mode == "c":
-                    #A PARTIR DES COORDONNEES
-                    X=int(X)
-                    Y=int(input("Y ? "))
-                    pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
-                    xy_forest_mask = forest_mask.sel(x = X, y = Y,method = "nearest")
-                elif mode == "i":
-                    #A PARTIR DE L'INDICE
-                    X=int(X)
-                    Y=int(input("Y ? "))
-                    pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)
-                    xy_forest_mask = forest_mask.isel(x = X, y = Y)
-                else:
-                    raise Exception("Index or coordinate mode incorrect. Type 'c' for coordinate mode, 'i' for index mode")
-                    
-                #PLOTTING
-                    
-                if X < tile.raster_meta["extent"][0] or X > tile.raster_meta["extent"][2] or Y < tile.raster_meta["extent"][1] or Y > tile.raster_meta["extent"][3]:
-                    print("Pixel outside extent of the region of interest")
-                elif not(xy_forest_mask):
-                    print("Pixel outside forest mask")
-                else:
-                    fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X, Y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
-             
-                    fig.savefig(tile.paths["series"] / ("X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))+".png"))
-                    plt.show()
-                    plt.close()
+                x=int(x)
+                y=int(input("y ? "))
+                
+                if mode == "c": y, x = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),x,y)
+                select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax)
     
 if __name__ == '__main__':
     # print(dictArgs)

@@ -428,7 +428,20 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
     return pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index
     
 
-
+def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax, name_file = None):
+    xy_forest_mask = forest_mask.isel(x = x, y = y)
+    if x < 0 or x >= tile.raster_meta["sizes"]["x"] or y < 0 or y >= tile.raster_meta["sizes"]["y"]:
+        print("Pixel outside extent of the region of interest")
+    elif not(xy_forest_mask):
+        print("Pixel outside forest mask")
+    else:
+        pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_indices(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)              
+        fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
+        
+        if name_file is None: name_file = "X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))
+        fig.savefig(tile.paths["series"] / name_file)
+        plt.show()
+        plt.close()
 
 
 
