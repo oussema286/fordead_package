@@ -410,7 +410,7 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
     yy = (harmonic_terms * coeff_model.isel(x = X, y = Y).compute()).sum(dim="coeff")
     
     xy_first_detection_date_index = int(first_detection_date_index.isel(x = X, y = Y))
-    xy_soil_data = soil_data.isel(x = X, y = Y)
+    xy_soil_data = soil_data.isel(x = X, y = Y) if soil_data is not None else {"state" : False}
     xy_stack_masks = stack_masks.isel(x = X, y = Y)
     pixel_series = stack_vi.isel(x = X, y = Y)
     if xy_first_detection_date_index!=0:

@@ -105,8 +105,7 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     if tile.parameters["soil_detection"]:
         soil_data = import_soil_data(tile.paths,chunks = chunks)
     else:
-        soil_data=xr.Dataset({"state": xr.DataArray(np.zeros(tile.raster_meta["shape"],dtype=bool), coords=tile.raster_meta["coords"])}).squeeze("band")
-        if chunks is not None: soil_data=xr.Dataset({"state": xr.DataArray(da.zeros(tile.raster_meta["shape"],dtype=bool,chunks = chunks), coords=tile.raster_meta["coords"])}).squeeze("band")
+        soil_data=None
     decline_data = import_decline_data(tile.paths,chunks = chunks)
     forest_mask = import_forest_mask(tile.paths["ForestMask"],chunks = chunks)
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
@@ -145,7 +144,7 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
         # matplotlib.use('TkAgg')
         PixelsToChoose = np.where(forest_mask)
         
-        mode = input("Type 'c' to input coordinates as coordinates in the system of projection of the tile\nType 'i' to input coordinates by positional indexing as using the pixel index from the top left hand corner\n[c/i]?")
+        mode = input("Type 'c' to input coordinates as coordinates in the system of projection of the tile\nType 'i' to input coordinates by positional indexing (x = col, y = row) \n[c/i]?")
         if mode not in ["c","i"]: raise Exception("Index or coordinate mode incorrect. Type 'c' for coordinate mode, 'i' for index mode")
       
         x=0
