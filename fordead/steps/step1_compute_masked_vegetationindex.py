@@ -91,6 +91,7 @@ def compute_masked_vegetationindex(
     soil_detection = True,
     formula_mask = "(B2 >= 700)",
     vi = "CRSWIR",
+    ignored_period = None,
     extent_shape_path=None,
     path_dict_vi = None
     ):
@@ -133,7 +134,7 @@ def compute_masked_vegetationindex(
     tile = tile.import_info()
     
     # Parameters used are added to the TileInfo Object
-    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "interpolation_order" : interpolation_order, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi, "extent_shape_path" : extent_shape_path, "path_dict_vi" : path_dict_vi, "soil_detection" : soil_detection,"formula_mask" : formula_mask})
+    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "interpolation_order" : interpolation_order, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi, "extent_shape_path" : extent_shape_path, "path_dict_vi" : path_dict_vi, "soil_detection" : soil_detection,"formula_mask" : formula_mask, "ignored_period" : ignored_period})
   
     # If parameters added differ from previously used parameters, all previous computation results are deleted
     if tile.parameters["Overwrite"] : 
@@ -155,7 +156,7 @@ def compute_masked_vegetationindex(
         
     #Computing cloudiness percentage for each date
     cloudiness = get_cloudiness(Path(input_directory) / "cloudiness", tile.paths["Sentinel"], sentinel_source) if lim_perc_cloud != -1 else dict(zip(tile.paths["Sentinel"], [-1]*len(tile.paths["Sentinel"]))) #Returns dictionnary with cloud percentage for each date, except if lim_perc_cloud is set as 1, in which case cloud percentage is -1 for every date so source mask is not used and every date is used 
-    new_dates = np.array([date for date in tile.paths["Sentinel"] if cloudiness[date] <= lim_perc_cloud and (not(hasattr(tile, "dates")) or date > tile.dates[-1])]) #Creates array containing only the dates with cloudiness inferior to lim_perc_cloud parameter. Also filters out dates anterior to already used dates.
+    new_dates = np.array([date for date in tile.paths["Sentinel"] if cloudiness[date] <= lim_perc_cloud and (ignored_period is None or (date[5:] > min(ignored_period) and date[5:] < max(ignored_period))) and (not(hasattr(tile, "dates")) or date > tile.dates[-1])]) #Creates array containing only the dates with cloudiness inferior to lim_perc_cloud parameter. Also filters out dates anterior to already used dates.
     tile.dates = np.concatenate((tile.dates, new_dates)) if hasattr(tile, "dates") else new_dates #Adds list of all used dates (already used + new dates) as attribute to TileInfo object
     
     if  len(new_dates) == 0:

@@ -326,7 +326,7 @@ def plot_model(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_d
         
     return fig
 
-def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax):
+def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax, ignored_period = None):
     """
     Creates figure from all data
 
@@ -345,6 +345,11 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask & ~pixel_series.Soil,drop=True).plot.line("r*", markersize=9, label='Anomalies') 
   
         #Plotting vegetation index model and anomaly threshold
+        
+        if ignored_period is not None:
+            kept_dates = ~np.array([(date.astype(str)[5:] > min(ignored_period) and date.astype(str)[5:] < max(ignored_period)) for date in yy.Time.data])
+            yy = xr.DataArray(np.ma.masked_where(kept_dates, yy), coords={"Time" : yy.Time},dims=["Time"])
+            
         yy.plot.line("b", label='Vegetation index model based on training dates')
         
         dict_vi = get_dict_vi(path_dict_vi)
@@ -436,7 +441,7 @@ def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, f
         print("Pixel outside forest mask")
     else:
         pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_indices(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)              
-        fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax)
+        fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax, ignored_period = tile.parameters["ignored_period"])
         
         if name_file is None: name_file = "X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))
         fig.savefig(tile.paths["series"] / name_file)

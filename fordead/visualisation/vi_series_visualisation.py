@@ -114,7 +114,9 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     tile.add_dirpath("series", tile.data_directory / "TimeSeries")
     tile.save_info()
     xx = np.array(range(int(stack_vi.DateNumber.min()), int(stack_vi.DateNumber.max())))
-    xxDate=[np.datetime64(datetime.datetime.strptime("2015-01-01", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day)))  for day in xx]
+    xxDate = [np.datetime64(datetime.datetime.strptime("2015-01-01", '%Y-%m-%d').date()+ datetime.timedelta(days=int(day))) for day in xx]
+    # xxDate = [date for date in xxDate if tile.parameters["ignored_period"] is None or (date.astype(str)[5:] > min(tile.parameters["ignored_period"]) and date.astype(str)[5:] < max(tile.parameters["ignored_period"]))]
+    # xx = np.array([(date - np.datetime64(datetime.datetime.strptime("2015-01-01", '%Y-%m-%d').date())).astype(int) for date in xxDate])
     
     harmonic_terms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in xx])
     harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : xxDate, "coeff" : [1,2,3,4,5]},dims=["Time","coeff"])
