@@ -173,7 +173,10 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                         y=DictCoordY[etat],
                         line_color=colors.rgb2hex(color_map(etat-1)),
                         hoverinfo="skip",
-                        name='Dieback detected' if not(show_confidence_class) else tile.parameters["classes_list"][etat-1]
+                        name='Dieback detected' if not(show_confidence_class) else tile.parameters["classes_list"][etat-1],
+                        legendgroup="dieback",
+                        legendgrouptitle_text="Dieback detected",
+                        
                         ))
                     
                 if tile.parameters["soil_detection"]:
@@ -183,6 +186,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                         line_color="black",
                         hoverinfo="skip",
                         name='Bare ground',
+                        legendgroup="bare_ground",
+                        legendgrouptitle_text="Bare ground detected",
                     ))
                     
                     fig.add_trace(go.Scatter(
@@ -192,6 +197,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                         line_width=3,
                         hoverinfo="skip",
                         name='Bare ground after dieback',
+                        legendgroup="bare_ground"
                     ))
                 
             # else:
@@ -238,7 +244,9 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                 mode=mode,
                 line_color="darkviolet",
                 name=" | ".join([str(obj[column]) for column in hover_column_list]),
-                hovertemplate=" | ".join([str(obj[column]) for column in hover_column_list])
+                hovertemplate=" | ".join([str(obj[column]) for column in hover_column_list]),
+                legendgroup="vector_display",
+                legendgrouptitle_text=" | ".join(hover_column_list)
                 ))
         else:
             nb_vector_obj = 0
