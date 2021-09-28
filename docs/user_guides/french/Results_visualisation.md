@@ -15,6 +15,7 @@ Les paramètres en entrée sont :
 - **vector_display_path** : Optionnel, chemin d'un vecteur à afficher dans le timelapse, peut contenir des points, des lignes et des polygones.
 - **hover_column_list** : String ou liste de strings correspondant aux colonnes du fichier **vector_display_path**, dont les informations seront affichées en plaçant la souris sur ses objects. A utiliser seulement si **vector_display_path** est utilisé
 - **max_date** : Exclut du timelapse l'ensemble des dates Sentinel-2 après cette date (format : "AAAA-MM-JJ"). Par défaut, le timelapse utilise l'ensemble des dates Sentinel-2 disponibles.
+- **show_confidence_class** : Si True, le dépérissement détecté est indiqué avec la classe de confiance, indicative de l'état du pixel à la dernière date utilisée, telle que calculée à l'étape [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/05_compute_confidence/)
 - **zip_results** : Si True, les fichiers html contenant les timelapses sont transférés dans un fichier zip compressé.
 
 Les paramètres indispensables sont **data_directory** ainsi que **shape_path** ou **x** et **y**.
@@ -29,9 +30,12 @@ Cet outil peut ne pas fonctionner sur des zones trop larges, il est recommandé 
 Le slider permet de se déplacer temporellement de date SENTINEL en date SENTINEL
 L'image correspond aux bandes RGB des données SENTINEL
 Les résultats apparaissent sous forme de polygones :
+- Le déperissement détecté apparait en blanc, ou du blanc au rouge selon la classe de confiance si **show_confidence_class** vaut True.
+Si la détection inclu la détection de sol nu (see [01_compute_masked_vegetationindex](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/01_compute_masked_vegetationindex/)) :
 - Polygones noirs : sol nu
-- Polygones jaunes : zones détectées comme dépérissantes
 - Polygones bleus : zones détectées comme coupe sanitaire (zones détectées comme sol-nu après avoir été détectées comme dépérissantes)
+
+Une légende est incluse, un clic sur un élément de la légende permet de le rendre invisible, un double clic en fait le seul élément visible sur le graphique.
 
 Les résultats apparaissent à partir de la première anomalie, confirmée par la suite. Les fausses détections liées à un stress hydrique temporaire et corrigées par la suite n'apparaissent pas. De même, pour les dernières , il peut y avoir des anomalies n'apparaissant pas encore par manque de  valides pour confirmer la détection.
 

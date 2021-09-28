@@ -41,8 +41,9 @@ def timelapse():
 @click.option("--vector_display_path", type = str, help = "Path of the shapefile with ground observations")
 @click.option("--hover_column_list", multiple=True, type=str, default=None, help="List of columns to display when hovering mouse over vectors of vector_display_path", show_default=True)
 @click.option("--max_date", type = str, default = None, help = "Last date used in the timelapse")
+@click.option("--show_confidence_class",  is_flag=True, help = "If True, detected dieback is shown with the confidence class at the last date used, as computed in the step [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/)", show_default=True)
 @click.option("--zip_results",  is_flag=True, help = "If True, puts timelapses in a zip file", show_default=True)
-def cli_create_timelapse(data_directory, shape_path = None, name_column = "id", x = None, y = None, buffer = 100, vector_display_path = None, hover_column_list = None, max_date = None, zip_results = False):
+def cli_create_timelapse(data_directory, shape_path = None, name_column = "id", x = None, y = None, buffer = 100, vector_display_path = None, hover_column_list = None, max_date = None, show_confidence_class = False, zip_results = False):
     """
     Create timelapse allowing navigation through Sentinel-2 dates with detection results superimposed.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons or points with a column containing a unique ID used to name the export. 
@@ -61,29 +62,20 @@ def cli_create_timelapse(data_directory, shape_path = None, name_column = "id", 
     vector_display_path
     hover_column_list
     max_date
+    show_confidence_class
     zip_results
 
 
     """
-    create_timelapse(data_directory, shape_path, name_column, x, y, buffer, vector_display_path, hover_column_list, max_date,zip_results)
+    create_timelapse(data_directory, shape_path, name_column, x, y, buffer, vector_display_path, hover_column_list, max_date, show_confidence_class, zip_results)
 
 #%% =============================================================================
 #   MAIN CODE
 # =============================================================================
        
-DictCol={'C' : "white",
-         'V' : "lawngreen",
-         "R" : "red",
-         'S' : "black",
-         'I' : "darkgreen",
-         'G' : "darkgray",
-         'X' : "indianred"}
 
-#DictColAtteint={1 : "yellow",
-#         2 : "black",
-#         3 : "blue"}
 
-def create_timelapse(data_directory, shape_path = None, name_column = "id",  x = None, y = None, buffer = 100, vector_display_path = None, hover_column_list = None, max_date = None, zip_results = False):
+def create_timelapse(data_directory, shape_path = None, name_column = "id",  x = None, y = None, buffer = 100, vector_display_path = None, hover_column_list = None, max_date = None, show_confidence_class = False, zip_results = False):
     """
     Create timelapse allowing navigation through Sentinel-2 dates with detection results superimposed.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons with a column containing a unique ID used to name the export. 
@@ -111,6 +103,8 @@ def create_timelapse(data_directory, shape_path = None, name_column = "id",  x =
         Optionnal, list of columns to display when hovering mouse over vectors of vector_display_path.
     max_date: str
         Last date used in the timelapse, if None all dates available are used.
+    show_confidence_class: bool
+        If True, detected dieback is shown with the confidence class at the last date used, as computed in the step [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/)
     zip_results: bool
         If True, transfers the timelapse to a zip file "Timelapses.zip" in data_directory/Timelapses directory
     """
@@ -152,7 +146,7 @@ def create_timelapse(data_directory, shape_path = None, name_column = "id",  x =
         
         # if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()):
         print("Creating timelapse | Id : " + NameFile)
-        fig = CreateTimelapse(Shape.geometry.buffer(buffer),tile, vector_display_path, hover_column_list, max_date)
+        fig = CreateTimelapse(Shape.geometry.buffer(buffer),tile, vector_display_path, hover_column_list, max_date, show_confidence_class)
         plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=False)
         if zip_results: 
             zipObj.write(str(tile.paths["timelapse"] / (NameFile + ".html")),NameFile + ".html") #Adding to zipfile

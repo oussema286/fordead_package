@@ -12,7 +12,7 @@ Healthy pixel | Attacked pixel
 ![graph_healthy](Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](Figures/graph_dieback.png "graph_dieback")
 
 It can be ran on a shapefile containing points if parameters **shape_path** and **name_column** are used, or with parameters **x** and **y** to plot a single pixel chosen from coordinates in the Sentinel-2 data CRS.
-If none ofthose parameters are used, the program will prompt the user in a loop to enter coordinates in the Sentinel-2 data CRS.  
+If none of those parameters are used, the program will prompt the user in a loop to enter coordinates.
 
 In this example, we will use a shapefile provided in the fordead_data repository. For the complete user guide for this tool, see [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/Results_visualisation/#create-graphs-showing-the-evolution-of-the-time-series).
 

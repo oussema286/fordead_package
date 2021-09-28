@@ -15,9 +15,11 @@ from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import datetime
+import matplotlib.colors as colors
+
 
 from fordead.masking_vi import get_dict_vi
-from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_decline_data, import_forest_mask
+from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_decline_data, import_forest_mask, import_confidence_data
 
 
 def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = None):
@@ -76,8 +78,11 @@ def polygon_from_coordinate_and_radius(coordinates, radius, crs):
 
 
 
-def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date):
-        NbData=4
+def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date, show_confidence_class):
+        nb_classes = len(tile.parameters["classes_list"]) if show_confidence_class else 1
+        NbData = 1 + nb_classes + 2*tile.parameters["soil_detection"]
+        color_map = plt.get_cmap('Reds',nb_classes+1)
+        
         fig = go.Figure()
         
         
@@ -87,7 +92,13 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date)
         if tile.parameters["soil_detection"]:
             soil_data = import_soil_data(tile.paths)
             soil_data = soil_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-
+        if tile.paths["confidence_index"].exists(): 
+            confidence_index, nb_dates = import_confidence_data(tile.paths)
+            confidence_index = confidence_index.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+            nb_dates = nb_dates.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+            digitized_confidence = np.digitize(confidence_index,tile.parameters["threshold_list"])
+            digitized_confidence[nb_dates==3]=0
+            
         decline_data = import_decline_data(tile.paths)
         decline_data = decline_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         forest_mask = import_forest_mask(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
@@ -115,15 +126,22 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date)
                         zmin=[0, 0, 0, 0], zmax=[600,600,600,600]))
                 
                 # Labels+=[date]
-                
-                DictCoordX={1 : [], 2 : [], 3 : []}
-                DictCoordY={1 : [], 2 : [], 3 : []}
-                
+                DictCoordX={}
+                DictCoordY={}
+                for etat in range(1,nb_classes + 2*tile.parameters["soil_detection"]+1):
+                    DictCoordX[etat] = []
+                    DictCoordY[etat] = []
 
                 detected = (decline_data["first_date"] <= dateIndex) & decline_data["state"]
                 if tile.parameters["soil_detection"]:
                     soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
-                    affected=detected+2*soil
+                    if show_confidence_class:
+                        # affected = detected.where(~soil, len(tile.parameters["classes_list"])+detected+soil)
+                        affected = xr.where(~soil, detected*(1+digitized_confidence),len(tile.parameters["classes_list"])+detected+soil)
+                    else:
+                        affected=detected+2*soil
+                elif show_confidence_class:
+                    affected = detected*(1+digitized_confidence)
                 else:
                     affected=detected
                 
@@ -138,7 +156,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date)
                 
                 geomsaffected = list(results_affected)
                 for geom in geomsaffected:
-                    if geom["properties"]["Etat"] in [1,2,3]:
+                    if geom["properties"]["Etat"] != 0:
 #                            print(geom["geometry"]["coordinates"])
                         for poly in geom["geometry"]["coordinates"]:
                             xList=np.array([coord[0] for coord in poly])
@@ -147,35 +165,41 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date)
                             DictCoordX[int(geom["properties"]["Etat"])]+=list((xList-np.array(stack_rgb.attrs["transform"][2]))/10-0.5)+[None]
                             DictCoordY[int(geom["properties"]["Etat"])]+=list((np.array(stack_rgb.attrs["transform"][5])-yList)/10-0.5)+[None]
                 
-                fig.add_trace(go.Scatter(
-                    x=DictCoordX[2],
-                    y=DictCoordY[2],
-                    line_color="black",
-                    hoverinfo="skip",
-                    name='Sol nu / Coupe rase',
-                ))
-                
-                fig.add_trace(go.Scatter(
-                    x=DictCoordX[3],
-                    y=DictCoordY[3],
-                    line_color="blue",
-                    line_width=3,
-                    hoverinfo="skip",
-                    name='Coupe sanitaire',
-                ))
-                
-                fig.add_trace(go.Scatter(
-                    x=DictCoordX[1],
-                    y=DictCoordY[1],
-                    line_color="yellow",
-                    hoverinfo="skip",
-                    name='Scolytes détectés',
-                ))
-                
-                
+
+
+                for etat in range(1,nb_classes+1):
+                    fig.add_trace(go.Scatter(
+                        x=DictCoordX[etat],
+                        y=DictCoordY[etat],
+                        line_color=colors.rgb2hex(color_map(etat-1)),
+                        hoverinfo="skip",
+                        name='Dieback detected' if not(show_confidence_class) else tile.parameters["classes_list"][etat-1]
+                        ))
+                    
+                if tile.parameters["soil_detection"]:
+                    fig.add_trace(go.Scatter(
+                        x=DictCoordX[etat+1],
+                        y=DictCoordY[etat+1],
+                        line_color="black",
+                        hoverinfo="skip",
+                        name='Bare ground',
+                    ))
+                    
+                    fig.add_trace(go.Scatter(
+                        x=DictCoordX[etat+2],
+                        y=DictCoordY[etat+2],
+                        line_color="blue",
+                        line_width=3,
+                        hoverinfo="skip",
+                        name='Bare ground after dieback',
+                    ))
                 
             # else:
             #     CountInvalid+=1
+        
+        
+        for data in range(len(fig.data)):
+            fig.data[data].visible = False
         fig.data[0].visible = True
         
         
@@ -230,10 +254,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date)
                 args=["visible", [False] * nb_valid_dates*NbData+[True]*nb_vector_obj])
                 # args=["visible", [False] * (len(Day)+stackAtteint.shape[0]*3) + [True] * scolytes.shape[0] + [False] * stackMask.shape[0]] ,
             
-            step["args"][1][i*NbData] = True  # Toggle i'th trace to "visible"
-            step["args"][1][i*NbData+1] = True  # Affiche les scolytes détectés
-            step["args"][1][i*NbData+2] = True  # Affiche les scolytes détectés
-            step["args"][1][i*NbData+3] = True  # Affiche les scolytes détectés
+            for n in range(NbData):
+                step["args"][1][i*NbData+n] = True  # Toggle i*NbData+n'th trace to "visible"
             # step["args"][1][IndexDay+stackAtteint.shape[0]*3] = True  # Affiche le sol nu
             # step["args"][1][IndexDay+stackAtteint.shape[0]*2] = True  # Affiche les coupes de scolytes
             # step["args"][1][IndexDay+stackAtteint.shape[0]*3+scolytes.shape[0]+stackMask.shape[0]] = True  # Affiche les nuages
@@ -242,19 +264,25 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date)
             
         
         sliders = [dict(
-            active=1,
+            active=0,
             currentvalue={"prefix": "Date : "},
             pad={"t": 50},
             steps=steps
         )]
         
         fig.update_layout(
-            sliders=sliders
+            sliders=sliders,
+            margin_autoexpand=False,
+            margin_b = 130,
+            margin_r = 250
+            # title=dict(
+            #             legend_title=dict(text = "Test")
+            #             )
         )
         
         fig.update_xaxes(range=[0, stack_rgb.shape[1]])
         fig.update_yaxes(range=[stack_rgb.shape[2],0])
-        fig.update_layout(showlegend=False)
+        fig.update_layout(showlegend=True)
         
     
         return fig
