@@ -15,6 +15,7 @@ The input parameters are :
 - **vector_display_path** : Optionnal, path of a vector to display in the timelapse, can contain points, lines and polygons.
 - **hover_column_list** : String or list strings corresponding to columns in the **vector_display_path** file, whose information to display when hovering mouse over its objects. To use only if **vector_display_path** is used
 - **max_date** : Exclude from the timelapse all Sentinel-2 dates after this date (format : "YYYY-MM-DD"). By default, the timelapse uses all available Sentinel-2 dates.
+- **show_confidence_class** : If True, detected dieback is shown with the confidence class, indicative of the pixel's state at the last date used, as computed in the step [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/)
 - **zip_results**: If True, the html files containing the timelapses are transferred in a compressed zip file.
 
 Required parameters are **data_directory** and either **shape_path** or **x** and **y**.
@@ -28,10 +29,13 @@ This tool may not work on large areas, it is recommended to avoid launching this
 #### ANALYSIS
 The slider allows you to move temporally from SENTINEL date to SENTINEL date
 The image corresponds to the RGB bands of the SENTINEL data
-The results appear as polygons:
+The results appear as polygons :
+- Detected dieback appears in white, or from white to red depending on the confidence class if **show_confidence_class** is True.
+If the detection includes bare ground detection (see [01_compute_masked_vegetationindex](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)) :
 - Black polygons: bare ground
-- Yellow polygons: areas detected as declining
-- Blue polygons: areas detected as sanitary cuts (areas detected as bare soil after being detected as declining)
+- Blue polygons: areas detected as bare ground after being detected as dieback
+
+A legend is included, and clicking on a legend item toggles its visibility, double clicking makes it the sole visible item on the graph.
 
 The polygons appear at the date of the first anomaly, if confirmed with 3 successive anomalies, and if there is no return to normal with 3 successive dates without anomalies afterwards. So false detections related to temporary water stress which are subsequently corrected do not appear. Also, in the last dates, there may be anomalies not appearing yet due to the lack of future data to confirm the detection.
 
