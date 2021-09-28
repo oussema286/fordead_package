@@ -136,8 +136,8 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
             id_point = shape.iloc[point_index][name_column]
             geometry_point = shape.iloc[point_index]["geometry"]
             print(id_point)
-            y, x = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),geometry_point.x,geometry_point.y)
-            select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax, name_file = str(id_point))
+            row, col = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),geometry_point.x,geometry_point.y)
+            select_and_plot_time_series(col,row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax, name_file = str(id_point))
     elif (x is not None) and (y is not None):
         row, col = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),x,y)
         select_and_plot_time_series(col, row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax)
