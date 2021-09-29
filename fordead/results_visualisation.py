@@ -92,7 +92,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
         if tile.parameters["soil_detection"]:
             soil_data = import_soil_data(tile.paths)
             soil_data = soil_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        if tile.paths["confidence_index"].exists(): 
+        if show_confidence_class: 
             confidence_index, nb_dates = import_confidence_data(tile.paths)
             confidence_index = confidence_index.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
             nb_dates = nb_dates.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
