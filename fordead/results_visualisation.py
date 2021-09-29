@@ -282,7 +282,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             sliders=sliders,
             margin_autoexpand=False,
             margin_b = 130,
-            margin_r = 250
+            margin_r = 250,
+            legend_groupclick = "toggleitem"
             # title=dict(
             #             legend_title=dict(text = "Test")
             #             )
