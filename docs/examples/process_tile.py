@@ -146,7 +146,9 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             end_date = end_date_results,
             frequency= results_frequency,
             export_soil = soil_detection,
-            multiple_files = multiple_files
+            multiple_files = multiple_files,
+            intersection_confidence_class = True
+            
             )
 
 

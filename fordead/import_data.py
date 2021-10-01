@@ -702,6 +702,16 @@ def import_decline_data(dict_paths, chunks = None):
     decline_data=decline_data.squeeze("band")
 
     return decline_data
+
+def import_stress_data(dict_paths, chunks = None):
+    
+    dates_stress = xr.open_rasterio(dict_paths["dates_stress"],chunks = chunks).rename({"band": "change"})
+    nb_periods_stress = xr.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
+    
+    stress_data=xr.Dataset({"date": dates_stress,
+                     "nb_periods": nb_periods_stress})
+
+    return stress_data
         
 def initialize_decline_data(shape,coords):
     """
@@ -722,17 +732,39 @@ def initialize_decline_data(shape,coords):
 
 
     """
+
+    zeros_array= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
     
-    count_decline= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
-    first_date_decline=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
-    state_decline=np.zeros(shape,dtype=bool)
-    
-    decline_data=xr.Dataset({"state": xr.DataArray(state_decline, coords=coords),
-                         "first_date": xr.DataArray(first_date_decline, coords=coords),
-                         "count" : xr.DataArray(count_decline, coords=coords)})
-    
+    decline_data=xr.Dataset({"state": xr.DataArray(zeros_array.astype(bool), coords=coords),
+                         "first_date": xr.DataArray(zeros_array.astype(np.uint16), coords=coords),
+                         "first_date_unconfirmed": xr.DataArray(zeros_array.astype(np.uint16), coords=coords),
+                         "count" : xr.DataArray(zeros_array, coords=coords)})
     return decline_data
 
+def initialize_stress_data(shape,coords):
+    """
+    Initializes data relating to stress periods
+
+    Parameters
+    ----------
+    shape : tuple
+        Tuple with sizes for the resulting array 
+    coords : Coordinates attribute of xarray DataArray
+        Coordinates y and x
+
+    Returns
+    -------
+    stress_data : xarray DataSet or dask DataSet
+
+
+    """
+    
+    
+    
+    stress_data=xr.Dataset({"date": xr.DataArray(np.zeros(shape+(10,),dtype=np.uint16), 
+                                                 coords= {"y" : coords["y"],"x" : coords["x"],"change" : range(1,11)}),
+                         "nb_periods": xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords)})
+    return stress_data
 
 
 def import_soil_data(dict_paths, chunks = None):

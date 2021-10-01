@@ -7,9 +7,9 @@ Created on Mon Nov  2 09:25:23 2020
 
 
 import click
-from fordead.import_data import import_coeff_model, import_decline_data, initialize_decline_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask
+from fordead.import_data import import_coeff_model, import_decline_data, import_stress_data, initialize_decline_data, initialize_stress_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask
 from fordead.writing_data import write_tif
-from fordead.decline_detection import detection_anomalies, detection_decline
+from fordead.decline_detection import detection_anomalies, detection_decline, save_stress
 from fordead.model_spectral_index import prediction_vegetation_index, correct_vi_date
 
 
@@ -79,7 +79,7 @@ def decline_detection(
     tile = tile.import_info()
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly})
     if tile.parameters["Overwrite"] : 
-        tile.delete_dirs("AnomaliesDir","state_decline" ,"confidence_index","periodic_results_decline","result_files","timelapse","series") #Deleting previous detection results if they exist
+        tile.delete_dirs("AnomaliesDir","state_decline" ,"confidence_index","periodic_results_decline","result_files","timelapse","series","nb_periods_stress") #Deleting previous detection results if they exist
         tile.delete_attributes("last_computed_anomaly","last_date_confidence_index","last_date_export")
 
     if vi==None : vi = tile.parameters["vi"]
@@ -92,6 +92,9 @@ def decline_detection(
     tile.add_path("state_decline", tile.data_directory / "DataDecline" / "state_decline.tif")
     tile.add_path("first_date_decline", tile.data_directory / "DataDecline" / "first_date_decline.tif")
     tile.add_path("count_decline", tile.data_directory / "DataDecline" / "count_decline.tif")
+    
+    tile.add_path("dates_stress", tile.data_directory / "DataStress" / "dates_stress.tif")
+    tile.add_path("nb_periods_stress", tile.data_directory / "DataStress" / "nb_periods_stress.tif")
     
     #Verify if there are new SENTINEL dates
     new_dates = tile.dates[tile.dates > tile.last_computed_anomaly] if hasattr(tile, "last_computed_anomaly") else tile.dates[tile.dates >= tile.parameters["min_last_date_training"]]
@@ -106,8 +109,11 @@ def decline_detection(
         
         if tile.paths["state_decline"].exists():
             decline_data = import_decline_data(tile.paths)
+            stress_data = import_stress_data(tile.paths)
         else:
             decline_data = initialize_decline_data(first_detection_date_index.shape,first_detection_date_index.coords)
+            stress_data = initialize_stress_data(first_detection_date_index.shape,first_detection_date_index.coords)
+            
         if tile.parameters["correct_vi"]:
             forest_mask = import_forest_mask(tile.paths["ForestMask"])
         #DECLINE DETECTION
@@ -124,14 +130,19 @@ def decline_detection(
                 anomalies = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly, 
                                                 vi = vi, path_dict_vi = path_dict_vi).squeeze("Time")
                                 
-                decline_data = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
+                decline_data, changing_pixels = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
+                
+                stress_data = save_stress(stress_data, decline_data, changing_pixels)
                 
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
-                del masked_vi, predicted_vi, anomalies
+                del masked_vi, predicted_vi, anomalies, changing_pixels
         tile.last_computed_anomaly = new_dates[-1]
                 
         #Writing decline data to rasters
+        write_tif(stress_data["date"], first_detection_date_index.attrs,tile.paths["dates_stress"],nodata=0)
+        write_tif(stress_data["nb_periods"], first_detection_date_index.attrs,tile.paths["nb_periods_stress"],nodata=0)
+
         write_tif(decline_data["state"], first_detection_date_index.attrs,tile.paths["state_decline"],nodata=0)
         write_tif(decline_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_decline"],nodata=0)
         write_tif(decline_data["count"], first_detection_date_index.attrs,tile.paths["count_decline"],nodata=0)

@@ -49,12 +49,16 @@ def write_tif(data_array, attributes, path, nodata = None):
     if nodata != None:
         data_array.attrs["nodata"]=nodata
         
-    if len(data_array.dims)==3: #If data_array has several bands
+    if len(data_array.dims)>=3: #If data_array has several bands
         for dim in data_array.dims:
             if dim != "x" and dim != "y":
                 data_array=data_array.transpose(dim, 'y', 'x') #dimension which is not x or y must be first
         data_array.attrs["scales"]=data_array.attrs["scales"]*data_array.shape[0]
         data_array.attrs["offsets"]=data_array.attrs["offsets"]*data_array.shape[0]
+    
+    # data_array.attrs["nodatavals"]=(0,)
+    # data_array.attrs["scales"]=(0,)
+    # data_array.attrs["offsets"]=(0,)
 
     data_array.rio.to_raster(path,windowed = False, **args, tiled = True)
 

@@ -7,6 +7,7 @@ Created on Mon Nov  2 09:34:34 2020
 
 from fordead.masking_vi import get_dict_vi
 import xarray as xr
+import numpy as np
 
 def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, path_dict_vi = None):
     """
@@ -48,20 +49,20 @@ def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, p
 
 
 
-def detection_decline_validation(decline_data, anomalies, mask, date_index, raster_binary_validation_data):
+# def detection_decline_validation(decline_data, anomalies, mask, date_index, raster_binary_validation_data):
    
-    decline_data["count"] = xr.where(~mask & (anomalies!=decline_data["state"]),decline_data["count"]+1,decline_data["count"])
-    decline_data["count"] = xr.where(~mask & (anomalies==decline_data["state"]),0,decline_data["count"])
+#     decline_data["count"] = xr.where(~mask & (anomalies!=decline_data["state"]),decline_data["count"]+1,decline_data["count"])
+#     decline_data["count"] = xr.where(~mask & (anomalies==decline_data["state"]),0,decline_data["count"])
     
-    changing_pixels = ~mask & (decline_data["count"]==3)
-    decline_data["state"] = xr.where(changing_pixels, ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
-    decline_data["first_date"] = xr.where(changing_pixels, decline_data["first_date_unconfirmed"], decline_data["first_date"]) #First_date saved if confirmed
-    dates_changes_validation = decline_data["first_date"].where(changing_pixels).data[raster_binary_validation_data]
+#     changing_pixels = ~mask & (decline_data["count"]==3)
+#     decline_data["state"] = xr.where(changing_pixels, ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
+#     decline_data["first_date"] = xr.where(changing_pixels, decline_data["first_date_unconfirmed"], decline_data["first_date"]) #First_date saved if confirmed
+#     dates_changes_validation = decline_data["first_date"].where(changing_pixels).data[raster_binary_validation_data]
 
-    decline_data["count"] = xr.where(changing_pixels, 0,decline_data["count"])
-    decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1), date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+#     decline_data["count"] = xr.where(changing_pixels, 0,decline_data["count"])
+#     decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1), date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
    
-    return decline_data, dates_changes_validation
+#     return decline_data, dates_changes_validation
 
 
 def detection_decline(decline_data, anomalies, mask, date_index):
@@ -90,12 +91,23 @@ def detection_decline(decline_data, anomalies, mask, date_index):
    
     decline_data["count"] = xr.where(~mask & (anomalies!=decline_data["state"]),decline_data["count"]+1,decline_data["count"])
     decline_data["count"] = xr.where(~mask & (anomalies==decline_data["state"]),0,decline_data["count"])
+    changing_pixels = ~mask & (decline_data["count"]==3)
+    # decline_data["state"] = xr.where(changing_pixels, ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
+    # decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
+    # decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & (~decline_data["state"]), date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+
+    decline_data["state"] = xr.where(changing_pixels, ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
+    decline_data["first_date"] = decline_data["first_date"].where(~changing_pixels,decline_data["first_date_unconfirmed"])
+    decline_data["count"] = xr.where(changing_pixels, 0,decline_data["count"])
+    decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1), date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
+   
+    return decline_data,changing_pixels
+
+def save_stress(stress_data, decline_data, changing_pixels):
+
+    stress_data["nb_periods"]=stress_data["nb_periods"]+changing_pixels*(~decline_data["state"]) #Adds one to the number of stress periods when pixels change back to normal
+    nb_changes = stress_data["nb_periods"]*2+decline_data["state"] #Number of the change 
+    stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), decline_data["first_date"])
+    return stress_data
     
-    decline_data["state"] = xr.where(~mask & (decline_data["count"]==3), ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
-        
-    decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
-    decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & (~decline_data["state"]), date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
-
-    return decline_data
-
-
+    
