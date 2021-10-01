@@ -4,7 +4,7 @@ This step allows you to compute the forest mask and thus define the area of inte
 #### INPUTS
 The input parameters are :
 - **data_directory**: The path of the output folder in which the forest mask will be written
-- **forest_mask_source** : Source of the forest mask, can be "BDFORET" to use the BD Foret of the IGN, "OSO" to use the CESBIO's land use map, the path to a binary raster of 10m resolution with the value 1 on the pixels of interest, or None to not use a forest mask and to extend the area of interest to all pixels
+- **forest_mask_source** : Source of the forest mask, can be "vector" to use a vector file at **vector_path**, or the path to a binary raster of 10m resolution with the value 1 on the pixels of interest, "BDFORET" to use the BD Foret of the IGN, "OSO" to use the CESBIO's land use map, or None to not use a forest mask and to extend the area of interest to all pixels
 - **dep_path** : Path to a shapefile of French departments containing the insee code in a code_insee field, only useful if forest_mask_source is "BDFORET".
 - **bdforet_dirpath** : Path to the folder containing the IGN forest database with one folder per department. Only useful if forest_mask_source is "BDFORET".
 - **list_forest_type** : List of forest stand types to be kept in the forest mask, corresponds to the CODE_TFV of the BD Foret. Only useful if forest_mask_source is "BDFORET".
