@@ -270,8 +270,9 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
         fig.add_trace(go.Scatter(
             x=dict_forest_mask["x"],
             y=dict_forest_mask["y"],
-            fill = "toself",
-            line_color = "black",
+            fill = "none",
+            hoveron = 'fills',
+            line_color = "grey",
             name="Outside of pixels of interest"))
         
         
