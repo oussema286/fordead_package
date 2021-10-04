@@ -13,7 +13,7 @@ from pathlib import Path
 @click.command(name='forest_mask')
 @click.option("-o", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
 @click.option("-f", "--forest_mask_source",  type=str, default=None,
-                    help="Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a binary raster with the resolution of the computed area, or None in which case all pixels will be considered valid", show_default=True)
+                    help="Source of the forest mask, can be 'vector' to use a vector file at vector_path, or the path to a binary raster of 10m resolution with the value 1 on the pixels of interest, 'BDFORET' to use the BD Foret of the IGN, 'OSO' to use the CESBIO's land use map, or None to not use a forest mask and to extend the area of interest to all pixels", show_default=True)
 @click.option("--dep_path",  type=str,
                     help="Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'", show_default=True)
 @click.option("--bdforet_dirpath",  type=str,
@@ -84,7 +84,7 @@ def compute_forest_mask(data_directory,
     data_directory : str
         Path of the output directory
     forest_mask_source : str
-        Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a binary raster with the resolution of the computed area, or None in which case all pixels will be considered valid
+        Source of the forest mask, can be 'vector' to use a vector file at vector_path, or the path to a binary raster of 10m resolution with the value 1 on the pixels of interest, 'BDFORET' to use the BD Foret of the IGN, 'OSO' to use the CESBIO's land use map, or None to not use a forest mask and to extend the area of interest to all pixels
     list_forest_type : list
         List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'
     dep_path : str

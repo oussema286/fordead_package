@@ -13,6 +13,6 @@ dependencies:
   - pathlib
   - rioxarray
   - path
-  - plotly
+  - plotly > 5.3
   - netcdf4
   - matplotlib

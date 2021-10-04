@@ -4,7 +4,7 @@ Cette étape permet de calculer le masque forêt et ainsi définir les zones d'i
 #### ENTRÉES
 Les paramètres en entrée sont :
 - **data_directory** : Le chemin du dossier de sortie dans lequel sera écrit le masque forêt
-- **forest_mask_source** : Source du masque forêt, peut être "vector" pour utiliser un vecteur contenant des polygones, "BDFORET" pour utiliser la BD Forêt de l'IGN,  "OSO" pour utiliser la carte d'occupation des sols du CESBIO, le chemin vers un raster binaire de résolution 10m valant 1 sur les pixels d'intérêt, ou None pour ne pas utiliser de masque forêt et étendre la zone d'intérêt à l'ensemble des pixels
+- **forest_mask_source** : Source du masque forêt, peut être "vector" pour utiliser un vecteur contenant des polygones au chemin **vector_path**, ou le chemin vers un raster binaire de résolution 10m valant 1 sur les pixels d'intérêt, "BDFORET" pour utiliser la BD Forêt de l'IGN,  "OSO" pour utiliser la carte d'occupation des sols du CESBIO, ou None pour ne pas utiliser de masque forêt et étendre la zone d'intérêt à l'ensemble des pixels
 - **dep_path** : Chemin d'un shapefile des départements français contenant le code insee dans un champ code_insee, seulement utile si forest_mask_source vaut "BDFORET"
 - **bdforet_dirpath** : Chemin du dossier contenant la BD Forêt de l'IGN avec un dossier par département. Seulement utile si forest_mask_source vaut "BDFORET"
 - **list_forest_type** : Liste des types de peuplements à garder dans le masque forêt, correspond au CODE_TFV de la BD Forêt. Seulement utile si forest_mask_source vaut "BDFORET"
