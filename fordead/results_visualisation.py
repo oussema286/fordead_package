@@ -250,6 +250,29 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                 ))
         else:
             nb_vector_obj = 0
+            
+        results_affected = (
+                    {'properties': {'Etat': v}, 'geometry': s}
+                    for i, (s, v) 
+                    in enumerate(
+                        rasterio.features.shapes(forest_mask.data.astype("uint8"), transform=Affine(*stack_rgb.attrs["transform"]))))
+        dict_forest_mask = {"x" : [],
+                            "y" : []}
+        for geom in list(results_affected):
+            if geom["properties"]["Etat"] == 0:
+                for poly in geom["geometry"]["coordinates"]:
+                    xList=np.array([coord[0] for coord in poly])
+                    yList=np.array([coord[1] for coord in poly])
+                    
+                    dict_forest_mask["x"] +=list((xList-np.array(stack_rgb.attrs["transform"][2]))/10-0.5)+[None]
+                    dict_forest_mask["y"] +=list((np.array(stack_rgb.attrs["transform"][5])-yList)/10-0.5)+[None]
+                    
+        fig.add_trace(go.Scatter(
+            x=dict_forest_mask["x"],
+            y=dict_forest_mask["y"],
+            fill = "toself",
+            line_color = "black",
+            name="Outside of pixels of interest"))
         
         
         #Slider  
@@ -259,15 +282,11 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             step = dict(
                 label = dates[valid_dates][i],
                 method="restyle",
-                args=["visible", [False] * nb_valid_dates*NbData+[True]*nb_vector_obj])
+                args=["visible", [False]*nb_valid_dates*NbData + [True]*nb_vector_obj + [True]])
                 # args=["visible", [False] * (len(Day)+stackAtteint.shape[0]*3) + [True] * scolytes.shape[0] + [False] * stackMask.shape[0]] ,
             
             for n in range(NbData):
                 step["args"][1][i*NbData+n] = True  # Toggle i*NbData+n'th trace to "visible"
-            # step["args"][1][IndexDay+stackAtteint.shape[0]*3] = True  # Affiche le sol nu
-            # step["args"][1][IndexDay+stackAtteint.shape[0]*2] = True  # Affiche les coupes de scolytes
-            # step["args"][1][IndexDay+stackAtteint.shape[0]*3+scolytes.shape[0]+stackMask.shape[0]] = True  # Affiche les nuages
-            # step["args"][1][IndexDay+stackAtteint.shape[0]*3+scolytes.shape[0]+stackMask.shape[0]*2] = True  # Affiche les ombres
             steps.append(step)
             
         
