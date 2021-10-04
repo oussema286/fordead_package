@@ -397,7 +397,9 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         
         for period in range(int(xy_stress_data["nb_periods"])):
             period_dates = (pixel_series.Time[xy_stress_data["date"].isel(change = [period*2,period*2+1])]).data
-            plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, label = "Stress period")            
+            label = {"label" : "Stress period"} if period==0 else {}
+            plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, **label)         
+            # plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, label = "Stress period")            
         
         # Plotting vertical lines when decline or soil is detected
         if ~xy_decline_data["state"] & ~xy_soil_data["state"]:
