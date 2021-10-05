@@ -762,7 +762,7 @@ def initialize_stress_data(shape,coords):
     
     
     stress_data=xr.Dataset({"date": xr.DataArray(np.zeros(shape+(10,),dtype=np.uint16), 
-                                                 coords= {"y" : coords["y"],"x" : coords["x"],"change" : range(1,11)}),
+                                                 coords= {"y" : coords["y"],"x" : coords["x"],"change" : range(1,11)},dims = ["y","x","change"]),
                          "nb_periods": xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords)})
     return stress_data
 
