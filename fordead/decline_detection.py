@@ -9,14 +9,14 @@ from fordead.masking_vi import get_dict_vi
 import xarray as xr
 import numpy as np
 
-def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, path_dict_vi = None):
+def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly, vi, path_dict_vi = None):
     """
     Detects anomalies by comparison between predicted and calculated vegetation index. The array returns contains True where the difference between the vegetation index and its prediction is above the threshold in the direction of the specified decline change direction of the vegetation index. 
 
     Parameters
     ----------
-    vegetation_index : xarray DataArray
-        Array containing the vegetation index values computed from satellite data
+    masked_vi : xarray Dataset
+        Dataset containing two DataArrays, "vegetation_index" containing the vegetation index values, and "mask" containing the mask values (True if masked)
     predicted_vi : array (x,y)
         Array containing the vegetation index predicted by the model
     threshold_anomaly : float
@@ -36,18 +36,16 @@ def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, p
 
     dict_vi = get_dict_vi(path_dict_vi)
     
-    
-    
     if dict_vi[vi]["decline_change_direction"] == "+":
-        diff_vi = vegetation_index-predicted_vi
+        diff_vi = (masked_vi["vegetation_index"]-predicted_vi)*(~masked_vi["mask"])
     elif dict_vi[vi]["decline_change_direction"] == "-":
-        diff_vi = predicted_vi - vegetation_index
+        diff_vi = (predicted_vi - masked_vi["vegetation_index"])*(~masked_vi["mask"])
     else:
         raise Exception("Unrecognized decline_change_direction in " + path_dict_vi + " for vegetation index " + vi)
     
     anomalies = diff_vi > threshold_anomaly
     
-    return anomalies, diff_vi
+    return anomalies.squeeze("Time"), diff_vi.squeeze("Time")
 
 
 
@@ -93,7 +91,7 @@ def detection_decline(decline_data, anomalies, mask, date_index):
    
     decline_data["count"] = xr.where(~mask & (anomalies!=decline_data["state"]),decline_data["count"]+1,decline_data["count"])
     decline_data["count"] = xr.where(~mask & (anomalies==decline_data["state"]),0,decline_data["count"])
-    changing_pixels = ~mask & (decline_data["count"]==3)
+    changing_pixels = decline_data["count"]==3
 
     decline_data["state"] = xr.where(changing_pixels, ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
     decline_data["first_date"] = decline_data["first_date"].where(~changing_pixels,decline_data["first_date_unconfirmed"])
@@ -102,11 +100,15 @@ def detection_decline(decline_data, anomalies, mask, date_index):
 
     return decline_data,changing_pixels
 
-def save_stress(stress_data, decline_data, changing_pixels):
-    
-    # stress_data["cum_diff"] = stress_data["cum_diff"].where((decline_data["count"] !=0) | decline_data["state"]
-    
+def save_stress(stress_data, decline_data, changing_pixels, diff_vi):
     stress_data["nb_periods"]=stress_data["nb_periods"]+changing_pixels*(~decline_data["state"]) #Adds one to the number of stress periods when pixels change back to normal
+        
+    relevant_period = stress_data["cum_diff"]["period"] != (stress_data["nb_periods"]+1)
+    potential_stressed_pixels = (decline_data["count"]==0) & ~decline_data["state"]
+    
+    stress_data["cum_diff"] = stress_data["cum_diff"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["cum_diff"]+diff_vi))
+    stress_data["nb_dates"] = stress_data["nb_dates"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["nb_dates"]+1))
+    
     nb_changes = stress_data["nb_periods"]*2+decline_data["state"] #Number of the change 
     stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), decline_data["first_date"])
     return stress_data

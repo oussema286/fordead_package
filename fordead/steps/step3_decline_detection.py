@@ -129,12 +129,12 @@ def decline_detection(
                 
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
                 
-                anomalies, diff_vi = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly, 
-                                                vi = vi, path_dict_vi = path_dict_vi).squeeze("Time")
+                anomalies, diff_vi = detection_anomalies(masked_vi, predicted_vi, threshold_anomaly, 
+                                                vi = vi, path_dict_vi = path_dict_vi)
                                 
-                decline_data, changing_pixels = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index, diff_vi)
+                decline_data, changing_pixels = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
                 
-                stress_data = save_stress(stress_data, decline_data, changing_pixels)
+                stress_data = save_stress(stress_data, decline_data, changing_pixels, diff_vi)
                 
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
@@ -144,6 +144,8 @@ def decline_detection(
         #Writing decline data to rasters
         write_tif(stress_data["date"], first_detection_date_index.attrs,tile.paths["dates_stress"],nodata=0)
         write_tif(stress_data["nb_periods"], first_detection_date_index.attrs,tile.paths["nb_periods_stress"],nodata=0)
+        write_tif(stress_data["cum_diff"], first_detection_date_index.attrs,tile.paths["cum_diff_stress"],nodata=0)
+        write_tif(stress_data["nb_dates"], first_detection_date_index.attrs,tile.paths["nb_dates_stress"],nodata=0)
 
         write_tif(decline_data["state"], first_detection_date_index.attrs,tile.paths["state_decline"],nodata=0)
         write_tif(decline_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_decline"],nodata=0)
