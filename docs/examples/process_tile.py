@@ -37,7 +37,7 @@ def parse_command_line():
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     parser.add_argument("--nb_min_date", dest = "nb_min_date",type = int,default = 10, help = "Nombre minimum de dates valides pour modéliser l'indice de végétation")
-    parser.add_argument('--ignored_period', nargs='+',default = None, help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
+    parser.add_argument('--ignored_period', nargs='+',default = None, help="Period whose date to ignore (format 'MM-DD', ex : --ignored_period 11-01 05-01")
 
     parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
