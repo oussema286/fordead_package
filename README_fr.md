@@ -1,6 +1,8 @@
 # fordead : un package python pour la détection d'anomalies de végétation à partir d'images SENTINEL-2
 
-Le package `fordead` a été développé pour la détection d'anomalies de végétation à partir de séries temporelles SENTINEL-2. Il a été développé dans l'objectif de fournir des outils de surveillance pour répondre à la crise sanitaire des scolytes sur les épicéas en France, mais il contient de nombreux outils simplifiant l'utilisation des données satellitaires SENTINEL-2 et permettant la détection d'anomalies qui peuvent être utilisés dans d'autres contextes. La méthode utilisée tire parti de la série temporelle complète de SENTINEL-2 depuis le lancement du premier satellite et détecte des anomalies à l'échelle du pixel qui peuvent être mis à jour chaque fois que de nouvelles dates Sentinel-2 sont ajoutées pour un suivi constant de la végétation.
+Le package `fordead`, développé pour la détection d'anomalies de végétation à partir de séries temporelles SENTINEL-2, fournit des outils de surveillance pour répondre à la crise sanitaire des scolytes sur les épicéas en France. Il contient de nombreux outils qui simplifient l'utilisation des données satellitaires SENTINEL-2, et qui permettent la détection éventuelle d'anomalies dans d'autres contextes. 
+
+La méthode proposée exploite des séries temporelles complètes SENTINEL-2 et ce, depuis le lancement du premier satellite en 2015. Elle permet de détecter des anomalies à l'échelle du pixel pour analyser des données d'archives ou procéder à une surveillance continue. Les détections sont alors mises à jour à chaque nouvelle acquisition SENTINEL-2.
 
 ## Utilisation pour la détection de déperissement
 
