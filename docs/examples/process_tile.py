@@ -37,6 +37,7 @@ def parse_command_line():
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     parser.add_argument("--nb_min_date", dest = "nb_min_date",type = int,default = 10, help = "Nombre minimum de dates valides pour modéliser l'indice de végétation")
+    parser.add_argument('--ignored_period', nargs='+',default = None, help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
 
     parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
@@ -64,7 +65,7 @@ def parse_command_line():
     	dictArgs[key]=value
     return dictArgs
 
-def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source, extent_shape_path,
+def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source, extent_shape_path,ignored_period,
                   dep_path, bdforet_dirpath, list_forest_type, path_oso, list_code_oso, #compute_forest_mask arguments
                   lim_perc_cloud, vi, sentinel_source, apply_source_mask, soil_detection, #compute_masked_vegetationindex arguments
                   min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
@@ -95,7 +96,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                                        lim_perc_cloud = lim_perc_cloud, vi = vi,
                                        sentinel_source = sentinel_source, apply_source_mask = apply_source_mask,
                                        extent_shape_path = extent_shape_path,
-                                       soil_detection = soil_detection)
+                                       soil_detection = soil_detection,
+                                       ignored_period = ignored_period)
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()

@@ -107,7 +107,7 @@ def save_stress(stress_data, decline_data, changing_pixels):
 
     stress_data["nb_periods"]=stress_data["nb_periods"]+changing_pixels*(~decline_data["state"]) #Adds one to the number of stress periods when pixels change back to normal
     nb_changes = stress_data["nb_periods"]*2+decline_data["state"] #Number of the change 
-    stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), decline_data["first_date"] - (~decline_data["state"]))
+    stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), decline_data["first_date"])
     return stress_data
     
     

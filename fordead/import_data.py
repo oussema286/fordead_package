@@ -462,6 +462,8 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
     """
     if raster_path != None:
         raster = xr.open_rasterio(raster_path)
+        if raster.sizes["band"] == 1:
+            raster=raster.squeeze("band")
     raster.attrs["crs"] = raster.attrs["crs"].replace("+init=","")
     if extent_shape_path is not None:
         
@@ -707,7 +709,6 @@ def import_stress_data(dict_paths, chunks = None):
     
     dates_stress = xr.open_rasterio(dict_paths["dates_stress"],chunks = chunks).rename({"band": "change"})
     nb_periods_stress = xr.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
-    
     stress_data=xr.Dataset({"date": dates_stress,
                      "nb_periods": nb_periods_stress})
 
