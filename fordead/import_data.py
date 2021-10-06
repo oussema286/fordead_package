@@ -708,9 +708,14 @@ def import_decline_data(dict_paths, chunks = None):
 def import_stress_data(dict_paths, chunks = None):
     
     dates_stress = xr.open_rasterio(dict_paths["dates_stress"],chunks = chunks).rename({"band": "change"})
+    cum_diff = xr.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).rename({"band": "period"})
+    nb_dates = xr.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).rename({"band": "period"})
     nb_periods_stress = xr.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
     stress_data=xr.Dataset({"date": dates_stress,
-                     "nb_periods": nb_periods_stress})
+                     "nb_periods": nb_periods_stress,
+                     "cum_diff" : cum_diff,
+                     "nb_dates" : nb_dates
+                     })
 
     return stress_data
         
@@ -759,12 +764,15 @@ def initialize_stress_data(shape,coords):
 
 
     """
-    
-    
-    
+
     stress_data=xr.Dataset({"date": xr.DataArray(np.zeros(shape+(10,),dtype=np.uint16), 
                                                  coords= {"y" : coords["y"],"x" : coords["x"],"change" : range(1,11)},dims = ["y","x","change"]),
-                         "nb_periods": xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords)})
+                         "nb_periods": xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords),
+                         "cum_diff": xr.DataArray(np.zeros(shape+(10,),dtype=np.float), 
+                                                                      coords= {"y" : coords["y"],"x" : coords["x"],"period" : range(1,6)},dims = ["y","x","period"]),
+                         "nb_dates": xr.DataArray(np.zeros(shape+(10,),dtype=np.uint16), 
+                                                                      coords= {"y" : coords["y"],"x" : coords["x"],"period" : range(1,6)},dims = ["y","x","period"])
+                         })
     return stress_data
 
 

@@ -36,16 +36,18 @@ def detection_anomalies(vegetation_index, predicted_vi, threshold_anomaly, vi, p
 
     dict_vi = get_dict_vi(path_dict_vi)
     
-    diff_vi = vegetation_index-predicted_vi
+    
     
     if dict_vi[vi]["decline_change_direction"] == "+":
-        anomalies = diff_vi > threshold_anomaly
+        diff_vi = vegetation_index-predicted_vi
     elif dict_vi[vi]["decline_change_direction"] == "-":
-        anomalies = diff_vi < (-1*threshold_anomaly)
+        diff_vi = predicted_vi - vegetation_index
     else:
         raise Exception("Unrecognized decline_change_direction in " + path_dict_vi + " for vegetation index " + vi)
-            
-    return anomalies
+    
+    anomalies = diff_vi > threshold_anomaly
+    
+    return anomalies, diff_vi
 
 
 
@@ -92,19 +94,18 @@ def detection_decline(decline_data, anomalies, mask, date_index):
     decline_data["count"] = xr.where(~mask & (anomalies!=decline_data["state"]),decline_data["count"]+1,decline_data["count"])
     decline_data["count"] = xr.where(~mask & (anomalies==decline_data["state"]),0,decline_data["count"])
     changing_pixels = ~mask & (decline_data["count"]==3)
-    # decline_data["state"] = xr.where(changing_pixels, ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
-    # decline_data["count"] = xr.where(decline_data["count"]==3, 0,decline_data["count"])
-    # decline_data["first_date"]=xr.where(~mask & (decline_data["count"]==1) & (~decline_data["state"]), date_index, decline_data["first_date"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
 
     decline_data["state"] = xr.where(changing_pixels, ~decline_data["state"], decline_data["state"]) #Changement d'état si CompteurScolyte = 3 et date valide
     decline_data["first_date"] = decline_data["first_date"].where(~changing_pixels,decline_data["first_date_unconfirmed"])
     decline_data["count"] = xr.where(changing_pixels, 0,decline_data["count"])
     decline_data["first_date_unconfirmed"]=xr.where(~mask & (decline_data["count"]==1), date_index, decline_data["first_date_unconfirmed"]) #Garde la première date de détection de scolyte sauf si déjà détécté comme scolyte
-   
+
     return decline_data,changing_pixels
 
 def save_stress(stress_data, decline_data, changing_pixels):
-
+    
+    # stress_data["cum_diff"] = stress_data["cum_diff"].where((decline_data["count"] !=0) | decline_data["state"]
+    
     stress_data["nb_periods"]=stress_data["nb_periods"]+changing_pixels*(~decline_data["state"]) #Adds one to the number of stress periods when pixels change back to normal
     nb_changes = stress_data["nb_periods"]*2+decline_data["state"] #Number of the change 
     stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), decline_data["first_date"])

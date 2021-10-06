@@ -95,7 +95,9 @@ def decline_detection(
     
     tile.add_path("dates_stress", tile.data_directory / "DataStress" / "dates_stress.tif")
     tile.add_path("nb_periods_stress", tile.data_directory / "DataStress" / "nb_periods_stress.tif")
-    
+    tile.add_path("cum_diff_stress", tile.data_directory / "DataStress" / "cum_diff_stress.tif")
+    tile.add_path("nb_dates_stress", tile.data_directory / "DataStress" / "nb_dates_stress.tif")
+
     #Verify if there are new SENTINEL dates
     new_dates = tile.dates[tile.dates > tile.last_computed_anomaly] if hasattr(tile, "last_computed_anomaly") else tile.dates[tile.dates >= tile.parameters["min_last_date_training"]]
     if  len(new_dates) == 0:
@@ -127,10 +129,10 @@ def decline_detection(
                 
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
                 
-                anomalies = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly, 
+                anomalies, diff_vi = detection_anomalies(masked_vi["vegetation_index"], predicted_vi, threshold_anomaly, 
                                                 vi = vi, path_dict_vi = path_dict_vi).squeeze("Time")
                                 
-                decline_data, changing_pixels = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
+                decline_data, changing_pixels = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index, diff_vi)
                 
                 stress_data = save_stress(stress_data, decline_data, changing_pixels)
                 
