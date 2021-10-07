@@ -50,15 +50,16 @@ As you can see, this step includes many options. However only the **input_direct
 ##### Outputs
 
 Running this script will filter out all SENTINEL-2 dates with a cloud percentage above **lim_perc_cloud** based on the data provider's classification, and create two directories in your **data_directory** :
-- A "VegetationIndex" directory, storing the chosen vegetation index (in this case, CRSWIR) calculated for each remaining date using SENTINEL-2 data interpolated at 10m resolution (in this case, `interpolation_order = 0` indicates nearest neighbour interpolation).
-- A "Mask" directory, containing the associated binary raster mask which corresponds to the two default masks (any negative value in the first band of the stack is considered outside the satellite swath and any pixel with a 0 value in any band is considered a shadow) associated to the **formula_mask** which is chosen by the user, as well as the mask provided by the SENTINEL-2 data provider if **apply_source_mask** is True.
+- A "VegetationIndex" directory, storing the chosen vegetation index (in this case, CRSWIR) calculated for each remaining date using SENTINEL-2 data interpolated at 10m resolution (in this case, `interpolation_order = 0` indicates nearest neighbour resampling).
+- A "Mask" directory, containing the associated binary raster mask which corresponds to the two default masks (any negative value in the first band of the stack is considered outside the satellite swath and any pixel with a 0 value in any band is considered as a shadow) associated to the **formula_mask** which is chosen by the user, as well as the mask provided by the SENTINEL-2 data provider if **apply_source_mask** is True.
 
 
 Vegetation index             |  Mask
 :-------------------------:|:-------------------------:
 ![gif_vegetation_index](Figures/gif_vegetation_index.gif "gif_vegetation_index")  |  ![gif_mask](Figures/gif_mask.gif "gif_mask")
 
-Any logical operation formula can be used in **formula_mask** (see [compute_vegetation_index](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)), although it is only used if **soil_detection** is False. If **soil_detection** is True, then the masks include bare ground detection as describe in the [step guide](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/), which can be useful but has only been tested on THEIA data on France's coniferous forests and might not be adapted to other contexts and types of data. This package has been used in France to map bark beetle infested stands, in which context this bare ground detection has been useful to filter out clear cuts, deciduous forests as well as late stage bark beetle infested forest stands. This option is described in the step guide, but will not be exploited in this tutorial.
+If **soil_detection** is False, any logical operation formula can be used in **formula_mask** (see [compute_vegetation_index](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)). 
+If **soil_detection** is True, then the masks include bare ground detection as describe in the [step guide](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/), which can be useful but it has only been tested on THEIA data over France's coniferous forests and might not be adapted to other contexts and types of data. This package has been used in France to map bark beetle infested stands. In this context, bare ground detection has been useful to filter out clear cuts, deciduous forests as well as late stage bark beetle infested forest stands. This option is described in the step guide, but will not be exploited in this tutorial.
 
 
 [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/02_train_model)
