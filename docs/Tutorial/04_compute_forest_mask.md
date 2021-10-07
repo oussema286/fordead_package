@@ -8,7 +8,7 @@ This steps aims at computing and writing a binary raster, then used as a 'forest
 This can be done either by rasterizing a vector file, or by producing this binary mask directly. 
 The final mask should have the same dimensions, resolution, projection as Sentinel-2 images. 
 It is also possible to run _fordead_ without any forest mask. 
-Specific options allow taing advantage of land cover or forest spatial database available in France ([BDFORET](https://inventaire-forestier.ign.fr/spip.php?article646) from IGN and [Land cover](https://www.theia-land.fr/en/ceslist/land-cover-sec/) from THEIA).
+Specific options allow taking advantage of land cover or forest spatial database available in France ([BDFORET](https://inventaire-forestier.ign.fr/spip.php?article646) from IGN and [Land cover](https://www.theia-land.fr/en/ceslist/land-cover-sec/) from THEIA).
 
 Here, we used a shapefile identifying forested areas in the example dataset, which was rasterized as a binary raster.
 
@@ -24,12 +24,15 @@ Run the following instructions to perform this processing step:
 
 ```python
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
-compute_forest_mask(data_directory, forest_mask_source = "vector", vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
+
+compute_forest_mask(data_directory, 
+                    forest_mask_source = "vector", 
+                    vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
 ```
 
-##### Running this step from the command invite
+##### Running this step from the command prompt
 
-This processing step can also be performed from a terminal :
+This processing step can also be performed from a terminal:
 
 ```bash
 fordead forest_mask -o <output directory> -f vector --vector_path <MyWorkingDirectory>/vector/area_interest.shp
