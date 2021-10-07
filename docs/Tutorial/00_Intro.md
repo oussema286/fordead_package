@@ -12,7 +12,7 @@ If it is already installed, simply launch the command prompt and activate the en
 
 Even though the analysis can be performed at the scale of a SENTINEL-2 tile, we will focus here on a small study area that presents coniferous forest stands infested with bark beetles. The related dataset can be downloaded from the [fordead_data repository](https://gitlab.com/fordead/fordead_data). It mainly contains unpacked SENTINEL-2 data from the launch of the first satellite in 2015 to summer 2019. 
 Here we are using level-2A FRE (**F**lat **RE**flectance) data, which means it is atmospherically and topographically corrected, and contains a Scene Classification Map (for more information, please visit the [related page](https://labo.obs-mip.fr/multitemp/sentinel-2/theias-sentinel-2-l2a-product-format/#English) ). The data provider is [THEIA](https://www.theia-land.fr/).
-Data from other providers ([ESA-Copernicus](https://scihub.copernicus.eu/), [CNES-PEPS](https://scihub.copernicus.eu/)) can also be used with this package.
+Data from other providers ([ESA-Copernicus](https://scihub.copernicus.eu/), [CNES-PEPS](https://peps.cnes.fr/rocket/#/home)) can also be used with this package.
 
 ### Memory space required
 
