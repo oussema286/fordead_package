@@ -5,7 +5,7 @@ This tutorial is focused on a small example area corresponding to a coniferous f
 
 ## Requirements
 ### Package installation 
-If the package is not already installed, follow the instructions of the [installation guide](https://fordead.gitlab.io/fordead_package/). 
+If the package is not already installed, follow the instructions of the [installation guide](https://fordead.gitlab.io/fordead_package/docs/Installation/). 
 If it is already installed, simply launch the command prompt and activate the environment with the command `conda activate <environment name>`
 
 ### Downloading the tutorial dataset
