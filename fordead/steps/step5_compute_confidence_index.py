@@ -25,8 +25,8 @@ def cli_compute_confidence_index(
     chunks = None
     ):
     """
-    Computes an index meant to describe the intensity of the detected disturbance. The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. For each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly).
-    In case of a disturbance, the intensity of anomalies often goes up which is why later dates have more weight.
+    Computes an index meant to describe the intensity of the detected dieback. The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. For each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly).
+    In case of dieback, the intensity of anomalies often goes up which is why later dates have more weight.
     Then, pixels are classified into classes, based on the discretization of the confidence index using threshold_list as bins. Pixels with only three anomalies are classified as the lowest class, because 3 anomalies are not considered enough to calculate a meaningful index. The results are vectorized and saved in data_directory/Confidence_Index directory.
 	See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/
 	\f
@@ -48,8 +48,8 @@ def compute_confidence_index(
     chunks = None
     ):
     """
-    Computes an index meant to describe the intensity of the detected disturbance. The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. For each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly).
-    In case of a disturbance, the intensity of anomalies often goes up which is why later dates have more weight.
+    Computes an index meant to describe the intensity of the detected dieback. The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. For each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly).
+    In case of dieback, the intensity of anomalies often goes up which is why later dates have more weight.
     Then, pixels are classified into classes, based on the discretization of the confidence index using threshold_list as bins. Pixels with only three anomalies are classified as the lowest class, because 3 anomalies are not considered enough to calculate a meaningful index. The results are vectorized and saved in data_directory/Confidence_Index directory.
 	See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/
 	\f
