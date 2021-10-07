@@ -14,7 +14,7 @@ This step's complete guide can be found [here](https://fordead.gitlab.io/fordead
 To run this step, simply add the following lines to the script :
 ```python
 from fordead.steps.step5_compute_confidence_index import compute_confidence_index
-compute_confidence_index(data_directory, threshold_list = [0.2,0.265], classes_list = ["Low anomaly", "Severe anomaly"])
+compute_confidence_index(data_directory, threshold_list = [0.265], classes_list = ["Low anomaly", "Severe anomaly"])
 ```
 
 ##### Running this step from the command invite
