@@ -19,7 +19,7 @@ import matplotlib.colors as colors
 
 
 from fordead.masking_vi import get_dict_vi
-from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_decline_data, import_forest_mask, import_confidence_data
+from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_dieback_data, import_forest_mask, import_confidence_data
 
 
 def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = None):
@@ -99,8 +99,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             digitized_confidence = np.digitize(confidence_index,tile.parameters["threshold_list"])
             digitized_confidence[nb_dates==3]=0
             
-        decline_data = import_decline_data(tile.paths)
-        decline_data = decline_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        dieback_data = import_dieback_data(tile.paths)
+        dieback_data = dieback_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         forest_mask = import_forest_mask(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         
         #Correcting extent if computed area is smaller than Sentinel-2 data area
@@ -132,7 +132,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                     DictCoordX[etat] = []
                     DictCoordY[etat] = []
 
-                detected = (decline_data["first_date"] <= dateIndex) & decline_data["state"]
+                detected = (dieback_data["first_date"] <= dateIndex) & dieback_data["state"]
                 if tile.parameters["soil_detection"]:
                     soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
                     if show_confidence_class:
@@ -317,7 +317,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
         return fig
 
 
-def plot_mask(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax):
+def plot_mask(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax):
     """
     Creates figure from all data
 
@@ -348,7 +348,7 @@ def plot_mask(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_da
         
     return fig
 
-def plot_model(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax):
+def plot_model(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax):
     """
     Creates figure from all data
 
@@ -383,7 +383,7 @@ def plot_model(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_d
         
     return fig
 
-def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax, ignored_period = None):
+def plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax, ignored_period = None):
     """
     Creates figure from all data
 
@@ -410,21 +410,21 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         yy.plot.line("b", label='Vegetation index model based on training dates')
         
         dict_vi = get_dict_vi(path_dict_vi)
-        if dict_vi[vi]["decline_change_direction"] == "+":
+        if dict_vi[vi]["dieback_change_direction"] == "+":
             (yy+threshold_anomaly).plot.line("b--", label='Threshold for anomaly detection')
-        elif dict_vi[vi]["decline_change_direction"] == "-":
+        elif dict_vi[vi]["dieback_change_direction"] == "-":
             (yy-threshold_anomaly).plot.line("b--", label='Threshold for anomaly detection')
         
         
-        # Plotting vertical lines when decline or soil is detected
-        if ~xy_decline_data["state"] & ~xy_soil_data["state"]:
+        # Plotting vertical lines when dieback or soil is detected
+        if ~xy_dieback_data["state"] & ~xy_soil_data["state"]:
             plt.title("X : " + str(int(pixel_series.x))+"   Y : " + str(int(pixel_series.y))+"\nHealthy pixel",size=15)
-        elif xy_decline_data["state"] & ~xy_soil_data["state"]:
-            date_atteint = pixel_series.Time[int(xy_decline_data["first_date"])].data
+        elif xy_dieback_data["state"] & ~xy_soil_data["state"]:
+            date_atteint = pixel_series.Time[int(xy_dieback_data["first_date"])].data
             plt.axvline(x=date_atteint, color='red', linewidth=3, linestyle=":",label="Dieback detection")
             plt.title("X : " + str(int(pixel_series.x))+"    Y : " + str(int(pixel_series.y))+"\nDieback detected, first anomaly on " + str(date_atteint.astype("datetime64[D]")),size=15)
-        elif xy_decline_data["state"] & xy_soil_data["state"]:
-            date_atteint = pixel_series.Time[int(xy_decline_data["first_date"])].data
+        elif xy_dieback_data["state"] & xy_soil_data["state"]:
+            date_atteint = pixel_series.Time[int(xy_dieback_data["first_date"])].data
             date_coupe = pixel_series.Time[int(xy_soil_data["first_date"])].data
             plt.axvline(x=date_atteint, color="red", linewidth=3, linestyle=":")
             plt.axvline(x=date_coupe,color='black', linewidth=3, linestyle=":")
@@ -446,7 +446,7 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_d
         
     return fig
 
-def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies):
+def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies):
     
     xy_first_detection_date_index = int(first_detection_date_index.sel(x = X, y = Y,method = "nearest"))
     xy_soil_data = soil_data.sel(x = X, y = Y,method = "nearest")
@@ -454,21 +454,21 @@ def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detect
     pixel_series = stack_vi.sel(x = X, y = Y,method = "nearest")
     if xy_first_detection_date_index!=0:
         xy_anomalies = anomalies.sel(x = X, y = Y,method = "nearest")
-        xy_decline_data = decline_data.sel(x = X, y = Y,method = "nearest")
+        xy_dieback_data = dieback_data.sel(x = X, y = Y,method = "nearest")
         anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
         pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
         pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
         yy = (harmonic_terms * coeff_model.sel(x = X, y = Y,method = "nearest").compute()).sum(dim="coeff")
     else:
-        xy_decline_data=None
+        xy_dieback_data=None
         xy_anomalies = None
         yy = None
     pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
     pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks.data))
         
-    return pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index
+    return pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index
     
-def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies):
+def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies):
     yy = (harmonic_terms * coeff_model.isel(x = X, y = Y).compute()).sum(dim="coeff")
     
     xy_first_detection_date_index = int(first_detection_date_index.isel(x = X, y = Y))
@@ -477,9 +477,9 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
     pixel_series = stack_vi.isel(x = X, y = Y)
     if xy_first_detection_date_index!=0:
         xy_anomalies = anomalies.isel(x = X, y = Y)
-        xy_decline_data = decline_data.isel(x = X, y = Y)
+        xy_dieback_data = dieback_data.isel(x = X, y = Y)
     else:
-        xy_decline_data=None
+        xy_dieback_data=None
         xy_anomalies = None
     pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
     pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks.data))
@@ -487,10 +487,10 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
         anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
         pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
         pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
-    return pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index
+    return pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index
     
 
-def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax, name_file = None):
+def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax, name_file = None):
     
     if x < 0 or x >= tile.raster_meta["sizes"]["x"] or y < 0 or y >= tile.raster_meta["sizes"]["y"]:
         print("Pixel outside extent of the region of interest")
@@ -499,8 +499,8 @@ def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, f
         if not(xy_forest_mask):
             print("Pixel outside forest mask")
         else:
-            pixel_series, yy,  xy_soil_data, xy_decline_data, xy_first_detection_date_index = select_pixel_from_indices(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies)              
-            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_decline_data, xy_first_detection_date_index, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax, ignored_period = tile.parameters["ignored_period"])
+            pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index = select_pixel_from_indices(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies)              
+            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax, ignored_period = tile.parameters["ignored_period"])
             
             if name_file is None: name_file = "X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))
             fig.savefig(tile.paths["series"] / (name_file + ".png"))

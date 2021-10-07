@@ -7,7 +7,7 @@ Created on Tue Nov 17 12:02:24 2020
 
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
-from fordead.steps.step3_decline_detection import decline_detection
+from fordead.steps.step3_dieback_detection import dieback_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step6_export_results import export_results
 from fordead.steps.step5_compute_confidence_index import compute_confidence_index
@@ -53,7 +53,7 @@ def parse_command_line():
     parser.add_argument("--start_date_results", dest = "start_date_results",type = str,default = '2015-06-23', help = "Date de début pour l'export des résultats")
     parser.add_argument("--end_date_results", dest = "end_date_results",type = str,default = "2022-01-01", help = "Date de fin pour l'export des résultats")
     parser.add_argument("--results_frequency", dest = "results_frequency",type = str,default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
-    parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas in decline at the end of the period. Else, a single shapefile is exported containing declined areas associated with the period of decline")
+    parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas suffering from dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback")
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
     # parser.add_argument('--threshold_list', nargs='+',default = [0.2, 0.265], help="Liste des seuils utilisés pour classer les stades de dépérissement par discrétisation de l'indice de confiance")
@@ -122,10 +122,10 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
 # =====================================================================================================================    
 
-        decline_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+        dieback_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
                                           threshold_anomaly = threshold_anomaly)
         file = open(logpath, "a")
-        file.write("decline_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
+        file.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
 
 # # =====================================================================================================================

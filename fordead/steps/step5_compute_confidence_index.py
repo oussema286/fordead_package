@@ -5,10 +5,10 @@ Created on Wed Apr  7 16:40:16 2021
 @author: Raphael Dutrieux
 """
 
-from fordead.import_data import import_masked_vi, import_decline_data, TileInfo, import_forest_mask, import_soil_data, import_confidence_data, import_coeff_model, initialize_confidence_data
+from fordead.import_data import import_masked_vi, import_dieback_data, TileInfo, import_forest_mask, import_soil_data, import_confidence_data, import_coeff_model, initialize_confidence_data
 from fordead.writing_data import write_tif, vectorizing_confidence_class
 from fordead.masking_vi import get_dict_vi
-from fordead.model_spectral_index import correct_vi_date, prediction_vegetation_index
+from fordead.model_vegetation_index import correct_vi_date, prediction_vegetation_index
 
 import numpy as np
 import click
@@ -71,7 +71,7 @@ def compute_confidence_index(
     tile = tile.import_info()
     tile.add_parameters({"threshold_list" : threshold_list, "classes_list" : classes_list})
     if tile.parameters["Overwrite"] : 
-        tile.delete_files("periodic_results_decline","result_files")
+        tile.delete_files("periodic_results_dieback","result_files")
         tile.delete_attributes("last_date_export")
         #Delete timelapse if changed to take confidence index into account
         
@@ -81,19 +81,19 @@ def compute_confidence_index(
     
     forest_mask = import_forest_mask(tile.paths["ForestMask"], chunks = chunks)
     valid_area = import_forest_mask(tile.paths["valid_area_mask"], chunks = chunks)
-    decline_data = import_decline_data(tile.paths, chunks = chunks)
+    dieback_data = import_dieback_data(tile.paths, chunks = chunks)
    
     if tile.parameters["soil_detection"]:
         soil_data = import_soil_data(tile.paths, chunks = chunks)
-        relevant_area = (forest_mask & valid_area & decline_data["state"] & ~soil_data["state"]).compute()
+        relevant_area = (forest_mask & valid_area & dieback_data["state"] & ~soil_data["state"]).compute()
     else:
-        relevant_area = (forest_mask & valid_area & decline_data["state"]).compute()
+        relevant_area = (forest_mask & valid_area & dieback_data["state"]).compute()
     dict_vi = get_dict_vi(tile.parameters["path_dict_vi"])
     nb_dates, sum_diff = initialize_confidence_data(forest_mask.shape,forest_mask.coords)
 
     coeff_model = import_coeff_model(tile.paths["coeff_model"], chunks = chunks)
     
-    first_date = decline_data["first_date"].where(relevant_area).min().compute()
+    first_date = dieback_data["first_date"].where(relevant_area).min().compute()
     Importing = (tile.dates[-1] == tile.last_date_confidence_index) if hasattr(tile, "last_date_confidence_index") else False
     if  Importing:
         print("Importing confidence index")
@@ -107,15 +107,15 @@ def compute_confidence_index(
                     masked_vi["vegetation_index"], tile.correction_vi = correct_vi_date(masked_vi,forest_mask, tile.large_scale_model, date, tile.correction_vi)
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
                 
-                if dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "+":
+                if dict_vi[tile.parameters["vi"]]["dieback_change_direction"] == "+":
                     diff = (masked_vi["vegetation_index"] - predicted_vi).squeeze("Time").compute()
-                elif dict_vi[tile.parameters["vi"]]["decline_change_direction"] == "-":
+                elif dict_vi[tile.parameters["vi"]]["dieback_change_direction"] == "-":
                     diff = (predicted_vi - masked_vi["vegetation_index"]).squeeze("Time").compute()
                 
-                declining_pixels = ((decline_data["first_date"] <= date_index) & ~masked_vi["mask"]).compute()
-                nb_dates = nb_dates + declining_pixels
-                sum_diff = sum_diff + diff*declining_pixels*nb_dates #Try compare with where
-                del masked_vi, predicted_vi, diff, declining_pixels
+                dieback_pixels = ((dieback_data["first_date"] <= date_index) & ~masked_vi["mask"]).compute()
+                nb_dates = nb_dates + dieback_pixels
+                sum_diff = sum_diff + diff*dieback_pixels*nb_dates #Try compare with where
+                del masked_vi, predicted_vi, diff, dieback_pixels
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
 
             

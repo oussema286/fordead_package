@@ -13,7 +13,7 @@
 #    docs_dir = "docs"
 # output_dir = "site"
 #    modules = ["fordead"]
-    modules = ["fordead.decline_detection", "fordead.import_data", "fordead.masking_vi", "fordead.maja_fun", "fordead.model_spectral_index", "fordead.writing_data"]
+    modules = ["fordead.dieback_detection", "fordead.import_data", "fordead.masking_vi", "fordead.maja_fun", "fordead.model_vegetation_index", "fordead.writing_data"]
     extra_markdown_extensions = ['mdx_breakless_lists', 'mkdocs-click']
 
 [[tool.portray.extra_markdown_extensions]]
@@ -62,7 +62,7 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
 	"Step 2. Train model" = "docs/Tutorial/02_train_model.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Step 3. Decline detection" = "docs/Tutorial/03_decline_detection.md"
+	"Step 3. Dieback detection" = "docs/Tutorial/03_dieback_detection.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
 	"Step 4. Compute forest mask" = "docs/Tutorial/04_compute_forest_mask.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
@@ -82,7 +82,7 @@ Installation = "docs/Installation.md"
     [[tool.portray.mkdocs.nav."User guides".English]]
     "2. Train model" = "docs/user_guides/english/02_train_model.md"
     [[tool.portray.mkdocs.nav."User guides".English]]
-    "3. Decline detection" = "docs/user_guides/english/03_decline_detection.md"    
+    "3. Dieback detection" = "docs/user_guides/english/03_dieback_detection.md"    
 	[[tool.portray.mkdocs.nav."User guides".English]]
     "4. Compute forest mask" = "docs/user_guides/english/04_compute_forest_mask.md"    
 	[[tool.portray.mkdocs.nav."User guides".English]]
@@ -103,7 +103,7 @@ Installation = "docs/Installation.md"
     [[tool.portray.mkdocs.nav."User guides".'Français']]
     "2. Apprentissage du modèle" = "docs/user_guides/french/02_train_model.md"
     [[tool.portray.mkdocs.nav."User guides".'Français']]
-    "3. Détection du dépérissement" = "docs/user_guides/french/03_decline_detection.md"    
+    "3. Détection du dépérissement" = "docs/user_guides/french/03_dieback_detection.md"    
 	[[tool.portray.mkdocs.nav."User guides".'Français']]
     "4. Calcul du masque forêt" = "docs/user_guides/french/04_compute_forest_mask.md"    
 	[[tool.portray.mkdocs.nav."User guides".'Français']]

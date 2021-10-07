@@ -11,7 +11,7 @@ La méthode proposée exploite des séries temporelles complètes SENTINEL-2 et 
 La détection du dépérissement se fait en cinq, voire six étapes.
 1. [Le calcul des indices de végétation et des masques pour chaque date SENTINEL-2](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/01_compute_masked_vegetationindex/)
 2. [L'apprentissage par modélisation de l'indice de végétation pixel par pixel à partir des premières dates](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/02_train_model/)
-3. [La détection du déperissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/03_decline_detection/)
+3. [La détection du déperissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/03_dieback_detection/)
 4. [La création du masque forêt, qui définit les zones d'intérêt](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/04_compute_forest_mask/)
 5. (FACULTATIF) [Calcul d'un indice de confiance pour classifier selon l'intensité des anomalies](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/05_compute_confidence/)
 6. [L'export de sorties permettant de visualiser les résultats au pas de temps souhaité](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/06_export_results/)

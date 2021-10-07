@@ -13,7 +13,7 @@ The input parameters are :
 #### OUTPUTS
 The outputs of this fifth step, in the folder data_directory/Results, are :
 - if **multiple_files** is False:
-    - the shapefile periodic_results_decline, whose polygons contain the time period when the first anomaly was detected for the declining areas. The areas reached before start_date or after end_date are ignored. If **intersection_confidence_class** is True, the polygons also contain the anomaly intensity class as calculated in the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/) step. This class therefore contains the "final" state, calculated at the last available Sentinel-2 date. If bare ground is detected, the confidence index is not calculated and this final state becomes "Bare ground".
+    - the shapefile periodic_results_dieback, whose polygons contain the time period when the first anomaly was detected for the areas suffering from dieback. The areas reached before start_date or after end_date are ignored. If **intersection_confidence_class** is True, the polygons also contain the anomaly intensity class as calculated in the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/) step. This class therefore contains the "final" state, calculated at the last available Sentinel-2 date. If bare ground is detected, the confidence index is not calculated and this final state becomes "Bare ground".
     - if soil_detection was True in the [first step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/), the shapefile periodic_results_soil whose polygons contain the period when the first soil anomaly was detected for areas detected as bare soil/cut. Bare areas before start_date or after end_date are not shown.
 - if **multiple_files** is True :
     - One shapefile per period whose name is the end date of the period (for example, with start_date = 2018-01-01, end_date = 2018-04-01 and frequency = "M", we will have the following files: 2018-01-30.shp, 2018-02-28.shp and 2018-03-31.shp. Each shapefile contains polygons corresponding to the stand state at the end of the period, even if the first anomalies occur before start_date. The status can be 'Anomaly', "Bare ground" and 'Bare ground after anomaly' if soil_detection was True in the first step, or simply "Anomaly" otherwise.
@@ -50,10 +50,10 @@ The information about the previous steps is imported (parameters, data paths, us
 
 ### Importing the results of the detection 
 The results of the previous steps are imported.
-> **_Functions used:_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_soil_data), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_decline_data), [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_forest_mask)
+> **_Functions used:_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_soil_data), [import_dieback_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_dieback_data), [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_forest_mask)
 
 ### Determining the periods for aggregating the results
-The results will be aggregated according to the time period at which the first anomalies occur for both soil and decline detection. These periods are determined from the frequency indicated by the parameter **frequency**, the start date **start_date** and the end date **end_date**. Periods before the first SENTINEL date used, or after the last one, if they exist, are ignored since they cannot correspond to any result.
+The results will be aggregated according to the time period at which the first anomalies occur for both soil and dieback detection. These periods are determined from the frequency indicated by the parameter **frequency**, the start date **start_date** and the end date **end_date**. Periods before the first SENTINEL date used, or after the last one, if they exist, are ignored since they cannot correspond to any result.
 > **_Functions used:_** [get_bins()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_bins)
 
 ### Conversion of first anomaly dates into number of days since 2015-01-01
@@ -61,7 +61,7 @@ The dates of first anomalies, stored as indexes of the dates used, are converted
 > **_Functions used: _** [convert_dateindex_to_datenumber()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#convert_dateindex_to_datenumber)
 
 ### If exported in several files:
-- For each period, the algorithm checks if the pixel has a first anomaly before the end of the period. We thus obtain the information for each pixel "Healthy", or "Declining" if **export_soil** is False, or "Healthy", "Declining", "Cut", "Sanitary cut" otherwise. 
+- For each period, the algorithm checks if the pixel has a first anomaly before the end of the period. We thus obtain the information for each pixel "Healthy", or "Dieback" if **export_soil** is False, or "Healthy", "Dieback", "Cut", "Sanitary cut" otherwise. 
 - This information is vectorized using only the area of interest (within the forest mask and with enough valid dates to model the vegetation index). Healthy pixels are also ignored.
 > **_Functions used:_** [get_state_at_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_state_at_date)
 - This vector is written for each of the periods using the period end date as the file name.

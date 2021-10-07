@@ -43,4 +43,4 @@ The outputs of this second step, in the data_directory folder, are:
 - In the **ForestMask** directory, the binary raster **valid_area_mask.tif** which is 1 for pixels where the model could be computed, 0 if there were not enough valid dates.
 
 
-[NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/03_decline_detection)
+[NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/03_dieback_detection)

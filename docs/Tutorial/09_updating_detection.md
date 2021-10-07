@@ -7,7 +7,7 @@ Here, you can find the complete script all in one place :
 ```python
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
-from fordead.steps.step3_decline_detection import decline_detection
+from fordead.steps.step3_dieback_detection import dieback_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step5_compute_confidence_index import compute_confidence_index
 from fordead.steps.step6_export_results import export_results
@@ -20,7 +20,7 @@ data_directory = "<output directory>"
 
 compute_masked_vegetationindex(input_directory = input_directory, data_directory = data_directory, lim_perc_cloud = 0.4, interpolation_order = 0, sentinel_source  = "THEIA", soil_detection = False, formula_mask = "B2 > 600", vi = "CRSWIR", apply_source_mask = True)
 train_model(data_directory = data_directory, nb_min_date = 10, min_last_date_training="2018-01-01", max_last_date_training="2018-06-01")
-decline_detection(data_directory = data_directory, threshold_anomaly = 0.16)
+dieback_detection(data_directory = data_directory, threshold_anomaly = 0.16)
 compute_forest_mask(data_directory, forest_mask_source = "vector", vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
 compute_confidence_index(data_directory, threshold_list = [0.265], classes_list = ["Low anomaly", "Severe anomaly"])
 export_results(data_directory = data_directory, frequency= "M", multiple_files = False, intersection_confidence_class = True)

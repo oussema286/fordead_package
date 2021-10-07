@@ -42,7 +42,7 @@ The informations about the previous processes are imported (parameters, data pat
 
 ### Importing the results of the previous steps
 The coefficients of the vegetation index prediction model are imported as well as the information related to the detection of disturbances (pixel status, date of first anomaly...), the information related to the detection of bare soil if it has been done, and the confidence index if it has already been computed and there are no new Sentinel-2 dates.
-> **_Functions used:_** [import_coeff_model()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_coeff_model), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_decline_data), [soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#soil_data), [initialize_confidence_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#initialize_confidence_data), [import_confidence_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_confidence_data)
+> **_Functions used:_** [import_coeff_model()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_coeff_model), [import_dieback_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_dieback_data), [soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#soil_data), [initialize_confidence_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#initialize_confidence_data), [import_confidence_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_confidence_data)
 
 ### For each date from the first date used for disturbance detection:
 
@@ -51,11 +51,11 @@ The coefficients of the vegetation index prediction model are imported as well a
 
 #### (OPTIONAL - if **correct_vi** is True in [model calculation step](https://fordead.gitlab.io/fordead_package/docs/user_guides/03_train_model/)
 - Correction term calculated in previous steps is added to the value of the vegetation index of every pixel
-> **_Functions used:_** [correct_vi_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/model_spectral_index/#correct_vi_date)
+> **_Functions used:_** [correct_vi_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/model_vegetation_index/#correct_vi_date)
 
 #### Prediction of the vegetation index at the given date.
 The vegetation index is predicted from the model coefficients.
-> **_Functions used:_** [prediction_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/decline_detection/#prediction_vegetation_index)
+> **_Functions used:_** [prediction_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/dieback_detection/#prediction_vegetation_index)
 
 #### Computing anomalies intensity
 The difference between the vegetation index with its prediction is calculated. If the vegetation index to increase in case of a disturbance, the prediction is substracted from the real value, whereas if the vegetation index to decrease, the vegetation index is substracted from its prediction. This way, the value of the difference increases for more intense anomalies.

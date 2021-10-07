@@ -11,7 +11,7 @@ The `fordead` package, developed for the detection of vegetation anomalies from 
 The detection of Forest disturbance is done in five or six steps.
 1. [The calculation of vegetation indices and masks for each SENTINEL-2 date](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)
 2. [The training by modeling the vegetation index pixel by pixel from the first dates](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/)
-3. [Detecting anomalies by comparing the vegetation index predicted by the model with the actual vegetation index](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_decline_detection/)
+3. [Detecting anomalies by comparing the vegetation index predicted by the model with the actual vegetation index](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/)
 4. [Creating a forest mask, which defines the areas of interest](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/)
 5. (Optional) [Computing a confidence index to classify anomalies by intensity](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/)
 6. [The export of results as shapefiles allowing to visualize the results with the desired time step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/06_export_results/)

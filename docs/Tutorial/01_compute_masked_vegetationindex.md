@@ -1,4 +1,4 @@
-#### Step 1 : Computing the spectral index and a mask for each SENTINEL-2 date
+#### Step 1 : Computing the vegetation index and a mask for each SENTINEL-2 date
 
 The first step is to calculate the vegetation index and a mask for each date. The mask corresponds to pixels that should not be used throughout the rest of the detection steps. Sentinel-2 data will simply be recognized by the algorithm, as long as in the **input_directory**, each directory corresponds to a Sentinel-2 date, with the corresponding date in its name. In those directories, there should be a file for each Sentinel-2 band with the band name in the file name (B2 or B02, and so on...).
 
