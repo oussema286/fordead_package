@@ -298,16 +298,20 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             steps=steps
         )]
         
-        fig.update_layout(
-            sliders=sliders,
-            margin_autoexpand=False,
-            margin_b = 130,
-            margin_r = 250,
-            legend_groupclick = "toggleitem"
-            # title=dict(
-            #             legend_title=dict(text = "Test")
-            #             )
-        )
+        try:
+            fig.update_layout(
+                sliders=sliders,
+                margin_autoexpand=False,
+                margin_b = 130,
+                margin_r = 250,
+                legend_groupclick = "toggleitem")
+        except:
+            print("If this message appears, your plotly package version might be under 5.3 and you are advised to update it")
+            fig.update_layout(
+                sliders=sliders,
+                margin_autoexpand=False,
+                margin_b = 130,
+                margin_r = 250)
         
         fig.update_xaxes(range=[0, stack_rgb.shape[1]])
         fig.update_yaxes(range=[stack_rgb.shape[2],0])

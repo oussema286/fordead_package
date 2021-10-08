@@ -69,6 +69,10 @@ def compute_confidence_index(
     # print("Computing confidence index")
     tile = TileInfo(data_directory)
     tile = tile.import_info()
+    
+    if len(list(threshold_list)) != (len(classes_list)-1):
+        raise Exception('classes_list must contain one more element than threshold_list')
+    
     tile.add_parameters({"threshold_list" : threshold_list, "classes_list" : classes_list})
     if tile.parameters["Overwrite"] : 
         tile.delete_files("periodic_results_dieback","result_files")
