@@ -5,7 +5,7 @@ Created on Wed Apr  7 16:40:16 2021
 @author: Raphael Dutrieux
 """
 
-from fordead.import_data import import_masked_vi, import_dieback_data, TileInfo, import_forest_mask, import_soil_data, import_confidence_data, import_coeff_model, initialize_confidence_data
+from fordead.import_data import import_stress_data, import_masked_vi, import_dieback_data, TileInfo, import_forest_mask, import_soil_data, import_confidence_data, import_coeff_model, initialize_confidence_data
 from fordead.writing_data import write_tif, vectorizing_confidence_class
 from fordead.masking_vi import get_dict_vi
 from fordead.model_vegetation_index import correct_vi_date, prediction_vegetation_index
@@ -94,19 +94,17 @@ def compute_confidence_index(
 
         relevant_area = (forest_mask & valid_area & dieback_data["state"]).compute()
 
-
-    nb_dates, sum_diff = initialize_confidence_data(forest_mask.shape,forest_mask.coords)
-
-
-
-    confidence_index = (sum_diff/(nb_dates*(nb_dates+1)/2))*relevant_area
-    # tile.last_date_confidence_index = date
+    stress_data = import_stress_data(tile.paths)
     
-    write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
-    write_tif(nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["nb_dates"])
+    for period in tile.parameters["max_nb_stress_periods"]:
+        period_data = stress_data.isel(period = period)
+        stress_index = period_data["cum_diff"]/period_data["nb_dates"]
+    
+    # write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
+    # write_tif(nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["nb_dates"])
         
-    confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, threshold_list, np.array(classes_list), tile.raster_meta["attrs"])
-    confidence_class.to_file(tile.paths["confidence_class"])
+    # confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, threshold_list, np.array(classes_list), tile.raster_meta["attrs"])
+    # confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
     
 if __name__ == '__main__':
