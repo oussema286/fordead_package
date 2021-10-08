@@ -8,7 +8,7 @@ The periodic model adjusted over the training period is expressed as follows:
 a1 + b1\sin{\frac{2\pi t}{T}} + b2\cos{\frac{2\pi t}{T}} + b3\sin{\frac{4\pi t}{T}} + b4\cos{\frac{4\pi t}{T}}
 ```
 
-The following figure illustrates a time series corresponding to CR_SWIR for a single pixel based on unmasked Sentinel-2 acquisitions, and the corresponding periodic model adjusted from acquisitions covering the training period:
+The following figure illustrates a time series corresponding to CRSWIR for a single pixel based on unmasked Sentinel-2 acquisitions, and the corresponding periodic model adjusted from acquisitions covering the training period:
 
 ![vegetation_index_model](Figures/model_X642135_Y5452255.png "vegetation_index_model")
 
