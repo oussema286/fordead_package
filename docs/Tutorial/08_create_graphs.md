@@ -5,7 +5,7 @@ The second built-in visualisation tool allows to visualize for a particular pixe
 ### Creating graphs showing the time series evolution at pixel level
 
 This tool creates figures showing: 
-- the vegetation index value for each Sentinel-2 acquisition
+- the vegetation index value for each SENTINEL-2 acquisition
 - the corresponding seasonal model
 - the threshold used for anomaly detection
 - the period used for training.
@@ -18,7 +18,7 @@ Healthy pixel | Attacked pixel
 :-------------------------:|:-------------------------:
 ![graph_healthy](Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](Figures/graph_dieback.png "graph_dieback")
 
-This process can be performed using a shapefile containing points if parameters **shape_path** and **name_column** are used, or with parameters **x** and **y** to plot a single pixel chosen from coordinates in the Sentinel-2 data CRS.
+This process can be performed using a shapefile containing points if parameters **shape_path** and **name_column** are used, or with parameters **x** and **y** to plot a single pixel chosen from coordinates in the SENTINEL-2 data CRS.
 If none of those parameters are used, the program will prompt the user in a loop to enter coordinates.
 
 In this example, we used a shapefile provided in the fordead_data repository. 
@@ -31,7 +31,13 @@ Run the following instructions to perform this processing step :
 
 ```python
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
-vi_series_visualisation(data_directory = data_directory, shape_path = "<MyWorkingDirectory>/vector/points_for_graphs.shp", name_column = "id", ymin = 0, ymax = 2, chunks = 100)
+
+vi_series_visualisation(data_directory = data_directory, 
+                        shape_path = "<MyWorkingDirectory>/vector/points_for_graphs.shp", 
+                        name_column = "id", 
+                        ymin = 0, 
+                        ymax = 2, 
+                        chunks = 100)
 ```
 ##### Running this step from the command invite
 
