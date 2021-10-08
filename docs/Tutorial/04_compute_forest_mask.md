@@ -1,12 +1,12 @@
 #### Step 4 : Creating a forest mask, which defines the areas of interest
 
 The previous steps result in the adjustment of a periodic model for each pixel, even non-forested pixels. 
-The export of results requires filtering out irrelevant areas. 
+The export of results requires to filter out irrelevant areas. 
 In our case, only coniferous forests are of interest. 
 
 This steps aims at computing and writing a binary raster, then used as a 'forest mask'. 
 This can be done either by rasterizing a vector file, or by producing this binary mask directly. 
-The final mask should have the same dimensions, resolution, projection as Sentinel-2 images. 
+The final mask must have the same dimensions, spatial resolution, origin, and projection as Sentinel-2 images. 
 It is also possible to run _fordead_ without any forest mask. 
 Specific options allow taking advantage of land cover or forest spatial database available in France ([BDFORET](https://inventaire-forestier.ign.fr/spip.php?article646) from IGN and [Land cover](https://www.theia-land.fr/en/ceslist/land-cover-sec/) from THEIA).
 
@@ -39,8 +39,8 @@ fordead forest_mask -o <output directory> -f vector --vector_path <MyWorkingDire
 ```
 ##### Outputs
 
-The outputs of this fourth step, in the data_directory folder, are :
-- In the folder ForestMask, the binary raster Forest_Mask.tif which has the value 1 on the pixels of interest and 0 elsewhere.
+The outputs of this step, in the data_directory folder, are :
+- In the folder ForestMask, the binary raster Forest_Mask.tif with the value 1 for pixels of interest, the value 0 elsewhere.
 
 > **_NOTE :_** Though this step is presented as the fourth, it can actually be used at any point, even on its own in which case the parameter **path_example_raster** is needed to give a raster from which to copy the extent, resolution, etc...
 
