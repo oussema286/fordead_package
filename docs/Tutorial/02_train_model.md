@@ -38,7 +38,7 @@ If less than 10 valid acquisitions are available on 2018-01-01, additional acqui
 the pixel is discarded and no seasonality model is then adjusted.
 This allows, for example in the case of a relatively ancient source of anomalies such as the bark beetle crisis, to start the detection as early as 2018 if there are enough valid dates at the beginning of the year, while allowing the study of pixels in situations with less data available simply by performing the training over a longer period to retrieve other valid dates. 
 
-It is not recommended to end the training before 2018, as a minimum of two seasons of SENTINEL-2 acquisitions is required to adjust the model.
+It is not recommended to end the training before 2018, as a minimum of two years of SENTINEL-2 acquisitions is required to adjust the model.
 
 > **_NOTE :_** This step can also be performed if user provides already computed vegetation index time series and corresponding mask: the parameters **path_vi** and **path_masks** correspond to the directories where the spectral index and corresponding mask are stored.
 Here again, the process is bypassed if the model is already computed and no parameters were changed. 
