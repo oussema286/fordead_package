@@ -42,8 +42,8 @@ The outputs of this step, in the data_directory folder, are :
 - In the **DataDieback** folder, three rasters:
     - **count_dieback** is the number of successive dates with anomalies
     - **first_date_dieback** is the index of the first date with an anomaly in the last series of anomalies
-    - **state_dieback** is a binary raster with pixel as suffering from dieback (at least three successive anomalies) identified as 1.
-- In the **DataAnomalies** folder, a raster for each date **Anomalies_YYYY-MM-DD.tif** whose value is 1 where anomalies are detected.
+    - **state_dieback** is a binary raster where the pixels identified as dying back (at least three successive anomalies) are assigned the value 1.
+- In the **DataAnomalies** folder, a raster for each date **Anomalies_YYYY-MM-DD.tif** where the value 1 refers to detected anomalies.
 
 
 [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/04_compute_forest_mask)
