@@ -1,4 +1,4 @@
-#### Step 6 : Exporting results as a shapefile for visualizing the results with the desired time step
+#### Step 6 : Exporting results to shapefile for visualizing results with a time step defined by the user
 
 This step aims at exporting results in a vector format with user defined time step and footpprint defined by the mask. 
 The minimum time step corresponds to the periods between available SENTINEL-2 dates. 
