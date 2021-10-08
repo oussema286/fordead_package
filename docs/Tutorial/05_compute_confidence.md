@@ -32,7 +32,7 @@ compute_confidence_index(data_directory,
 This processing step can also be performed from a terminal:
 
 ```bash
-fordead ind_conf -o <output directory> --threshold_list [0.265] --classes_list ["Low anomaly", "Severe anomaly"]
+fordead ind_conf -o <output directory> -t 0.265 -c "Low anomaly" -c "Severe anomaly"
 ```
 
 ##### Outputs
