@@ -1,11 +1,11 @@
-#### (OPTIONAL) Step 5 : Computing a confidence index to classify anomalies by severity
+#### (OPTIONAL) Step 5 : Computing a confidence index to classify anomalies by degree of severity
 
 This optional step aims at computing a confidence index increasing as the registered anomalies increase in severity. 
 This confidence index can be used to describe the intensity of the detected disturbance and possibly help to filter out potential false detections. 
 The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. 
 For each acquisition, the weight corresponds to the number of valid acquisitions from the first anomaly. 
 In case of a disturbance, the intensity of anomalies often increases, which is why later dates have more weight. 
-Since all SENTINEL-2 dates are used, this index describes the state of the pixel at the last SENTINEL-2 acquisition available, and not the state at the moment of detection. 
+Since all SENTINEL-2 dates are used, this index describes the pixel state at the last available SENTINEL-2 acquisition, and not at the moment of detection. 
 The following figure illustrates the computation of this confidence index:
 
 ![graph_ind_conf](../user_guides/english/Diagrams/graph_ind_conf.png "graph_ind_conf")
@@ -23,7 +23,7 @@ Run the following instructions to perform this processing step:
 from fordead.steps.step5_compute_confidence_index import compute_confidence_index
 
 compute_confidence_index(data_directory, 
-                         threshold_list = [0.2, 0.265], 
+                         threshold_list = [0.265], 
                          classes_list = ["Low anomaly", "Severe anomaly"])
 ```
 
@@ -42,7 +42,7 @@ The outputs of this fourth step, in the data_directory/Confidence_Index folder, 
 - confidence_index.tif, the raster containing the continuous confidence index value
 - nb_dates.tif, the raster containing the number of unmasked dates since the first confirmed anomaly for each pixel
 
-The following illustration shows the SENTINEL-2 view, as well as the continuous confidence index raster, and then the discretized, vectorized confidence class for this example's detection. The SENTINEL-2 date shown is the last date available (2019-09-20), since the confidence index shows the detected state of pixels at the last SENTINEL-2 date used.
+The following animated figure presents successively the last used SENTINEL-2 image (2019-09-20), the continuous confidence index raster, and the discretized / vectorized confidence class for this tutorial dataset.
 
 ![confidence-2019-09-20](Figures/gif_confidence.gif "confidence-2019-09-20")
 
