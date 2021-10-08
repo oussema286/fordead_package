@@ -15,8 +15,8 @@ import click
 
 @click.command(name='ind_conf')
 @click.option("-o", "--data_directory", type = str, help = "Path of the output directory")
-@click.option("-t", "--threshold_list", type = list, default = [0.265], help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
-@click.option("-c", "--classes_list", type = list, default = ["Faible anomalie","Forte anomalie"], help = "List of classes names, if threshold_list has n values, classes_list must have n+1 values", show_default=True)
+@click.option("-t", "--threshold_list", multiple = True, type = float, default = [0.265], help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
+@click.option("-c", "--classes_list", multiple = True, type = str, default = ["Faible anomalie","Forte anomalie"], help = "List of classes names, if threshold_list has n values, classes_list must have n+1 values", show_default=True)
 @click.option("--chunks", type = int, default = None, help = "Chunk size for dask computation", show_default=True)
 def cli_compute_confidence_index(
     data_directory,
