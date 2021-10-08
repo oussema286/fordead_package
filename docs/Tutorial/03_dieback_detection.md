@@ -6,6 +6,7 @@ For example, the CRSWIR is sensitive to canopy water content and tends to increa
 Bark beetle outbreaks induce decreasing canopy water content, therefore only CRSWIR values higher than expected values can be identified as anomalies. 
 The anomaly is reported for a pixel when three successive anomalies are detected. 
 This prevents from false positive corresponding to one time events of anomalies due to an imperfect mask, or temporary climatic events. 
+
 Once anomalies confirmed (after three successive anomalies), pixel can return to normal state if no anomaly is detected for three successive acquisitions. 
 This reduces the risk of false positive corresponding to long drought periods resulting in more than three successive anomalies.
 
@@ -19,15 +20,17 @@ Comprehensive documentation can be found [here](https://fordead.gitlab.io/fordea
 
 ##### Running this step using a script
 
-Run the following instructions to perform this processing step :
+Run the following instructions to perform this processing step:
 ```python
 from fordead.steps.step3_dieback_detection import dieback_detection
-dieback_detection(data_directory = data_directory, threshold_anomaly = 0.16)
+
+dieback_detection(data_directory = data_directory, 
+                  threshold_anomaly = 0.16)
 ```
 
-##### Running this step from the command invite
+##### Running this step from the command prompt
 
-This processing step can also be performed from a terminal :
+This processing step can also be performed from a terminal:
 ```bash
 fordead dieback_detection -o <output directory> --threshold_anomaly 0.17
 ```
