@@ -1,11 +1,11 @@
-#### Step 3 : Detecting anomalies by comparing the vegetation index and its predicted value
+#### Step 3 : Detecting anomalies by comparing vegetation index to predicted value
 
 The value of the vegetation index is compared to the vegetation index predicted from the periodic model calculated in the previous step, for each SENTINEL-2 acquisition available for the detection step.
 An anomaly is identified when the difference exceeds a threshold (in the expected direction in case of anomaly). 
 For example, the CRSWIR is sensitive to canopy water content and tends to increase with decreasing water content. 
 Bark beetle outbreaks induce decreasing canopy water content, therefore only CRSWIR values higher than expected values can be identified as anomalies. 
 The anomaly is reported for a pixel when three successive anomalies are detected. 
-This prevents from false positive corresponding to one time events of anomalies due to an imperfect mask, or temporary climatic events. 
+This prevents from false positive corresponding to one time events of anomalies due to an imperfect mask, temporary climatic events, or other factor. 
 
 Once anomalies confirmed (after three successive anomalies), pixel can return to normal state if no anomaly is detected for three successive acquisitions. 
 This reduces the risk of false positive corresponding to long drought periods resulting in more than three successive anomalies.
