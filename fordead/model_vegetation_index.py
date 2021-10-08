@@ -220,7 +220,7 @@ def model_vi_correction(stack_vi, stack_masks, dict_paths):
     """
     Corrects stacked vegetation index using large scale vegetation index median value.
     A periodic model is fitted on the median vegetation index of unmasked pixels within the forest mask. The difference between the prediction of this model and these large scale median values is used as a correction term to correct the vegetation index.
-    This is meant to take into account changes affecting all pixels equally which are not linked with a decline.
+    This is meant to take into account changes affecting all pixels equally which are not linked with a dieback.
 
     Parameters
     ----------
@@ -262,7 +262,7 @@ def correct_vi_date(masked_vi, forest_mask, large_scale_model, date, correction_
     """
     Corrects single date vegetation index using large scale vegetation index median value previously computed.
     The difference between the prediction of the model and the large scale median value is used as a correction term for the vegetation index.
-    This is meant to take into account changes affecting all pixels equally which are not linked with a decline.
+    This is meant to take into account changes affecting all pixels equally which are not linked with a dieback.
 
     Parameters
     ----------

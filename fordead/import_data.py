@@ -676,34 +676,35 @@ def import_first_detection_date_index(path,chunks = None):
     first_detection_date_index=xr.open_rasterio(path,chunks = chunks).squeeze("band")
     return first_detection_date_index
 
-def import_decline_data(dict_paths, chunks = None):
+def import_dieback_data(dict_paths, chunks = None):
     """
-    Imports data relating to decline detection
+    Imports data relating to dieback detection
 
     Parameters
     ----------
     dict_paths : dict
-        Dictionnary containg the keys "state_decline", "first_date_decline" and "count_decline" whose values are the paths to the corresponding decline data file.
+        Dictionnary containg the keys "state_dieback", "first_date_dieback" and "count_dieback" whose values are the paths to the corresponding dieback data file.
     chunks : int, optional
         Chunk size for import as dask array. The default is None.
 
     Returns
     -------
-    decline_data : xarray DataSet or dask DataSet
+    dieback_data : xarray DataSet or dask DataSet
         DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
 
     """
     
-    state_decline = xr.open_rasterio(dict_paths["state_decline"],chunks = chunks).astype(bool)
-    first_date_decline = xr.open_rasterio(dict_paths["first_date_decline"],chunks = chunks)
-    count_decline = xr.open_rasterio(dict_paths["count_decline"],chunks = chunks)
+    state_dieback = xr.open_rasterio(dict_paths["state_dieback"],chunks = chunks).astype(bool)
+    first_date_dieback = xr.open_rasterio(dict_paths["first_date_dieback"],chunks = chunks)
+    count_dieback = xr.open_rasterio(dict_paths["count_dieback"],chunks = chunks)
     
-    decline_data=xr.Dataset({"state": state_decline,
-                     "first_date": first_date_decline,
-                     "count" : count_decline})
-    decline_data=decline_data.squeeze("band")
+    dieback_data=xr.Dataset({"state": state_dieback,
+                     "first_date": first_date_dieback,
+                     "count" : count_dieback})
+    dieback_data=dieback_data.squeeze("band")
 
-    return decline_data
+
+    return dieback_data
 
 def import_stress_data(dict_paths, chunks = None):
     
@@ -718,10 +719,11 @@ def import_stress_data(dict_paths, chunks = None):
                      })
 
     return stress_data
+
         
-def initialize_decline_data(shape,coords):
+def initialize_dieback_data(shape,coords):
     """
-    Initializes data relating to decline detection
+    Initializes data relating to dieback detection
 
     Parameters
     ----------
@@ -732,7 +734,7 @@ def initialize_decline_data(shape,coords):
 
     Returns
     -------
-    decline_data : xarray DataSet or dask DataSet
+    dieback_data : xarray DataSet or dask DataSet
         DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
         For all three arrays, all pixels are intitialized at zero.
 
@@ -741,11 +743,13 @@ def initialize_decline_data(shape,coords):
 
     zeros_array= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
     
-    decline_data=xr.Dataset({"state": xr.DataArray(zeros_array.astype(bool), coords=coords),
+
+    dieback_data=xr.Dataset({"state": xr.DataArray(zeros_array.astype(bool), coords=coords),
                          "first_date": xr.DataArray(zeros_array.astype(np.uint16), coords=coords),
                          "first_date_unconfirmed": xr.DataArray(zeros_array.astype(np.uint16), coords=coords),
                          "count" : xr.DataArray(zeros_array, coords=coords)})
-    return decline_data
+    return dieback_data
+
 
 def initialize_stress_data(shape,coords):
     """

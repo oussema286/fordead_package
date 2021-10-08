@@ -14,7 +14,7 @@ import rasterio
 from affine import Affine
 import geopandas as gp
 import dask.array as da
-from fordead.model_spectral_index import prediction_vegetation_index
+from fordead.model_vegetation_index import prediction_vegetation_index
 from fordead.masking_vi import get_dict_vi
 from scipy import ndimage
 
@@ -212,7 +212,7 @@ def get_state_at_date(state_code,relevant_area,attrs):
 
 def vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, bins_classes, classes, attrs):
     """
-    Classifies pixels in the relevant area into decline classes based on the confidence index and the number of unmasked dates since the first anomaly. 
+    Classifies pixels in the relevant area into dieback classes based on the confidence index and the number of unmasked dates since the first anomaly. 
     
     Parameters
     ----------
@@ -232,7 +232,7 @@ def vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, bins
     Returns
     -------
     gp_results : geopandas geodataframe
-        Polygons from pixels in the relevant areacontaining the decline class.
+        Polygons from pixels in the relevant areacontaining the dieback class.
 
     """
     

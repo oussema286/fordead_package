@@ -10,7 +10,7 @@ Created on Tue Nov  3 16:21:15 2020
 
 import click
 from fordead.import_data import import_stackedmaskedVI, TileInfo
-from fordead.model_spectral_index import get_detection_dates, model_vi, model_vi_correction
+from fordead.model_vegetation_index import get_detection_dates, model_vi, model_vi_correction
 from fordead.writing_data import write_tif
 
 
@@ -99,7 +99,7 @@ def train_model(
     
     tile.add_parameters({"nb_min_date" : nb_min_date, "min_last_date_training" : min_last_date_training, "max_last_date_training" : max_last_date_training, "correct_vi" : correct_vi})
     if tile.parameters["Overwrite"] : 
-        tile.delete_dirs("coeff_model","AnomaliesDir","state_decline" ,"confidence_index","periodic_results_decline","result_files","timelapse","series", "validation") #Deleting previous training and detection results if they exist
+        tile.delete_dirs("coeff_model","AnomaliesDir","state_dieback" ,"confidence_index","periodic_results_dieback","result_files","timelapse","series", "validation") #Deleting previous training and detection results if they exist
         tile.delete_files("valid_area_mask")
         tile.delete_attributes("last_computed_anomaly","last_date_confidence_index","last_date_export")
 

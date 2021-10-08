@@ -1,6 +1,6 @@
 ## (OPTIONAL) STEP 5: Computing a confidence index to classify anomalies by intensity
-This step computes an index meant to describe the intensity of the detected disturbance. The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. For each date used, the weight corresponds to the number of unmasked dates from the first anomaly.
-In case of a disturbance, the intensity of anomalies often goes up which is why later dates have more weight.
+This step computes an index meant to describe the intensity of the detected dieback. The index is a weighted mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. For each date used, the weight corresponds to the number of unmasked dates from the first anomaly.
+In case of dieback, the intensity of anomalies often goes up which is why later dates have more weight.
 Then, pixels are classified into classes, based on the discretization of the confidence index using a list of thresholds. Pixels with only three anomalies are classified as the lowest class, because 3 anomalies are not considered enough to calculate a meaningful index. The results are vectorized and saved in data_directory/Confidence_Index directory.
 This step is optional and can be skipped if irrelevant or unnecessary.
 
@@ -41,24 +41,24 @@ The informations about the previous processes are imported (parameters, data pat
 > **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), TileInfo class methods [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#delete_dirs), [delete_attributes()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#delete_attributes)
 
 ### Importing the results of the previous steps
-The coefficients of the vegetation index prediction model are imported as well as the information related to the detection of disturbances (pixel status, date of first anomaly...), the information related to the detection of bare soil if it has been done, and the confidence index if it has already been computed and there are no new Sentinel-2 dates.
-> **_Functions used:_** [import_coeff_model()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_coeff_model), [import_decline_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_decline_data), [soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#soil_data), [initialize_confidence_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#initialize_confidence_data), [import_confidence_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_confidence_data)
+The coefficients of the vegetation index prediction model are imported as well as the information related to the detection of diebacks (pixel status, date of first anomaly...), the information related to the detection of bare soil if it has been done, and the confidence index if it has already been computed and there are no new Sentinel-2 dates.
+> **_Functions used:_** [import_coeff_model()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_coeff_model), [import_dieback_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_dieback_data), [soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#soil_data), [initialize_confidence_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#initialize_confidence_data), [import_confidence_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_confidence_data)
 
-### For each date from the first date used for disturbance detection:
+### For each date from the first date used for dieback detection:
 
 #### Import of the calculated vegetation index and the mask
 > **_Functions used:_** [import_masked_vi()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_masked_vi)
 
 #### (OPTIONAL - if **correct_vi** is True in [model calculation step](https://fordead.gitlab.io/fordead_package/docs/user_guides/03_train_model/)
 - Correction term calculated in previous steps is added to the value of the vegetation index of every pixel
-> **_Functions used:_** [correct_vi_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/model_spectral_index/#correct_vi_date)
+> **_Functions used:_** [correct_vi_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/model_vegetation_index/#correct_vi_date)
 
 #### Prediction of the vegetation index at the given date.
 The vegetation index is predicted from the model coefficients.
-> **_Functions used:_** [prediction_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/decline_detection/#prediction_vegetation_index)
+> **_Functions used:_** [prediction_vegetation_index()](https://fordead.gitlab.io/fordead_package/reference/fordead/dieback_detection/#prediction_vegetation_index)
 
 #### Computing anomalies intensity
-The difference between the vegetation index with its prediction is calculated. If the vegetation index to increase in case of a disturbance, the prediction is substracted from the real value, whereas if the vegetation index to decrease, the vegetation index is substracted from its prediction. This way, the value of the difference increases for more intense anomalies.
+The difference between the vegetation index with its prediction is calculated. If the vegetation index to increase in case of dieback, the prediction is substracted from the real value, whereas if the vegetation index to decrease, the vegetation index is substracted from its prediction. This way, the value of the difference increases for more intense anomalies.
 
 ### Computing the confidence index from the difference between vegetation index and its prediction
 The difference between the vegetation and its prediction, if unmasked, is multiplied by an associated weight, then summed. The weight is the number of unmasked Sentinel-2 dates from the first anomaly confirmed.
@@ -68,7 +68,7 @@ This sum is then divided by the sum of the weights, the result is the confidence
 
 
 ### Discretization and vectorizing results
-The confidence index is discretized using **threshold_list**. Pixels with only three dates from the first anomaly, the minimum number of dates for disturbance detection, are affected to the first group. 
+The confidence index is discretized using **threshold_list**. Pixels with only three dates from the first anomaly, the minimum number of dates for dieback detection, are affected to the first group. 
 Then, those results are vectorized and affected with the classes from **classes_list**.
 Pixels are ignored if outside forest mask, or where no model could be computed, or detected as bare ground if such a detection occured.
 > **_Functions used:_** [vectorizing_confidence_class()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#vectorizing_confidence_class),

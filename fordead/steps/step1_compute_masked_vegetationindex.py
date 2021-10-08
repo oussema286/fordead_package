@@ -138,7 +138,7 @@ def compute_masked_vegetationindex(
   
     # If parameters added differ from previously used parameters, all previous computation results are deleted
     if tile.parameters["Overwrite"] : 
-        tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_decline", "state_soil" ,"confidence_index","periodic_results_decline","result_files","timelapse","series")
+        tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_dieback", "state_soil" ,"confidence_index","periodic_results_dieback","result_files","timelapse","series")
         tile.delete_files("valid_area_mask")
         tile.delete_attributes("last_computed_anomaly","last_date_confidence_index","dates","last_date_export")
 

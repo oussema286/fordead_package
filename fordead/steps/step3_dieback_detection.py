@@ -7,13 +7,12 @@ Created on Mon Nov  2 09:25:23 2020
 
 
 import click
-from fordead.import_data import import_coeff_model, import_decline_data, import_stress_data, initialize_decline_data, initialize_stress_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask
+from fordead.import_data import import_coeff_model, import_dieback_data, import_stress_data, initialize_dieback_data, initialize_stress_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask
 from fordead.writing_data import write_tif
-from fordead.decline_detection import detection_anomalies, detection_decline, save_stress
-from fordead.model_spectral_index import prediction_vegetation_index, correct_vi_date
+from fordead.dieback_detection import detection_anomalies, detection_dieback, save_stress
+from fordead.model_vegetation_index import prediction_vegetation_index, correct_vi_date
 
-
-@click.command(name='decline_detection')
+@click.command(name='dieback_detection')
 @click.option("-o", "--data_directory",  type=str, help="Path of the output directory")
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
                     help="Minimum threshold for anomaly detection", show_default=True)
@@ -21,7 +20,7 @@ from fordead.model_spectral_index import prediction_vegetation_index, correct_vi
                     help="Chosen vegetation index, only useful if step1 was skipped", show_default=True)
 @click.option("--path_dict_vi",  type=str, default=None,
                     help="Path of text file to add vegetation index formula, only useful if step1 was skipped", show_default=True)
-def cli_decline_detection(
+def cli_dieback_detection(
     data_directory,
     threshold_anomaly=0.16,
     vi = None,
@@ -29,9 +28,9 @@ def cli_decline_detection(
     ):
     """
     Detects anomalies by comparing the vegetation index and its prediction from the model. 
-    Detects declining pixels when there are 3 successive anomalies. If pixels detected as declining have 3 successive dates without anomalies, they are considered healthy again.
-    Anomalies and decline data are written in the data_directory
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_decline_detection/
+    Detects pixels suffering from dieback when there are 3 successive anomalies. If pixels detected as suffering from dieback have 3 successive dates without anomalies, they are considered healthy again.
+    Anomalies and dieback data are written in the data_directory
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/
     \f
     Parameters
     ----------
@@ -44,10 +43,10 @@ def cli_decline_detection(
     -------
 
     """
-    decline_detection(data_directory, threshold_anomaly, vi, path_dict_vi)
+    dieback_detection(data_directory, threshold_anomaly, vi, path_dict_vi)
 
 
-def decline_detection(
+def dieback_detection(
     data_directory,
     threshold_anomaly=0.16,
     vi = None,
@@ -55,9 +54,9 @@ def decline_detection(
     ):
     """
     Detects anomalies by comparing the vegetation index and its prediction from the model. 
-    Detects declining pixels when there are 3 successive anomalies. If pixels detected as declining have 3 successive dates without anomalies, they are considered healthy again.
-    Anomalies and decline data are written in the data_directory
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_decline_detection/
+    Detects pixels suffering from dieback when there are 3 successive anomalies. If pixels detected as suffering from dieback have 3 successive dates without anomalies, they are considered healthy again.
+    Anomalies and dieback data are written in the data_directory
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/
     
     \f
     Parameters
@@ -79,7 +78,7 @@ def decline_detection(
     tile = tile.import_info()
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly})
     if tile.parameters["Overwrite"] : 
-        tile.delete_dirs("AnomaliesDir","state_decline" ,"confidence_index","periodic_results_decline","result_files","timelapse","series","nb_periods_stress") #Deleting previous detection results if they exist
+        tile.delete_dirs("AnomaliesDir","state_dieback" ,"confidence_index","periodic_results_dieback","result_files","timelapse","series","nb_periods_stress") #Deleting previous detection results if they exist
         tile.delete_attributes("last_computed_anomaly","last_date_confidence_index","last_date_export")
 
     if vi==None : vi = tile.parameters["vi"]
@@ -89,9 +88,9 @@ def decline_detection(
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies
     tile.search_new_dates() #Get list of all used dates
     
-    tile.add_path("state_decline", tile.data_directory / "DataDecline" / "state_decline.tif")
-    tile.add_path("first_date_decline", tile.data_directory / "DataDecline" / "first_date_decline.tif")
-    tile.add_path("count_decline", tile.data_directory / "DataDecline" / "count_decline.tif")
+    tile.add_path("state_dieback", tile.data_directory / "DataDieback" / "state_dieback.tif")
+    tile.add_path("first_date_dieback", tile.data_directory / "DataDieback" / "first_date_dieback.tif")
+    tile.add_path("count_dieback", tile.data_directory / "DataDieback" / "count_dieback.tif")
     
     tile.add_path("dates_stress", tile.data_directory / "DataStress" / "dates_stress.tif")
     tile.add_path("nb_periods_stress", tile.data_directory / "DataStress" / "nb_periods_stress.tif")
@@ -101,24 +100,24 @@ def decline_detection(
     #Verify if there are new SENTINEL dates
     new_dates = tile.dates[tile.dates > tile.last_computed_anomaly] if hasattr(tile, "last_computed_anomaly") else tile.dates[tile.dates >= tile.parameters["min_last_date_training"]]
     if  len(new_dates) == 0:
-        print("Decline detection : no new dates")
+        print("Dieback detection : no new dates")
     else:
-        print("Decline detection : " + str(len(new_dates))+ " new dates")
+        print("Dieback detection : " + str(len(new_dates))+ " new dates")
         
         #IMPORTING DATA
         first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"])
         coeff_model = import_coeff_model(tile.paths["coeff_model"])
         
-        if tile.paths["state_decline"].exists():
-            decline_data = import_decline_data(tile.paths)
+        if tile.paths["state_dieback"].exists():
+            dieback_data = import_dieback_data(tile.paths)
             stress_data = import_stress_data(tile.paths)
         else:
-            decline_data = initialize_decline_data(first_detection_date_index.shape,first_detection_date_index.coords)
+            dieback_data = initialize_dieback_data(first_detection_date_index.shape,first_detection_date_index.coords)
             stress_data = initialize_stress_data(first_detection_date_index.shape,first_detection_date_index.coords)
             
         if tile.parameters["correct_vi"]:
             forest_mask = import_forest_mask(tile.paths["ForestMask"])
-        #DECLINE DETECTION
+        #dieback DETECTION
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
                 masked_vi = import_masked_vi(tile.paths,date)
@@ -132,24 +131,26 @@ def decline_detection(
                 anomalies, diff_vi = detection_anomalies(masked_vi, predicted_vi, threshold_anomaly, 
                                                 vi = vi, path_dict_vi = path_dict_vi)
                                 
-                decline_data, changing_pixels = detection_decline(decline_data, anomalies, masked_vi["mask"], date_index)
+                dieback_data, changing_pixels = detection_dieback(dieback_data, anomalies, masked_vi["mask"], date_index)
                 
-                stress_data = save_stress(stress_data, decline_data, changing_pixels, diff_vi)
+                stress_data = save_stress(stress_data, dieback_data, changing_pixels, diff_vi)
+
                 
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
                 del masked_vi, predicted_vi, anomalies, changing_pixels
         tile.last_computed_anomaly = new_dates[-1]
                 
-        #Writing decline data to rasters
+        #Writing dieback data to rasters
         write_tif(stress_data["date"], first_detection_date_index.attrs,tile.paths["dates_stress"],nodata=0)
         write_tif(stress_data["nb_periods"], first_detection_date_index.attrs,tile.paths["nb_periods_stress"],nodata=0)
         write_tif(stress_data["cum_diff"], first_detection_date_index.attrs,tile.paths["cum_diff_stress"],nodata=0)
         write_tif(stress_data["nb_dates"], first_detection_date_index.attrs,tile.paths["nb_dates_stress"],nodata=0)
 
-        write_tif(decline_data["state"], first_detection_date_index.attrs,tile.paths["state_decline"],nodata=0)
-        write_tif(decline_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_decline"],nodata=0)
-        write_tif(decline_data["count"], first_detection_date_index.attrs,tile.paths["count_decline"],nodata=0)
+        write_tif(dieback_data["state"], first_detection_date_index.attrs,tile.paths["state_dieback"],nodata=0)
+        write_tif(dieback_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_dieback"],nodata=0)
+        write_tif(dieback_data["count"], first_detection_date_index.attrs,tile.paths["count_dieback"],nodata=0)
+
         
         # print("Détection du déperissement")
     tile.save_info()
@@ -159,5 +160,5 @@ def decline_detection(
 if __name__ == '__main__':
     # print(dictArgs)
     # start_time = time.time()
-    cli_decline_detection()
+    cli_dieback_detection()
     # print("Temps d execution : %s secondes ---" % (time.time() - start_time))

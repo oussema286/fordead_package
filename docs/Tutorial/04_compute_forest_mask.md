@@ -1,10 +1,18 @@
 #### Step 4 : Creating a forest mask, which defines the areas of interest
 
-The previous steps compute results on every pixel, but to export results, it will become necessary to restrict the area of study to the vegetation of interest, in our case resinous forests. This steps aims at computing and saving a binary raster which will then be used to filter out pixels outside of these areas of interest. This can be done using a vector, which will be rasterized, or a binary raster which will be clipped but still needs to have the same resolution, and be aligned with the Sentinel-2 data. Also no mask can be used, in which case results are unfiltered. Other options are tied to data specific to France, using IGN's BDFORET or CESBIO's OSO map.
+The previous steps result in the adjustment of a periodic model for each pixel, even non-forested pixels. 
+The export of results requires filtering out irrelevant areas. 
+In our case, only coniferous forests are of interest. 
 
-In this tutorial, we will use a vector shapefile, available with the example dataset, whose polygons will be rasterized as a binary raster.
+This steps aims at computing and writing a binary raster, then used as a 'forest mask'. 
+This can be done either by rasterizing a vector file, or by producing this binary mask directly. 
+The final mask should have the same dimensions, resolution, projection as Sentinel-2 images. 
+It is also possible to run _fordead_ without any forest mask. 
+Specific options allow taking advantage of land cover or forest spatial database available in France ([BDFORET](https://inventaire-forestier.ign.fr/spip.php?article646) from IGN and [Land cover](https://www.theia-land.fr/en/ceslist/land-cover-sec/) from THEIA).
 
-The complete guide can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/).
+Here, we used a shapefile identifying forested areas in the example dataset, which was rasterized as a binary raster.
+
+Comprehensive documentation can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/).
 
 Study area with area of interest             |  Resulting mask
 :-------------------------:|:-------------------------:
@@ -12,15 +20,20 @@ Study area with area of interest             |  Resulting mask
 
 ##### Running this step using a script
 
-To run this step, simply add the following lines to the script :
+Run the following instructions to perform this processing step:
+
 ```python
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
-compute_forest_mask(data_directory, forest_mask_source = "vector", vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
+
+compute_forest_mask(data_directory, 
+                    forest_mask_source = "vector", 
+                    vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
 ```
 
-##### Running this step from the command invite
+##### Running this step from the command prompt
 
-This step can also be used from the command invite with the command :
+This processing step can also be performed from a terminal:
+
 ```bash
 fordead forest_mask -o <output directory> -f vector --vector_path <MyWorkingDirectory>/vector/area_interest.shp
 ```

@@ -4,7 +4,7 @@ import click
 import collections
 from fordead.steps.step1_compute_masked_vegetationindex import cli_compute_masked_vegetationindex
 from fordead.steps.step2_train_model import cli_train_model
-from fordead.steps.step3_decline_detection import cli_decline_detection
+from fordead.steps.step3_dieback_detection import cli_dieback_detection
 from fordead.steps.step4_compute_forest_mask import cli_compute_forest_mask
 from fordead.steps.step6_export_results import cli_export_results
 from fordead.cli.cli_read_tileinfo import cli_read_tileinfo
@@ -28,11 +28,11 @@ def fordead():
     fordead - Remote sensing time series processing to detect forest anomalies
 
     The usual workflow is :
-        masked_vi --> train_model --> decline_detection --> forest_mask --> export_results
+        masked_vi --> train_model --> dieback_detection --> forest_mask --> export_results
     """
 fordead.add_command(cli_compute_masked_vegetationindex)
 fordead.add_command(cli_train_model)
-fordead.add_command(cli_decline_detection)
+fordead.add_command(cli_dieback_detection)
 fordead.add_command(cli_compute_forest_mask)
 fordead.add_command(cli_export_results)
 fordead.add_command(cli_read_tileinfo)

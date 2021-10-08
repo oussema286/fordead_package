@@ -17,8 +17,10 @@ import matplotlib
 from rasterio import Affine, transform
 import dask.array as da
 
-from fordead.import_data import TileInfo, import_stackedmaskedVI, import_stress_data, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_decline_data, import_soil_data
-from fordead.model_spectral_index import compute_HarmonicTerms
+
+from fordead.import_data import TileInfo, import_stackedmaskedVI, import_stress_data, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_dieback_data, import_soil_data
+from fordead.model_vegetation_index import compute_HarmonicTerms
+
 from fordead.results_visualisation import select_and_plot_time_series
 
 @click.group()
@@ -108,7 +110,7 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
         soil_data = import_soil_data(tile.paths,chunks = chunks)
     else:
         soil_data=None
-    decline_data = import_decline_data(tile.paths,chunks = chunks)
+    dieback_data = import_dieback_data(tile.paths,chunks = chunks)
     forest_mask = import_forest_mask(tile.paths["ForestMask"],chunks = chunks)
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
     anomalies = import_stacked_anomalies(tile.paths["Anomalies"],chunks = chunks)
@@ -139,10 +141,12 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
             geometry_point = shape.iloc[point_index]["geometry"]
             print(id_point)
             row, col = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),geometry_point.x,geometry_point.y)
-            select_and_plot_time_series(col,row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax, name_file = str(id_point))
+
+            select_and_plot_time_series(col,row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax, name_file = str(id_point))
     elif (x is not None) and (y is not None):
         row, col = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),x,y)
-        select_and_plot_time_series(col, row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
+        select_and_plot_time_series(col, row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
+
     else:
         #Initialiser x,y
         # matplotlib.use('TkAgg')
@@ -160,7 +164,9 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
                 PixelID=random.randint(0,PixelsToChoose[0].shape[0])
                 x=PixelsToChoose[1][PixelID]
                 y=PixelsToChoose[0][PixelID]
-                select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
+
+                select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
+
 
             elif x=="-1":
                 #ARRET SI x = -1
@@ -170,7 +176,9 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
                 y=int(input("y ? "))
                 
                 if mode == "c": y, x = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),x,y)
-                select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, decline_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
+
+                select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
+
     
 if __name__ == '__main__':
     # print(dictArgs)

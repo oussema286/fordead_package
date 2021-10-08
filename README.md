@@ -2,23 +2,23 @@
 
 Read in french [here](https://gitlab.com/fordead/fordead_package/-/blob/master/README_fr.md).
 
-The `fordead` package has been developed for the detection of vegetation anomalies from SENTINEL-2 time series. It has been developped to provide monitoring tools to adress the bark beetle health crisis on spruce trees in France, but the many tools simplifying the use of SENTINEL-2 satellite data and anomaly detection can certainly be used in other contexts. The method used takes advantage of the complete SENTINEL-2 time series from the launch of the first satellite and detects anomalies at the pixel level which can be updated whenever new Sentinel-2 dates are added for constant monitoring of the vegetation.
+The `fordead` package, developed for the detection of vegetation anomalies from SENTINEL-2 time series, provides monitoring tools to adress the bark beetle health crisis on spruce trees in France. It includes several tools that make use of SENTINEL-2 satellite data easier, and allow potential anomaly detection in other contexts. The proposed method takes advantage of complete SENTINEL-2 time series, from the launch of the first satellite in 2015. It detects anomalies at the pixel level in order to analyze archive data or to carry out continuous monitoring. The detections are then updated for each new SENTINEL-2 acquisition.
 
 ## Dieback detection
 
 ![diagramme_general_english](docs/user_guides/english/Diagrams/Diagramme_general.png "diagramme_general_english")
 
-The detection of Forest disturbance is done in five steps.
-- [The calculation of vegetation indices and masks for each SENTINEL-2 date](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)
-- [The training by modeling the vegetation index pixel by pixel from the first dates](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/)
-- [Detecting anomalies by comparing the vegetation index predicted by the model with the actual vegetation index](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_decline_detection/)
-- [Creating a forest mask, which defines the areas of interest](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/)
-- (Optional) [Computing a confidence index to classify anomalies by intensity](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/)
-- [The export of results as shapefiles allowing to visualize the results with the desired time step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/06_export_results/)
+The detection of dieback is done in five or six steps.
+1. [The calculation of vegetation indices and masks for each SENTINEL-2 date](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)
+2. [The training by modeling the vegetation index pixel by pixel from the first dates](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/)
+3. [Detecting anomalies by comparing the vegetation index predicted by the model with the actual vegetation index](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/)
+4. [Creating a forest mask, which defines the areas of interest](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/)
+5. (Optional) [Computing a confidence index to classify anomalies by intensity](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/)
+6. [The export of results as shapefiles allowing to visualize the results with the desired time step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/06_export_results/)
 
-It is possible to correct the vegetation index using a correction factor calculated from the median of the vegetation index of the large-scale stands of interest, in which case the mask creation step must be performed before the model training step.
+> **N.B.** It is possible to correct the vegetation index using a correction factor calculated from the median of the vegetation index of the large-scale stands of interest, in which case the mask creation step must be performed before the model training step.
 
-All the documentation and user guides for these steps are available at the [documentation website](https://fordead.gitlab.io/fordead_package/).
+All the documentation and user guides for these steps are available in the [documentation website](https://fordead.gitlab.io/fordead_package/).
 
 Here is an example of the result of these steps on a small area :
 
@@ -28,13 +28,14 @@ Period of detection | Confidence class
 
 ## Visualisation tools
 
-The package also contains built-in visualisation tools, the first one plots the time series of the vegetation index for a particular pixel, along with the associated model, the anomaly detection threshold and the associated detection.
+The package also contains built-in visualisation tools. 
+The first one plots the time series of the vegetation index for a particular pixel, along with the associated model, the anomaly detection threshold and the associated detection.
 
 Healthy pixel | Attacked pixel
 :-------------------------:|:-------------------------:
 ![graph_healthy](docs/Tutorial/Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](docs/Tutorial/Figures/graph_dieback.png "graph_dieback")
 
-The second one makes a "timelapse" on a small area to visualize the results at each Sentinel-2 date used, with the Sentinel-2 data in RGB in the background and a slider to navigate between the different dates.
+The second one makes a "timelapse" on a small area for visualizing the results at each used Sentinel-2 date, with SENTINEL-2 natural color composites in background. A slider also allows you to navigate between the different dates.
 
 ![gif_timelapse](docs/Tutorial/Figures/gif_timelapse.gif "gif_timelapse")
 
@@ -44,5 +45,5 @@ The installation guide can be found [here](https://fordead.gitlab.io/fordead_pac
 
 ## Tutorial
 
-A tutorial to get started and test the package on a small dataset can be found [here](https://fordead.gitlab.io/fordead_package/docs/Tutorial/00_Intro/).
+A tutorial for getting started, and testing the package on a small dataset, can be found [here](https://fordead.gitlab.io/fordead_package/docs/Tutorial/00_Intro/).
 
