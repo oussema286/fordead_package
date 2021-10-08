@@ -18,15 +18,48 @@ from fordead.visualisation.vi_series_visualisation import vi_series_visualisatio
 input_directory = "<MyWorkingDirectory>/study_area"
 data_directory = "<output directory>"
 
-compute_masked_vegetationindex(input_directory = input_directory, data_directory = data_directory, lim_perc_cloud = 0.4, interpolation_order = 0, sentinel_source  = "THEIA", soil_detection = False, formula_mask = "B2 > 600", vi = "CRSWIR", apply_source_mask = True)
-train_model(data_directory = data_directory, nb_min_date = 10, min_last_date_training="2018-01-01", max_last_date_training="2018-06-01")
-dieback_detection(data_directory = data_directory, threshold_anomaly = 0.16)
-compute_forest_mask(data_directory, forest_mask_source = "vector", vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
-compute_confidence_index(data_directory, threshold_list = [0.2, 0.265], classes_list = ["Low anomaly", "Severe anomaly"])
-export_results(data_directory = data_directory, frequency= "M", multiple_files = False, intersection_confidence_class = True)
+compute_masked_vegetationindex(input_directory = input_directory, 
+                               data_directory = data_directory, 
+                               lim_perc_cloud = 0.4, 
+                               interpolation_order = 0, 
+                               sentinel_source  = "THEIA", 
+                               soil_detection = False, 
+                               formula_mask = "B2 > 600", 
+                               vi = "CRSWIR", 
+                               apply_source_mask = True)
 
-create_timelapse(data_directory = data_directory, x = 643069, y = 5452565, buffer = 1500)
-vi_series_visualisation(data_directory = data_directory, shape_path = "<MyWorkingDirectory>/vector/points_for_graphs.shp", name_column = "id", ymin = 0, ymax = 2, chunks = 100)
+train_model(data_directory = data_directory, 
+            nb_min_date = 10, 
+            min_last_date_training="2018-01-01", 
+            max_last_date_training="2018-06-01")
+
+dieback_detection(data_directory = data_directory, 
+                  threshold_anomaly = 0.16)
+
+compute_forest_mask(data_directory, 
+                    forest_mask_source = "vector", 
+                    vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
+
+compute_confidence_index(data_directory, 
+                         threshold_list = [0.2, 0.265], 
+                         classes_list = ["Low anomaly", "Severe anomaly"])
+
+export_results(data_directory = data_directory, 
+               frequency= "M", 
+               multiple_files = False, 
+               intersection_confidence_class = True)
+
+create_timelapse(data_directory = data_directory, 
+                 x = 643069, 
+                 y = 5452565, 
+                 buffer = 1500)
+
+vi_series_visualisation(data_directory = data_directory, 
+                        shape_path = "<MyWorkingDirectory>/vector/points_for_graphs.shp", 
+                        name_column = "id", 
+                        ymin = 0, 
+                        ymax = 2, 
+                        chunks = 100)
 ```
 
 Results can be updated using only the new Sentinel-2 dates, saving on computation time. 
