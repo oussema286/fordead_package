@@ -34,8 +34,8 @@ This procesing step can also be performed from a terminal:
 fordead train_model -o <output directory> --nb_min_date 10 --min_last_date_training 2018-01-01 --max_last_date_training 2018-06-01
 ```
 Here, the model is adjusted based on all Sentinel-2 acquisitions from the first acquisition to the last acquisition before 2018-01-01. 
-If less than 10 valid acquisitions are available on 2018-01-01, additional acquisitions are used in order to reach 10 valid acquisitions, unless this number is not reach on 2018-06-01. 
-In this situation, the pixel is discarded and no seasonality model is adjusted.
+If less than 10 valid acquisitions are available on 2018-01-01, additional acquisitions are used in order to reach 10 valid acquisitions. If this number is not reach on 2018-06-01, 
+the pixel is discarded and no seasonality model is then adjusted.
 This allows, for example in the case of a relatively ancient source of anomalies such as the bark beetle crisis, to start the detection as early as 2018 if there are enough valid dates at the beginning of the year, while allowing the study of pixels in situations with less data available simply by performing the training over a longer period to retrieve other valid dates. 
 
 It is not recommended to end the training before 2018, as a minimum of two seasons of SENTINEL-2 acquisitions is required to adjust the model.
