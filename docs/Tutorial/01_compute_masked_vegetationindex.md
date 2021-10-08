@@ -20,8 +20,11 @@ For more details, you can find the complete guide for this step [here](https://f
 
 ##### Running this step using a script
 
+Run the following instructions to perform this processing step:
+
 ```python
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
+
 input_directory = "<MyWorkingDirectory>/study_area"
 data_directory = "<output directory>"
 
