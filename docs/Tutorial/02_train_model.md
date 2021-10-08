@@ -2,7 +2,7 @@
 
 A harmonic model is adjusted for each pixel based on a time period defined by user, considered as representative of a 'normal' seasonal behavior of the vegetation index.
 The parameterization of the model is influenced by many factors, such as forest density, composition, topography. 
-As this seasonality is relatively variable among pixels, even in an individual forest stand, the seasonality is defined pixelwise in order to account for these differences. 
+Since this seasonality is relatively variable among pixels, even within an individual forest stand, seasonality is set at the pixel level to account for these differences. 
 The periodic model adjusted over the training period is expressed as follows:
 ```math
 a1 + b1\sin{\frac{2\pi t}{T}} + b2\cos{\frac{2\pi t}{T}} + b3\sin{\frac{4\pi t}{T}} + b4\cos{\frac{4\pi t}{T}}
