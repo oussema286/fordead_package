@@ -16,6 +16,8 @@ from fordead.model_vegetation_index import prediction_vegetation_index, correct_
 @click.option("-o", "--data_directory",  type=str, help="Path of the output directory")
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16,
                     help="Minimum threshold for anomaly detection", show_default=True)
+@click.option("--max_nb_stress_periods",  type=int, default=5,
+                    help="Maximum number of stress periods", show_default=True)
 @click.option("--vi",  type=str, default=None,
                     help="Chosen vegetation index, only useful if step1 was skipped", show_default=True)
 @click.option("--path_dict_vi",  type=str, default=None,
@@ -23,6 +25,7 @@ from fordead.model_vegetation_index import prediction_vegetation_index, correct_
 def cli_dieback_detection(
     data_directory,
     threshold_anomaly=0.16,
+    max_nb_stress_periods = 5,
     vi = None,
     path_dict_vi = None
     ):
@@ -43,12 +46,13 @@ def cli_dieback_detection(
     -------
 
     """
-    dieback_detection(data_directory, threshold_anomaly, vi, path_dict_vi)
+    dieback_detection(data_directory, threshold_anomaly, max_nb_stress_periods, vi, path_dict_vi)
 
 
 def dieback_detection(
     data_directory,
     threshold_anomaly=0.16,
+    max_nb_stress_periods = 5,
     vi = None,
     path_dict_vi = None
     ):
@@ -113,7 +117,7 @@ def dieback_detection(
             stress_data = import_stress_data(tile.paths)
         else:
             dieback_data = initialize_dieback_data(first_detection_date_index.shape,first_detection_date_index.coords)
-            stress_data = initialize_stress_data(first_detection_date_index.shape,first_detection_date_index.coords)
+            stress_data = initialize_stress_data(first_detection_date_index.shape,first_detection_date_index.coords, max_nb_stress_periods)
             
         if tile.parameters["correct_vi"]:
             forest_mask = import_forest_mask(tile.paths["ForestMask"])
@@ -135,12 +139,18 @@ def dieback_detection(
                 
                 stress_data = save_stress(stress_data, dieback_data, changing_pixels, diff_vi)
 
-                
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
                 del masked_vi, predicted_vi, anomalies, changing_pixels
         tile.last_computed_anomaly = new_dates[-1]
-                
+        
+        
+        # valid_area = import_forest_mask(tile.paths["valid_area_mask"])
+        # valid_area.where(stress_data["nb_periods"]<=max_nb_stress_periods)
+        
+        # stress_data["nb_periods"].mod(3)
+        
+        
         #Writing dieback data to rasters
         write_tif(stress_data["date"], first_detection_date_index.attrs,tile.paths["dates_stress"],nodata=0)
         write_tif(stress_data["nb_periods"], first_detection_date_index.attrs,tile.paths["nb_periods_stress"],nodata=0)
