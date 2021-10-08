@@ -419,7 +419,9 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_d
         elif dict_vi[vi]["dieback_change_direction"] == "-":
             (yy-threshold_anomaly).plot.line("b--", label='Threshold for anomaly detection')
         
-        for period in range(int(xy_stress_data["nb_periods"])):
+        
+        
+        for period in range(min(xy_stress_data.sizes["period"], int(xy_stress_data["nb_periods"]))):
             period_dates = (pixel_series.Time[xy_stress_data["date"].isel(change = [period*2,period*2+1])]).data
             label = {"label" : "Stress period"} if period==0 else {}
             plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, **label)         
@@ -512,13 +514,16 @@ def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, f
             print("Pixel outside forest mask")
         else:
             pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data = select_pixel_from_indices(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data)              
-            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax, ignored_period = tile.parameters["ignored_period"])
-
-            
-            if name_file is None: name_file = "X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))
-            fig.savefig(tile.paths["series"] / (name_file + ".png"))
-            plt.show()
-            plt.close()
+            if xy_stress_data["nb_periods"]>tile.parameters["max_nb_stress_periods"]:
+                print("Maximum number of stress periods exceeded")
+            else:
+                fig = plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax, ignored_period = tile.parameters["ignored_period"])
+    
+                
+                if name_file is None: name_file = "X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))
+                fig.savefig(tile.paths["series"] / (name_file + ".png"))
+                plt.show()
+                plt.close()
 
 
 

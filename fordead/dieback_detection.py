@@ -85,27 +85,27 @@ def detection_dieback(dieback_data, anomalies, mask, date_index):
 def save_stress(stress_data, dieback_data, changing_pixels, diff_vi):
     stress_data["nb_periods"]=stress_data["nb_periods"]+changing_pixels*(~dieback_data["state"]) #Adds one to the number of stress periods when pixels change back to normal
 #AVEC MODULO   
-    nb_periods_modulo = np.mod(stress_data["nb_periods"],stress_data.sizes["period"])
+    # nb_periods_modulo = np.mod(stress_data["nb_periods"],stress_data.sizes["period"])
 
-    relevant_period = stress_data["cum_diff"]["period"] != (nb_periods_modulo+1) # +1 because periods coordinates start at 1
-    potential_stressed_pixels = (dieback_data["count"]==0) & ~dieback_data["state"]
-    
-    stress_data["cum_diff"] = stress_data["cum_diff"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["cum_diff"]+diff_vi))
-    stress_data["nb_dates"] = stress_data["nb_dates"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["nb_dates"]+1))
-    
-    nb_changes = np.mod(stress_data["nb_periods"]*2+dieback_data["state"],stress_data.sizes["period"]*2+1) #Number of the change
-    stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), dieback_data["first_date"])
-
-#SANS MODULO    
-
-    # relevant_period = stress_data["cum_diff"]["period"] != (stress_data["nb_periods"]+1) #ajouter modulo +1 because periods coordinates start at 1
+    # relevant_period = stress_data["cum_diff"]["period"] != (nb_periods_modulo+1) # +1 because periods coordinates start at 1
     # potential_stressed_pixels = (dieback_data["count"]==0) & ~dieback_data["state"]
     
     # stress_data["cum_diff"] = stress_data["cum_diff"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["cum_diff"]+diff_vi))
     # stress_data["nb_dates"] = stress_data["nb_dates"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["nb_dates"]+1))
     
-    # nb_changes = stress_data["nb_periods"]*2+dieback_data["state"] #Number of the change #ajouter modulo
+    # nb_changes = np.mod(stress_data["nb_periods"]*2+dieback_data["state"],stress_data.sizes["period"]*2+1) #Number of the change
     # stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), dieback_data["first_date"])
+
+#SANS MODULO    
+
+    relevant_period = stress_data["cum_diff"]["period"] != (stress_data["nb_periods"]+1) #ajouter modulo +1 because periods coordinates start at 1
+    potential_stressed_pixels = (dieback_data["count"]==0) & ~dieback_data["state"]
+    
+    stress_data["cum_diff"] = stress_data["cum_diff"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["cum_diff"]+diff_vi))
+    stress_data["nb_dates"] = stress_data["nb_dates"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["nb_dates"]+1))
+    
+    nb_changes = stress_data["nb_periods"]*2+dieback_data["state"] #Number of the change #ajouter modulo
+    stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), dieback_data["first_date"])
     return stress_data
     
     

@@ -80,7 +80,7 @@ def dieback_detection(
     """
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    tile.add_parameters({"threshold_anomaly" : threshold_anomaly})
+    tile.add_parameters({"threshold_anomaly" : threshold_anomaly, "max_nb_stress_periods" : max_nb_stress_periods})
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("AnomaliesDir","state_dieback" ,"confidence_index","periodic_results_dieback","result_files","timelapse","series","nb_periods_stress") #Deleting previous detection results if they exist
         tile.delete_attributes("last_computed_anomaly","last_date_confidence_index","last_date_export")
@@ -144,12 +144,9 @@ def dieback_detection(
                 del masked_vi, predicted_vi, anomalies, changing_pixels
         tile.last_computed_anomaly = new_dates[-1]
         
-        
-        # valid_area = import_forest_mask(tile.paths["valid_area_mask"])
-        # valid_area.where(stress_data["nb_periods"]<=max_nb_stress_periods)
-        
-        # stress_data["nb_periods"].mod(3)
-        
+        valid_area = import_forest_mask(tile.paths["valid_area_mask"])
+        valid_area = valid_area.where(stress_data["nb_periods"]<=max_nb_stress_periods,0)
+        write_tif(valid_area, first_detection_date_index.attrs,tile.paths["valid_area_mask"],nodata=0)        
         
         #Writing dieback data to rasters
         write_tif(stress_data["date"], first_detection_date_index.attrs,tile.paths["dates_stress"],nodata=0)
