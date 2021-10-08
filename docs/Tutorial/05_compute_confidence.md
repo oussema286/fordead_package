@@ -23,7 +23,7 @@ Run the following instructions to perform this processing step:
 from fordead.steps.step5_compute_confidence_index import compute_confidence_index
 
 compute_confidence_index(data_directory, 
-                         threshold_list = [0.2, 0.265], 
+                         threshold_list = [0.265], 
                          classes_list = ["Low anomaly", "Severe anomaly"])
 ```
 
@@ -32,7 +32,7 @@ compute_confidence_index(data_directory,
 This processing step can also be performed from a terminal:
 
 ```bash
-fordead ind_conf -o <output directory> -t 0.265 -c "Low anomaly" -c "Severe anomaly"
+fordead ind_conf -o <output directory> --threshold_list [0.265] --classes_list ["Low anomaly", "Severe anomaly"]
 ```
 
 ##### Outputs
