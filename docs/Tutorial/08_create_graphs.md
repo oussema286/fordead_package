@@ -2,9 +2,9 @@
 
 The second built-in visualisation tool allows to visualize for a particular pixel the time series of the vegetation index with the associated model, the anomaly detection threshold and the associated detections.
 
-### Creating graphs showing the time series evolution at pixel level
+### Creating graphs of time series evolution at pixel level
 
-This tool creates figures showing: 
+This tool creates figures that present: 
 - the vegetation index value for each SENTINEL-2 acquisition
 - the corresponding seasonal model
 - the threshold used for anomaly detection
@@ -27,7 +27,7 @@ Comprehensive documentation can be found [here](https://fordead.gitlab.io/fordea
 
 ##### Running this step using a script
 
-Run the following instructions to perform this processing step :
+Run the following instructions to perform this processing step:
 
 ```python
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
@@ -39,9 +39,9 @@ vi_series_visualisation(data_directory = data_directory,
                         ymax = 2, 
                         chunks = 100)
 ```
-##### Running this step from the command invite
+##### Running this step from the command prompt
 
-This processing step can also be performed from a terminal :
+This processing step can also be performed from a terminal:
 ```bash
 fordead graph_series  -o <output directory> --shape_path <MyWorkingDirectory>/vector/points_for_graphs.shp --name_column id --ymin 0 --ymax 2 --chunks 100
 ```
