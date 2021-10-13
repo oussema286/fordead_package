@@ -10,7 +10,7 @@ from fordead.import_data import import_dieback_data, TileInfo, import_forest_mas
 from fordead.writing_data import get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date, union_confidence_class
 
 @click.command(name='export_results')
-@click.option("-d", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
+@click.option("-o", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
 @click.option("--start_date",  type=str, default='2015-06-23',
                     help="Start date for exporting results", show_default=True)
 @click.option("--end_date",  type=str, default="2022-01-02",
