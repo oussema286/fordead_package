@@ -720,7 +720,12 @@ def import_stress_data(dict_paths, chunks = None):
 
     return stress_data
 
-        
+def import_stress_index(path, chunks = None):
+    
+    stress_index = xr.open_rasterio(path,chunks = chunks).rename({"band": "period"})
+
+    return stress_index 
+
 def initialize_dieback_data(shape,coords):
     """
     Initializes data relating to dieback detection

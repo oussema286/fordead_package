@@ -103,7 +103,7 @@ def compute_confidence_index(
     # write_tif(confidence_index, forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
     # write_tif(nb_dates, forest_mask.attrs,nodata = 0, path = tile.paths["nb_dates"])
         
-    # confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, threshold_list, np.array(classes_list), tile.raster_meta["attrs"])
+    confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, threshold_list, np.array(classes_list), tile.raster_meta["attrs"])
     # confidence_class.to_file(tile.paths["confidence_class"])
     tile.save_info()
     

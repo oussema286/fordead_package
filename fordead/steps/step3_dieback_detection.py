@@ -100,6 +100,7 @@ def dieback_detection(
     tile.add_path("nb_periods_stress", tile.data_directory / "DataStress" / "nb_periods_stress.tif")
     tile.add_path("cum_diff_stress", tile.data_directory / "DataStress" / "cum_diff_stress.tif")
     tile.add_path("nb_dates_stress", tile.data_directory / "DataStress" / "nb_dates_stress.tif")
+    tile.add_path("stress_index", tile.data_directory / "DataStress" / "stress_index.tif")
 
     #Verify if there are new SENTINEL dates
     new_dates = tile.dates[tile.dates > tile.last_computed_anomaly] if hasattr(tile, "last_computed_anomaly") else tile.dates[tile.dates >= tile.parameters["min_last_date_training"]]
@@ -147,6 +148,9 @@ def dieback_detection(
         valid_area = import_forest_mask(tile.paths["valid_area_mask"])
         valid_area = valid_area.where(stress_data["nb_periods"]<=max_nb_stress_periods,0)
         write_tif(valid_area, first_detection_date_index.attrs,tile.paths["valid_area_mask"],nodata=0)        
+        
+        stress_index = stress_data["cum_diff"]/stress_data["nb_dates"]
+        write_tif(stress_index, first_detection_date_index.attrs,tile.paths["stress_index"],nodata=0)
         
         #Writing dieback data to rasters
         write_tif(stress_data["date"], first_detection_date_index.attrs,tile.paths["dates_stress"],nodata=0)

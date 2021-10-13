@@ -253,8 +253,10 @@ def vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, bins
     gp_results = gp_results.drop(columns=['class_index'])
     return gp_results
 
-def union_confidence_class(periodic_results, path_confidence_class):
-    confidence_class = gp.read_file(path_confidence_class)
+def union_confidence_class(periodic_results, confidence_class):
+    
+    
+    # confidence_class = gp.read_file(path_confidence_class)
     union = gp.overlay(periodic_results, confidence_class, how='union',keep_geom_type = True)
     # union = union.explode()
     # union = union[union.geom_type != 'Point']
