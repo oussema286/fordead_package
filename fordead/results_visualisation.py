@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 import geopandas as gp
 import xarray as xr
 import rasterio
+import rasterio.features
 from affine import Affine
 import numpy as np
 from shapely.geometry import Polygon
