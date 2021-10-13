@@ -41,7 +41,7 @@ compute_forest_mask(data_directory,
                     vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
 
 compute_confidence_index(data_directory, 
-                         threshold_list = [0.2, 0.265], 
+                         threshold_list = [0.265], 
                          classes_list = ["Low anomaly", "Severe anomaly"])
 
 export_results(data_directory = data_directory, 
