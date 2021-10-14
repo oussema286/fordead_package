@@ -19,7 +19,7 @@ import matplotlib.colors as colors
 
 
 from fordead.masking_vi import get_dict_vi
-from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_dieback_data, import_forest_mask, import_confidence_data
+from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_dieback_data, import_forest_mask, import_stress_data, import_stress_index
 
 
 def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = None):
@@ -93,7 +93,11 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             soil_data = import_soil_data(tile.paths)
             soil_data = soil_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         if show_confidence_class: 
-            confidence_index, nb_dates = import_confidence_data(tile.paths)
+            stress_data = import_stress_data(tile.paths)
+            stress_index = import_stress_index(tile.paths["stress_index"])
+            confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=5,5))
+            nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=5,5))
+            
             confidence_index = confidence_index.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
             nb_dates = nb_dates.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
             digitized_confidence = np.digitize(confidence_index,tile.parameters["threshold_list"])

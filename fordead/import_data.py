@@ -774,8 +774,8 @@ def initialize_stress_data(shape,coords, max_nb_stress_periods):
 
     """
 
-    stress_data=xr.Dataset({"date": xr.DataArray(np.zeros(shape+((max_nb_stress_periods+1)*2,),dtype=np.uint16), 
-                                                 coords= {"y" : coords["y"],"x" : coords["x"],"change" : range(1,(max_nb_stress_periods+1)*2+1)},dims = ["y","x","change"]),
+    stress_data=xr.Dataset({"date": xr.DataArray(np.zeros(shape+((max_nb_stress_periods+1)*2-1,),dtype=np.uint16), 
+                                                 coords= {"y" : coords["y"],"x" : coords["x"],"change" : range(1,(max_nb_stress_periods+1)*2)},dims = ["y","x","change"]),
                          "nb_periods": xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords),
                          "cum_diff": xr.DataArray(np.zeros(shape+(max_nb_stress_periods+1,),dtype=np.float), 
                                                                       coords= {"y" : coords["y"],"x" : coords["x"],"period" : range(1,max_nb_stress_periods+2)},dims = ["y","x","period"]),
@@ -868,26 +868,6 @@ def initialize_confidence_data(shape,coords):
 
     return nb_dates, sum_diff
 
-def import_confidence_data(dict_paths, chunks = None):
-    """
-    Imports data relating to confidence index
-
-    Parameters
-    ----------
-    dict_paths : dict
-        Dictionnary containing keys "confidence_index" and "nb_dates" whose values are the paths to the rasters.
-    Returns
-    -------
-    confidence_index : xarray DataArray (x,y)
-        Confidence index
-    nb_dates : xarray DataArray (x,y)
-        Number of unmasked sentinel dates since the first anomaly for each pixel.
-
-    """
-    confidence_index=xr.open_rasterio(dict_paths["confidence_index"], chunks = chunks).squeeze("band")
-    nb_dates=xr.open_rasterio(dict_paths["nb_dates"], chunks = chunks).squeeze("band")
-
-    return confidence_index, nb_dates
 
 def import_masked_vi(dict_paths, date, chunks = None):
     """

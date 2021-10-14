@@ -138,9 +138,9 @@ def compute_masked_vegetationindex(
   
     # If parameters added differ from previously used parameters, all previous computation results are deleted
     if tile.parameters["Overwrite"] : 
-        tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_dieback", "state_soil" ,"confidence_index","periodic_results_dieback","result_files","timelapse","series")
+        tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_dieback", "state_soil","periodic_results_dieback","result_files","timelapse","series", "nb_periods_stress")
         tile.delete_files("valid_area_mask")
-        tile.delete_attributes("last_computed_anomaly","last_date_confidence_index","dates","last_date_export")
+        tile.delete_attributes("last_computed_anomaly","dates","last_date_export")
 
     # All SENTINEL data in the input directory is detected, and paths are added to the TileInfo object. For example, after this operation tile.paths["Sentinel"]["YYYY-MM-DD"]["B2"] brings up the path to the B2 band file of the specified date?
     tile.getdict_datepaths("Sentinel",Path(input_directory)) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands

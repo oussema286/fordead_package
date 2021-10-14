@@ -7,7 +7,7 @@ Created on Fri Dec 18 11:32:57 2020
 
 import click
 from fordead.import_data import import_dieback_data, TileInfo, import_forest_mask, import_soil_data, import_stress_data, import_stress_index
-from fordead.writing_data import vectorizing_confidence_class, get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date, union_confidence_class
+from fordead.writing_data import vectorizing_confidence_class, get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date, union_confidence_class, write_tif
 import numpy as np
 
 @click.command(name='export_results')
@@ -96,6 +96,8 @@ def export_results(
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("periodic_results_dieback","result_files") #Deleting previous detection results if they exist
         tile.delete_attributes("last_date_export")
+        
+    tile.add_path("confidence_index", tile.data_directory / "Results" / "confidence_index.tif")
     
     exporting = (tile.dates[-1] != tile.last_date_export) if hasattr(tile, "last_date_export") else True
     if exporting:
@@ -129,9 +131,11 @@ def export_results(
                 stress_index = import_stress_index(tile.paths["stress_index"])
                 confidence_area = relevant_area & dieback_data["state"] & ~soil_data["state"] if tile.parameters["soil_detection"] else relevant_area & dieback_data["state"]
            
-                confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=5,5))
-                nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=5,5))
-
+                confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))
+                nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))
+               
+                write_tif(confidence_index.where(confidence_area,0), forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
+               
                 confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, confidence_area.compute(), threshold_list, np.array(classes_list), tile.raster_meta["attrs"])
                 periodic_results = union_confidence_class(periodic_results, confidence_class)
             if not(periodic_results.empty):
