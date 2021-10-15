@@ -7,7 +7,6 @@ Created on Mon Nov  2 09:34:34 2020
 
 from fordead.masking_vi import get_dict_vi
 import xarray as xr
-import numpy as np
 
 def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly, vi, path_dict_vi = None):
     """
@@ -31,6 +30,8 @@ def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly, vi, path_dic
     -------
     anomalies : array (x,y) (bool)
         Array, pixel value is True if an anomaly is detected.
+    diff_vi : array (x,y) (float)
+        Array containing the difference between the vegetation index and its prediction
 
     """
 
@@ -53,10 +54,11 @@ def detection_dieback(dieback_data, anomalies, mask, date_index):
     
     Parameters
     ----------
-    dieback_data : Dataset with three arrays : 
+    dieback_data : Dataset with four arrays : 
         "count" which is the number of successive anomalies, 
         "state" which is True where pixels are detected as suffering from dieback, False where they are considered healthy.
-        "first date" which contains the index of the date of the first anomaly.
+        "first_date" contains the index of the date of the first anomaly then confirmed
+        "first_date_unconfirmed" containing the date of pixel change, first anomaly if pixel is not detected as dieback, first non-anomaly if pixel is detected as dieback
     anomalies : array (x,y) (bool)
         Array, pixel value is True if an anomaly is detected.
     mask : array (x,y) (bool)
@@ -68,7 +70,8 @@ def detection_dieback(dieback_data, anomalies, mask, date_index):
     -------
     dieback_data : Dataset
         Dataset with the three arrays updated with the results from the date being analysed
-
+    changing_pixels : DataArray
+        Binary array (x,y) containing True where pixels change state is confirmed with a third successive anomaly
     """
 
     dieback_data["count"] = xr.where(~mask & (anomalies!=dieback_data["state"]),dieback_data["count"]+1,dieback_data["count"])
@@ -83,22 +86,38 @@ def detection_dieback(dieback_data, anomalies, mask, date_index):
     return dieback_data,changing_pixels
 
 def save_stress(stress_data, dieback_data, changing_pixels, diff_vi, mask, stress_index_mode):
+    """
+    Updates stress data, saves the date of pixel state changes, adds one to the number of stress periods when pixels change back to normal, adds the difference between vegetation index and its prediction multiplied by the weight of the date if "stress_index_mode" is "weighted_mean", iterates the number of dates in the stress periods for unmasked pixels.
+
+    Parameters
+    ----------
+    stress_data : xarray DataSet or dask DataSet
+        DataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
+    dieback_data : Dataset with four arrays : 
+        "count" which is the number of successive anomalies, 
+        "state" which is True where pixels are detected as suffering from dieback, False where they are considered healthy.
+        "first_date" contains the index of the date of the first anomaly then confirmed
+        "first_date_unconfirmed" containing the date of pixel change, first anomaly if pixel is not detected as dieback, first non-anomaly if pixel is detected as dieback
+    changing_pixels : DataArray
+        Binary array (x,y) containing True where pixels change state is confirmed with a third successive anomaly
+    diff_vi : array (x,y) (float)
+        Array containing the difference between the vegetation index and its prediction
+    mask : array (x,y) (bool)
+        Array containing the mask values (True if masked)
+    stress_index_mode : str
+        Chosen stress index, if 'mean', diff_vi is simply added to "cum_diff", if 'weighted_mean', diff_vi is added to "cum_diff" after being multiplied with "nb_dates", the number of the date from the first anomaly.
+
+    Returns
+    -------
+    stress_data : xarray DataSet or dask DataSet
+        Updated dataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
+
+
+    """
+    
     stress_data["nb_periods"]=stress_data["nb_periods"]+changing_pixels*(~dieback_data["state"]) #Adds one to the number of stress periods when pixels change back to normal
-#AVEC MODULO   
-    # nb_periods_modulo = np.mod(stress_data["nb_periods"],stress_data.sizes["period"])
 
-    # relevant_period = stress_data["cum_diff"]["period"] != (nb_periods_modulo+1) # +1 because periods coordinates start at 1
-    # potential_stressed_pixels = (dieback_data["count"]==0) & ~dieback_data["state"]
-    
-    # stress_data["cum_diff"] = stress_data["cum_diff"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["cum_diff"]+diff_vi))
-    # stress_data["nb_dates"] = stress_data["nb_dates"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["nb_dates"]+1))
-    
-    # nb_changes = np.mod(stress_data["nb_periods"]*2+dieback_data["state"],stress_data.sizes["period"]*2+1) #Number of the change
-    # stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), dieback_data["first_date"])
-
-#SANS MODULO    
-
-    relevant_period = stress_data["cum_diff"]["period"] != (stress_data["nb_periods"]+1) #ajouter modulo +1 because periods coordinates start at 1
+    relevant_period = stress_data["cum_diff"]["period"] != (stress_data["nb_periods"]+1) #+1 because periods coordinates start at 1
     potential_stressed_pixels = (dieback_data["count"]==0) & ~dieback_data["state"]
     stress_data["nb_dates"] = stress_data["nb_dates"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["nb_dates"]+~mask))
 
@@ -109,7 +128,7 @@ def save_stress(stress_data, dieback_data, changing_pixels, diff_vi, mask, stres
     else:
         raise Exception("Unrecognized stress_index_mode")
         
-    nb_changes = stress_data["nb_periods"]*2+dieback_data["state"] #Number of the change #ajouter modulo
+    nb_changes = stress_data["nb_periods"]*2+dieback_data["state"] #Number of the change
     stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), dieback_data["first_date"])
     return stress_data
     

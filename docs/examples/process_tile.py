@@ -125,7 +125,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================    
 
         dieback_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-                                          threshold_anomaly = threshold_anomaly)
+                                          threshold_anomaly = threshold_anomaly, stress_index_mode = "weighted_mean")
         file = open(logpath, "a")
         file.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()

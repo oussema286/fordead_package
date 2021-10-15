@@ -18,23 +18,25 @@ from fordead.model_vegetation_index import prediction_vegetation_index, correct_
                     help="Minimum threshold for anomaly detection", show_default=True)
 @click.option("--max_nb_stress_periods",  type=int, default=5,
                     help="Maximum number of stress periods", show_default=True)
+@click.option("--stress_index_mode",  type=str, default=None,
+                    help="Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no informations are saved.", show_default=True)
 @click.option("--vi",  type=str, default=None,
                     help="Chosen vegetation index, only useful if step1 was skipped", show_default=True)
 @click.option("--path_dict_vi",  type=str, default=None,
                     help="Path of text file to add vegetation index formula, only useful if step1 was skipped", show_default=True)
-@click.option("--stress_index_mode",  type=str, default=None,
-                    help="'mean', 'weighted_mean' or None", show_default=True)
 def cli_dieback_detection(
     data_directory,
     threshold_anomaly=0.16,
     max_nb_stress_periods = 5,
+    stress_index_mode = None,
     vi = None,
-    path_dict_vi = None,
-    stress_index_mode = None
+    path_dict_vi = None
+    
     ):
     """
     Detects anomalies by comparing the vegetation index and its prediction from the model. 
     Detects pixels suffering from dieback when there are 3 successive anomalies. If pixels detected as suffering from dieback have 3 successive dates without anomalies, they are considered healthy again.
+    If stress_index_mode parameter is given, Those periods between detection and return to normal are saved, with the date of first anomaly, date of return to normal, number of dates, and an associated stress index.
     Anomalies and dieback data are written in the data_directory
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/
     \f
@@ -42,28 +44,30 @@ def cli_dieback_detection(
     ----------
     data_directory
     threshold_anomaly
+    max_nb_stress_periods
+    stress_index_mode
     vi
     path_dict_vi
-    stress_index_mode
 
     Returns
     -------
 
     """
-    dieback_detection(data_directory, threshold_anomaly, max_nb_stress_periods, vi, path_dict_vi, stress_index_mode)
+    dieback_detection(data_directory, threshold_anomaly, max_nb_stress_periods, stress_index_mode, vi, path_dict_vi)
 
 
 def dieback_detection(
     data_directory,
     threshold_anomaly=0.16,
     max_nb_stress_periods = 5,
+    stress_index_mode = None,
     vi = None,
-    path_dict_vi = None,
-    stress_index_mode = None
+    path_dict_vi = None
     ):
     """
     Detects anomalies by comparing the vegetation index and its prediction from the model. 
     Detects pixels suffering from dieback when there are 3 successive anomalies. If pixels detected as suffering from dieback have 3 successive dates without anomalies, they are considered healthy again.
+    If stress_index_mode parameter is given, information on those periods between detection and return to normal are saved, with the date of first anomaly, date of return to normal, number of dates, an associated stress index, and the total number of those periods.
     Anomalies and dieback data are written in the data_directory
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/
     
@@ -74,6 +78,12 @@ def dieback_detection(
         Path of the output directory
     threshold_anomaly : float
         Minimum threshold for anomaly detection
+    max_nb_stress_periods : int
+        Maximum number of stress periods, if this number is reached, the pixel is removed from the valid_area_mask, thus removed from future exports. Only used if stress_index_mode is not None.
+    stress_index_mode : str
+        Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed.
+        If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly.
+        If None, the stress periods are not detected, and no informations are saved.
     vi : str
         Chosen vegetation index, only useful if step1 was skipped
     path_dict_vi : str
