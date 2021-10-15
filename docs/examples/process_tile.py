@@ -129,16 +129,6 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a")
         file.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
-
-# # =====================================================================================================================
-        
-        file = open(logpath, "a")
-        compute_confidence_index(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-                                threshold_list = [0.2,0.265],
-                                classes_list = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"],
-                                chunks = 1280)
-        file.write("Classify declining area : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
-        file.close()
         
 # # =====================================================================================================================
 
@@ -147,8 +137,10 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             start_date = start_date_results,
             end_date = end_date_results,
             frequency= results_frequency,
-            multiple_files = multiple_files,
-            intersection_confidence_class = True
+            multiple_files = multiple_files, 
+            conf_threshold_list = [0.2,0.265],
+            conf_classes_list = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"],
+            
             )
 
 
