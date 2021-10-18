@@ -10,7 +10,6 @@ from fordead.steps.step2_train_model import train_model
 from fordead.steps.step3_dieback_detection import dieback_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step6_export_results import export_results
-from fordead.steps.step5_compute_confidence_index import compute_confidence_index
 
 from fordead.visualisation.create_timelapse import create_timelapse
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
