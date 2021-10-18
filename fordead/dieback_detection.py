@@ -124,7 +124,7 @@ def save_stress(stress_data, dieback_data, changing_pixels, diff_vi, mask, stres
     if stress_index_mode == "mean":
         stress_data["cum_diff"] = stress_data["cum_diff"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["cum_diff"]+diff_vi))
     elif stress_index_mode == "weighted_mean":
-        stress_data["cum_diff"] = stress_data["cum_diff"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["cum_diff"]+diff_vi*stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=stress_data.sizes["period"],stress_data.sizes["period"]))))
+        stress_data["cum_diff"] = stress_data["cum_diff"].where(relevant_period, xr.where(potential_stressed_pixels, 0, stress_data["cum_diff"]+diff_vi*stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=stress_data.sizes["period"]-1,stress_data.sizes["period"])))) #The selection probably makes no sense for pixels with nb_periods higher that stress_data.sizes["period"], but it doesn't matter since they are excluded from result exports, but it removes bugs of inexistant period values.
     else:
         raise Exception("Unrecognized stress_index_mode")
         

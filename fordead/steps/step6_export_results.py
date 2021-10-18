@@ -131,8 +131,8 @@ def export_results(
                 stress_index = import_stress_index(tile.paths["stress_index"])
                 confidence_area = relevant_area & dieback_data["state"] & ~soil_data["state"] if tile.parameters["soil_detection"] else relevant_area & dieback_data["state"]
            
-                confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))
-                nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))
+                confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"])) #The selection probably makes no sense for pixels with nb_periods higher that max_nb_stress_periods, but it doesn't matter since they are excluded from result exports, but it removes bugs of inexistant period values.
+                nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))  #The selection probably makes no sense for pixels with nb_periods higher that max_nb_stress_periods, but it doesn't matter since they are excluded from result exports, but it removes bugs of inexistant period values.
                
                 write_tif(confidence_index.where(confidence_area,0), forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
                
