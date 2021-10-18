@@ -1,7 +1,7 @@
 ## STEP 5: Output export
 This step allows you to output the results in the format desired by the user, for the desired period and frequency.
 If chosen, a confidence index corresponding to the current stress index of pixels detected as suffering from dieback, and within the forest mask and valid area mask is extracted from the stress index results of step 3 and exported.
-The pixels are also classified into classes, based on the discretization of this confidence index using a list of thresholds. Pixels with only three anomalies are classified as the lowest class, because 3 anomalies are not considered enough to calculate a meaningful index.
+The pixels are also classified, based on the discretization of this confidence index using a list of thresholds. Pixels with only three anomalies are classified as the lowest class, because 3 anomalies are not considered enough to calculate a meaningful index.
 
 #### INPUTS
 The input parameters are :
@@ -18,9 +18,9 @@ The outputs of this fifth step, in the folder data_directory/Results, are :
 - if **multiple_files** is False:
     - the shapefile periodic_results_dieback, whose polygons contain the time period when the first anomaly was detected for the areas suffering from dieback. The areas reached before start_date or after end_date are ignored. If **conf_threshold_list** and **conf_classes_list** are provided, the polygons also contain the anomaly intensity class as calculated in the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/) step. This class therefore contains the "final" state, calculated at the last available Sentinel-2 date. If bare ground is detected, the confidence index is not calculated and this final state becomes "Bare ground".
     - if soil_detection was True in the [first step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/), the shapefile periodic_results_soil whose polygons contain the period when the first soil anomaly was detected for areas detected as bare soil/cut. Bare areas before start_date or after end_date are not shown.
+	- A confidence_index raster, containing the continuous value of the confidence index which is also discretized in the vectorized results.
 - if **multiple_files** is True :
     - One shapefile per period whose name is the end date of the period (for example, with start_date = 2018-01-01, end_date = 2018-04-01 and frequency = "M", we will have the following files: 2018-01-30.shp, 2018-02-28.shp and 2018-03-31.shp. Each shapefile contains polygons corresponding to the stand state at the end of the period, even if the first anomalies occur before start_date. The status can be 'Anomaly', "Bare ground" and 'Bare ground after anomaly' if soil_detection was True in the first step, or simply "Anomaly" otherwise.
-- A confidence_index raster, containing the continuous value of the confidence index which is also discretized in the vectorized results.
 
 ## How to use
 ### From a script

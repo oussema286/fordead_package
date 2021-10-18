@@ -69,7 +69,7 @@ def detection_dieback(dieback_data, anomalies, mask, date_index):
     Returns
     -------
     dieback_data : Dataset
-        Dataset with the three arrays updated with the results from the date being analysed
+        Dataset with the four arrays updated with the results from the date being analysed
     changing_pixels : DataArray
         Binary array (x,y) containing True where pixels change state is confirmed with a third successive anomaly
     """
