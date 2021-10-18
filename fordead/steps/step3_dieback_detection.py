@@ -184,7 +184,6 @@ def dieback_detection(
         write_tif(dieback_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_dieback"],nodata=0)
         write_tif(dieback_data["count"], first_detection_date_index.attrs,tile.paths["count_dieback"],nodata=0)
 
-        
         # print("Détection du déperissement")
     tile.save_info()
 
