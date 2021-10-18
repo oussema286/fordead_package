@@ -683,23 +683,28 @@ def import_dieback_data(dict_paths, chunks = None):
     Parameters
     ----------
     dict_paths : dict
-        Dictionnary containg the keys "state_dieback", "first_date_dieback" and "count_dieback" whose values are the paths to the corresponding dieback data file.
+        Dictionnary containg the keys "state_dieback", "first_date_dieback", "first_date_unconfirmed_dieback", and "count_dieback" whose values are the paths to the corresponding dieback data file.
     chunks : int, optional
         Chunk size for import as dask array. The default is None.
 
     Returns
     -------
     dieback_data : xarray DataSet or dask DataSet
-        DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
+        DataSet containing four DataArrays, "state" containing the state of the pixel after computations, 
+        "first_date" containing the index of the date of the first anomaly when confirmed, 
+        "first_date_unconfirmed" containing the date of pixel change, first anomaly if pixel is not detected as dieback, first non-anomaly if pixel is detected as dieback, 
+        "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
 
     """
     
     state_dieback = xr.open_rasterio(dict_paths["state_dieback"],chunks = chunks).astype(bool)
     first_date_dieback = xr.open_rasterio(dict_paths["first_date_dieback"],chunks = chunks)
+    first_date_unconfirmed_dieback = xr.open_rasterio(dict_paths["first_date_unconfirmed_dieback"],chunks = chunks)
     count_dieback = xr.open_rasterio(dict_paths["count_dieback"],chunks = chunks)
     
     dieback_data=xr.Dataset({"state": state_dieback,
                      "first_date": first_date_dieback,
+                     "first_date_unconfirmed" : first_date_unconfirmed_dieback,
                      "count" : count_dieback})
     dieback_data=dieback_data.squeeze("band")
 

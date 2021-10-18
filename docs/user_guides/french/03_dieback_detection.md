@@ -1,10 +1,16 @@
 ## ÉTAPE 3 : Détection du dépérissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel
 Cette étape permet la détection du déperissement. Pour chaque date SENTINEL non utilisée pour l'apprentissage, l'indice de végétation réel est comparé à l'indice de végétation prédit à partir des modèles calculés dans l'étape précèdente. Si la différence dépasse un seuil, une anomalie est détectée. Si trois anomalies successives sont détectées, le pixel est considéré comme dépérissant. Si après avoir été détecté comme déperissant, le pixel a trois dates successives sans anomalies, il n'est plus considéré comme dépérissant.
+Ces périodes entre la détection et le retour à la normale peuvent être enregistrées et associées à un indice de stress.
+Cet indice de stress peut être soit la moyenne de la différence entre l'indice de végétation et sa prédiction, soit une moyenne pondérée où pour chaque date utilisée, le poids correspond au numéro de la date à partir de la première anomalie :
+
+![graph_ind_conf](Diagrams/graph_ind_conf.png "graph_ind_conf")
 
 #### ENTRÉES
 Les paramètres en entrée sont :
 - **data_directory** : Le chemin du dossier de sortie dans lequel sera écrit les résultats de la détection.
 - **threshold_anomaly** : Seuil à partir duquel la différence entre l'indice de végétation réel et prédit est considéré comme une anomalie
+- **max_nb_stress_periods** : Nombre maximum de périodes de stress, les pixels avec un nombre plus élevé de périodes de stress sont masqués dans les exports.
+- **stress_index_mode** : Choix de l'indice de stress, si 'mean', l'indice est la moyenne de la différence entre l'indice de végétation et sa prédiction pour toutes les dates non masquées après la première anomalie confirmée ultérieurement. Si 'weighted_mean', l'indice est une moyenne pondérée, où pour chaque date utilisée, le poids correspond au numéro de la date (1, 2, 3, etc...) à partir de la première anomalie. Si None, les périodes de stress ne sont pas détectées, et aucune information n'est enregistrée.
 - **vi** : Indice de végétation utilisé, il est inutile de le renseigner si l'étape [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/) a été utilisée.
 - **path_dict_vi** : Chemin d'un fichier texte permettant d'ajouter des indices de végétations utilisables. Si non renseigné, uniquement les indices prévus dans le package sont utilisable (CRSWIR, NDVI, NDWI). Le fichier [examples/ex_dict_vi.txt](/examples/ex_dict_vi.txt) donne l'exemple du formattage de ce fichier. Il s'agit de renseigner son nom, sa formule, et "+" ou "-" selon si l'indice augmente en cas de déperissement, ou si il diminue. Il est également inutile de le renseigner si cela a été fait lors de l'étape [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/).
 
