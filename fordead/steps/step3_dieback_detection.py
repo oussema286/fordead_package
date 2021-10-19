@@ -163,7 +163,7 @@ def dieback_detection(
         
         if stress_index_mode is not None:
             valid_area = import_forest_mask(tile.paths["valid_area_mask"])
-            valid_area = valid_area.where(stress_data["nb_periods"]<=max_nb_stress_periods,0)
+            valid_area = valid_area.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
             write_tif(valid_area, first_detection_date_index.attrs,tile.paths["valid_area_mask"],nodata=0)        
   
             if stress_index_mode == "mean":
