@@ -16,7 +16,7 @@ The input parameters are :
 #### OUTPUTS
 The outputs of this fifth step, in the folder data_directory/Results, are :
 - if **multiple_files** is False:
-    - the shapefile periodic_results_dieback, whose polygons contain the time period when the first anomaly was detected for the areas suffering from dieback. The areas reached before start_date or after end_date are ignored. If **conf_threshold_list** and **conf_classes_list** are provided, the polygons also contain the anomaly intensity class as calculated in the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/) step. This class therefore contains the "final" state, calculated at the last available Sentinel-2 date. If bare ground is detected, the confidence index is not calculated and this final state becomes "Bare ground".
+    - the shapefile periodic_results_dieback, whose polygons contain the time period when the first anomaly was detected for the areas suffering from dieback. The areas reached before start_date or after end_date are ignored. If **conf_threshold_list** and **conf_classes_list** are provided, the polygons also contain an anomaly intensity class discretized and vectorized from the stress index calculated in the [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/) step. This class therefore contains the "final" state, calculated at the last available Sentinel-2 date. If bare ground is detected, the confidence index is not calculated and this final state becomes "Bare ground".
     - if soil_detection was True in the [first step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/), the shapefile periodic_results_soil whose polygons contain the period when the first soil anomaly was detected for areas detected as bare soil/cut. Bare areas before start_date or after end_date are not shown.
 	- A confidence_index raster, containing the continuous value of the confidence index which is also discretized in the vectorized results.
 - if **multiple_files** is True :
@@ -32,7 +32,9 @@ export_results(
     start_date = <start_date>,
     end_date = <end_date>,
     frequency= <frequency>,
-    multiple_files = <multiple_files>
+    multiple_files = <multiple_files>,
+    conf_threshold_list = <conf_threshold_list>,
+    conf_classes_list = <conf_classes_list>
     )
 ```
 

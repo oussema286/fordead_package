@@ -79,7 +79,7 @@ def polygon_from_coordinate_and_radius(coordinates, radius, crs):
 
 
 def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date, show_confidence_class):
-        nb_classes = len(tile.parameters["classes_list"]) if show_confidence_class else 1
+        nb_classes = len(tile.parameters["conf_classes_list"]) if show_confidence_class else 1
         NbData = 1 + nb_classes + 2*tile.parameters["soil_detection"]
         color_map = plt.get_cmap('Reds',nb_classes+1)
         
@@ -95,23 +95,24 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
         if show_confidence_class: 
             stress_data = import_stress_data(tile.paths)
             stress_index = import_stress_index(tile.paths["stress_index"])
-            confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=5,5))
-            nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=5,5))
+            confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))
+            nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))
             
             confidence_index = confidence_index.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
             nb_dates = nb_dates.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-            digitized_confidence = np.digitize(confidence_index,tile.parameters["threshold_list"])
+            digitized_confidence = np.digitize(confidence_index,tile.parameters["conf_threshold_list"])
             digitized_confidence[nb_dates==3]=0
             
         dieback_data = import_dieback_data(tile.paths)
         dieback_data = dieback_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         forest_mask = import_forest_mask(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        
+        valid_area = import_forest_mask(tile.paths["valid_area_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        relevant_area = valid_area & forest_mask
         #Correcting extent if computed area is smaller than Sentinel-2 data area
-        extent = np.array([float(forest_mask[dict(x=0,y=0)].coords["x"])-forest_mask.attrs["transform"][0]/2,
-                                                float(forest_mask[dict(x=-1,y=-1)].coords["y"])-forest_mask.attrs["transform"][0]/2,
-                                                float(forest_mask[dict(x=-1,y=-1)].coords["x"])+forest_mask.attrs["transform"][0]/2,
-                                                float(forest_mask[dict(x=0,y=0)].coords["y"])+forest_mask.attrs["transform"][0]/2])
+        extent = np.array([float(relevant_area[dict(x=0,y=0)].coords["x"])-relevant_area.attrs["transform"][0]/2,
+                                                float(relevant_area[dict(x=-1,y=-1)].coords["y"])-relevant_area.attrs["transform"][0]/2,
+                                                float(relevant_area[dict(x=-1,y=-1)].coords["x"])+relevant_area.attrs["transform"][0]/2,
+                                                float(relevant_area[dict(x=0,y=0)].coords["y"])+relevant_area.attrs["transform"][0]/2])
         
         dates = tile.dates[tile.dates <= max_date] if max_date is not None else tile.dates
         stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = dates)
@@ -140,8 +141,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                 if tile.parameters["soil_detection"]:
                     soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
                     if show_confidence_class:
-                        # affected = detected.where(~soil, len(tile.parameters["classes_list"])+detected+soil)
-                        affected = xr.where(~soil, detected*(1+digitized_confidence),len(tile.parameters["classes_list"])+detected+soil)
+                        # affected = detected.where(~soil, len(tile.parameters["conf_classes_list"])+detected+soil)
+                        affected = xr.where(~soil, detected*(1+digitized_confidence),len(tile.parameters["conf_classes_list"])+detected+soil)
                     else:
                         affected=detected+2*soil
                 elif show_confidence_class:
@@ -150,7 +151,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                     affected=detected
                 
                 # valid_area = 
-                affected = affected.where(forest_mask,0)
+                affected = affected.where(relevant_area,0)
                 
                 results_affected = (
                             {'properties': {'Etat': v}, 'geometry': s}
@@ -177,7 +178,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                         y=DictCoordY[etat],
                         line_color=colors.rgb2hex(color_map(etat-1)),
                         hoverinfo="skip",
-                        name='Dieback detected' if not(show_confidence_class) else tile.parameters["classes_list"][etat-1],
+                        name='Dieback detected' if not(show_confidence_class) else tile.parameters["conf_classes_list"][etat-1],
                         legendgroup="dieback",
                         legendgrouptitle_text="Dieback detected",
                         
@@ -259,8 +260,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                     {'properties': {'Etat': v}, 'geometry': s}
                     for i, (s, v) 
                     in enumerate(
-                        rasterio.features.shapes(forest_mask.data.astype("uint8"), transform=Affine(*stack_rgb.attrs["transform"]))))
-        dict_forest_mask = {"x" : [],
+                        rasterio.features.shapes(relevant_area.data.astype("uint8"), transform=Affine(*stack_rgb.attrs["transform"]))))
+        dict_relevant_area = {"x" : [],
                             "y" : []}
         for geom in list(results_affected):
             if geom["properties"]["Etat"] == 0:
@@ -268,16 +269,16 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                     xList=np.array([coord[0] for coord in poly])
                     yList=np.array([coord[1] for coord in poly])
                     
-                    dict_forest_mask["x"] +=list((xList-np.array(stack_rgb.attrs["transform"][2]))/10-0.5)+[None]
-                    dict_forest_mask["y"] +=list((np.array(stack_rgb.attrs["transform"][5])-yList)/10-0.5)+[None]
+                    dict_relevant_area["x"] +=list((xList-np.array(stack_rgb.attrs["transform"][2]))/10-0.5)+[None]
+                    dict_relevant_area["y"] +=list((np.array(stack_rgb.attrs["transform"][5])-yList)/10-0.5)+[None]
                     
         fig.add_trace(go.Scatter(
-            x=dict_forest_mask["x"],
-            y=dict_forest_mask["y"],
+            x=dict_relevant_area["x"],
+            y=dict_relevant_area["y"],
             fill = "none",
             hoveron = 'fills',
             line_color = "grey",
-            name="Outside of pixels of interest"))
+            name="Permanently masked pixels"))
         
         
         #Slider  

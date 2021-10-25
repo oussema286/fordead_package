@@ -15,7 +15,7 @@ The input parameters are :
 - **vector_display_path** : Optionnal, path of a vector to display in the timelapse, can contain points, lines and polygons.
 - **hover_column_list** : String or list strings corresponding to columns in the **vector_display_path** file, whose information to display when hovering mouse over its objects. To use only if **vector_display_path** is used
 - **max_date** : Exclude from the timelapse all Sentinel-2 dates after this date (format : "YYYY-MM-DD"). By default, the timelapse uses all available Sentinel-2 dates.
-- **show_confidence_class** : If True, detected dieback is shown with the confidence class, indicative of the pixel's state at the last date used, as computed in the step [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/)
+- **show_confidence_class** : If True, detected dieback is shown with the confidence class, indicative of the pixel's state at the last date used, as vectorized in the step [05_export_results](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_export_results/)
 - **zip_results**: If True, the html files containing the timelapses are transferred in a compressed zip file.
 
 Required parameters are **data_directory** and either **shape_path** or **x** and **y**.

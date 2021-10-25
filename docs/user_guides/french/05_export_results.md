@@ -17,7 +17,7 @@ Les paramètres en entrée sont :
 #### SORTIES
 Les sorties de cette cinquième étape, dans le dossier data_directory/Results, sont :
 - si **multiple_files** vaut False :
-    - le shapefile periodic_results_dieback, dont les polygones contiennent la période à laquelle la première anomalie a été détecté pour les zones dépérissantes. Si **conf_threshold_list** and **conf_classes_list** sont renseignés, les polygones contiennent également la classe d'intensité d'anomalie telle que calculée lors de l'étape [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/05_compute_confidence/). Cette classe contient donc l'état "final", calculé à la dernière date Sentinel-2 disponible. Si le sol nu est détecté, l'indice de confiance n'est pas calculé et cet état final devient donc "Bare ground". Les zones atteintes avant start_date ou après end_date ne sont pas représentées.
+    - le shapefile periodic_results_dieback, dont les polygones contiennent la période à laquelle la première anomalie a été détecté pour les zones dépérissantes. Si **conf_threshold_list** and **conf_classes_list** sont renseignés, les polygones contiennent également la classe d'intensité d'anomalie, discretisée et vectorisée à partir de l'indice de stress calculé lors de l'étape [03_dieback_detection](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/03_dieback_detection/). Cette classe contient donc l'état "final", calculé à la dernière date Sentinel-2 disponible. Si le sol nu est détecté, l'indice de confiance n'est pas calculé et cet état final devient donc "Bare ground". Les zones atteintes avant start_date ou après end_date ne sont pas représentées.
     - si soil_detection valait True lors de la [première étape](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/01_compute_masked_vegetationindex/), le shapefile periodic_results_soil dont les polygones contiennent la période à laquelle la première anomalie de sol a été détecté pour les zones détectées comme sol nu/coupe. Les zones à nu avant start_date ou après end_date ne sont pas représentées.
 	- Un raster confidence_index, contenant la valeur continue de l'indice de confiance
 - si **multiple_files** vaut True :
@@ -35,7 +35,8 @@ export_results(
     frequency= <frequency>,
     export_soil = <export_soil>,
     multiple_files = <multiple_files>,
-	intersection_confidence_class = <intersection_confidence_class>
+    conf_threshold_list = <conf_threshold_list>,
+    conf_classes_list = <conf_classes_list>
     )
 ```
 

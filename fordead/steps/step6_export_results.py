@@ -20,8 +20,8 @@ import numpy as np
                     help="Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)", show_default=True)
 @click.option("--multiple_files",  is_flag=True,
                     help="If True, one shapefile is exported for each period containing the areas in dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback", show_default=True)
-@click.option("--conf_threshold_list", type = list, default = None, help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
-@click.option("--conf_classes_list", type = list, default = None, help = "List of classes names, if conf_threshold_list has n values, conf_classes_list must have n+1 values", show_default=True)
+@click.option("-t", "--conf_threshold_list", type = list, default = None, help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
+@click.option("-c", "--conf_classes_list", type = list, default = None, help = "List of classes names, if conf_threshold_list has n values, conf_classes_list must have n+1 values", show_default=True)
 def cli_export_results(
     data_directory,
     start_date = '2015-06-23',
@@ -64,7 +64,7 @@ def export_results(
     ):
     """
     Writes results in the chosen period, form and using chosen frequency.
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/06_export_results/
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_export_results/
     \f
 
     Parameters

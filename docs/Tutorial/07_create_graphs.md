@@ -53,4 +53,4 @@ The y axis limits are set using **ymin** and **ymax** parameters.
 
 > **_NOTE :_** The **chunks** parameter is not really necessary in this case, since we're working on a small area, but it is needed to reduce computation time in large datasets.
 
-[NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/09_updating_detection)
+[NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/08_updating_detection)
