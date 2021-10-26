@@ -66,7 +66,7 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
 	"Step 4. Compute forest mask" = "docs/Tutorial/04_compute_forest_mask.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Step 6. Export results" = "docs/Tutorial/05_export_results.md"
+	"Step 5. Export results" = "docs/Tutorial/05_export_results.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
 	"Creating a timelapse" = "docs/Tutorial/06_create_timelapse.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
@@ -84,7 +84,7 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav."User guides".English]]
     "4. Compute forest mask" = "docs/user_guides/english/04_compute_forest_mask.md"    
 	[[tool.portray.mkdocs.nav."User guides".English]]
-    "6. Export results" = "docs/user_guides/english/05_export_results.md"
+    "5. Export results" = "docs/user_guides/english/05_export_results.md"
 	[[tool.portray.mkdocs.nav."User guides".English]]
     "Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
 	
@@ -103,7 +103,7 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav."User guides".'Français']]
     "4. Calcul du masque forêt" = "docs/user_guides/french/04_compute_forest_mask.md"    
 	[[tool.portray.mkdocs.nav."User guides".'Français']]
-    "6. Export des résultats" = "docs/user_guides/french/05_export_results.md"
+    "5. Export des résultats" = "docs/user_guides/french/05_export_results.md"
 	[[tool.portray.mkdocs.nav."User guides".'Français']]
     "Outils de visualisation" = "docs/user_guides/french/Results_visualisation.md"
 	
