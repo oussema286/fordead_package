@@ -141,7 +141,9 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             conf_classes_list = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"],
             
             )
-
+        file = open(logpath, "a")
+        file.write("Exporting results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
+        file.close()
 
 
         # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
