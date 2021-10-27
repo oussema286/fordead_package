@@ -27,7 +27,7 @@ Les sorties de cette cinquième étape, dans le dossier data_directory/Results, 
 ### A partir d'un script
 
 ```bash
-from fordead.steps.step6_export_results import export_results
+from fordead.steps.step5_export_results import export_results
 export_results(
     data_directory = <data_directory>,
     start_date = <start_date>,

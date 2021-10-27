@@ -15,7 +15,7 @@ Comprehensive documentation can be found [here](https://fordead.gitlab.io/fordea
 Run the following instructions to perform this processing step:
 
 ```python
-from fordead.steps.step6_export_results import export_results
+from fordead.steps.step5_export_results import export_results
 
 export_results(data_directory = data_directory, 
                frequency= "M", 
