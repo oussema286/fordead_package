@@ -35,6 +35,8 @@ Si la détection inclu la détection de sol nu (see [01_compute_masked_vegetatio
 - Polygones noirs : sol nu
 - Polygones bleus : zones détectées comme coupe sanitaire (zones détectées comme sol-nu après avoir été détectées comme dépérissantes)
 
+Les pixels hors du masque végétation utilisé, ou invalides car n'ayant pas assez de dates pour calculer un modèle d'indice de végétation, ou ayant trop de périodes de stress, apparaissent en gris avec la légende "Permanently masked pixels".
+
 Une légende est incluse, un clic sur un élément de la légende permet de le rendre invisible, un double clic en fait le seul élément visible sur le graphique.
 
 Les résultats apparaissent à partir de la première anomalie, confirmée par la suite. Les fausses détections liées à un stress hydrique temporaire et corrigées par la suite n'apparaissent pas. De même, pour les dernières , il peut y avoir des anomalies n'apparaissant pas encore par manque de  valides pour confirmer la détection.

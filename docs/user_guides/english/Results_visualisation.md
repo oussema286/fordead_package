@@ -35,6 +35,8 @@ If the detection includes bare ground detection (see [01_compute_masked_vegetati
 - Black polygons: bare ground
 - Blue polygons: areas detected as bare ground after being detected as dieback
 
+Pixels outside of the vegetation masked used, or invalid due to not enough dates to compute a vegetation index model, or too many stress periods are shown  in grey as "Permanently masked pixels".
+
 A legend is included, and clicking on a legend item toggles its visibility, double clicking makes it the sole visible item on the graph.
 
 The polygons appear at the date of the first anomaly, if confirmed with 3 successive anomalies, and if there is no return to normal with 3 successive dates without anomalies afterwards. So false detections related to temporary water stress which are subsequently corrected do not appear. Also, in the last dates, there may be anomalies not appearing yet due to the lack of future data to confirm the detection.

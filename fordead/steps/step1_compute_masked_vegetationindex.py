@@ -37,6 +37,7 @@ from fordead.writing_data import write_tif
 @click.option("--soil_detection",  is_flag=True, help = "If True, bare ground is detected and used as mask, but the process has not been tested on other data than THEIA data in France (see https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/). If False, mask from formula_mask is applied.", show_default=True)
 @click.option("--formula_mask", type = str,default = "(B2 >= 700)", help = "formula whose result would be binary, as described here https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index. Is only used if soil_detection is False.", show_default=True)
 @click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
+@click.option("--ignored_period", type = list, default = None, help = "Period whose Sentinel dates to ignore (format 'MM-DD', ex : --ignored_period 11-01 --ignored_period 05-01", show_default=True)
 @click.option("--extent_shape_path", type = str,default = None, help = "Path of shapefile used as extent of detection, if None, the whole tile is used", show_default=True)
 @click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
 def cli_compute_masked_vegetationindex(
@@ -49,6 +50,7 @@ def cli_compute_masked_vegetationindex(
     soil_detection = False, 
     formula_mask = "(B2 >= 700)",
     vi = "CRSWIR",
+    ignored_period = None,
     extent_shape_path=None,
     path_dict_vi = None
     ):
@@ -71,6 +73,7 @@ def cli_compute_masked_vegetationindex(
     soil_detection
     formula_mask
     vi
+    ignored_period
     extent_shape_path
     path_dict_vi
 
@@ -78,7 +81,7 @@ def cli_compute_masked_vegetationindex(
     -------
 
     """
-    compute_masked_vegetationindex(input_directory,data_directory, lim_perc_cloud, interpolation_order, sentinel_source, apply_source_mask, soil_detection, formula_mask, vi, extent_shape_path, path_dict_vi)
+    compute_masked_vegetationindex(input_directory,data_directory, lim_perc_cloud, interpolation_order, sentinel_source, apply_source_mask, soil_detection, formula_mask, vi, ignored_period, extent_shape_path, path_dict_vi)
 
 
 def compute_masked_vegetationindex(
@@ -121,6 +124,8 @@ def compute_masked_vegetationindex(
         formula whose result would be binary, as described here https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index. Is only used if soil_detection is False.
     vi : str
         Chosen vegetation index
+    ignored_period : list of two strings
+        Period whose Sentinel dates to ignore (format 'MM-DD', ex : ["11-01","05-01"]
     extent_shape_path : str
         Path of shapefile used as extent of detection, if None, the whole tile is used
     path_dict_vi : str

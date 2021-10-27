@@ -12,6 +12,7 @@ Les paramètres en entrée sont :
 - **soil_detection** : Si True, le sol nu est détecté et utilisé comme masque, mais le processus peut ne pas être adapté à des situations autre qu'en utilisant les données THEIA sur des forêts résineuses de France métropolitaine. Si False, le masque de formula_mask est appliqué.
 - **formula_mask** : formule dont le résultat est binaire, format décrit [ici](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index). N'est utilisé que si soil_detection vaut False.
 - **vi** : Indice de végétation utilisé, peut être un des indices prévus dans le package (CRSWIR, NDVI, NDWI), ou n'importe quel indice spectral déterminé par l'utilisateur à partir du paramètre path_dict_vi
+- **ignored_period** : Période de l'année dont les dates Sentinel sont ignorées (liste de deux dates au format "MM-DD" (ex : ["11-01","05-01"]).
 - **extent_shape_path** : Chemin d'un shapefile contenant un polygone utilisé pour restreindre les calculs à une zone. Si non renseigné, le calcul est appliqué à l'ensemble de la tuile
 - **path_dict_vi** : Chemin d'un fichier texte permettant d'ajouter des indices de végétations utilisables. Si non renseigné, uniquement les indices prévus dans le package sont utilisable (CRSWIR, NDVI, NDWI). Le fichier examples/ex_dict_vi.txt donne l'exemple du formattage de ce fichier. Il s'agit de renseigner son nom, sa formule, et "+" ou "-" selon si l'indice augmente en cas de déperissement, ou si il diminue.
 
