@@ -216,6 +216,7 @@ def compute_masked_vegetationindex(
     #Add paths to vi and mask to TileInfo object
     tile.getdict_paths(path_vi = tile.paths["VegetationIndexDir"],
                         path_masks = tile.paths["MaskDir"])
+    
     #Saving TileInfo object
     tile.save_info()
     

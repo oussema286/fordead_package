@@ -54,4 +54,4 @@ The outputs of this processing step are described hereafter :
 - **ForestMask** directory: the binary raster **valid_area_mask.tif** is written. This mask identifies valid pixels for which a model was computed as 1, and non-valid pixels as 0.
 
 
-[NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/03_dieback_detection)
+[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/01_compute_masked_vegetationindex) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/03_dieback_detection)
