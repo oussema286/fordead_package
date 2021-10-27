@@ -49,12 +49,16 @@ def write_tif(data_array, attributes, path, nodata = None):
     if nodata != None:
         data_array.attrs["nodata"]=nodata
         
-    if len(data_array.dims)==3: #If data_array has several bands
+    if len(data_array.dims)>=3: #If data_array has several bands
         for dim in data_array.dims:
             if dim != "x" and dim != "y":
                 data_array=data_array.transpose(dim, 'y', 'x') #dimension which is not x or y must be first
         data_array.attrs["scales"]=data_array.attrs["scales"]*data_array.shape[0]
         data_array.attrs["offsets"]=data_array.attrs["offsets"]*data_array.shape[0]
+    
+    # data_array.attrs["nodatavals"]=(0,)
+    # data_array.attrs["scales"]=(0,)
+    # data_array.attrs["offsets"]=(0,)
 
     data_array.rio.to_raster(path,windowed = False, **args, tiled = True)
 
@@ -249,10 +253,30 @@ def vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, bins
     gp_results = gp_results.drop(columns=['class_index'])
     return gp_results
 
-def union_confidence_class(periodic_results, path_confidence_class):
-    confidence_class = gp.read_file(path_confidence_class)
-    union = gp.overlay(periodic_results, confidence_class, how='union', keep_geom_type = True)
-    # union = union.explode(index_parts=False)
+
+def union_confidence_class(periodic_results, confidence_class):
+    """
+    Computes union between periodic_results containing the dates of detection, and confidence_class containing the confidence classes
+    Polygons not intersecting correspond to areas detected as bare ground and their class column is filled with "Bare ground"
+
+    Parameters
+    ----------
+    period_end_results : geopandas dataframe
+        Polygons where dieback is detected, containing the period of the first anomaly detected
+    confidence_class : geopandas dataframe
+        Polygons containing the confidence class
+
+    Returns
+    -------
+    union : geopandas dataframe
+        Union of periodic_results and confidence_class
+
+    """
+    
+    
+    # confidence_class = gp.read_file(path_confidence_class)
+    union = gp.overlay(periodic_results, confidence_class, how='union',keep_geom_type = True)
+    # union = union.explode()
     # union = union[union.geom_type != 'Point']
     # union = union[union.geom_type != 'MultiLineString']
     # union = union[union.geom_type != 'LineString']

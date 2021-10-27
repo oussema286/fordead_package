@@ -66,15 +66,13 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
 	"Step 4. Compute forest mask" = "docs/Tutorial/04_compute_forest_mask.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Step 5. Compute confidence" = "docs/Tutorial/05_compute_confidence.md"
+	"Step 5. Export results" = "docs/Tutorial/05_export_results.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Step 6. Export results" = "docs/Tutorial/06_export_results.md"
+	"Creating a timelapse" = "docs/Tutorial/06_create_timelapse.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Creating a timelapse" = "docs/Tutorial/07_create_timelapse.md"
+	"Creating graphs" = "docs/Tutorial/07_create_graphs.md"
 	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Creating graphs" = "docs/Tutorial/08_create_graphs.md"
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Updating detection" = "docs/Tutorial/09_updating_detection.md"
+	"Updating detection" = "docs/Tutorial/08_updating_detection.md"
 	
 [[tool.portray.mkdocs.nav]]
     [[tool.portray.mkdocs.nav."User guides".English]]
@@ -86,9 +84,7 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav."User guides".English]]
     "4. Compute forest mask" = "docs/user_guides/english/04_compute_forest_mask.md"    
 	[[tool.portray.mkdocs.nav."User guides".English]]
-    "5. Compute confidence" = "docs/user_guides/english/05_compute_confidence.md"
-	[[tool.portray.mkdocs.nav."User guides".English]]
-    "6. Export results" = "docs/user_guides/english/06_export_results.md"
+    "5. Export results" = "docs/user_guides/english/05_export_results.md"
 	[[tool.portray.mkdocs.nav."User guides".English]]
     "Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
 	
@@ -107,9 +103,7 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav."User guides".'Français']]
     "4. Calcul du masque forêt" = "docs/user_guides/french/04_compute_forest_mask.md"    
 	[[tool.portray.mkdocs.nav."User guides".'Français']]
-    "5. Calcul de l'indice de confiance" = "docs/user_guides/french/05_compute_confidence.md"
-	[[tool.portray.mkdocs.nav."User guides".'Français']]
-    "6. Export des résultats" = "docs/user_guides/french/06_export_results.md"
+    "5. Export des résultats" = "docs/user_guides/french/05_export_results.md"
 	[[tool.portray.mkdocs.nav."User guides".'Français']]
     "Outils de visualisation" = "docs/user_guides/french/Results_visualisation.md"
 	

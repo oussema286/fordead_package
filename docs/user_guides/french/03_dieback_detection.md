@@ -1,10 +1,16 @@
 ## ÉTAPE 3 : Détection du dépérissement par comparaison entre l'indice de végétation prédit par le modèle et l'indice de végétation réel
 Cette étape permet la détection du déperissement. Pour chaque date SENTINEL non utilisée pour l'apprentissage, l'indice de végétation réel est comparé à l'indice de végétation prédit à partir des modèles calculés dans l'étape précèdente. Si la différence dépasse un seuil, une anomalie est détectée. Si trois anomalies successives sont détectées, le pixel est considéré comme dépérissant. Si après avoir été détecté comme déperissant, le pixel a trois dates successives sans anomalies, il n'est plus considéré comme dépérissant.
+Ces périodes entre la détection et le retour à la normale peuvent être enregistrées et associées à un indice de stress.
+Cet indice de stress peut être soit la moyenne de la différence entre l'indice de végétation et sa prédiction, soit une moyenne pondérée où pour chaque date utilisée, le poids correspond au numéro de la date à partir de la première anomalie :
+
+![graph_ind_conf](Diagrams/graph_ind_conf.png "graph_ind_conf")
 
 #### ENTRÉES
 Les paramètres en entrée sont :
 - **data_directory** : Le chemin du dossier de sortie dans lequel sera écrit les résultats de la détection.
 - **threshold_anomaly** : Seuil à partir duquel la différence entre l'indice de végétation réel et prédit est considéré comme une anomalie
+- **max_nb_stress_periods** : Nombre maximum de périodes de stress, les pixels avec un nombre plus élevé de périodes de stress sont masqués dans les exports.
+- **stress_index_mode** : Choix de l'indice de stress, si 'mean', l'indice est la moyenne de la différence entre l'indice de végétation et sa prédiction pour toutes les dates non masquées après la première anomalie confirmée ultérieurement. Si 'weighted_mean', l'indice est une moyenne pondérée, où pour chaque date utilisée, le poids correspond au numéro de la date (1, 2, 3, etc...) à partir de la première anomalie. Si None, les périodes de stress ne sont pas détectées, et aucune information n'est enregistrée.
 - **vi** : Indice de végétation utilisé, il est inutile de le renseigner si l'étape [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/) a été utilisée.
 - **path_dict_vi** : Chemin d'un fichier texte permettant d'ajouter des indices de végétations utilisables. Si non renseigné, uniquement les indices prévus dans le package sont utilisable (CRSWIR, NDVI, NDWI). Le fichier [examples/ex_dict_vi.txt](/examples/ex_dict_vi.txt) donne l'exemple du formattage de ce fichier. Il s'agit de renseigner son nom, sa formule, et "+" ou "-" selon si l'indice augmente en cas de déperissement, ou si il diminue. Il est également inutile de le renseigner si cela a été fait lors de l'étape [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/01_compute_masked_vegetationindex/).
 
@@ -13,9 +19,18 @@ Les paramètres en entrée sont :
 Les sorties de cette troisième étape, dans le dossier data_directory, sont :
 - Dans le dossier **DataDieback**, trois rasters :
     - **count_dieback** : le nombre de dates successives avec des anomalies
+	- **first_date_unconfirmed_dieback** : L'indice de la date du dernier changement d'état potentiel du pixel, date de première anomalie si le pixel n'est pas détecté comme un dépérissement, première non-anomalie si le pixel est détecté comme un dépérissement.
     - **first_date_dieback** : L'index de la première date avec une anomalie de la dernière série d'anomalies
     - **state_dieback** : Un raster binaire qui vaut 1 si le pixel est détecté comme déperissant (Au moins trois anomalies successives)
+- Dans le dossier **DataStress**, quatre rasters :
+    - **dates_stress** : Un raster avec **max_nb_stress_periods***2+1 bandes, contenant les indices de date de la première anomalie, et de retour à la normale pour chaque période de stress.
+    - **nb_periods_stress** : Un raster contenant le nombre total de périodes de stress pour chaque pixel. 
+    - **cum_diff_stress** : Un raster à **max_nb_stress_periods**+1 bandes contenant pour chaque période de stress la somme de la différence entre l'indice de végétation et sa prédiction, multipliée par le poids si stress_index_mode est "weighted_mean".
+	- **nb_dates_stress** : Un raster avec **max_nb_stress_periods**+1 bandes contenant le nombre de dates non masquées de chaque période de stress.
+	- **stress_index** : Un raster avec **max_nb_stress_periods**+1 bandes contenant l'indice de stress de chaque période de stress, c'est la moyenne ou la  moyenne pondérée de la différence entre l'indice de végétation et sa prédiction en fonction de **stress_index_mode**, obtenue à partir de cum_diff_stress et nb_dates_stress
+	Le nombre de bandes de ces matrices permet de sauvegarder les informations de chaque période de stress potentielle, et de la période du potentiel dépérissement final détecté.
 - Dans le dossier **DataAnomalies**, un raster pour chaque date **Anomalies_YYYY-MM-JJ.tif** qui vaut True là où sont détectées les anomalies.
+
 ## Utilisation
 ### A partir d'un script
 
@@ -66,7 +81,16 @@ Les anomalies sont détectées en comparant l'indice de végétation avec sa pr�
 Les anomalies successives sont comptées, à partir de trois anomalies successives, le pixel est considéré dépérissant. Si le pixel est considéré dépérissant, les dates successives sans anomalies sont comptées et à partir de trois dates sans anomalies, le pixel n'est plus considéré dépérissant.
 > **_Fonctions utilisées :_** [detection_dieback()](https://fordead.gitlab.io/fordead_package/reference/fordead/dieback_detection/#detection_dieback)
 
+#### Sauvegarde des informations sur les périodes de stress (OPTIONNEL, si stress_index_mode est renseigné)
+Les rasters contenant les informations sur les périodes de stress sont mis à jour, le nombre de périodes de stress est mis à jour lorsque les pixels reviennent à la normale. Lorsque les changements d'état sont confirmés, la première date d'anomalie ou de retour à la normale est sauvegardée. Pour chaque date, le nombre de dates dans les périodes de stress est mis à jour si le pixel n'est pas masqué et en période de stress.
+La différence entre l'indice de végétation et sa prédiction est ajoutée au raster cum_diff_stress, après avoir été multipliée par le numéro de la date si stress_index_mode est "weighted_mean".
+**_Fonctions utilisées:_** [save_stress()](https://fordead.gitlab.io/fordead_package/reference/fordead/dieback_detection/#save_stress)
+
+### L'indice de stress est calculé
+Si stress_index_mode est "mean", la trame de l'indice de stress est la trame cum_diff_stress divisée par la trame nb_dates_stress.
+Si stress_index_mode est "weighted_mean", le raster stress index est le raster cum_diff_stress divisé par la somme des poids (1+2+3+...+ nb_dates_stress).
+
  ### Ecriture des résultats
-Les informations liées à la détection du dépérissement sont écrites. L'ensemble des paramètres, chemins des données et dates utilisées sont aussi sauvegardés.
+Les informations liées à la détection du dépérissement et les périodes de stress sont écrites. L'ensemble des paramètres, chemins des données et dates utilisées sont aussi sauvegardés.
  > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#save_info)
 

@@ -41,7 +41,7 @@ def timelapse():
 @click.option("--vector_display_path", type = str, help = "Path of the shapefile with ground observations")
 @click.option("--hover_column_list", multiple=True, type=str, default=None, help="List of columns to display when hovering mouse over vectors of vector_display_path", show_default=True)
 @click.option("--max_date", type = str, default = None, help = "Last date used in the timelapse")
-@click.option("--show_confidence_class",  is_flag=True, help = "If True, detected dieback is shown with the confidence class at the last date used, as computed in the step [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/)", show_default=True)
+@click.option("--show_confidence_class",  is_flag=True, help = "If True, detected dieback is shown with the confidence class at the last date used, as vectorized in the step [05_export_results](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_export_results/)", show_default=True)
 @click.option("--zip_results",  is_flag=True, help = "If True, puts timelapses in a zip file", show_default=True)
 def cli_create_timelapse(data_directory, shape_path = None, name_column = "id", x = None, y = None, buffer = 100, vector_display_path = None, hover_column_list = None, max_date = None, show_confidence_class = False, zip_results = False):
     """
@@ -104,7 +104,7 @@ def create_timelapse(data_directory, shape_path = None, name_column = "id",  x =
     max_date: str
         Last date used in the timelapse, if None all dates available are used.
     show_confidence_class: bool
-        If True, detected dieback is shown with the confidence class at the last date used, as computed in the step [05_compute_confidence](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_compute_confidence/)
+        If True, detected dieback is shown with the confidence class at the last date used, as vectorized in the step [05_export_results](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_export_results/)
     zip_results: bool
         If True, transfers the timelapse to a zip file "Timelapses.zip" in data_directory/Timelapses directory
     """

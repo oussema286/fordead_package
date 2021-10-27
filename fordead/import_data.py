@@ -462,6 +462,8 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
     """
     if raster_path != None:
         raster = xr.open_rasterio(raster_path)
+        if raster.sizes["band"] == 1:
+            raster=raster.squeeze("band")
     raster.attrs["crs"] = raster.attrs["crs"].replace("+init=","")
     if extent_shape_path is not None:
         
@@ -681,28 +683,82 @@ def import_dieback_data(dict_paths, chunks = None):
     Parameters
     ----------
     dict_paths : dict
-        Dictionnary containg the keys "state_dieback", "first_date_dieback" and "count_dieback" whose values are the paths to the corresponding dieback data file.
+        Dictionnary containg the keys "state_dieback", "first_date_dieback", "first_date_unconfirmed_dieback", and "count_dieback" whose values are the paths to the corresponding dieback data file.
     chunks : int, optional
         Chunk size for import as dask array. The default is None.
 
     Returns
     -------
     dieback_data : xarray DataSet or dask DataSet
-        DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
+        DataSet containing four DataArrays, "state" containing the state of the pixel after computations, 
+        "first_date" containing the index of the date of the first anomaly when confirmed, 
+        "first_date_unconfirmed" containing the date of pixel change, first anomaly if pixel is not detected as dieback, first non-anomaly if pixel is detected as dieback, 
+        "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
 
     """
     
     state_dieback = xr.open_rasterio(dict_paths["state_dieback"],chunks = chunks).astype(bool)
     first_date_dieback = xr.open_rasterio(dict_paths["first_date_dieback"],chunks = chunks)
+    first_date_unconfirmed_dieback = xr.open_rasterio(dict_paths["first_date_unconfirmed_dieback"],chunks = chunks)
     count_dieback = xr.open_rasterio(dict_paths["count_dieback"],chunks = chunks)
     
     dieback_data=xr.Dataset({"state": state_dieback,
                      "first_date": first_date_dieback,
+                     "first_date_unconfirmed" : first_date_unconfirmed_dieback,
                      "count" : count_dieback})
     dieback_data=dieback_data.squeeze("band")
 
+
     return dieback_data
-        
+
+def import_stress_data(dict_paths, chunks = None):
+    """
+    Imports data relating to stress periods
+
+    Parameters
+    ----------
+    dict_paths : dict
+        Dictionnary containg the keys "dates_stress", "cum_diff_stress", "nb_dates_stress" and "nb_periods_stress" whose values are the paths to the corresponding stress data file.
+    chunks : int, optional
+        Chunk size for import as dask array. The default is None.
+
+    Returns
+    -------
+    stress_data : xarray DataSet or dask DataSet
+        DataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
+    """
+    dates_stress = xr.open_rasterio(dict_paths["dates_stress"],chunks = chunks).rename({"band": "change"})
+    cum_diff = xr.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).rename({"band": "period"})
+    nb_dates = xr.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).rename({"band": "period"})
+    nb_periods_stress = xr.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
+    stress_data=xr.Dataset({"date": dates_stress,
+                     "nb_periods": nb_periods_stress,
+                     "cum_diff" : cum_diff,
+                     "nb_dates" : nb_dates
+                     })
+
+    return stress_data
+
+def import_stress_index(path, chunks = None):
+    """
+    Imports the stress index of all stress periods
+
+    Parameters
+    ----------
+    path : str
+        Path to the stress index raster stack.
+    chunks : int, optional
+        Chunk size for import as dask array. The default is None.
+
+    Returns
+    -------
+    stress_index : xarray DataSet or dask DataSet (x,y,period)
+        DataSet containing the value of the stress index for each pixel and each stress period.
+    """
+    stress_index = xr.open_rasterio(path,chunks = chunks).rename({"band": "period"})
+
+    return stress_index 
+
 def initialize_dieback_data(shape,coords):
     """
     Initializes data relating to dieback detection
@@ -717,22 +773,54 @@ def initialize_dieback_data(shape,coords):
     Returns
     -------
     dieback_data : xarray DataSet or dask DataSet
-        DataSet containing three DataArrays, "state" containing the state of the pixel after computations, "first_date" containing the index of the date of the first anomaly, "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
-        For all three arrays, all pixels are intitialized at zero.
+        DataSet containing four DataArrays, "state" containing the state of the pixel after computations, 
+        "first_date" containing the index of the date of the first anomaly then confirmed, 
+        "first_date_unconfirmed" containing the date of pixel change, first anomaly if pixel is not detected as dieback, first non-anomaly if pixel is detected as dieback, 
+        "count" containing the number of successive anomalies if "state" is True, or conversely the number of successive dates without anomalies. 
+        For all four arrays, all pixels are intitialized at zero.
 
 
     """
+
+    zeros_array= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
     
-    count_dieback= np.zeros(shape,dtype=np.uint8) #np.int8 possible ?
-    first_date_dieback=np.zeros(shape,dtype=np.uint16) #np.int8 possible ?
-    state_dieback=np.zeros(shape,dtype=bool)
-    
-    dieback_data=xr.Dataset({"state": xr.DataArray(state_dieback, coords=coords),
-                         "first_date": xr.DataArray(first_date_dieback, coords=coords),
-                         "count" : xr.DataArray(count_dieback, coords=coords)})
-    
+
+    dieback_data=xr.Dataset({"state": xr.DataArray(zeros_array.astype(bool), coords=coords),
+                         "first_date": xr.DataArray(zeros_array.astype(np.uint16), coords=coords),
+                         "first_date_unconfirmed": xr.DataArray(zeros_array.astype(np.uint16), coords=coords),
+                         "count" : xr.DataArray(zeros_array, coords=coords)})
     return dieback_data
 
+
+def initialize_stress_data(shape,coords, max_nb_stress_periods):
+    """
+    Initializes data relating to stress periods
+
+    Parameters
+    ----------
+    shape : tuple
+        Tuple with sizes for the resulting array 
+    coords : Coordinates attribute of xarray DataArray
+        Coordinates y and x
+    max_nb_stress_periods : int
+        Maximum number of stress periods, used to set the number of bands in the DataArrays. "date" will contain max_nb_stress_periods*2+1 bands, "nb_periods" only one, and "cum_diff" and "nb_dates" will contain max_nb_stress_periods+1 bands.
+
+    Returns
+    -------
+    stress_data : xarray DataSet or dask DataSet
+        DataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
+        For all four arrays, all pixels are intitialized at zero.
+    """
+
+    stress_data=xr.Dataset({"date": xr.DataArray(np.zeros(shape+((max_nb_stress_periods+1)*2-1,),dtype=np.uint16), 
+                                                 coords= {"y" : coords["y"],"x" : coords["x"],"change" : range(1,(max_nb_stress_periods+1)*2)},dims = ["y","x","change"]),
+                         "nb_periods": xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords),
+                         "cum_diff": xr.DataArray(np.zeros(shape+(max_nb_stress_periods+1,),dtype=np.float), 
+                                                                      coords= {"y" : coords["y"],"x" : coords["x"],"period" : range(1,max_nb_stress_periods+2)},dims = ["y","x","period"]),
+                         "nb_dates": xr.DataArray(np.zeros(shape+(max_nb_stress_periods+1,),dtype=np.uint16), 
+                                                                      coords= {"y" : coords["y"],"x" : coords["x"],"period" : range(1,max_nb_stress_periods+2)},dims = ["y","x","period"])
+                         })
+    return stress_data
 
 
 def import_soil_data(dict_paths, chunks = None):
@@ -791,53 +879,6 @@ def initialize_soil_data(shape,coords):
                          "first_date": xr.DataArray(first_date_soil, coords=coords),
                          "count" : xr.DataArray(count_soil, coords=coords)}).squeeze("band")
     return soil_data
-
-def initialize_confidence_data(shape,coords):
-    """
-    Initializes data relating to confidence index
-
-    Parameters
-    ----------
-    shape : tuple
-        Tuple with sizes for the resulting array 
-    coords : Coordinates attribute of xarray DataArray
-        Coordinates y and x
-
-    Returns
-    -------
-    nb_dates : xarray DataArray (x,y)
-        Number of unmasked sentinel dates since the first anomaly for each pixel.
-    sum_diff : xarray DataArray (x,y)
-        Cumulative sum of differences between the vegetation index and its prediction for each date.
-
-    """
-    
-    
-    nb_dates=xr.DataArray(np.zeros(shape,dtype=np.uint16), coords=coords)
-    sum_diff=xr.DataArray(np.zeros(shape,dtype=np.float), coords=coords)
-
-    return nb_dates, sum_diff
-
-def import_confidence_data(dict_paths, chunks = None):
-    """
-    Imports data relating to confidence index
-
-    Parameters
-    ----------
-    dict_paths : dict
-        Dictionnary containing keys "confidence_index" and "nb_dates" whose values are the paths to the rasters.
-    Returns
-    -------
-    confidence_index : xarray DataArray (x,y)
-        Confidence index
-    nb_dates : xarray DataArray (x,y)
-        Number of unmasked sentinel dates since the first anomaly for each pixel.
-
-    """
-    confidence_index=xr.open_rasterio(dict_paths["confidence_index"], chunks = chunks).squeeze("band")
-    nb_dates=xr.open_rasterio(dict_paths["nb_dates"], chunks = chunks).squeeze("band")
-
-    return confidence_index, nb_dates
 
 def import_masked_vi(dict_paths, date, chunks = None):
     """

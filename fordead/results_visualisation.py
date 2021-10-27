@@ -20,7 +20,7 @@ import matplotlib.colors as colors
 
 
 from fordead.masking_vi import get_dict_vi
-from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_dieback_data, import_forest_mask, import_confidence_data
+from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_dieback_data, import_forest_mask, import_stress_data, import_stress_index
 
 
 def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = None):
@@ -80,7 +80,7 @@ def polygon_from_coordinate_and_radius(coordinates, radius, crs):
 
 
 def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date, show_confidence_class):
-        nb_classes = len(tile.parameters["classes_list"]) if show_confidence_class else 1
+        nb_classes = len(tile.parameters["conf_classes_list"]) if show_confidence_class else 1
         NbData = 1 + nb_classes + 2*tile.parameters["soil_detection"]
         color_map = plt.get_cmap('Reds',nb_classes+1)
         
@@ -94,21 +94,26 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             soil_data = import_soil_data(tile.paths)
             soil_data = soil_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         if show_confidence_class: 
-            confidence_index, nb_dates = import_confidence_data(tile.paths)
+            stress_data = import_stress_data(tile.paths)
+            stress_index = import_stress_index(tile.paths["stress_index"])
+            confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))
+            nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))
+            
             confidence_index = confidence_index.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
             nb_dates = nb_dates.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-            digitized_confidence = np.digitize(confidence_index,tile.parameters["threshold_list"])
+            digitized_confidence = np.digitize(confidence_index,tile.parameters["conf_threshold_list"])
             digitized_confidence[nb_dates==3]=0
             
         dieback_data = import_dieback_data(tile.paths)
         dieback_data = dieback_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         forest_mask = import_forest_mask(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        
+        valid_area = import_forest_mask(tile.paths["valid_area_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        relevant_area = valid_area & forest_mask
         #Correcting extent if computed area is smaller than Sentinel-2 data area
-        extent = np.array([float(forest_mask[dict(x=0,y=0)].coords["x"])-forest_mask.attrs["transform"][0]/2,
-                                                float(forest_mask[dict(x=-1,y=-1)].coords["y"])-forest_mask.attrs["transform"][0]/2,
-                                                float(forest_mask[dict(x=-1,y=-1)].coords["x"])+forest_mask.attrs["transform"][0]/2,
-                                                float(forest_mask[dict(x=0,y=0)].coords["y"])+forest_mask.attrs["transform"][0]/2])
+        extent = np.array([float(relevant_area[dict(x=0,y=0)].coords["x"])-relevant_area.attrs["transform"][0]/2,
+                                                float(relevant_area[dict(x=-1,y=-1)].coords["y"])-relevant_area.attrs["transform"][0]/2,
+                                                float(relevant_area[dict(x=-1,y=-1)].coords["x"])+relevant_area.attrs["transform"][0]/2,
+                                                float(relevant_area[dict(x=0,y=0)].coords["y"])+relevant_area.attrs["transform"][0]/2])
         
         dates = tile.dates[tile.dates <= max_date] if max_date is not None else tile.dates
         stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = dates)
@@ -137,8 +142,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                 if tile.parameters["soil_detection"]:
                     soil = (soil_data["first_date"] <= dateIndex) & soil_data["state"]
                     if show_confidence_class:
-                        # affected = detected.where(~soil, len(tile.parameters["classes_list"])+detected+soil)
-                        affected = xr.where(~soil, detected*(1+digitized_confidence),len(tile.parameters["classes_list"])+detected+soil)
+                        # affected = detected.where(~soil, len(tile.parameters["conf_classes_list"])+detected+soil)
+                        affected = xr.where(~soil, detected*(1+digitized_confidence),len(tile.parameters["conf_classes_list"])+detected+soil)
                     else:
                         affected=detected+2*soil
                 elif show_confidence_class:
@@ -147,7 +152,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                     affected=detected
                 
                 # valid_area = 
-                affected = affected.where(forest_mask,0)
+                affected = affected.where(relevant_area,0)
                 
                 results_affected = (
                             {'properties': {'Etat': v}, 'geometry': s}
@@ -174,7 +179,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                         y=DictCoordY[etat],
                         line_color=colors.rgb2hex(color_map(etat-1)),
                         hoverinfo="skip",
-                        name='Dieback detected' if not(show_confidence_class) else tile.parameters["classes_list"][etat-1],
+                        name='Dieback detected' if not(show_confidence_class) else tile.parameters["conf_classes_list"][etat-1],
                         legendgroup="dieback",
                         legendgrouptitle_text="Dieback detected",
                         
@@ -256,8 +261,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                     {'properties': {'Etat': v}, 'geometry': s}
                     for i, (s, v) 
                     in enumerate(
-                        rasterio.features.shapes(forest_mask.data.astype("uint8"), transform=Affine(*stack_rgb.attrs["transform"]))))
-        dict_forest_mask = {"x" : [],
+                        rasterio.features.shapes(relevant_area.data.astype("uint8"), transform=Affine(*stack_rgb.attrs["transform"]))))
+        dict_relevant_area = {"x" : [],
                             "y" : []}
         for geom in list(results_affected):
             if geom["properties"]["Etat"] == 0:
@@ -265,16 +270,16 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                     xList=np.array([coord[0] for coord in poly])
                     yList=np.array([coord[1] for coord in poly])
                     
-                    dict_forest_mask["x"] +=list((xList-np.array(stack_rgb.attrs["transform"][2]))/10-0.5)+[None]
-                    dict_forest_mask["y"] +=list((np.array(stack_rgb.attrs["transform"][5])-yList)/10-0.5)+[None]
+                    dict_relevant_area["x"] +=list((xList-np.array(stack_rgb.attrs["transform"][2]))/10-0.5)+[None]
+                    dict_relevant_area["y"] +=list((np.array(stack_rgb.attrs["transform"][5])-yList)/10-0.5)+[None]
                     
         fig.add_trace(go.Scatter(
-            x=dict_forest_mask["x"],
-            y=dict_forest_mask["y"],
+            x=dict_relevant_area["x"],
+            y=dict_relevant_area["y"],
             fill = "none",
             hoveron = 'fills',
             line_color = "grey",
-            name="Outside of pixels of interest"))
+            name="Permanently masked pixels"))
         
         
         #Slider  
@@ -388,7 +393,7 @@ def plot_model(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_d
         
     return fig
 
-def plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax, ignored_period = None):
+def plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data, X,Y, yy, threshold_anomaly, vi, path_dict_vi,ymin,ymax, ignored_period = None):
     """
     Creates figure from all data
 
@@ -420,6 +425,13 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_d
         elif dict_vi[vi]["dieback_change_direction"] == "-":
             (yy-threshold_anomaly).plot.line("b--", label='Threshold for anomaly detection')
         
+        
+        
+        for period in range(min(xy_stress_data.sizes["period"], int(xy_stress_data["nb_periods"]))):
+            period_dates = (pixel_series.Time[xy_stress_data["date"].isel(change = [period*2,period*2+1])]).data
+            label = {"label" : "Stress period"} if period==0 else {}
+            plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, **label)         
+            # plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, label = "Stress period")            
         
         # Plotting vertical lines when dieback or soil is detected
         if ~xy_dieback_data["state"] & ~xy_soil_data["state"]:
@@ -473,13 +485,15 @@ def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detect
         
     return pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index
     
-def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies):
+
+def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies,stress_data):
     yy = (harmonic_terms * coeff_model.isel(x = X, y = Y).compute()).sum(dim="coeff")
     
     xy_first_detection_date_index = int(first_detection_date_index.isel(x = X, y = Y))
     xy_soil_data = soil_data.isel(x = X, y = Y) if soil_data is not None else {"state" : False}
     xy_stack_masks = stack_masks.isel(x = X, y = Y)
     pixel_series = stack_vi.isel(x = X, y = Y)
+    xy_stress_data = stress_data.isel(x = X, y = Y)
     if xy_first_detection_date_index!=0:
         xy_anomalies = anomalies.isel(x = X, y = Y)
         xy_dieback_data = dieback_data.isel(x = X, y = Y)
@@ -492,10 +506,11 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
         anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
         pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
         pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
-    return pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index
-    
+        
+    return pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data
 
-def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, tile, ymin, ymax, name_file = None):
+def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax, name_file = None):
+
     
     if x < 0 or x >= tile.raster_meta["sizes"]["x"] or y < 0 or y >= tile.raster_meta["sizes"]["y"]:
         print("Pixel outside extent of the region of interest")
@@ -504,13 +519,17 @@ def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, f
         if not(xy_forest_mask):
             print("Pixel outside forest mask")
         else:
-            pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index = select_pixel_from_indices(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies)              
-            fig = plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax, ignored_period = tile.parameters["ignored_period"])
-            
-            if name_file is None: name_file = "X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))
-            fig.savefig(tile.paths["series"] / (name_file + ".png"))
-            plt.show()
-            plt.close()
+            pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data = select_pixel_from_indices(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data)              
+            if xy_stress_data["nb_periods"]>tile.parameters["max_nb_stress_periods"]:
+                print("Maximum number of stress periods exceeded")
+            else:
+                fig = plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax, ignored_period = tile.parameters["ignored_period"])
+    
+                
+                if name_file is None: name_file = "X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))
+                fig.savefig(tile.paths["series"] / (name_file + ".png"))
+                plt.show()
+                plt.close()
 
 
 

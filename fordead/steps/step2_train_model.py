@@ -99,9 +99,9 @@ def train_model(
     
     tile.add_parameters({"nb_min_date" : nb_min_date, "min_last_date_training" : min_last_date_training, "max_last_date_training" : max_last_date_training, "correct_vi" : correct_vi})
     if tile.parameters["Overwrite"] : 
-        tile.delete_dirs("coeff_model","AnomaliesDir","state_dieback" ,"confidence_index","periodic_results_dieback","result_files","timelapse","series", "validation") #Deleting previous training and detection results if they exist
+        tile.delete_dirs("coeff_model","AnomaliesDir","state_dieback", "periodic_results_dieback","result_files","timelapse","series", "validation", "nb_periods_stress") #Deleting previous training and detection results if they exist
         tile.delete_files("valid_area_mask")
-        tile.delete_attributes("last_computed_anomaly","last_date_confidence_index","last_date_export")
+        tile.delete_attributes("last_computed_anomaly","last_date_export")
 
     #Create missing directories and add paths to TileInfo object
     tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.tif")

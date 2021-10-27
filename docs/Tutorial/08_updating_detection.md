@@ -9,7 +9,6 @@ from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_ve
 from fordead.steps.step2_train_model import train_model
 from fordead.steps.step3_dieback_detection import dieback_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
-from fordead.steps.step5_compute_confidence_index import compute_confidence_index
 from fordead.steps.step6_export_results import export_results
 
 from fordead.visualisation.create_timelapse import create_timelapse
@@ -34,20 +33,18 @@ train_model(data_directory = data_directory,
             max_last_date_training="2018-06-01")
 
 dieback_detection(data_directory = data_directory, 
-                  threshold_anomaly = 0.16)
-
+                  threshold_anomaly = 0.16,
+				  stress_index_mode = "weighted_mean")
+				  
 compute_forest_mask(data_directory, 
                     forest_mask_source = "vector", 
                     vector_path = "<MyWorkingDirectory>/vector/area_interest.shp")
 
-compute_confidence_index(data_directory, 
-                         threshold_list = [0.265], 
-                         classes_list = ["Low anomaly", "Severe anomaly"])
-
 export_results(data_directory = data_directory, 
                frequency= "M", 
                multiple_files = False, 
-               intersection_confidence_class = True)
+			   conf_threshold_list = [0.265],
+			   conf_classes_list = ["Low anomaly","Severe anomaly"])
 
 create_timelapse(data_directory = data_directory, 
                  x = 643069, 

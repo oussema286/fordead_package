@@ -1,10 +1,15 @@
 ## STEP 3: Detection of dieback by comparing the model-predicted vegetation index with the actual vegetation index
-This step allows the detection of dieback. For each SENTINEL date not used for training, the actual vegetation index is compared to the vegetation index predicted from the model calculated in the previous step. If the difference exceeds a threshold, an anomaly is detected. If three successive anomalies are detected, the pixel is considered as suffering from dieback. If after being detected as suffering from dieback, the pixel has three successive dates without anomalies, it is no longer considered as suffering from dieback.
+This step allows the detection of dieback. For each SENTINEL date not used for training, the actual vegetation index is compared to the vegetation index predicted from the model calculated in the previous step. If the difference exceeds a threshold, an anomaly is detected. If three successive anomalies are detected, the pixel is considered as suffering from dieback. If after being detected as suffering from dieback, the pixel has three successive dates without anomalies, it is no longer considered as suffering from dieback. Those periods between detection and return to normal can be saved along with an associated stress index.
+This stress index can either be the mean of the difference between the vegetation index and its prediction, or a weighted mean where for each date used, the weight corresponds to the number of the date from the first anomaly :
+
+![graph_ind_conf](Diagrams/graph_ind_conf.png "graph_ind_conf")
 
 #### INPUTS
 The input parameters are :
 - **data_directory**: The path of the output folder where the detection results will be written.
 - **threshold_anomaly**: Threshold at which the difference between the actual and predicted vegetation index is considered as an anomaly
+- **max_nb_stress_periods** : Maximum number of stress periods, pixels with a higher number of stress periods are masked in exports.
+- **stress_index_mode** : Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no informations are saved
 - **vi**: Vegetation index used, can be ignored if the [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/) step has been used.
 - **path_dict_vi** : Path to a text file allowing to add usable vegetation indices. If not filled in, only the indices provided in the package are usable (CRSWIR, NDVI, NDWI). The file [examples/ex_dict_vi.txt](/examples/ex_dict_vi.txt) gives an example on how to format of this file. It is necessary to fill in its name, its formula, and "+" or "-" depending on whether the index's value increases or decreases in case of diebacks. Can be ignored in if it has been done previously in the [_compute_masked_vegetationindex_ step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/).
 
@@ -12,8 +17,16 @@ The input parameters are :
 The outputs of this step, in the data_directory folder, are :
 - In the **DataDieback** folder, three rasters:
     - **count_dieback** : the number of successive dates with anomalies
+	- **first_date_unconfirmed_dieback** : The date index of latest potential state change of the pixels, first anomaly if pixel is not detected as dieback, first non-anomaly if pixel is detected as dieback, not necessarily confirmed.
     - **first_date_dieback**: The index of the first date with an anomaly in the last series of anomalies
     - **state_dieback**: A binary raster whose value is 1 if the pixel is detected as suffering from dieback (at least three successive anomalies)
+- In the **DataStress** folder, four rasters:
+    - **dates_stress** : A raster with **max_nb_stress_periods***2+1 bands, containing the date indices of the first anomaly, and of return to normal for each stress period.
+    - **nb_periods_stress**: A raster containing the total number of stress periods for each pixel 
+    - **cum_diff_stress**: a raster with **max_nb_stress_periods**+1 bands containing containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean"
+	- **nb_dates_stress** : a raster with **max_nb_stress_periods**+1 bands containing the number of unmasked dates of each stress period.
+	- **stress_index** : a raster with **max_nb_stress_periods**+1 bands containing the stress index of each stress period, it is the mean or weighted mean of the difference between the vegetation index and its prediction depending on **stress_index_mode**, obtained from cum_diff_stress and nb_dates_stress
+	The number of bands of these rasters is meant to account for each potential stress period, and another for a potential final dieback detection
 - In the **DataAnomalies** folder, a raster for each date **Anomalies_YYYY-MM-DD.tif** whose value is 1 where anomalies are detected.
 
 ## How to use
@@ -66,6 +79,15 @@ Anomalies are detected by comparing the vegetation index with its prediction. Kn
 The successive anomalies are counted, the pixel is considered suffering from dieback if there are three successive anomalies. If the pixel is considered as suffering from dieback, the successive dates without anomalies are counted instead, and the pixel is not considered as suffering from dieback anymore if there are three successive dates without anomalies, 
 > **_Functions used:_** [detection_dieback()](https://fordead.gitlab.io/fordead_package/reference/fordead/dieback_detection/#detection_dieback)
 
+#### Saving stress periods information (OPTIONAL - if **stress_index_mode** is not None)
+The rasters containing stress periods information are updated, the number of stress periods is updated when pixels return to normal. When changes of state are confirmed, the first date of anomaly or return to normal is saved. For each date, the number of dates within stress periods is updated if the pixel is unmasked and in a stress period.
+The difference between the vegetation index and its prediction is added to the cum_diff_stress raster, after being multiplied be the number of the date if stress_index_mode is "weighted_mean".
+> **_Functions used:_** [save_stress()](https://fordead.gitlab.io/fordead_package/reference/fordead/dieback_detection/#save_stress)
+
+### The stress index is calculated
+If stress_index_mode is "mean", the stress index raster is the cum_diff_stress raster divided by the nb_dates_stress raster
+If stress_index_mode is "weighted_mean", the stress index raster is the cum_diff_stress raster divided by the sum of the weights (1+2+3+...+ nb_dates_stress)
+
  ### Writing the results
-The information related to the detection of dieback is written. All parameters, data paths and dates used are also saved.
+The information related to the detection of dieback, stress data and stress indices are written. All parameters, data paths and dates used are also saved.
 > **_Functions used:_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif),
