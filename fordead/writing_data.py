@@ -107,17 +107,18 @@ def get_bins(start_date,end_date,frequency,dates):
     
     return bins_as_date, bins_as_datenumber
 
-def convert_dateindex_to_datenumber(dataset, dates):
+def convert_dateindex_to_datenumber(date_array, mask_array, dates):
     """
     Converts array containing dates as an index to an array containing dates as the number of days since "2015-01-01" or to a no data value if masked
 
     Parameters
     ----------
-    dataset : xarray dataset with at least arrays : 
-        "state", binary array with False where returned array will take a no data value (99999999)
-        "first date", array containing index of date in 'dates'
+    date_array : xarray DataArray 
+        array containing date indices
+    mask_array : xarray DataArray 
+        mask array, pixels containing False are given no data value of 99999999
     dates : array
-        Array of dates in the format "YYYY-MM-DD"
+        Array of dates in the format "YYYY-MM-DD", index of the date in this array corresponds to the indices in date_array.
 
     Returns
     -------
@@ -127,9 +128,9 @@ def convert_dateindex_to_datenumber(dataset, dates):
     """
     
     used_dates_numbers = (pd.to_datetime(dates)-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days
-    results_date_number = used_dates_numbers[dataset.first_date.data.ravel()]
-    results_date_number = np.reshape(np.array(results_date_number),dataset.first_date.shape)
-    results_date_number[~dataset.state.data] = 99999999
+    results_date_number = used_dates_numbers[date_array.data.ravel()]
+    results_date_number = np.reshape(np.array(results_date_number),date_array.shape)
+    results_date_number[~mask_array.data] = 99999999
     
     return results_date_number
 

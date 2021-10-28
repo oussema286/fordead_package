@@ -9,6 +9,8 @@ import click
 from fordead.import_data import import_dieback_data, TileInfo, import_forest_mask, import_soil_data, import_stress_data, import_stress_index
 from fordead.writing_data import vectorizing_confidence_class, get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date, union_confidence_class, write_tif
 import numpy as np
+import geopandas as gp
+import pandas as pd
 
 @click.command(name='export_results')
 @click.option("-o", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
@@ -22,6 +24,8 @@ import numpy as np
                     help="If True, one shapefile is exported for each period containing the areas in dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback", show_default=True)
 @click.option("-t", "--conf_threshold_list", type = list, default = None, help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
 @click.option("-c", "--conf_classes_list", type = list, default = None, help = "List of classes names, if conf_threshold_list has n values, conf_classes_list must have n+1 values", show_default=True)
+@click.option("--export_stress",  is_flag=True,
+                    help="If True, stress periods are exported as polygons containing the period when each stress period started, and stress class if conf_threshold_list and conf_classes_list are given", show_default=True)
 def cli_export_results(
     data_directory,
     start_date = '2015-06-23',
@@ -29,7 +33,8 @@ def cli_export_results(
     frequency = 'M',
     multiple_files = False,
     conf_threshold_list = None,
-    conf_classes_list = None
+    conf_classes_list = None,
+    export_stress = False
     ):
     """
     Export results to a vectorized shapefile format.
@@ -44,12 +49,13 @@ def cli_export_results(
     multiple_files
     conf_threshold_list
     conf_classes_list
+    export_stress
 
     Returns
     -------
 
     """
-    export_results(data_directory, start_date, end_date, frequency, multiple_files, conf_threshold_list, conf_classes_list)
+    export_results(data_directory, start_date, end_date, frequency, multiple_files, conf_threshold_list, conf_classes_list, export_stress)
 
 
 
@@ -60,7 +66,8 @@ def export_results(
     frequency = 'M',
     multiple_files = False,
     conf_threshold_list = None,
-    conf_classes_list = None
+    conf_classes_list = None,
+    export_stress = False
     ):
     """
     Writes results in the chosen period, form and using chosen frequency.
@@ -83,6 +90,8 @@ def export_results(
         List of thresholds used as bins to discretize the confidence index into several classes
     conf_classes_list : list
         List of classes names, if conf_threshold_list has n values, conf_classes_list must have n+1 values
+    export_stress : bool
+        If True, stress periods are exported as polygons containing the period when each stress period started, and stress class if conf_threshold_list and conf_classes_list are given.
     
     Returns
     -------
@@ -98,21 +107,39 @@ def export_results(
         tile.delete_attributes("last_date_export")
         
     tile.add_path("confidence_index", tile.data_directory / "Results" / "confidence_index.tif")
-    
+    tile.add_path("stress_periods", tile.data_directory / "Results" / "stress_periods.shp")
+
     exporting = (tile.dates[-1] != tile.last_date_export) if hasattr(tile, "last_date_export") else True
     if exporting:
         print("Exporting results")
         bins_as_date, bins_as_datenumber = get_bins(start_date,end_date,frequency,tile.dates)
-        first_date_number = convert_dateindex_to_datenumber(dieback_data, tile.dates)
+        first_date_number = convert_dateindex_to_datenumber(dieback_data.first_date,dieback_data.state, tile.dates)
     
         if tile.parameters["soil_detection"]:
             soil_data = import_soil_data(tile.paths, chunks= 1280)
-            first_date_number_soil = convert_dateindex_to_datenumber(soil_data, tile.dates)
+            first_date_number_soil = convert_dateindex_to_datenumber(soil_data.first_date, soil_data.state, tile.dates)
             
         forest_mask = import_forest_mask(tile.paths["ForestMask"], chunks= 1280)
         valid_area = import_forest_mask(tile.paths["valid_area_mask"], chunks= 1280)
         relevant_area = forest_mask & valid_area
-    
+        
+        if export_stress:
+            stress_index = import_stress_index(tile.paths["stress_index"])
+            stress_data = import_stress_data(tile.paths)
+            stress_list = []
+            for period in range(tile.parameters["max_nb_stress_periods"]):
+                stress_period = stress_index.isel(period = period)
+                stress_class = vectorizing_confidence_class(stress_period, stress_data.nb_dates.isel(period = period), (relevant_area & (period < stress_data["nb_periods"])).compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
+                
+                stress_start_date = stress_data["date"].isel(change = period*2)
+                stress_start_date_number = convert_dateindex_to_datenumber(stress_start_date, period < stress_data["nb_periods"], tile.dates)
+                vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
+                
+                stress_list += [union_confidence_class(vector_stress_start, stress_class)]
+                
+            stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
+            stress_total.to_file(tile.paths["stress_periods"])
+            
         if multiple_files:
             tile.add_dirpath("result_files", tile.data_directory / "Results")
             for date_bin_index, date_bin in enumerate(bins_as_date):
