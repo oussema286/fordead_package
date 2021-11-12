@@ -72,9 +72,10 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   start_date_results, end_date_results, results_frequency, multiple_files,
                   correct_vi):
 
-    # sentinel_directory = "D:/Documents/Deperissement/FORMATION_SANTE_FORETS/A_DATA/RASTER/SERIES_SENTINEL"
-    # main_directory = "D:/Documents/Deperissement/Output"    
-    # soil_detection = False
+    # sentinel_directory = "E:/fordead/Data/bug/sentinel/"
+    # main_directory = "E:/fordead/Data/bug/output"   
+    # soil_detection = True
+    # tuiles = ["test_bug"]
     
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)

@@ -158,7 +158,7 @@ def dieback_detection(
 
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
-                del masked_vi, predicted_vi, anomalies, changing_pixels
+                del masked_vi, predicted_vi, anomalies, changing_pixels, diff_vi
         tile.last_computed_anomaly = new_dates[-1]
         
         if stress_index_mode is not None:
