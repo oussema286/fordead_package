@@ -59,6 +59,8 @@ def model_vi(stack_vi, stack_masks, one_dim = False):
         Array containing vegetation index data, must contain coordinates 'Time' with format '%Y-%m-%d'
     stack_masks : array (Time,x,y)
         Array (boolean) containing mask data.
+    one_dim : bool
+        Has to be True if data dimension is only temporal, and have no spatial dimensions
 
     Returns
     -------
@@ -74,7 +76,7 @@ def model_vi(stack_vi, stack_masks, one_dim = False):
         coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms})
         coeff_model['coeff'] = range(1,6) # coordinate values as recorded in .tif bands
     else:
-        p, _, _, _ = lstsq(HarmonicTerms[~stack_masks], stack_vi.where(~stack_masks,drop=True))
+        p, _, _, _ = lstsq(HarmonicTerms[~stack_masks][0], stack_vi.where(~stack_masks,drop=True))
         coeff_model = xr.DataArray(p, coords={"coeff" : range(1,6)},dims=["coeff"])
         
     return coeff_model
