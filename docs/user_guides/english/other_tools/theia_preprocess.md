@@ -37,3 +37,8 @@ fordead theia_preprocess -i <zipped_directory> -o <unzipped_directory> -t T31UFQ
 ```
 
 See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-theia_preprocess)
+
+## Other ways to download THEIA data
+
+Information about THEIA products can be found on the [THEIA website](https://www.theia-land.fr/), and you can find the catalog [here](https://theia.cnes.fr/atdistrib/rocket/#/search?collection=SENTINEL2).
+You can also use the [theia_download package by Olivier Hagolle](https://github.com/olivierhagolle/theia_download) whose simplified code is used in this tool.
