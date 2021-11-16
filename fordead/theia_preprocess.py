@@ -267,7 +267,7 @@ def s2_unzip(s2zipfile, out_dir, bands):
         print("Bad zip file, removing file")
         os.remove(s2zipfile)
 
-def unzip_theia(bands, zip_dir,out_dir):
+def unzip_theia(bands, zip_dir,out_dir, empty_zip):
     """
     Unzips zipped theia data, then empties the zip file
 
@@ -279,6 +279,8 @@ def unzip_theia(bands, zip_dir,out_dir):
         Directory where zip files containing theia data are stored
     out_dir : str
         Directory where data is extracted
+    empty_zip : bool
+        If True, the zip file is emptied as a way to save space
 
     Returns
     -------
@@ -294,7 +296,7 @@ def unzip_theia(bands, zip_dir,out_dir):
     for zipfile in zipList:
         s2_unzip(zipfile,out_dir,bands)
         
-        if len(ZipFile(zipfile).namelist()) != 0:
+        if (len(ZipFile(zipfile).namelist()) != 0) and empty_zip:
             print("Removal of " + str(zipfile))
             os.remove(zipfile)
             zipObj = ZipFile(zipfile, 'w')

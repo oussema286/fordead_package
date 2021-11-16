@@ -90,10 +90,12 @@ Installation = "docs/Installation.md"
 	
 	[[tool.portray.mkdocs.nav."User guides".English]]
 		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
-		"Computing vegetation index" = "docs/examples/ex_computing_vegetation_index.md"
+		"Computing vegetation index" = "docs/user_guides/english/other_tools/ex_computing_vegetation_index.md"
 		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
-		"Using TileInfo object" = "docs/examples/ex_tileinfo_object.md"
-	
+		"Using TileInfo object" = "docs/user_guides/english/other_tools/ex_tileinfo_object.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
+		"Downloading and preprocessing Sentinel-2 data from THEIA" = "docs/user_guides/english/other_tools/theia_preprocess.md"
+		
     [[tool.portray.mkdocs.nav."User guides".'Français']]
     "1. Calcul de l'indice de végétation et des masques" = "docs/user_guides/french/01_compute_masked_vegetationindex.md"
     [[tool.portray.mkdocs.nav."User guides".'Français']]
