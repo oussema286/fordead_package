@@ -26,7 +26,7 @@ elif sys.version_info[0] > 2:
     
 
         
-def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_cloud, login_theia, password_theia):
+def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_cloud, login_theia, password_theia, level):
     """
     Checks if there are undownloaded Sentinel-2 acquisitions available
 
@@ -46,6 +46,8 @@ def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_c
         Login of your theia account
     password_theia : str
         Password of your theia account
+    level : str
+        Product level for reflectance products, can be 'LEVEL1C', 'LEVEL2A' or 'LEVEL3A'
 
     Returns
     -------
@@ -59,7 +61,7 @@ def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_c
                   "startDate" : start_date,
                   'completionDate': end_date, 
                   'maxRecords': 500, 
-                  'processingLevel': 'LEVEL2A'}
+                  'processingLevel': level}
     
     config = {'serveur': 'https://theia.cnes.fr/atdistrib', 
               'resto': 'resto2', 
@@ -104,7 +106,7 @@ def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_c
     return False
         
         
-def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_theia, password_theia):
+def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_theia, password_theia, level):
     """
     Downloads Sentinel-2 acquisitions of the specified tile from THEIA from start_date to end_date under a cloudiness threshold
 
@@ -124,6 +126,8 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
         Login of your theia account
     password_theia : str
         Password of your theia account
+    level : str
+        Product level for reflectance products, can be 'LEVEL1C', 'LEVEL2A' or 'LEVEL3A'
 
     """
 
@@ -131,7 +135,7 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
                   "startDate" : start_date,
                   'completionDate': end_date, 
                   'maxRecords': 500, 
-                  'processingLevel': 'LEVEL2A'}
+                  'processingLevel': level}
     
     config = {'serveur': 'https://theia.cnes.fr/atdistrib', 
               'resto': 'resto2', 
@@ -221,7 +225,7 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
         print(">>>no product corresponds to selection criteria")
 
 
-def s2_unzip(s2zipfile, out_dir, bands):
+def s2_unzip(s2zipfile, out_dir, bands, correction_type):
     """
     Unzips Flat REflectance data from zipped theia data, then empties the zip file
 
@@ -232,20 +236,27 @@ def s2_unzip(s2zipfile, out_dir, bands):
     out_dir : str
         Directory where data is extracted
     bands : list of str
-        List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2)
+        List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, as well as CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2 for LEVEL2A data, and DTS1, DTS2, FLG1, FLG2, WGT1, WGT2 for LEVEL3A)
+    correction_type : str
+        Chosen correction type (SRE or FRE for LEVEL2A data, FRC for LEVEL3A)
 
     Returns
     -------
     None.
 
     """
+    
+    corrBand = dict(zip(['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12'] + ['CLMR1', 'CLMR2', 'EDGR1', 'EDGR2', 'SATR1', 'SATR2',"DTS1","DTS2","FLG1","FLG2","WGT1","WGT2"],
+         ["_"+correction_type+"_"+band for band in ['B2.tif', 'B3.tif', 'B4.tif', 'B5.tif', 'B6.tif', 'B7.tif', 'B8.tif', 'B8A.tif', 'B11.tif', 'B12.tif']] + ['_CLM_R1.tif', '_CLM_R2.tif', '_EDG_R1.tif', '_EDG_R2.tif', '_SAT_R1.tif', '_SAT_R2.tif',"_FLG_R1.tif","_FLG_R2.tif","_WGT_R1.tif","_WGT_R2.tif"]))
+    
 
-    corrBand = {'B2':'_FRE_B2.tif', 'B3':'_FRE_B3.tif', 'B4':'_FRE_B4.tif', 'B5':'_FRE_B5.tif',
-                'B6':'_FRE_B6.tif', 'B7':'_FRE_B7.tif', 'B8':'_FRE_B8.tif',
-                'B8A':'_FRE_B8A.tif', 'B11':'_FRE_B11.tif', 'B12':'_FRE_B12.tif',
-                'CLMR1': '_CLM_R1.tif', 'CLMR2':'_CLM_R2.tif',
-                'EDGR1': '_EDG_R1.tif', 'EDGR2':'_EDG_R2.tif',
-                'SATR1': '_SAT_R1.tif', 'SATR2':'_SAT_R2.tif'}
+    
+    # corrBand = {'B2':'_FRE_B2.tif', 'B3':'_FRE_B3.tif', 'B4':'_FRE_B4.tif', 'B5':'_FRE_B5.tif',
+    #             'B6':'_FRE_B6.tif', 'B7':'_FRE_B7.tif', 'B8':'_FRE_B8.tif',
+    #             'B8A':'_FRE_B8A.tif', 'B11':'_FRE_B11.tif', 'B12':'_FRE_B12.tif',
+    #             'CLMR1': '_CLM_R1.tif', 'CLMR2':'_CLM_R2.tif',
+    #             'EDGR1': '_EDG_R1.tif', 'EDGR2':'_EDG_R2.tif',
+    #             'SATR1': '_SAT_R1.tif', 'SATR2':'_SAT_R2.tif'}
 
     try:
         os.mkdir(out_dir) #Create directory
@@ -267,20 +278,23 @@ def s2_unzip(s2zipfile, out_dir, bands):
         print("Bad zip file, removing file")
         os.remove(s2zipfile)
 
-def unzip_theia(bands, zip_dir,out_dir, empty_zip):
+def unzip_theia(bands, zip_dir,out_dir, empty_zip, correction_type):
     """
     Unzips zipped theia data, then empties the zip file
 
     Parameters
     ----------
     bands : list of str
-        List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2)
+        List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, as well as CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2 for LEVEL2A data, and DTS1, DTS2, FLG1, FLG2, WGT1, WGT2 for LEVEL3A)
     zip_dir : str
         Directory where zip files containing theia data are stored
     out_dir : str
         Directory where data is extracted
     empty_zip : bool
         If True, the zip file is emptied as a way to save space
+    correction_type : str
+        Chosen correction type (SRE or FRE for LEVEL2A data, FRC for LEVEL3A)
+
 
     Returns
     -------
@@ -294,7 +308,7 @@ def unzip_theia(bands, zip_dir,out_dir, empty_zip):
     if not(out_dir.exists()):
         os.mkdir(out_dir)
     for zipfile in zipList:
-        s2_unzip(zipfile,out_dir,bands)
+        s2_unzip(zipfile,out_dir,bands, correction_type)
         
         if (len(ZipFile(zipfile).namelist()) != 0) and empty_zip:
             print("Removal of " + str(zipfile))
@@ -325,8 +339,9 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
         tile.getdict_datepaths("unzipped",unzipped_dir)
         for date in tile.paths["zipped"]:
             if date not in tile.paths["unzipped"]:
-                os.remove(tile.paths["zipped"][date])
-                print(str(tile.paths["zipped"][date]) + "removed")
+                if (len(ZipFile(tile.paths["zipped"][date]).namelist()) == 0):
+                    print("Empty zip with no unzipped directory detected : removal of " + str(tile.paths["zipped"][date]))
+                    os.remove(tile.paths["zipped"][date])
             
 
 def merge_same_date(bands,out_dir):
@@ -336,7 +351,7 @@ def merge_same_date(bands,out_dir):
     Parameters
     ----------
     bands : list of str
-        List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2).
+        List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, CLMR2).
     out_dir : str
         Directory where unzipped data containing theia data are stored.
 

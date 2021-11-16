@@ -248,6 +248,18 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                 x=x1,
                 y=y1, 
                 mode=mode,
+                marker=dict(
+                    color='white',
+                    size=10,
+                    line=dict(
+                        color='black',
+                        width=2
+                    )
+                ),
+                # marker_color = "white",
+                # marker_size = 12,
+                # marker_line_width = 5,
+                # marker_line_color="darkviolet",
                 line_color="darkviolet",
                 name=" | ".join([str(obj[column]) for column in hover_column_list]),
                 hovertemplate=" | ".join([str(obj[column]) for column in hover_column_list]),
