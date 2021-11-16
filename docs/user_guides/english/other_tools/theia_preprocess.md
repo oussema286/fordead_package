@@ -33,7 +33,7 @@ theia_preprocess(zipped_directory = <zipped_directory>, unzipped_directory = <un
 ### From the command line
 
 ```bash
-fordead theia_preprocess -i <zipped_directory> -o <unzipped_directory> -t T31UFQ -t T31UFP --login_theia <login_theia> --password_theia <password_theia> --start_date 2015-01-01 --end_date 2025-01-01 --lim_perc_cloud 50 -b B2 -b B3 -b B4 -b B5 -b B6 -b B7 -b B8 -b B8A -b B11 -b B12 -b CLMR2 --empty_zip
+fordead theia_preprocess -i <zipped_directory> -o <unzipped_directory> -t T31UFQ -t T31UFP --login_theia <login_theia> --password_theia <password_theia> --start_date 2015-01-01 --end_date 2025-01-01 -n 50 -b B2 -b B3 -b B4 -b B5 -b B6 -b B7 -b B8 -b B8A -b B11 -b B12 -b CLMR2 --empty_zip
 ```
 
 See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-theia_preprocess)

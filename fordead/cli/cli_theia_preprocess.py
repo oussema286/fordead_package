@@ -19,9 +19,61 @@ from fordead.theia_preprocess import unzip_theia, merge_same_date, delete_empty_
 @click.option("--start_date", type = str, default = "2015-06-23",help = "start date, fmt('2015-12-22')", show_default=True)
 @click.option("--end_date", type = str, default = "2023-06-23", help = "end date, fmt('2015-12-22')", show_default=True)
 @click.option("-n", "--lim_perc_cloud", type = int,default = 50, help = "Maximum cloudiness in SENTINEL dates downloaded (%)", show_default=True)
-@click.option("-b", "--bands", multiple=True, default=["B2","B3","B4", "B8A", "B11", "B12", "CLMR2"],help = "Extracted bands", show_default=True)
+@click.option("-b", "--bands", multiple=True, default=["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"],help = "Extracted bands", show_default=True)
 @click.option("--empty_zip",  is_flag=True, help = "If True, the zip files are emptied as a way to save space.", show_default=True)
-def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia, start_date, end_date, lim_perc_cloud, bands, empty_zip):
+def cli_theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia, start_date = "2015-06-23", end_date = "2023-06-23", lim_perc_cloud = 50, bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], empty_zip = False):
+    """
+    Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold. Then this data is unzipped, keeping only chosen bands from Flat REflectance data, and zip files can be emptied as a way to save storage space.
+    Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
+
+    \f
+    Parameters
+    ----------
+    zipped_directory
+    unzipped_directory
+    tiles
+    login_theia
+    password_theia
+    start_date
+    end_date
+    lim_perc_cloud
+    bands
+    empty_zip
+
+    """
+    
+    theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia, start_date, end_date, lim_perc_cloud, bands, empty_zip)
+
+def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia, start_date = "2015-06-23", end_date = "2023-06-23", lim_perc_cloud = 50, bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], empty_zip = False):
+    """
+    Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold. Then this data is unzipped, keeping only chosen bands from Flat REflectance data, and zip files can be emptied as a way to save storage space.
+    Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
+
+    Parameters
+    ----------
+    zipped_directory : str
+        Path of the directory with zipped theia data.
+    unzipped_directory : str
+        Path of the output directory.
+    tiles : list of str
+        Name of the tiles to be downloaded (format : T31UFQ)
+.
+    login_theia : str
+        Login of your theia account.
+    password_theia : str
+        Password of your theia account.
+    start_date : str, optional
+        start date, fmt('2015-12-22'). The default is "2015-06-23".
+    end_date : str, optional
+        end date, fmt('2015-12-22'). The default is "2023-06-23".
+    lim_perc_cloud : int, optional
+        Maximum cloudiness in SENTINEL dates downloaded (%). The default is 50.
+    bands : list of str, optional
+        List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2). The default is ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"].
+    empty_zip : bool, optional
+        If True, the zip files are emptied as a way to save space. The default is False.
+
+    """
     
     zipped_directory = Path(zipped_directory)
     unzipped_directory = Path(unzipped_directory)
@@ -45,3 +97,9 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, p
             
         unzip_theia(bands,zipped_directory / tuile, unzipped_directory / tuile, empty_zip)
         merge_same_date(bands,unzipped_directory / tuile)
+
+if __name__ == '__main__':
+    # start_time_debut = time.time()
+    cli_theia_preprocess()
+    # print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
+
