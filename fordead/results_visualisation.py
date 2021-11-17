@@ -544,7 +544,10 @@ def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, f
                 
                 if name_file is None: name_file = "X"+str(int(pixel_series.x))+"_Y"+str(int(pixel_series.y))
                 fig.savefig(tile.paths["series"] / (name_file + ".png"))
-                plt.show()
+                
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", message="Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.")
+                    plt.show()
                 plt.close()
 
 
