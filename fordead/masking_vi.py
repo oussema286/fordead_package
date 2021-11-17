@@ -4,6 +4,7 @@ Created on Fri Nov 20 17:29:17 2020
 
 @author: Raphael Dutrieux
 """
+import warnings
 import xarray as xr
 import numpy as np
 import re
@@ -81,8 +82,10 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
     example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
         
     bdforet_paths, tile_extent = bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath) #List of paths to relevant BD foret shapefiles. Can be replaced with home-made list if your data structure is different
-    
-    bd_list=[(gp.read_file(bd_path,bbox=tile_extent)) for bd_path in bdforet_paths] #Warning ?
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Sequential read of iterator was interrupted. Resetting iterator. This can negatively impact the performance.")
+        bd_list=[(gp.read_file(bd_path,bbox=tile_extent)) for bd_path in bdforet_paths]
+        
     bd_foret = gp.GeoDataFrame( pd.concat( bd_list, ignore_index=True), crs=bd_list[0].crs)
     bd_foret=bd_foret[bd_foret['CODE_TFV'].isin(list_forest_type)]    
     
