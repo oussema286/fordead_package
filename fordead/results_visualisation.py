@@ -4,7 +4,7 @@ Created on Fri Sep 18 13:37:02 2020
 
 @author: raphael.dutrieux
 """
-
+import warnings
 import plotly.graph_objects as go
 import geopandas as gp
 import xarray as xr
@@ -217,7 +217,11 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
         
         # Visualisation vector display
         if vector_display_path is not None:
-            vector_display = gp.read_file(vector_display_path,bbox=shape.envelope).to_crs(crs=stack_rgb.crs).explode()
+            
+            
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message="Sequential read of iterator was interrupted. Resetting iterator. This can negatively impact the performance.")
+                vector_display = gp.read_file(vector_display_path,bbox=shape.envelope).to_crs(crs=stack_rgb.crs).explode()
             nb_vector_obj = vector_display.shape[0]
             
             if type(hover_column_list) is str: hover_column_list = [hover_column_list]
