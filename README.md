@@ -46,3 +46,6 @@ The installation guide can be found [here](https://fordead.gitlab.io/fordead_pac
 
 A tutorial for getting started, and testing the package on a small dataset, can be found [here](https://fordead.gitlab.io/fordead_package/docs/Tutorial/00_Intro/).
 
+## Associated publications
+
+The method and its application to monitor the bark beetle health crisis on spruce trees in France has been described in a technical article in "Les Rendez-Vous Techniques de l'ONF" during the package's developpement and can be found [here](https://www.onf.fr/onf/+/cec::les-rendez-vous-techniques-de-lonf-no69-70.html), page 39 to 46.

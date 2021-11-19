@@ -13,10 +13,15 @@ import json
 from shapely.geometry import Polygon
 import geopandas as gp
 import pandas as pd
-import rasterio
 from scipy import ndimage
 from fordead.import_data import import_resampled_sen_stack
+import rasterio
+from rasterio import Affine
+from rasterio.crs import CRS
+from rasterio.enums import Resampling
+from rasterio.vrt import WarpedVRT
 
+import rioxarray
 
 def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
     """
@@ -172,23 +177,32 @@ def clip_oso(path_oso, path_example_raster, list_code_oso):
 
     """
     
-    example_raster = xr.open_rasterio(path_example_raster)
-    OSO = xr.open_rasterio(path_oso)
-    example_raster.attrs["nodata"] = 0 #Avoids bug in reproject when nodata = nan and dtype = int
-    reprojected_corner1 = example_raster.isel(x=[0,1],y=[0,1]).rio.reproject(OSO.crs).isel(x=0,y=0)
-    reprojected_corner2 = example_raster.isel(x=[-2,-1],y=[-2,-1]).rio.reproject(OSO.crs).isel(x=-1,y=-1)
-    clipped_OSO = OSO.rio.clip_box(
-                                minx=float(reprojected_corner1.x),
-                                miny=float(reprojected_corner2.y),
-                                maxx=float(reprojected_corner2.x),
-                                maxy=float(reprojected_corner1.y),
-                                )
-    reprojected_clipped_OSO = clipped_OSO.rio.reproject(example_raster.crs)
-    forest_mask_data = reprojected_clipped_OSO.isin(list_code_oso)
+    example_raster = xr.open_rasterio(path_example_raster).squeeze("band")
+    # reprojected_corner1 = OSO.isel(x=[0,1],y=[0,1]).rio.reproject(example_raster.crs).isel(x=0,y=0)
+    # reprojected_corner2 = OSO.isel(x=[-2,-1],y=[-2,-1]).rio.reproject(example_raster.crs).isel(x=-1,y=-1)
+    # xmin, ymax = transform.xy(Affine(*OSO.attrs["transform"]),0,0)
+    # xmax, ymin = transform.xy(Affine(*OSO.attrs["transform"]),OSO.sizes["y"],OSO.sizes["x"])                
+                
+    vrt_options = {
+        'resampling': Resampling.nearest,
+        'crs': CRS.from_epsg(int(''.join(filter(str.isdigit, example_raster.attrs["crs"])))), #extracts integer from example_raster crs
+        'transform': Affine(*example_raster.attrs["transform"]),
+        'height': example_raster.sizes["y"],
+        'width': example_raster.sizes["x"],
+    }
+    
     forest_mask = example_raster
-    forest_mask.data = forest_mask_data
-    # forest_mask.attrs = example_raster.attrs
-    forest_mask=forest_mask.sel(band=1)
+
+    with rasterio.open(path_oso) as src:
+        with WarpedVRT(src, **vrt_options) as vrt:
+            # data = vrt.read()
+            # for _, window in vrt.block_windows():
+            #     data = vrt.read(window=window)
+            forest_mask.data = vrt.read()[0]
+    
+    forest_mask = forest_mask.isin(list_code_oso)
+    forest_mask.attrs=example_raster.attrs
+
     return forest_mask
 
 def raster_full(path_example_raster, fill_value, dtype = None):
