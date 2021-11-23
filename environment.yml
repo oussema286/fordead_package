@@ -15,4 +15,3 @@ dependencies:
   - plotly
   - netcdf4
   - matplotlib
-  - rioxarray
