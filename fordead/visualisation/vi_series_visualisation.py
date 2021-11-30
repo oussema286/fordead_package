@@ -18,7 +18,7 @@ from rasterio import Affine, transform
 import dask.array as da
 
 
-from fordead.import_data import TileInfo, import_stackedmaskedVI, import_stress_data, import_stacked_anomalies, import_coeff_model, import_forest_mask, import_first_detection_date_index, import_dieback_data, import_soil_data
+from fordead.import_data import TileInfo, import_stackedmaskedVI, import_stress_data, import_stacked_anomalies, import_coeff_model, import_binary_raster, import_first_detection_date_index, import_dieback_data, import_soil_data
 from fordead.model_vegetation_index import compute_HarmonicTerms
 
 from fordead.results_visualisation import select_and_plot_time_series
@@ -111,7 +111,7 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     else:
         soil_data=None
     dieback_data = import_dieback_data(tile.paths,chunks = chunks)
-    forest_mask = import_forest_mask(tile.paths["ForestMask"],chunks = chunks)
+    forest_mask = import_binary_raster(tile.paths["ForestMask"],chunks = chunks)
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
     anomalies = import_stacked_anomalies(tile.paths["Anomalies"],chunks = chunks)
     

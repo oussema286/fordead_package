@@ -6,7 +6,7 @@ Created on Fri Dec 18 11:32:57 2020
 """
 
 import click
-from fordead.import_data import import_dieback_data, TileInfo, import_forest_mask, import_soil_data, import_stress_data, import_stress_index
+from fordead.import_data import import_dieback_data, TileInfo, import_binary_raster, import_soil_data, import_stress_data, import_stress_index
 from fordead.writing_data import vectorizing_confidence_class, get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date, union_confidence_class, write_tif
 import numpy as np
 
@@ -109,8 +109,8 @@ def export_results(
             soil_data = import_soil_data(tile.paths, chunks= 1280)
             first_date_number_soil = convert_dateindex_to_datenumber(soil_data, tile.dates)
             
-        forest_mask = import_forest_mask(tile.paths["ForestMask"], chunks= 1280)
-        valid_area = import_forest_mask(tile.paths["valid_area_mask"], chunks= 1280)
+        forest_mask = import_binary_raster(tile.paths["ForestMask"], chunks= 1280)
+        valid_area = import_binary_raster(tile.paths["valid_area_mask"], chunks= 1280)
         relevant_area = forest_mask & valid_area
     
         if multiple_files:

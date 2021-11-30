@@ -7,7 +7,7 @@ Created on Mon Nov  2 09:25:23 2020
 
 
 import click
-from fordead.import_data import import_coeff_model, import_dieback_data, import_stress_data, initialize_dieback_data, initialize_stress_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_forest_mask
+from fordead.import_data import import_coeff_model, import_dieback_data, import_stress_data, initialize_dieback_data, initialize_stress_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_binary_raster
 from fordead.writing_data import write_tif
 from fordead.dieback_detection import detection_anomalies, detection_dieback, save_stress
 from fordead.model_vegetation_index import prediction_vegetation_index, correct_vi_date
@@ -137,7 +137,7 @@ def dieback_detection(
             stress_data = initialize_stress_data(first_detection_date_index.shape,first_detection_date_index.coords, max_nb_stress_periods)
             
         if tile.parameters["correct_vi"]:
-            forest_mask = import_forest_mask(tile.paths["ForestMask"])
+            forest_mask = import_binary_raster(tile.paths["ForestMask"])
         #dieback DETECTION
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
@@ -162,7 +162,7 @@ def dieback_detection(
         tile.last_computed_anomaly = new_dates[-1]
         
         if stress_index_mode is not None:
-            valid_area = import_forest_mask(tile.paths["valid_area_mask"])
+            valid_area = import_binary_raster(tile.paths["valid_area_mask"])
             valid_area = valid_area.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
             write_tif(valid_area, first_detection_date_index.attrs,tile.paths["valid_area_mask"],nodata=0)        
   

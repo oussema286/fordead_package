@@ -20,7 +20,7 @@ import matplotlib.colors as colors
 
 
 from fordead.masking_vi import get_dict_vi
-from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_dieback_data, import_forest_mask, import_stress_data, import_stress_index
+from fordead.import_data import import_resampled_sen_stack, import_soil_data, import_dieback_data, import_binary_raster, import_stress_data, import_stress_index
 
 
 def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = None):
@@ -106,8 +106,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             
         dieback_data = import_dieback_data(tile.paths)
         dieback_data = dieback_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        forest_mask = import_forest_mask(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        valid_area = import_forest_mask(tile.paths["valid_area_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        forest_mask = import_binary_raster(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        valid_area = import_binary_raster(tile.paths["valid_area_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         relevant_area = valid_area & forest_mask
         #Correcting extent if computed area is smaller than Sentinel-2 data area
         extent = np.array([float(forest_mask[dict(x=0,y=0)].coords["x"])-forest_mask.attrs["transform"][0]/2,
