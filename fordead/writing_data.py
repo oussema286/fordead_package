@@ -286,10 +286,10 @@ def union_confidence_class(periodic_results, confidence_class):
     union = union.fillna("Bare ground")
     return union
 
-def get_rasterized_validation_data(ground_obs, raster_metadata, ground_obs_buffer = None, name_column  = "id"):
+def get_rasterized_validation_data(ground_obs_path, raster_metadata, ground_obs_buffer = None, name_column  = "id"):
 
         #Rasterize données terrain
-
+    ground_obs = gp.read_file(ground_obs_path)
     ground_obs=ground_obs.to_crs(crs=raster_metadata["attrs"]["crs"])
             
     all_touched = True if np.all(ground_obs.geom_type == 'Point') else False           
