@@ -221,7 +221,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", message="Sequential read of iterator was interrupted. Resetting iterator. This can negatively impact the performance.")
-                vector_display = gp.read_file(vector_display_path,bbox=shape.envelope).to_crs(crs=stack_rgb.crs).explode()
+                vector_display = gp.read_file(vector_display_path,bbox=shape.envelope).to_crs(crs=stack_rgb.crs).explode(index_parts=True)
             nb_vector_obj = vector_display.shape[0]
             
             if type(hover_column_list) is str: hover_column_list = [hover_column_list]
