@@ -101,7 +101,7 @@ def export_results(
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     dieback_data = import_dieback_data(tile.paths, chunks= None)
-    tile.add_parameters({"start_date" : start_date,"end_date" : end_date, "frequency" : frequency, "multiple_files" : multiple_files, "conf_threshold_list": conf_threshold_list, "conf_classes_list" : conf_classes_list})
+    tile.add_parameters({"start_date" : start_date,"end_date" : end_date, "frequency" : frequency, "multiple_files" : multiple_files, "conf_threshold_list": conf_threshold_list, "conf_classes_list" : conf_classes_list, "export_stress" : export_stress})
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("periodic_results_dieback","result_files") #Deleting previous detection results if they exist
         tile.delete_attributes("last_date_export")
@@ -128,18 +128,21 @@ def export_results(
             stress_data = import_stress_data(tile.paths)
             stress_list = []
             for period in range(tile.parameters["max_nb_stress_periods"]):
+                print(period)
                 stress_period = stress_index.isel(period = period)
+                print("confidence")
                 stress_class = vectorizing_confidence_class(stress_period, stress_data.nb_dates.isel(period = period), (relevant_area & (period < stress_data["nb_periods"])).compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
                 
                 stress_start_date = stress_data["date"].isel(change = period*2)
                 stress_start_date_number = convert_dateindex_to_datenumber(stress_start_date, period < stress_data["nb_periods"], tile.dates)
+                print("periodic")
                 vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
-                
+                print("union")
                 stress_list += [union_confidence_class(vector_stress_start, stress_class)]
-                
+            print("concat")
             stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
             stress_total.to_file(tile.paths["stress_periods"])
-            
+        print("dieback")
         if multiple_files:
             tile.add_dirpath("result_files", tile.data_directory / "Results")
             for date_bin_index, date_bin in enumerate(bins_as_date):
