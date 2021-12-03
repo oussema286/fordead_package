@@ -139,6 +139,10 @@ def export_results(
                 vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
                 print("union")
                 stress_list += [union_confidence_class(vector_stress_start, stress_class)]
+                # if period ==0:
+                #     stress_total = union_confidence_class(vector_stress_start, stress_class)
+                # else:
+                #     stress_total = stress_total.append(union_confidence_class(vector_stress_start, stress_class))
             print("concat")
             stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
             stress_total.to_file(tile.paths["stress_periods"])
