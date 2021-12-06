@@ -16,14 +16,14 @@ import pandas as pd
 @click.option("-o", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
 @click.option("--start_date",  type=str, default='2015-06-23',
                     help="Start date for exporting results", show_default=True)
-@click.option("--end_date",  type=str, default="2022-01-02",
+@click.option("--end_date",  type=str, default="2025-01-02",
                     help="End date for exporting results", show_default=True)
 @click.option("--frequency",  type=str, default='M',
                     help="Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)", show_default=True)
 @click.option("--multiple_files",  is_flag=True,
                     help="If True, one shapefile is exported for each period containing the areas in dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback", show_default=True)
-@click.option("-t", "--conf_threshold_list", type = list, default = None, help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
-@click.option("-c", "--conf_classes_list", type = list, default = None, help = "List of classes names, if conf_threshold_list has n values, conf_classes_list must have n+1 values", show_default=True)
+@click.option("-t", "--conf_threshold_list", type = float, multiple=True, default = None, help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
+@click.option("-c", "--conf_classes_list", type = str, multiple=True, default = None, help = "List of classes names, if conf_threshold_list has n values, conf_classes_list must have n+1 values", show_default=True)
 @click.option("--export_stress",  is_flag=True,
                     help="If True, stress periods are exported as polygons containing the period when each stress period started, and stress class if conf_threshold_list and conf_classes_list are given", show_default=True)
 def cli_export_results(
@@ -96,8 +96,7 @@ def export_results(
     Returns
     -------
 
-    """
-    
+    """    
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     dieback_data = import_dieback_data(tile.paths, chunks= None)
@@ -137,8 +136,8 @@ def export_results(
                 stress_start_date_number = convert_dateindex_to_datenumber(stress_start_date, period < stress_data["nb_periods"], tile.dates)
                 vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
                 
-                stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + (period+1) + ".shp"))
-                vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + (period+1) + ".shp"))
+                stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + str(period+1) + ".shp"))
+                vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + str(period+1) + ".shp"))
                 # stress_list += [gp.overlay(periodic_results, confidence_class, how='intersection',keep_geom_type = True)]
 
                 # for period_date in pd.unique(vector_stress_start["period"]):
