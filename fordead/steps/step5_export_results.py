@@ -107,7 +107,8 @@ def export_results(
         tile.delete_attributes("last_date_export")
         
     tile.add_path("confidence_index", tile.data_directory / "Results" / "confidence_index.tif")
-    tile.add_path("stress_periods", tile.data_directory / "Results" / "stress_periods.shp")
+    # tile.add_path("stress_periods", tile.data_directory / "Results" / "stress_periods.shp")
+    tile.add_path("stress_periods", tile.data_directory / "Results")
 
     exporting = (tile.dates[-1] != tile.last_date_export) if hasattr(tile, "last_date_export") else True
     if exporting:
@@ -130,24 +131,22 @@ def export_results(
             for period in range(tile.parameters["max_nb_stress_periods"]):
                 print(period)
                 stress_period = stress_index.isel(period = period)
-                print("confidence")
                 stress_class = vectorizing_confidence_class(stress_period, stress_data.nb_dates.isel(period = period), (relevant_area & (period < stress_data["nb_periods"])).compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
                 
                 stress_start_date = stress_data["date"].isel(change = period*2)
                 stress_start_date_number = convert_dateindex_to_datenumber(stress_start_date, period < stress_data["nb_periods"], tile.dates)
-                print("periodic")
                 vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
-                print("union")
-
+                
+                stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + (period+1) + ".shp"))
+                vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + (period+1) + ".shp"))
                 # stress_list += [gp.overlay(periodic_results, confidence_class, how='intersection',keep_geom_type = True)]
 
-                for period_date in pd.unique(vector_stress_start["period"]):
-                    for class_stress in pd.unique(stress_class["class"]):
-                        stress_list += [gp.overlay(vector_stress_start[vector_stress_start["period"]==period_date], stress_class[stress_class["class"] == class_stress], how='intersection',keep_geom_type = True)]
+                # for period_date in pd.unique(vector_stress_start["period"]):
+                #     for class_stress in pd.unique(stress_class["class"]):
+                #         stress_list += [gp.overlay(vector_stress_start[vector_stress_start["period"]==period_date], stress_class[stress_class["class"] == class_stress], how='intersection',keep_geom_type = True)]
 
-            print("concat")
-            stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
-            stress_total.to_file(tile.paths["stress_periods"])
+            # stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
+            # stress_total.to_file(tile.paths["stress_periods"])
         print("dieback")
         if multiple_files:
             tile.add_dirpath("result_files", tile.data_directory / "Results")
