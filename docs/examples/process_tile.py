@@ -71,10 +71,6 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   threshold_anomaly,
                   start_date_results, end_date_results, results_frequency, multiple_files,
                   correct_vi):
-
-    sentinel_directory = "E:/fordead/fordead_data/"
-    main_directory = "E:/fordead/fordead_data/dir_output"    
-    soil_detection = True
     
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
