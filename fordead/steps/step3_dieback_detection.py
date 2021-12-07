@@ -158,8 +158,14 @@ def dieback_detection(
 
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
-                del masked_vi, predicted_vi, anomalies, changing_pixels
+                del masked_vi, predicted_vi, anomalies, changing_pixels, diff_vi
         tile.last_computed_anomaly = new_dates[-1]
+  
+        write_tif(dieback_data["state"], first_detection_date_index.attrs,tile.paths["state_dieback"],nodata=0)
+        write_tif(dieback_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_dieback"],nodata=0)
+        write_tif(dieback_data["first_date_unconfirmed"], first_detection_date_index.attrs,tile.paths["first_date_unconfirmed_dieback"],nodata=0)
+        write_tif(dieback_data["count"], first_detection_date_index.attrs,tile.paths["count_dieback"],nodata=0)
+        del dieback_data
         
         if stress_index_mode is not None:
             valid_area = import_forest_mask(tile.paths["valid_area_mask"])
@@ -174,17 +180,13 @@ def dieback_detection(
                 raise Exception("Unrecognized stress_index_mode")
                    
             write_tif(stress_index, first_detection_date_index.attrs,tile.paths["stress_index"],nodata=0)
-        
+            del stress_index
             #Writing dieback data to rasters
             write_tif(stress_data["date"], first_detection_date_index.attrs,tile.paths["dates_stress"],nodata=0)
             write_tif(stress_data["nb_periods"], first_detection_date_index.attrs,tile.paths["nb_periods_stress"],nodata=0)
             write_tif(stress_data["cum_diff"], first_detection_date_index.attrs,tile.paths["cum_diff_stress"],nodata=0)
             write_tif(stress_data["nb_dates"], first_detection_date_index.attrs,tile.paths["nb_dates_stress"],nodata=0)
 
-        write_tif(dieback_data["state"], first_detection_date_index.attrs,tile.paths["state_dieback"],nodata=0)
-        write_tif(dieback_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_dieback"],nodata=0)
-        write_tif(dieback_data["first_date_unconfirmed"], first_detection_date_index.attrs,tile.paths["first_date_unconfirmed_dieback"],nodata=0)
-        write_tif(dieback_data["count"], first_detection_date_index.attrs,tile.paths["count_dieback"],nodata=0)
 
         # print("Détection du déperissement")
     tile.save_info()
