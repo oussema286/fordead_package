@@ -107,7 +107,7 @@ def export_results(
         
     tile.add_path("confidence_index", tile.data_directory / "Results" / "confidence_index.tif")
     # tile.add_path("stress_periods", tile.data_directory / "Results" / "stress_periods.shp")
-    tile.add_path("stress_periods", tile.data_directory / "Results")
+    tile.add_path("stress_periods", tile.data_directory / "Results" / "stress_periods.shp")
 
     exporting = (tile.dates[-1] != tile.last_date_export) if hasattr(tile, "last_date_export") else True
     if exporting:
@@ -135,7 +135,6 @@ def export_results(
                 stress_start_date = stress_data["date"].isel(change = period*2)
                 stress_start_date_number = convert_dateindex_to_datenumber(stress_start_date, period < stress_data["nb_periods"], tile.dates)
                 vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
-                
                 # stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + str(period+1) + ".shp"))
                 # vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + str(period+1) + ".shp"))
                 stress_list += [gp.overlay(vector_stress_start, stress_class, how='intersection',keep_geom_type = True)]
