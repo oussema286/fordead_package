@@ -363,7 +363,7 @@ def export_csv(
             coeff_model = import_coeff_model(tile.paths["coeff_model"])
             dieback_data = import_dieback_data(tile.paths)
             stress_data = import_stress_data(tile.paths)
-            stress_index = import_stress_index(tile.paths["stress_index"])
+            # stress_index = import_stress_index(tile.paths["stress_index"])
 
             
             # #DECLINE DETECTION
@@ -410,8 +410,8 @@ def export_csv(
                   "dieback_state" : dieback_data["state"].data[raster_binary_validation_data],
                   "dieback_first_date" : tile.dates[dieback_data["first_date"].data[raster_binary_validation_data]],
                   "nb_stress_periods" : stress_data["nb_periods"].data[raster_binary_validation_data]})
-            dict_results.update({
-                  "stress_index"+str(i) : stress_index.sel(period = i).data[raster_binary_validation_data] for i in range(1,tile.parameters["max_nb_stress_periods"]+2)})
+            # dict_results.update({
+            #       "stress_index"+str(i) : stress_index.sel(period = i).data[raster_binary_validation_data] for i in range(1,tile.parameters["max_nb_stress_periods"]+2)})
             dict_results.update({"vegetation_index" : tile.parameters["vi"],
                   "threshold_anomaly" : tile.parameters["threshold_anomaly"]})
                   
@@ -420,3 +420,4 @@ def export_csv(
             Results.to_csv(tile.paths["validation"] / 'Pixel_data.csv', mode='w', index=False,header=True)
             # Results2.to_csv(tile.paths["validation"] / 'Pixel_data.csv', mode='a', index=False,header=not((tile.paths["validation"] / 'Pixel_data.csv').exists()))
 
+            tile.save_info()
