@@ -110,10 +110,10 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
         valid_area = import_forest_mask(tile.paths["valid_area_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         relevant_area = valid_area & forest_mask
         #Correcting extent if computed area is smaller than Sentinel-2 data area
-        extent = np.array([float(relevant_area[dict(x=0,y=0)].coords["x"])-relevant_area.attrs["transform"][0]/2,
-                                                float(relevant_area[dict(x=-1,y=-1)].coords["y"])-relevant_area.attrs["transform"][0]/2,
-                                                float(relevant_area[dict(x=-1,y=-1)].coords["x"])+relevant_area.attrs["transform"][0]/2,
-                                                float(relevant_area[dict(x=0,y=0)].coords["y"])+relevant_area.attrs["transform"][0]/2])
+        extent = np.array([float(forest_mask[dict(x=0,y=0)].coords["x"])-forest_mask.attrs["transform"][0]/2,
+                                                float(forest_mask[dict(x=-1,y=-1)].coords["y"])-forest_mask.attrs["transform"][0]/2,
+                                                float(forest_mask[dict(x=-1,y=-1)].coords["x"])+forest_mask.attrs["transform"][0]/2,
+                                                float(forest_mask[dict(x=0,y=0)].coords["y"])+forest_mask.attrs["transform"][0]/2])
         
         dates = tile.dates[tile.dates <= max_date] if max_date is not None else tile.dates
         stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = dates)
