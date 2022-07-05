@@ -29,7 +29,7 @@ export_results(data_directory = data_directory,
 This processing step can also be performed from a terminal:
 
 ```bash
-fordead export_results -o <output directory> --frequency M --t 0.265 -c "Low anomaly" -c "Severe anomaly"
+fordead export_results -o <output directory> --frequency M -t 0.265 -c "Low anomaly" -c "Severe anomaly"
 ```
 
 ##### Outputs

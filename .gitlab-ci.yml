@@ -20,7 +20,7 @@ stages:
 
 pages:
   stage: deploy
-  image: $CI_REGISTRY/fordead/fordead_package:1.2.0
+  image: $CI_REGISTRY/fordead/fordead_package:latest
   script:
     - conda init bash
     - source ~/.bashrc

@@ -82,7 +82,7 @@ The information about the previous steps is imported (parameters, data paths, us
 This option is given for users who want to create their own mask by other means and use it in the processing chain. A copy will be written in the data_directory folder.
  - If forest_mask_source is a path to an existing file, this file is imported. It must be a binary raster file with the value 1 where there are pixels of interest
  - The file is clipped to the extent of the study area, or to the path_example_raster file
-> **_Functions used:_** [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_forest_mask), [clip_xarray()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#clip_xarray)
+> **_Functions used:_** [import_binary_raster()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_binary_raster), [clip_xarray()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#clip_xarray)
 
 ### From the IGN BDFORET
 - Import of the BDFORET shapefiles of the departments intersecting the study area

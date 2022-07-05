@@ -562,7 +562,7 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
 
 
         
-def import_forest_mask(forest_mask_path,chunks = None):
+def import_binary_raster(forest_mask_path,chunks = None):
     """
     Imports forest mask
 

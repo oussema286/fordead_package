@@ -56,7 +56,7 @@ The information about the previous steps is imported (parameters, data paths, us
 
 ### Importing the results of the detection 
 The results of the previous steps are imported.
-> **_Functions used:_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_soil_data), [import_dieback_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_dieback_data), [import_forest_mask()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_forest_mask)
+> **_Functions used:_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_soil_data), [import_dieback_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_dieback_data), [import_binary_raster()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_binary_raster)
 
 ### Determining the periods for aggregating the results
 The results will be aggregated according to the time period at which the first anomalies occur for both soil and dieback detection. These periods are determined from the frequency indicated by the parameter **frequency**, the start date **start_date** and the end date **end_date**. Periods before the first SENTINEL date used, or after the last one, if they exist, are ignored since they cannot correspond to any result.

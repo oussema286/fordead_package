@@ -5,7 +5,7 @@ Created on Fri Nov 27 18:20:18 2020
 @author: Raphael Dutrieux
 """
 import click
-from fordead.import_data import TileInfo, import_forest_mask, get_raster_metadata, clip_xarray
+from fordead.import_data import TileInfo, import_binary_raster, get_raster_metadata, clip_xarray
 from fordead.masking_vi import rasterize_bdforet, clip_oso, raster_full, rasterize_vector
 from fordead.writing_data import write_tif
 from pathlib import Path
@@ -129,7 +129,7 @@ def compute_forest_mask(data_directory,
             
         elif Path(forest_mask_source).is_file():
             print("Importing " + forest_mask_source)
-            forest_mask = clip_xarray(array = import_forest_mask(forest_mask_source), 
+            forest_mask = clip_xarray(array = import_binary_raster(forest_mask_source), 
                                       extent = get_raster_metadata(path_example_raster)["extent"])
             
         elif forest_mask_source=="BDFORET":
@@ -141,7 +141,7 @@ def compute_forest_mask(data_directory,
             forest_mask = clip_oso(path_oso, path_example_raster, list_code_oso)
             
         elif forest_mask_source == "vector":
-            print("Computing forest mask from vector")
+            print("Computing mask from vector")
             forest_mask = rasterize_vector(vector_path, path_example_raster)
             
         else:

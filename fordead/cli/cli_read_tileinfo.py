@@ -7,7 +7,7 @@ def cli():
 
 @cli.command(name='read_tileinfo')
 @click.option("-o", "--data_directory", type = str, help = "Path of the output directory containing the saved TileInfo object")
-def cli_read_tileinfo(data_directory,test):
+def cli_read_tileinfo(data_directory):
     """
     Prints parameters, all dates used and last anomaly date computed to the console
     \f
