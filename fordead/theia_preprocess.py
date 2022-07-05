@@ -345,7 +345,7 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
                         os.remove(tile.paths["zipped"][date])
                 except BadZipfile:
                     print("Bad zip file, removing file")
-                    os.remove(s2zipfile)
+                    os.remove(tile.paths["zipped"][date])
 
 def merge_same_date(bands,out_dir):
     """
