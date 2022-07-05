@@ -339,10 +339,13 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
         tile.getdict_datepaths("unzipped",unzipped_dir)
         for date in tile.paths["zipped"]:
             if date not in tile.paths["unzipped"]:
-                if (len(ZipFile(tile.paths["zipped"][date]).namelist()) == 0):
-                    print("Empty zip with no unzipped directory detected : removal of " + str(tile.paths["zipped"][date]))
-                    os.remove(tile.paths["zipped"][date])
-            
+                try:
+                    if (len(ZipFile(tile.paths["zipped"][date]).namelist()) == 0):
+                        print("Empty zip with no unzipped directory detected : removal of " + str(tile.paths["zipped"][date]))
+                        os.remove(tile.paths["zipped"][date])
+                except BadZipfile:
+                    print("Bad zip file, removing file")
+                    os.remove(s2zipfile)
 
 def merge_same_date(bands,out_dir):
     """
