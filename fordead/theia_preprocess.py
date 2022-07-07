@@ -210,7 +210,6 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
                             tmp_data = json.load(f_tmp)
                             print("Result is a text file")
                             print(tmp_data)
-                            sys.exit(-1)
                         except ValueError:
                             pass
     
