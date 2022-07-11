@@ -132,7 +132,7 @@ def compute_masked_vegetationindex(
         Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)
 
     """
-    if extent_shape_path is not None: data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
+    # if extent_shape_path is not None: data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
 
     # Creation of TileInfo object. If it already exists in the specified directory, it is imported. 
     tile = TileInfo(data_directory)
