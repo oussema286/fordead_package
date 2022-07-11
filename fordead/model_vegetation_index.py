@@ -216,6 +216,7 @@ def prediction_vegetation_index(coeff_model,date_list):
     harmonic_terms = xr.DataArray(harmonic_terms, coords={"Time" : date_list, "coeff" : range(1, 6)},dims=["Time", "coeff"])
     
     predicted_vi = sum(coeff_model * harmonic_terms)
+    
     return predicted_vi
 
 def model_vi_correction(stack_vi, stack_masks, dict_paths):

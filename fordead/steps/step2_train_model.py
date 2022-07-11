@@ -104,9 +104,9 @@ def train_model(
         tile.delete_attributes("last_computed_anomaly","last_date_export")
 
     #Create missing directories and add paths to TileInfo object
-    tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.tif")
-    tile.add_path("first_detection_date_index", tile.data_directory / "DataModel" / "first_detection_date_index.tif")
-    tile.add_path("valid_area_mask", tile.data_directory / "ForestMask" / "valid_area_mask.tif")
+    tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.nc")
+    tile.add_path("first_detection_date_index", tile.data_directory / "DataModel" / "first_detection_date_index.nc")
+    tile.add_path("valid_area_mask", tile.data_directory / "ForestMask" / "valid_area_mask.nc")
     
     if tile.paths["coeff_model"].exists():
         print("Model already calculated")

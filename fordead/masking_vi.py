@@ -83,7 +83,7 @@ def rasterize_bdforet(example_path, dep_path, bdforet_dirpath,
 
     """
 
-    example_raster = xr.open_rasterio(example_path).squeeze("band")
+    example_raster = rioxarray.open_rasterio(example_path).squeeze("band")
     example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
         
     bdforet_paths, tile_extent = bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath) #List of paths to relevant BD foret shapefiles. Can be replaced with home-made list if your data structure is different
@@ -114,7 +114,7 @@ def rasterize_vector(vector_path, example_path):
         Boolean DataArray containing True where pixels are in the polygons with the vector file.
     """
     
-    example_raster = xr.open_rasterio(example_path).squeeze("band")
+    example_raster = rioxarray.open_rasterio(example_path).squeeze("band")
     example_raster.attrs["crs"]=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
     vector = gp.read_file(vector_path)
     forest_mask = rasterize_polygons_binary(vector, example_raster)
@@ -177,7 +177,7 @@ def clip_oso(path_oso, path_example_raster, list_code_oso):
 
     """
     
-    example_raster = xr.open_rasterio(path_example_raster).squeeze("band")
+    example_raster = rioxarray.open_rasterio(path_example_raster).squeeze("band")
     # reprojected_corner1 = OSO.isel(x=[0,1],y=[0,1]).rio.reproject(example_raster.crs).isel(x=0,y=0)
     # reprojected_corner2 = OSO.isel(x=[-2,-1],y=[-2,-1]).rio.reproject(example_raster.crs).isel(x=-1,y=-1)
     # xmin, ymax = transform.xy(Affine(*OSO.attrs["transform"]),0,0)
@@ -225,7 +225,7 @@ def raster_full(path_example_raster, fill_value, dtype = None):
 
     """
     
-    filled_raster = xr.open_rasterio(path_example_raster).sel(band=1)
+    filled_raster = rioxarray.open_rasterio(path_example_raster).sel(band=1)
     filled_raster[:,:]=fill_value
     filled_raster.attrs["crs"]=filled_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
     if dtype!= None : filled_raster = filled_raster.astype(dtype)

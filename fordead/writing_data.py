@@ -41,8 +41,12 @@ def write_tif(data_array, attributes, path, nodata = None):
     None.
 
     """
+    # if path.suffix == ".nc":
+    #     data_array.rio.to_raster(path)
+    # else:
+    
     data_array.attrs=attributes
-    data_array.attrs["crs"]=data_array.crs.replace("+init=","") #Remove "+init=" which it deprecated
+    # data_array.attrs["crs"]=data_array.crs.replace("+init=","") #Remove "+init=" which it deprecated
 
     args={}
     if data_array.dtype==bool: #Bool rasters can't be written, so they have to be converted to int8, but they can still be written in one bit with the argument nbits = 1
@@ -55,8 +59,8 @@ def write_tif(data_array, attributes, path, nodata = None):
         for dim in data_array.dims:
             if dim != "x" and dim != "y":
                 data_array=data_array.transpose(dim, 'y', 'x') #dimension which is not x or y must be first
-        data_array.attrs["scales"]=data_array.attrs["scales"]*data_array.shape[0]
-        data_array.attrs["offsets"]=data_array.attrs["offsets"]*data_array.shape[0]
+        # data_array.attrs["scales"]=data_array.attrs["scales"]*data_array.shape[0]
+        # data_array.attrs["offsets"]=data_array.attrs["offsets"]*data_array.shape[0]
     
     # data_array.attrs["nodatavals"]=(0,)
     # data_array.attrs["scales"]=(0,)

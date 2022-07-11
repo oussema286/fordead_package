@@ -118,7 +118,7 @@ def compute_forest_mask(data_directory,
             tile.delete_attributes("last_computed_anomaly")
 
     if path_example_raster == None : path_example_raster = tile.paths["VegetationIndex"][tile.dates[0]]
-    tile.add_path("ForestMask", tile.data_directory / "ForestMask" / "Forest_Mask.tif")
+    tile.add_path("ForestMask", tile.data_directory / "ForestMask" / "Forest_Mask.nc")
     
     if tile.paths["ForestMask"].exists():
         print("Forest mask already calculated")
