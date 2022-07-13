@@ -308,8 +308,7 @@ def unzip_theia(bands, zip_dir,out_dir, empty_zip, correction_type):
         os.mkdir(out_dir)
     for zipfile in zipList:
         s2_unzip(zipfile,out_dir,bands, correction_type)
-        
-        if (len(ZipFile(zipfile).namelist()) != 0) and empty_zip:
+        if zipfile.exists() and (len(ZipFile(zipfile).namelist()) != 0) and empty_zip:
             print("Removal of " + str(zipfile))
             os.remove(zipfile)
             zipObj = ZipFile(zipfile, 'w')
