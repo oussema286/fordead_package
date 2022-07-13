@@ -109,8 +109,8 @@ def export_results(
             soil_data = import_soil_data(tile.paths, chunks= 1280)
             first_date_number_soil = convert_dateindex_to_datenumber(soil_data, tile.dates)
             
-        forest_mask = import_binary_raster(tile.paths["ForestMask"], chunks= 1280)
-        valid_area = import_binary_raster(tile.paths["valid_area_mask"], chunks= 1280)
+        forest_mask = import_binary_raster(tile.paths["forest_mask"], chunks= 1280)
+        valid_area = import_binary_raster(tile.paths["valid_model_mask"], chunks= 1280)
         relevant_area = forest_mask & valid_area
     
         if multiple_files:

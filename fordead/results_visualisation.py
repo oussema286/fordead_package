@@ -106,8 +106,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             
         dieback_data = import_dieback_data(tile.paths)
         dieback_data = dieback_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        forest_mask = import_binary_raster(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        valid_area = import_binary_raster(tile.paths["valid_area_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        forest_mask = import_binary_raster(tile.paths["forest_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        valid_area = import_binary_raster(tile.paths["valid_model_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         relevant_area = valid_area & forest_mask
         #Correcting extent if computed area is smaller than Sentinel-2 data area
         extent = np.array([float(forest_mask[dict(x=0,y=0)].coords["x"])-forest_mask.attrs["transform"][0]/2,

@@ -111,7 +111,7 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     else:
         soil_data=None
     dieback_data = import_dieback_data(tile.paths,chunks = chunks)
-    forest_mask = import_binary_raster(tile.paths["ForestMask"],chunks = chunks)
+    forest_mask = import_binary_raster(tile.paths["forest_mask"],chunks = chunks)
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
     anomalies = import_stacked_anomalies(tile.paths["Anomalies"],chunks = chunks)
     

@@ -79,7 +79,7 @@ def dieback_detection(
     threshold_anomaly : float
         Minimum threshold for anomaly detection
     max_nb_stress_periods : int
-        Maximum number of stress periods, if this number is reached, the pixel is masked in the invalid_model_mask, thus removed from future exports. Only used if stress_index_mode is not None.
+        Maximum number of stress periods, if this number is reached, the pixel is masked in the valid_model_mask, thus removed from future exports. Only used if stress_index_mode is not None.
     stress_index_mode : str
         Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed.
         If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly.
@@ -98,6 +98,7 @@ def dieback_detection(
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly, "max_nb_stress_periods" : max_nb_stress_periods, "stress_index_mode" : stress_index_mode})
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("AnomaliesDir","state_dieback","periodic_results_dieback","result_files","timelapse","series","nb_periods_stress") #Deleting previous detection results if they exist
+        tile.delete_files("valid_model_mask")
         tile.delete_attributes("last_computed_anomaly","last_date_export")
 
     if vi==None : vi = tile.parameters["vi"]
@@ -107,7 +108,7 @@ def dieback_detection(
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies
     tile.search_new_dates() #Get list of all used dates
     
-    tile.add_path("invalid_model_mask", tile.data_directory / "TimelessMask" / "invalid_model_mask.nc")
+    tile.add_path("valid_model_mask", tile.data_directory / "TimelessMasks" / "valid_model_mask.nc")
     
     tile.add_path("state_dieback", tile.data_directory / "DataDieback" / "state_dieback.nc")
     tile.add_path("first_date_dieback", tile.data_directory / "DataDieback" / "first_date_dieback.nc")
@@ -139,7 +140,7 @@ def dieback_detection(
             stress_data = initialize_stress_data(first_detection_date_index.shape,first_detection_date_index.coords, max_nb_stress_periods)
             
         if tile.parameters["correct_vi"]:
-            forest_mask = import_binary_raster(tile.paths["ForestMask"])
+            forest_mask = import_binary_raster(tile.paths["forest_mask"])
         #dieback DETECTION
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
@@ -164,9 +165,9 @@ def dieback_detection(
         tile.last_computed_anomaly = new_dates[-1]
         
         if stress_index_mode is not None:
-            invalid_model = import_binary_raster(tile.paths["sufficient_coverage_mask"])
-            invalid_model = invalid_model.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
-            write_tif(invalid_model, first_detection_date_index.attrs,tile.paths["invalid_model_mask"],nodata=0) 
+            valid_model = import_binary_raster(tile.paths["sufficient_coverage_mask"])
+            valid_model = valid_model.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
+            write_tif(valid_model, first_detection_date_index.attrs,tile.paths["valid_model_mask"],nodata=0) 
 
             if stress_index_mode == "mean":
                 stress_index = stress_data["cum_diff"]/stress_data["nb_dates"]

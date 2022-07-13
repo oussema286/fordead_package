@@ -109,18 +109,18 @@ def compute_forest_mask(data_directory,
     tile = tile.import_info()
     tile.add_parameters({"forest_mask_source" : forest_mask_source, "list_forest_type" : list_forest_type, "list_code_oso" : list_code_oso, "vector_path" : vector_path})
     if tile.parameters["Overwrite"] : 
-        tile.delete_files("ForestMask" ,"periodic_results_dieback","result_files","timelapse")
+        tile.delete_files("forest_mask" ,"periodic_results_dieback","result_files","timelapse")
         tile.delete_attributes("last_date_export")
         #Si correction de l'indice de végétation, le calcul du masque forêt se fait en step2 et d'autres résultats doivent être supprimés
         if hasattr(tile, "correct_vi") and tile.parameters["correct_vi"] : 
             tile.delete_dirs("coeff_model","AnomaliesDir","state_dieback" ,"periodic_results_dieback","result_files","timelapse","series", "validation", "nb_periods_stress") #Deleting previous training and detection results if they exist
-            tile.delete_files("valid_area_mask")
+            tile.delete_files("sufficient_coverage_mask","valid_model_mask")
             tile.delete_attributes("last_computed_anomaly")
 
     if path_example_raster == None : path_example_raster = tile.paths["VegetationIndex"][tile.dates[0]]
-    tile.add_path("ForestMask", tile.data_directory / "ForestMask" / "Forest_Mask.nc")
+    tile.add_path("forest_mask", tile.data_directory / "TimelessMasks" / "Forest_Mask.nc")
     
-    if tile.paths["ForestMask"].exists():
+    if tile.paths["forest_mask"].exists():
         print("Forest mask already calculated")
     else:
         if forest_mask_source is None:
@@ -147,7 +147,7 @@ def compute_forest_mask(data_directory,
         else:
             print("Unrecognized forest_mask_source")
 
-        write_tif(forest_mask, forest_mask.attrs,nodata = 0, path = tile.paths["ForestMask"])
+        write_tif(forest_mask, forest_mask.attrs,nodata = 0, path = tile.paths["forest_mask"])
         tile.save_info()
         
 if __name__ == '__main__':

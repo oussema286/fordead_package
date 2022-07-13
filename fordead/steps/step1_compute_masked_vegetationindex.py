@@ -144,7 +144,7 @@ def compute_masked_vegetationindex(
     # If parameters added differ from previously used parameters, all previous computation results are deleted
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("VegetationIndexDir", "MaskDir","coeff_model", "AnomaliesDir","state_dieback", "state_soil","periodic_results_dieback","result_files","timelapse","series", "nb_periods_stress")
-        tile.delete_files("valid_area_mask")
+        tile.delete_files("sufficient_coverage_mask","valid_model_mask")
         tile.delete_attributes("last_computed_anomaly","dates","last_date_export")
 
     # All SENTINEL data in the input directory is detected, and paths are added to the TileInfo object. For example, after this operation tile.paths["Sentinel"]["YYYY-MM-DD"]["B2"] brings up the path to the B2 band file of the specified date?

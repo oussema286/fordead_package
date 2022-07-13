@@ -21,7 +21,7 @@ It can then be retrieved using the parameter's key : `tile.parameters["parameter
 You can also add paths to the object. If directories and parent directories don't exist, they are created.
 ```python
 tile.add_dirpath("vegetation_index_directory", tile.data_directory / "VegetationIndex") #Adding path to a directory
-tile.add_path("forest_mask", tile.data_directory / "Forest_Mask" / "forest_mask.tif") #Adding path to a file
+tile.add_path("forest_mask", tile.data_directory / TimelessMasks / "forest_mask.tif") #Adding path to a file
 ```
 It can then be retrieved using the path's key : `tile.paths["vegetation_index_directory"]`, `tile.parameters["paths"]`.
 

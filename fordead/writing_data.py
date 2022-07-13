@@ -350,12 +350,12 @@ def export_csv(
     tile = tile.import_info()
     tile.add_dirpath("validation", tile.data_directory / "Validation")
     
-    forest_mask = import_binary_raster(tile.paths["ForestMask"])
-    valid_area_mask = import_binary_raster(tile.paths["valid_area_mask"])
+    forest_mask = import_binary_raster(tile.paths["forest_mask"])
+    valid_model_mask = import_binary_raster(tile.paths["valid_model_mask"])
     # if type(ground_obs) is str: ground_obs = gp.read_file(ground_obs)
 
     raster_id_validation_data=get_rasterized_validation_data(ground_obs_path, tile.raster_meta, ground_obs_buffer, name_column)
-    # raster_binary_validation_data = (raster_id_validation_data!=0) & valid_area_mask
+    # raster_binary_validation_data = (raster_id_validation_data!=0) & valid_model_mask
     raster_binary_validation_data = (raster_id_validation_data!=0)
 
     nb_pixels = int(np.sum(raster_binary_validation_data))
@@ -410,7 +410,7 @@ def export_csv(
                 {"coeff"+str(i) : coeff_model.sel(coeff = i).data[raster_binary_validation_data] for i in range(1,6)})
             dict_results.update(
                 {"forest_mask" : forest_mask.data[raster_binary_validation_data],
-                  "valid" : valid_area_mask.data[raster_binary_validation_data],
+                  "valid" : valid_model_mask.data[raster_binary_validation_data],
                   "first_detection_date" : tile.dates[first_detection_date_index.data[raster_binary_validation_data]],
                   "dieback_state" : dieback_data["state"].data[raster_binary_validation_data],
                   "dieback_first_date" : tile.dates[dieback_data["first_date"].data[raster_binary_validation_data]],

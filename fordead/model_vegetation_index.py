@@ -233,7 +233,7 @@ def model_vi_correction(stack_vi, stack_masks, dict_paths):
     stack_masks : array (Time,x,y)
         Array (boolean) containing mask data.
     dict_paths : dict
-        Dictionnary containing vegetation index path for each date, and "ForestMask" key linking to the path of the pixels of interest.
+        Dictionnary containing vegetation index path for each date, and forest_mask key linking to the path of the pixels of interest.
 
     Returns
     -------
@@ -246,7 +246,7 @@ def model_vi_correction(stack_vi, stack_masks, dict_paths):
 
     """
     
-    forest_mask = import_binary_raster(dict_paths["ForestMask"])
+    forest_mask = import_binary_raster(dict_paths["forest_mask"])
     median_vi=[]
     for date in stack_vi.Time.data:
         masked_vi = import_masked_vi(dict_paths, date)

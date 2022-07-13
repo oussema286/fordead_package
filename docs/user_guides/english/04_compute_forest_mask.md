@@ -15,7 +15,7 @@ The input parameters are :
 
 #### OUTPUTS
 The outputs of this fourth step, in the data_directory folder, are :
-- In the folder **ForestMask**, the binary raster Forest_Mask.tif which has the value 1 on the pixels of interest and 0 elsewhere.
+- In the folder **TimelessMasks**, the binary raster Forest_Mask.tif which has the value 1 on the pixels of interest and 0 elsewhere.
 
 ## How to use
 ### From a script
