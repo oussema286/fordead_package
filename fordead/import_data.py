@@ -731,7 +731,7 @@ def import_stress_data(dict_paths, chunks = None):
     cum_diff = rioxarray.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).squeeze("band").to_array(dim = "period")
     nb_dates = rioxarray.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).squeeze("band").to_array(dim = "period")
     nb_periods_stress = rioxarray.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
-    stress_data=xr.Dataset({"date": dates_stress.assign_coords({"change" : range(dates_stress.change.size)}),
+    stress_data=xr.Dataset({"date": dates_stress.assign_coords({"change" : range(1,dates_stress.change.size+1)}),
                      "nb_periods": nb_periods_stress,
                      "cum_diff" : cum_diff.assign_coords({"period" : range(1,cum_diff.period.size+1)}),
                      "nb_dates" : nb_dates.assign_coords({"period" : range(1,nb_dates.period.size+1)})
