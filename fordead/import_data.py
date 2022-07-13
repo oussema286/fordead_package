@@ -733,8 +733,8 @@ def import_stress_data(dict_paths, chunks = None):
     nb_periods_stress = rioxarray.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
     stress_data=xr.Dataset({"date": dates_stress.assign_coords({"change" : range(dates_stress.change.size)}),
                      "nb_periods": nb_periods_stress,
-                     "cum_diff" : cum_diff.assign_coords({"period" : range(cum_diff.period.size)}),
-                     "nb_dates" : nb_dates.assign_coords({"period" : range(nb_dates.period.size)})
+                     "cum_diff" : cum_diff.assign_coords({"period" : range(1,cum_diff.period.size+1)}),
+                     "nb_dates" : nb_dates.assign_coords({"period" : range(1,nb_dates.period.size+1)})
                      })
 
     return stress_data
@@ -756,7 +756,7 @@ def import_stress_index(path, chunks = None):
         DataSet containing the value of the stress index for each pixel and each stress period.
     """
     stress_index = rioxarray.open_rasterio(path,chunks = chunks).to_array(dim = "period").squeeze("band")
-    stress_index = stress_index.assign_coords({"period" : range(stress_index.period.size)})
+    stress_index = stress_index.assign_coords({"period" : range(1,stress_index.period.size+1)})
     # stress_index = stress_index.rename({"Band1" : 0, "Band2" : 1,"Band3" : 2,"Band4" : 3,"Band5" : 4, "Band6"}).to_array(dim = "period").squeeze("band")
 
     return stress_index 
