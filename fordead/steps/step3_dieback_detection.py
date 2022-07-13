@@ -79,7 +79,7 @@ def dieback_detection(
     threshold_anomaly : float
         Minimum threshold for anomaly detection
     max_nb_stress_periods : int
-        Maximum number of stress periods, if this number is reached, the pixel is removed from the valid_area_mask, thus removed from future exports. Only used if stress_index_mode is not None.
+        Maximum number of stress periods, if this number is reached, the pixel is masked in the invalid_model_mask, thus removed from future exports. Only used if stress_index_mode is not None.
     stress_index_mode : str
         Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed.
         If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly.
@@ -106,6 +106,8 @@ def dieback_detection(
     tile.add_dirpath("AnomaliesDir", tile.data_directory / "DataAnomalies") #Choose anomalies directory
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies
     tile.search_new_dates() #Get list of all used dates
+    
+    tile.add_path("invalid_model_mask", tile.data_directory / "TimelessMask" / "invalid_model_mask.nc")
     
     tile.add_path("state_dieback", tile.data_directory / "DataDieback" / "state_dieback.nc")
     tile.add_path("first_date_dieback", tile.data_directory / "DataDieback" / "first_date_dieback.nc")
@@ -162,10 +164,10 @@ def dieback_detection(
         tile.last_computed_anomaly = new_dates[-1]
         
         if stress_index_mode is not None:
-            valid_area = import_binary_raster(tile.paths["valid_area_mask"])
-            valid_area = valid_area.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
-            write_tif(valid_area, first_detection_date_index.attrs,tile.paths["valid_area_mask"],nodata=0)        
-  
+            invalid_model = import_binary_raster(tile.paths["sufficient_coverage_mask"])
+            invalid_model = invalid_model.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
+            write_tif(invalid_model, first_detection_date_index.attrs,tile.paths["invalid_model_mask"],nodata=0) 
+
             if stress_index_mode == "mean":
                 stress_index = stress_data["cum_diff"]/stress_data["nb_dates"]
             elif stress_index_mode == "weighted_mean":

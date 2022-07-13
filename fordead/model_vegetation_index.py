@@ -75,6 +75,7 @@ def model_vi(stack_vi, stack_masks, one_dim = False):
     if not one_dim:
         coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms})
         coeff_model['coeff'] = range(1,6) # coordinate values as recorded in .tif bands
+        
     else:
         p, _, _, _ = lstsq(HarmonicTerms[~stack_masks][0], stack_vi.where(~stack_masks,drop=True))
         coeff_model = xr.DataArray(p, coords={"coeff" : range(1,6)},dims=["coeff"])

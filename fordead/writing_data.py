@@ -44,9 +44,10 @@ def write_tif(data_array, attributes, path, nodata = None):
     # if path.suffix == ".nc":
     #     data_array.rio.to_raster(path)
     # else:
-    
+
+        
     data_array.attrs=attributes
-    # data_array.attrs["crs"]=data_array.crs.replace("+init=","") #Remove "+init=" which it deprecated
+    # data_array.rio.crs=data_array.crs.replace("+init=","") #Remove "+init=" which it deprecated
 
     args={}
     if data_array.dtype==bool: #Bool rasters can't be written, so they have to be converted to int8, but they can still be written in one bit with the argument nbits = 1
@@ -174,13 +175,13 @@ def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_d
                 {'properties': {'period_index': v}, 'geometry': s}
                 for i, (s, v) 
                 in enumerate(
-                    rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).compute().data , transform=Affine(*attrs["transform"]))))
+                    rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).compute().data , transform=relevant_area.rio.transform()))) #Affine(*attrs["transform"])
     gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
     gp_results.period_index=gp_results.period_index.astype(int)
     gp_results.insert(0,"start",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d'))
     gp_results.insert(1,"end",(bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))
     gp_results.insert(0,"period", (gp_results["start"] + " - " + gp_results["end"]))
-    gp_results.crs = attrs["crs"].replace("+init=","")
+    gp_results.crs = relevant_area.rio.crs #attrs["crs"].replace("+init=","")
     gp_results = gp_results.drop(columns=['period_index'])
     return gp_results
 
@@ -250,12 +251,12 @@ def vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, bins
                 in enumerate(
                     rasterio.features.shapes(digitized.astype(np.uint8), 
                                              mask = relevant_area.data, 
-                                             transform=Affine(*attrs["transform"]))))
+                                             transform=confidence_index.rio.transform())))
     
     gp_results = gp.GeoDataFrame.from_features(geoms_class)
     gp_results.class_index=gp_results.class_index.astype(int)
     gp_results.insert(1,"class",classes[gp_results.class_index])
-    gp_results.crs = attrs["crs"].replace("+init=","")
+    gp_results.crs = confidence_index.rio.crs
     gp_results = gp_results.drop(columns=['class_index'])
     return gp_results
 
