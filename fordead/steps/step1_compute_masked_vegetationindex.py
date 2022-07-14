@@ -163,13 +163,15 @@ def compute_masked_vegetationindex(
     cloudiness = get_cloudiness(Path(input_directory) / "cloudiness", tile.paths["Sentinel"], sentinel_source) if lim_perc_cloud != -1 else dict(zip(tile.paths["Sentinel"], [-1]*len(tile.paths["Sentinel"]))) #Returns dictionnary with cloud percentage for each date, except if lim_perc_cloud is set as 1, in which case cloud percentage is -1 for every date so source mask is not used and every date is used 
     new_dates = np.array([date for date in tile.paths["Sentinel"] if cloudiness[date] <= lim_perc_cloud and (ignored_period is None or (date[5:] > min(ignored_period) and date[5:] < max(ignored_period))) and (not(hasattr(tile, "dates")) or date > tile.dates[-1])]) #Creates array containing only the dates with cloudiness inferior to lim_perc_cloud parameter. Also filters out dates anterior to already used dates.
     tile.dates = np.concatenate((tile.dates, new_dates)) if hasattr(tile, "dates") else new_dates #Adds list of all used dates (already used + new dates) as attribute to TileInfo object
-    
+    tile.raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[-1][next(x for x in list(tile.paths["Sentinel"].values())[1] if x in ["B2","B3","B4","B8"])], #path of first 10m resolution band found
+                                           extent_shape_path = extent_shape_path)  #Imports all raster metadata from one band. 
+
     if  len(new_dates) == 0:
         print("Computing masks and vegetation index : no new dates")
     else:
         print("Computing masks and vegetation index : " + str(len(new_dates))+ " new dates")
         
-        tile.raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[0][next(x for x in list(tile.paths["Sentinel"].values())[0] if x in ["B2","B3","B4","B8"])], #path of first 10m resolution band found
+        tile.raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[-1][next(x for x in list(tile.paths["Sentinel"].values())[1] if x in ["B2","B3","B4","B8"])], #path of first 10m resolution band found
                                                extent_shape_path = extent_shape_path)  #Imports all raster metadata from one band. 
         
         #Import or initialize data for the soil mask

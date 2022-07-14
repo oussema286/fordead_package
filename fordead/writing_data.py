@@ -237,7 +237,7 @@ def vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, bins
         Polygons from pixels in the relevant areacontaining the dieback class.
 
     """
-    
+    print(attrs)
     digitized = np.digitize(confidence_index,bins_classes)
     digitized[nb_dates==3]=0
     geoms_class = list(
