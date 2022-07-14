@@ -117,12 +117,14 @@ def compute_forest_mask(data_directory,
             tile.delete_files("valid_area_mask")
             tile.delete_attributes("last_computed_anomaly")
 
-    if path_example_raster == None : path_example_raster = tile.paths["VegetationIndex"][tile.dates[0]]
+
     tile.add_path("ForestMask", tile.data_directory / "ForestMask" / "Forest_Mask.tif")
     
     if tile.paths["ForestMask"].exists():
         print("Forest mask already calculated")
     else:
+        if path_example_raster == None : path_example_raster = tile.paths["VegetationIndex"][tile.dates[-1]]
+        
         if forest_mask_source is None:
             print("No mask used, computing forest mask with every pixel marked as True")
             forest_mask = raster_full(path_example_raster, fill_value = 1, dtype = bool)

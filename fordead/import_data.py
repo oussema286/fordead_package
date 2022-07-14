@@ -279,7 +279,11 @@ class TileInfo:
         
         self.getdict_datepaths("VegetationIndex",path_vi)
         self.getdict_datepaths("Masks",path_masks)
-        self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
+        if hasattr(self, "dates"):
+            self.dates = np.unique(np.concatenate((self.dates,np.array(list(self.paths["VegetationIndex"].keys()))),0))
+        else:
+            self.dates = np.array(list(self.paths["VegetationIndex"].keys()))
+
             
 
     def add_parameters(self, parameters):
