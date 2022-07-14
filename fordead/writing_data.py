@@ -20,7 +20,43 @@ from scipy import ndimage
 import json
 from fordead.import_data import import_stress_index, import_coeff_model, import_dieback_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_binary_raster, import_soil_data,import_resampled_sen_stack, import_stress_data
 
+def write_raster(data_array, path):
+    
+    import time
+    
+        #     del clipped.attrs["scale_factor"]
+        #     del clipped.attrs["_FillValue"]
+        #     clipped.encoding["dtype"]="int16"
+        #     clipped.encoding["scale_factor"]=0.001
+        #     clipped.encoding["_FillValue"]=0
+    
+    start_time = time.time()
+    
+    
+    dem = data_array.to_dataset(name="dem")
 
+    encoding = {"dem": {'zlib': True, "complevel" : 9}}
+    encoding = {"dem": {'zlib': True, "dtype" : "int16", "scale_factor" : 0.001, "_FillValue" : 0}}
+    
+    dem.to_netcdf(path, encoding=encoding)
+
+    data_array.encoding["DEFLATE"]=True
+    data_array.encoding["dtype"]="int16"
+    data_array.encoding["scale_factor"]=0.001
+    data_array.encoding["_FillValue"]=0
+    data_array.encoding["complevel"]=9
+    
+    data_array.rio.to_raster(path, windowed = False, tiled = True)
+    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
+
+    rioxarray.open_rasterio(path)
+    rioxarray.open_rasterio(path)
+    
+    if data_array.dtype==bool: #Bool rasters can't be written, so they have to be converted to int8, but they can still be written in one bit with the argument nbits = 1
+        data_array=data_array.astype(uint8)
+    data_array.rio.to_raster(path, compress='zlib', windowed = True, tiled = True)
+    
+# , num_threads='all_cpus', tiled=True, dtype='uint8, driver="GTiff", predictor=2)
 def write_tif(data_array, attributes, path, nodata = None):
     """
     Writes raster to the disk
@@ -41,9 +77,6 @@ def write_tif(data_array, attributes, path, nodata = None):
     None.
 
     """
-    # if path.suffix == ".nc":
-    #     data_array.rio.to_raster(path)
-    # else:
 
         
     data_array.attrs=attributes
