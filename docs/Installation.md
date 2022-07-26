@@ -15,6 +15,11 @@ conda activate fordead_env
 pip install .
 ```
 
+The conda environment can be deleted using the following command :
+```bash
+conda env remove -n fordead_env
+```
+
 ### Install without conda
 
 If you don't have conda, you can find the required dependencies in the [environment.yml](https://gitlab.com/fordead/fordead_package/-/blob/master/environment.yml) file and install them by hand before running the following command in the package directory :
