@@ -21,17 +21,12 @@ import json
 from fordead.import_data import import_stress_index, import_coeff_model, import_dieback_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_binary_raster, import_soil_data,import_resampled_sen_stack, import_stress_data
 
 def write_raster(data_array, path):
-    
-    import time
-    
+        
         #     del clipped.attrs["scale_factor"]
         #     del clipped.attrs["_FillValue"]
         #     clipped.encoding["dtype"]="int16"
         #     clipped.encoding["scale_factor"]=0.001
-        #     clipped.encoding["_FillValue"]=0
-    
-    start_time = time.time()
-    
+        #     clipped.encoding["_FillValue"]=0    
     
     dem = data_array.to_dataset(name="dem")
 
@@ -47,14 +42,14 @@ def write_raster(data_array, path):
     data_array.encoding["complevel"]=9
     
     data_array.rio.to_raster(path, windowed = False, tiled = True)
-    print("Temps d execution : %s secondes ---" % (time.time() - start_time))
+    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))
 
-    rioxarray.open_rasterio(path)
-    rioxarray.open_rasterio(path)
+    # rioxarray.open_rasterio(path)
+    # rioxarray.open_rasterio(path)
     
-    if data_array.dtype==bool: #Bool rasters can't be written, so they have to be converted to int8, but they can still be written in one bit with the argument nbits = 1
-        data_array=data_array.astype(uint8)
-    data_array.rio.to_raster(path, compress='zlib', windowed = True, tiled = True)
+    # if data_array.dtype==bool: #Bool rasters can't be written, so they have to be converted to int8, but they can still be written in one bit with the argument nbits = 1
+    #     data_array=data_array.astype(uint8)
+    # data_array.rio.to_raster(path, compress='zlib', windowed = True, tiled = True)
     
 # , num_threads='all_cpus', tiled=True, dtype='uint8, driver="GTiff", predictor=2)
 def write_tif(data_array, attributes, path, nodata = None):
