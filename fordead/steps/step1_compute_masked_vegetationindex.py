@@ -21,7 +21,7 @@ import numpy as np
 
 from fordead.import_data import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
 from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula, get_source_mask, compute_user_mask
-from fordead.writing_data import write_raster
+from fordead.writing_data import write_raster, write_tif
 
 #%% =============================================================================
 #   FONCTIONS
@@ -203,21 +203,21 @@ def compute_masked_vegetationindex(
                     
                 #Writing vegetation index and mask
                 # write_tif(vegetation_index, tile.raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".nc"),nodata=0)
-                # write_tif(mask, tile.raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".nc"),nodata=0)
+                write_tif(mask, tile.raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)
                 write_raster(vegetation_index, tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".nc"))
-                write_raster(mask, tile.paths["MaskDir"] / ("Mask_"+date+".nc"))
+                # write_raster(mask, tile.paths["MaskDir"] / ("Mask_"+date+".nc"))
 
                 del vegetation_index, mask
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
             
         if soil_detection:
             #Writing soil data 
-            # write_tif(soil_data["state"], tile.raster_meta["attrs"],tile.paths["state_soil"],nodata=0)
-            # write_tif(soil_data["first_date"], tile.raster_meta["attrs"],tile.paths["first_date_soil"],nodata=0)
-            # write_tif(soil_data["count"], tile.raster_meta["attrs"],tile.paths["count_soil"],nodata=0)
-            write_raster(soil_data["state"],tile.paths["state_soil"])
-            write_raster(soil_data["first_date"],tile.paths["first_date_soil"])
-            write_raster(soil_data["count"],tile.paths["count_soil"])
+            write_tif(soil_data["state"], tile.raster_meta["attrs"],tile.paths["state_soil"],nodata=0)
+            write_tif(soil_data["first_date"], tile.raster_meta["attrs"],tile.paths["first_date_soil"],nodata=0)
+            write_tif(soil_data["count"], tile.raster_meta["attrs"],tile.paths["count_soil"],nodata=0)
+            # write_raster(soil_data["state"],tile.paths["state_soil"])
+            # write_raster(soil_data["first_date"],tile.paths["first_date_soil"])
+            # write_raster(soil_data["count"],tile.paths["count_soil"])
 
     #Add paths to vi and mask to TileInfo object
     tile.getdict_paths(path_vi = tile.paths["VegetationIndexDir"],
