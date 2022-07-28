@@ -152,9 +152,8 @@ def rasterize_polygons_binary(polygons, example_raster):
                                             default_value = 1, fill = 0,
                                             transform =example_raster.rio.transform())
     forest_mask=forest_mask.astype("bool")
-    forest_mask = xr.DataArray(forest_mask, coords=example_raster.coords)
+    forest_mask = xr.DataArray(forest_mask, coords=example_raster.coords).rio.write_crs(example_raster.rio.crs)
     forest_mask.attrs = example_raster.attrs
-    
     return forest_mask
 
 def clip_oso(path_oso, path_example_raster, list_code_oso):

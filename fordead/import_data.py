@@ -752,15 +752,26 @@ def import_stress_data(dict_paths, chunks = None):
     stress_data : xarray DataSet or dask DataSet
         DataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
     """
-    dates_stress = rioxarray.open_rasterio(dict_paths["dates_stress"],chunks = chunks)#.squeeze("band").to_array(dim = "change")
-    cum_diff = rioxarray.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks)#.squeeze("band").to_array(dim = "period")
-    nb_dates = rioxarray.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks)#.squeeze("band").to_array(dim = "period")
-    nb_periods_stress = rioxarray.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
-    stress_data=xr.Dataset({"date": dates_stress.assign_coords({"change" : range(1,dates_stress.change.size+1)}),
+    
+    dates_stress = xr.open_rasterio(dict_paths["dates_stress"],chunks = chunks).rename({"band": "change"})
+    cum_diff = xr.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).rename({"band": "period"})
+    nb_dates = xr.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).rename({"band": "period"})
+    nb_periods_stress = xr.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
+    stress_data=xr.Dataset({"date": dates_stress,
                      "nb_periods": nb_periods_stress,
-                     "cum_diff" : cum_diff.assign_coords({"period" : range(1,cum_diff.period.size+1)}),
-                     "nb_dates" : nb_dates.assign_coords({"period" : range(1,nb_dates.period.size+1)})
+                     "cum_diff" : cum_diff,
+                     "nb_dates" : nb_dates
                      })
+    
+    # dates_stress = rioxarray.open_rasterio(dict_paths["dates_stress"],chunks = chunks).squeeze("band").to_array(dim = "change")
+    # cum_diff = rioxarray.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).squeeze("band").to_array(dim = "period")
+    # nb_dates = rioxarray.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).squeeze("band").to_array(dim = "period")
+    # nb_periods_stress = rioxarray.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
+    # stress_data=xr.Dataset({"date": dates_stress.assign_coords({"change" : range(1,dates_stress.change.size+1)}),
+    #                  "nb_periods": nb_periods_stress,
+    #                  "cum_diff" : cum_diff.assign_coords({"period" : range(1,cum_diff.period.size+1)}),
+    #                  "nb_dates" : nb_dates.assign_coords({"period" : range(1,nb_dates.period.size+1)})
+    #                  })
 
     return stress_data
 
@@ -780,7 +791,9 @@ def import_stress_index(path, chunks = None):
     stress_index : xarray DataSet or dask DataSet (x,y,period)
         DataSet containing the value of the stress index for each pixel and each stress period.
     """
-    stress_index = rioxarray.open_rasterio(path,chunks = chunks).to_array(dim = "period").squeeze("band")
+    stress_index = rioxarray.open_rasterio(path,chunks = chunks).rename({"band": "period"})
+    # stress_index = rioxarray.open_rasterio(path,chunks = chunks).to_array(dim = "period").squeeze("band")
+
     stress_index = stress_index.assign_coords({"period" : range(1,stress_index.period.size+1)})
     # stress_index = stress_index.rename({"Band1" : 0, "Band2" : 1,"Band3" : 2,"Band4" : 3,"Band5" : 4, "Band6"}).to_array(dim = "period").squeeze("band")
 

@@ -73,7 +73,7 @@ def model_vi(stack_vi, stack_masks, one_dim = False):
     
     HarmonicTerms = np.array([compute_HarmonicTerms(DateAsNumber) for DateAsNumber in DatesNumbers])
     if not one_dim:
-        coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms})
+        coeff_model = xr.map_blocks(censored_lstsq, stack_vi, args=[~stack_masks], kwargs={'A':HarmonicTerms}).rio.write_crs(stack_vi.rio.crs)
         coeff_model['coeff'] = range(1,6) # coordinate values as recorded in .tif bands
         
     else:
