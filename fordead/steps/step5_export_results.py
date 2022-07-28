@@ -97,7 +97,7 @@ def export_results(
         tile.delete_dirs("periodic_results_dieback","result_files") #Deleting previous detection results if they exist
         tile.delete_attributes("last_date_export")
         
-    tile.add_path("confidence_index", tile.data_directory / "Results" / "confidence_index.nc")
+    tile.add_path("confidence_index", tile.data_directory / "Results" / "confidence_index.tif")
     
     exporting = (tile.dates[-1] != tile.last_date_export) if hasattr(tile, "last_date_export") else True
     if exporting:

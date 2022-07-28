@@ -608,24 +608,50 @@ def import_stackedmaskedVI(tuile,min_date = None, max_date=None,chunks = None):
     else:
         dates = [date for date in tuile.paths["VegetationIndex"]if date >= min_date & date <= max_date]
         
-    stack_vi = xr.open_mfdataset([tuile.paths["VegetationIndex"][date] for date in dates],concat_dim = "Time",combine = "nested", chunks = chunks)
+        
+        
+# =============================================================================
+    list_vi=[xr.open_dataset(tuile.paths["VegetationIndex"][date],chunks =chunks, engine = "rasterio") for date in dates]
+    stack_vi=xr.concat(list_vi,dim="Time")
+    stack_vi=stack_vi.assign_coords(Time=dates)
+    stack_vi=stack_vi.squeeze("band")
+    stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
+    
+    # list_mask=[xr.open_dataset(tuile.paths["Masks"][date],chunks =chunks, engine = "rasterio") for date in dates]
+    # stack_masks=xr.concat(list_mask,dim="Time")
+    # stack_masks=stack_masks.assign_coords(Time=dates).astype(bool)
+    # stack_masks=stack_masks.squeeze("band")
+    # stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
+
+
+# =============================================================================
+#Original rioxarray.open_rasterio
     # list_vi=[rioxarray.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in dates]
     # stack_vi=xr.concat(list_vi,dim="Time")
-    stack_vi=stack_vi.assign_coords(Time=dates)
+    # stack_vi=stack_vi.assign_coords(Time=dates)
     # stack_vi=stack_vi.squeeze("band")
-    stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
-    # stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
+    # stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
 
-    stack_masks = xr.open_mfdataset([tuile.paths["Masks"][date] for date in dates],concat_dim = "Time",combine = "nested", chunks = chunks)
-
-    # list_mask=[rioxarray.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in dates]
-    # stack_masks=xr.concat(list_mask,dim="Time")
+    list_mask=[rioxarray.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in dates]
+    stack_masks=xr.concat(list_mask,dim="Time")
     stack_masks=stack_masks.assign_coords(Time=dates).astype(bool)
     stack_masks=stack_masks.squeeze("band")
     stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
-    # stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
 
-    return stack_vi["Band1"], stack_masks["band_data"]
+# =============================================================================
+# 
+# =============================================================================
+#xr.open_mfdataset
+    # stack_vi = xr.open_mfdataset([tuile.paths["VegetationIndex"][date] for date in dates],concat_dim = "Time",combine = "nested", chunks = chunks)
+    # stack_vi=stack_vi.assign_coords(Time=dates)
+    # stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
+
+    # stack_masks = xr.open_mfdataset([tuile.paths["Masks"][date] for date in dates],concat_dim = "Time",combine = "nested", chunks = chunks)
+    # stack_masks=stack_masks.assign_coords(Time=dates).astype(bool)
+    # stack_masks=stack_masks.squeeze("band")
+    # stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
+
+    return stack_vi["Band1"], stack_masks #stack_masks["band_data"]
 
     
 def import_coeff_model(path, chunks = None):
@@ -647,14 +673,11 @@ def import_coeff_model(path, chunks = None):
     """
 
     # coeff_model = xr.open_dataset(path, engine="rasterio")
-    # xds = xr.open_dataset(path, decode_coords="all")
-    # path2 = 'E:/fordead/Data/Sentinel/zone_etude/output2/DataModel/coeff_model2.nc'
+    
     coeff_model = rioxarray.open_rasterio(path,chunks = chunks)
-    coeff_model = coeff_model.rename({"Band1" : 1, "Band2" : 2,"Band3" : 3,"Band4" : 4,"Band5" : 5}).to_array(dim = "coeff").squeeze("band")
-    # coeff_model.squeeze("band").rio.to_raster(path2)
-    # coeff_model = rioxarray.open_rasterio(path2,chunks = chunks)
+    # coeff_model = coeff_model.rename({"Band1" : 1, "Band2" : 2,"Band3" : 3,"Band4" : 4,"Band5" : 5}).to_array(dim = "coeff").squeeze("band")
 
-    # coeff_model = coeff_model.rename({"band": "coeff"})
+    coeff_model = coeff_model.rename({"band": "coeff"})
     return coeff_model
 
 def import_first_detection_date_index(path,chunks = None):
@@ -729,9 +752,9 @@ def import_stress_data(dict_paths, chunks = None):
     stress_data : xarray DataSet or dask DataSet
         DataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
     """
-    dates_stress = rioxarray.open_rasterio(dict_paths["dates_stress"],chunks = chunks).squeeze("band").to_array(dim = "change")
-    cum_diff = rioxarray.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).squeeze("band").to_array(dim = "period")
-    nb_dates = rioxarray.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).squeeze("band").to_array(dim = "period")
+    dates_stress = rioxarray.open_rasterio(dict_paths["dates_stress"],chunks = chunks)#.squeeze("band").to_array(dim = "change")
+    cum_diff = rioxarray.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks)#.squeeze("band").to_array(dim = "period")
+    nb_dates = rioxarray.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks)#.squeeze("band").to_array(dim = "period")
     nb_periods_stress = rioxarray.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
     stress_data=xr.Dataset({"date": dates_stress.assign_coords({"change" : range(1,dates_stress.change.size+1)}),
                      "nb_periods": nb_periods_stress,

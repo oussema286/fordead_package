@@ -104,9 +104,9 @@ def train_model(
         tile.delete_attributes("last_computed_anomaly","last_date_export")
 
     #Create missing directories and add paths to TileInfo object
-    tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.nc")
-    tile.add_path("first_detection_date_index", tile.data_directory / "DataModel" / "first_detection_date_index.nc")
-    tile.add_path("sufficient_coverage_mask", tile.data_directory / "TimelessMasks" / "sufficient_coverage_mask.nc")
+    tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.tif")
+    tile.add_path("first_detection_date_index", tile.data_directory / "DataModel" / "first_detection_date_index.tif")
+    tile.add_path("sufficient_coverage_mask", tile.data_directory / "TimelessMasks" / "sufficient_coverage_mask.tif")
     
     if tile.paths["coeff_model"].exists():
         print("Model already calculated")
@@ -135,7 +135,7 @@ def train_model(
         
         #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, la zone utilisable
         write_tif(first_detection_date_index,tile.raster_meta["attrs"], tile.paths["first_detection_date_index"],nodata=0)
-        write_tif(coeff_model,tile.raster_meta["attrs"], tile.paths["coeff_model"])
+        write_tif(coeff_model,tile.raster_meta["attrs"], tile.paths["coeff_model"],nodata=0)
         write_tif(sufficient_coverage_mask,tile.raster_meta["attrs"], tile.paths["sufficient_coverage_mask"],nodata=0)
         #Save the TileInfo object
     tile.save_info()

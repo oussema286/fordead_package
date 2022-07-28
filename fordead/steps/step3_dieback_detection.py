@@ -108,18 +108,18 @@ def dieback_detection(
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies
     tile.search_new_dates() #Get list of all used dates
     
-    tile.add_path("valid_model_mask", tile.data_directory / "TimelessMasks" / "valid_model_mask.nc")
+    tile.add_path("valid_model_mask", tile.data_directory / "TimelessMasks" / "valid_model_mask.tif")
     
-    tile.add_path("state_dieback", tile.data_directory / "DataDieback" / "state_dieback.nc")
-    tile.add_path("first_date_dieback", tile.data_directory / "DataDieback" / "first_date_dieback.nc")
-    tile.add_path("first_date_unconfirmed_dieback", tile.data_directory / "DataDieback" / "first_date_unconfirmed_dieback.nc")
-    tile.add_path("count_dieback", tile.data_directory / "DataDieback" / "count_dieback.nc")
+    tile.add_path("state_dieback", tile.data_directory / "DataDieback" / "state_dieback.tif")
+    tile.add_path("first_date_dieback", tile.data_directory / "DataDieback" / "first_date_dieback.tif")
+    tile.add_path("first_date_unconfirmed_dieback", tile.data_directory / "DataDieback" / "first_date_unconfirmed_dieback.tif")
+    tile.add_path("count_dieback", tile.data_directory / "DataDieback" / "count_dieback.tif")
     
-    tile.add_path("dates_stress", tile.data_directory / "DataStress" / "dates_stress.nc")
-    tile.add_path("nb_periods_stress", tile.data_directory / "DataStress" / "nb_periods_stress.nc")
-    tile.add_path("cum_diff_stress", tile.data_directory / "DataStress" / "cum_diff_stress.nc")
-    tile.add_path("nb_dates_stress", tile.data_directory / "DataStress" / "nb_dates_stress.nc")
-    tile.add_path("stress_index", tile.data_directory / "DataStress" / "stress_index.nc")
+    tile.add_path("dates_stress", tile.data_directory / "DataStress" / "dates_stress.tif")
+    tile.add_path("nb_periods_stress", tile.data_directory / "DataStress" / "nb_periods_stress.tif")
+    tile.add_path("cum_diff_stress", tile.data_directory / "DataStress" / "cum_diff_stress.tif")
+    tile.add_path("nb_dates_stress", tile.data_directory / "DataStress" / "nb_dates_stress.tif")
+    tile.add_path("stress_index", tile.data_directory / "DataStress" / "stress_index.tif")
 
     #Verify if there are new SENTINEL dates
     new_dates = tile.dates[tile.dates > tile.last_computed_anomaly] if hasattr(tile, "last_computed_anomaly") else tile.dates[tile.dates >= tile.parameters["min_last_date_training"]]
@@ -159,7 +159,7 @@ def dieback_detection(
                 
                 if stress_index_mode is not None: stress_data = save_stress(stress_data, dieback_data, changing_pixels, diff_vi, masked_vi["mask"], stress_index_mode) 
 
-                write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".nc"),nodata=0)
+                write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
                 print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
                 del masked_vi, predicted_vi, anomalies, changing_pixels, diff_vi
         tile.last_computed_anomaly = new_dates[-1]
