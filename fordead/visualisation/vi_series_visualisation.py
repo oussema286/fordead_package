@@ -134,17 +134,17 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     if shape_path is not None:
         matplotlib.use('Agg')
         shape = gp.read_file(shape_path)
-        shape = shape.to_crs(crs = tile.raster_meta["attrs"]["crs"])
+        shape = shape.to_crs(crs = tile.raster_meta["crs"])
         
         for point_index in range(len(shape)):
             id_point = shape.iloc[point_index][name_column]
             geometry_point = shape.iloc[point_index]["geometry"]
             print(id_point)
-            row, col = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),geometry_point.x,geometry_point.y)
+            row, col = transform.rowcol(tile.raster_meta["transform"],geometry_point.x,geometry_point.y)
 
             select_and_plot_time_series(col,row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax, name_file = str(id_point))
     elif (x is not None) and (y is not None):
-        row, col = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),x,y)
+        row, col = transform.rowcol(tile.raster_meta["transform"],x,y)
         select_and_plot_time_series(col, row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
 
     else:
@@ -175,7 +175,7 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
                 x=int(x)
                 y=int(input("y ? "))
                 
-                if mode == "c": y, x = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),x,y)
+                if mode == "c": y, x = transform.rowcol(tile.raster_meta["transform"],x,y)
 
                 select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
 
