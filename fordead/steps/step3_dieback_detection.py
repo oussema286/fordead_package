@@ -165,8 +165,9 @@ def dieback_detection(
         tile.last_computed_anomaly = new_dates[-1]
         
         if stress_index_mode is not None:
-            valid_model = import_binary_raster(tile.paths["sufficient_coverage_mask"])
-            valid_model = valid_model.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
+            # valid_model = import_binary_raster(tile.paths["sufficient_coverage_mask"])
+            # valid_model = valid_model.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
+            valid_model = stress_data["nb_periods"]<=max_nb_stress_periods
             write_tif(valid_model, first_detection_date_index.attrs,tile.paths["valid_model_mask"],nodata=0) 
 
             if stress_index_mode == "mean":

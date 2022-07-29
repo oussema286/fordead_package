@@ -555,13 +555,13 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
 
 
         
-def import_binary_raster(forest_mask_path,chunks = None):
+def import_binary_raster(raster_path,chunks = None):
     """
     Imports forest mask
 
     Parameters
     ----------
-    forest_mask_path : str
+    raster_path : str
         Path of the forest mask binary raster.
     chunks : int, optional
         Chunks for import as dask array. If None, data is imported as xarray. The default is None.
@@ -572,9 +572,9 @@ def import_binary_raster(forest_mask_path,chunks = None):
         Binary array containing True if pixels are inside the region of interest.
 
     """
-    forest_mask = rioxarray.open_rasterio(forest_mask_path,chunks = chunks).squeeze("band")
-    # forest_mask=forest_mask.rename({"band" : "Mask"})
-    return forest_mask.astype(bool)
+    raster = rioxarray.open_rasterio(raster_path,chunks = chunks).squeeze("band")
+    # raster=raster.rename({"band" : "Mask"})
+    return raster.astype(bool)
 
 
 def import_stackedmaskedVI(tuile,min_date = None, max_date=None,chunks = None):

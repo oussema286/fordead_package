@@ -28,7 +28,7 @@ def write_raster(data_array, path):
 
     data_array.encoding["dtype"]="int16"
     data_array.encoding["scale_factor"]=0.001
-    data_array.encoding["_FillValue"]=0
+    data_array.encoding["_FillValue"]=-1
     
     data_array.rio.to_raster(path, windowed = False, tiled = True)
 

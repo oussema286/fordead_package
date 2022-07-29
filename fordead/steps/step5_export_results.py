@@ -110,9 +110,13 @@ def export_results(
             first_date_number_soil = convert_dateindex_to_datenumber(soil_data, tile.dates)
             
         forest_mask = import_binary_raster(tile.paths["forest_mask"], chunks= 1280)
-        valid_area = import_binary_raster(tile.paths["valid_model_mask"], chunks= 1280)
-        relevant_area = forest_mask & valid_area
-    
+        valid_area = import_binary_raster(tile.paths["sufficient_coverage_mask"], chunks= 1280)
+        if tile.parameters["stress_index_mode"] is not None:
+            valid_model = import_binary_raster(tile.paths["valid_model_mask"], chunks= 1280)
+            relevant_area = forest_mask & valid_area & valid_model
+        else:
+            relevant_area = forest_mask & valid_area
+
         if multiple_files:
             tile.add_dirpath("result_files", tile.data_directory / "Results")
             for date_bin_index, date_bin in enumerate(bins_as_date):
@@ -127,17 +131,20 @@ def export_results(
             tile.add_path("periodic_results_dieback", tile.data_directory / "Results" / "periodic_results_dieback.shp")
             periodic_results = get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_datenumber, relevant_area, dieback_data.state.attrs)
             if conf_threshold_list is not None and conf_classes_list is not None:
-                stress_data = import_stress_data(tile.paths)
-                stress_index = import_stress_index(tile.paths["stress_index"])
-                confidence_area = relevant_area & dieback_data["state"] & ~soil_data["state"] if tile.parameters["soil_detection"] else relevant_area & dieback_data["state"]
-           
-                confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"])) #The selection probably makes no sense for pixels with nb_periods higher that max_nb_stress_periods, but it doesn't matter since they are excluded from result exports, but it removes bugs of inexistant period values.
-                nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))  #The selection probably makes no sense for pixels with nb_periods higher that max_nb_stress_periods, but it doesn't matter since they are excluded from result exports, but it removes bugs of inexistant period values.
+                if tile.parameters["stress_index_mode"] is None:
+                    print("Stress index was not saved, parameters conf_threshold_list and conf_classes_list are ignored. Change stress_index_mode parameter in step 3 to compute stress index")
+                else:
+                    stress_data = import_stress_data(tile.paths)
+                    stress_index = import_stress_index(tile.paths["stress_index"])
+                    confidence_area = relevant_area & dieback_data["state"] & ~soil_data["state"] if tile.parameters["soil_detection"] else relevant_area & dieback_data["state"]
                
-                write_tif(confidence_index.where(confidence_area,0), forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
-               
-                confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, confidence_area.compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
-                periodic_results = union_confidence_class(periodic_results, confidence_class)
+                    confidence_index = stress_index.sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"])) #The selection probably makes no sense for pixels with nb_periods higher that max_nb_stress_periods, but it doesn't matter since they are excluded from result exports, but it removes bugs of inexistant period values.
+                    nb_dates = stress_data["nb_dates"].sel(period = (stress_data["nb_periods"]+1).where(stress_data["nb_periods"]<=tile.parameters["max_nb_stress_periods"],tile.parameters["max_nb_stress_periods"]))  #The selection probably makes no sense for pixels with nb_periods higher that max_nb_stress_periods, but it doesn't matter since they are excluded from result exports, but it removes bugs of inexistant period values.
+                   
+                    write_tif(confidence_index.where(confidence_area,0), forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
+                   
+                    confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, confidence_area.compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
+                    periodic_results = union_confidence_class(periodic_results, confidence_class)
             if not(periodic_results.empty):
                 periodic_results.to_file(tile.paths["periodic_results_dieback"],index = None)
             del periodic_results
