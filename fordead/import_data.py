@@ -944,11 +944,11 @@ def import_masked_vi(dict_paths, date, chunks = None):
     vegetation_index = xr.open_dataset(dict_paths["VegetationIndex"][date],chunks = chunks, engine = "rasterio")['Band1']
     mask=rioxarray.open_rasterio(dict_paths["Masks"][date],chunks = chunks).astype(bool)
     
-    masked_vi=xr.Dataset({"vegetation_index": vegetation_index,
-                             "mask": mask})
-    masked_vi=masked_vi.squeeze("band")
+    # masked_vi=xr.Dataset({"vegetation_index": vegetation_index,
+    #                          "mask": mask})
+    # masked_vi=masked_vi.squeeze("band")
 
-    return masked_vi
+    return vegetation_index, mask
 
 
 

@@ -144,24 +144,24 @@ def dieback_detection(
         #dieback DETECTION
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
-                masked_vi = import_masked_vi(tile.paths,date)
+                vegetation_index, mask = import_masked_vi(tile.paths,date)
                 if tile.parameters["correct_vi"]:
-                    masked_vi["vegetation_index"], tile.correction_vi = correct_vi_date(masked_vi,forest_mask, tile.large_scale_model, date, tile.correction_vi)
+                    vegetation_index, tile.correction_vi = correct_vi_date(vegetation_index, mask,forest_mask, tile.large_scale_model, date, tile.correction_vi)
 
-                masked_vi["mask"] = masked_vi["mask"] | (date_index < first_detection_date_index) #Masking pixels where date was used for training
+                mask = mask | (date_index < first_detection_date_index) #Masking pixels where date was used for training
                 
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
                 
-                anomalies, diff_vi = detection_anomalies(masked_vi, predicted_vi, threshold_anomaly, 
+                anomalies, diff_vi = detection_anomalies(vegetation_index, mask, predicted_vi, threshold_anomaly, 
                                                 vi = vi, path_dict_vi = path_dict_vi)
                                 
-                dieback_data, changing_pixels = detection_dieback(dieback_data, anomalies, masked_vi["mask"], date_index)
+                dieback_data, changing_pixels = detection_dieback(dieback_data, anomalies, mask, date_index)
                 
-                if stress_index_mode is not None: stress_data = save_stress(stress_data, dieback_data, changing_pixels, diff_vi, masked_vi["mask"], stress_index_mode) 
+                if stress_index_mode is not None: stress_data = save_stress(stress_data, dieback_data, changing_pixels, diff_vi, mask, stress_index_mode) 
 
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
-                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
-                del masked_vi, predicted_vi, anomalies, changing_pixels, diff_vi
+                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining         ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
+                del vegetation_index, mask, predicted_vi, anomalies, changing_pixels, diff_vi
         tile.last_computed_anomaly = new_dates[-1]
         
         if stress_index_mode is not None:
