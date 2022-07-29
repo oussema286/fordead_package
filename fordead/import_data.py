@@ -935,9 +935,10 @@ def import_masked_vi(dict_paths, date, chunks = None):
 
     Returns
     -------
-    masked_vi : xarray DataSet
-        DataSet containing two DataArrays, "vegetation_index" containing vegetation index values, and "mask" containing mask values.
-
+    vegetation_index : xarray DataArray
+        DataArray containing vegetation index values
+    mask : xarray DataArray
+        DataArray containing mask values.
     """
     
     # vegetation_index = rioxarray.open_rasterio(dict_paths["VegetationIndex"][date],chunks = chunks)

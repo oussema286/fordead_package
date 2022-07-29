@@ -14,8 +14,10 @@ def detection_anomalies(vegetation_index, mask, predicted_vi, threshold_anomaly,
 
     Parameters
     ----------
-    masked_vi : xarray Dataset
-        Dataset containing two DataArrays, "vegetation_index" containing the vegetation index values, and "mask" containing the mask values (True if masked)
+    vegetation_index : xarray DataArray
+        DataArray containing uncorrected vegetation index values
+    mask : xarray DataArray
+        DataArray containing mask values.
     predicted_vi : array (x,y)
         Array containing the vegetation index predicted by the model
     threshold_anomaly : float
