@@ -9,7 +9,7 @@ Created on Tue Nov  3 16:21:15 2020
 # =============================================================================
 
 import click
-from fordead.import_data import import_stackedmaskedVI, TileInfo
+from fordead.import_data import import_stackedmaskedVI, TileInfo, get_raster_metadata
 from fordead.model_vegetation_index import get_detection_dates, model_vi, model_vi_correction
 from fordead.writing_data import write_tif
 
@@ -93,8 +93,14 @@ def train_model(
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     
-    if path_vi != None : tile.paths["VegetationIndexDir"] = path_vi
-    if path_masks != None : tile.paths["MaskDir"] = path_masks
+    if path_vi != None and path_masks != None :    
+        tile.paths["VegetationIndexDir"] = path_vi
+        tile.paths["MaskDir"] = path_masks
+        tile.getdict_paths(path_vi = tile.paths["VegetationIndexDir"],
+                            path_masks = tile.paths["MaskDir"])
+        tile.raster_meta = get_raster_metadata(list(tile.paths["VegetationIndex"].values())[0]) 
+        tile.add_parameters({"vi" : "vi", "soil_detection" : False})
+
 
     
     tile.add_parameters({"nb_min_date" : nb_min_date, "min_last_date_training" : min_last_date_training, "max_last_date_training" : max_last_date_training, "correct_vi" : correct_vi})

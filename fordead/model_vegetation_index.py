@@ -35,9 +35,9 @@ def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
     
     min_date_index=int(sum(stack_masks.Time<min_last_date_training))-1
     
+    if min_date_index == stack_masks.Time.size-1 : min_date_index = min_date_index-1
     indexes = xr.DataArray(da.ones(stack_masks.shape,dtype=np.uint16, chunks=stack_masks.chunks), stack_masks.coords) * xr.DataArray(range(stack_masks.sizes["Time"]), coords={"Time" : stack_masks.Time},dims=["Time"])   
-    cumsum=(~stack_masks).cumsum(dim="Time",dtype=np.uint16)
-    
+    cumsum=(~stack_masks).cumsum(dim="Time",dtype=np.uint16)    
     detection_dates = ((indexes > min_date_index) & (cumsum > nb_min_date))
     first_detection_date_index = detection_dates.argmax(dim="Time").astype(np.uint16)
     
