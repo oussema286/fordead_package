@@ -56,6 +56,9 @@ def parse_command_line():
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas suffering from dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback")
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
+    parser.add_argument("--export_stress", dest = "export_stress", action="store_true",default = False, help = "If activated, export stress results, a pixel is considered stress when it is detected but then returned to normal")
+
+    
     # parser.add_argument('--threshold_list', nargs='+',default = [0.2, 0.265], help="Liste des seuils utilisés pour classer les stades de dépérissement par discrétisation de l'indice de confiance")
     # parser.add_argument('--classes_list', nargs='+',default = ["Faible anomalie","Forte anomalie"], help="Liste des noms des classes pour la discrétisation de l'indice de confiance. Si threshold_list a une longueur n, classes_list doit avoir une longueur n+1")
 
@@ -70,7 +73,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
                   threshold_anomaly,
                   start_date_results, end_date_results, results_frequency, multiple_files,
-                  correct_vi):
+                  correct_vi, export_stress):
     
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
@@ -135,7 +138,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             multiple_files = multiple_files, 
             conf_threshold_list = [0.2,0.265],
             conf_classes_list = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"],
-            
+            export_stress = export_stress
             )
         file = open(logpath, "a")
         file.write("Exporting results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
