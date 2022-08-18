@@ -284,6 +284,8 @@ def union_confidence_class(periodic_results, confidence_class):
     if periodic_results.size != 0:
         union = gp.overlay(periodic_results, confidence_class, how='union',keep_geom_type = True)
         union = union.fillna("Bare ground")
+        
+        return union
     else:
         return periodic_results
 
