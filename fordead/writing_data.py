@@ -172,12 +172,15 @@ def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_d
                 in enumerate(
                     rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).compute().data , transform=Affine(*attrs["transform"]))))
     gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
-    gp_results.period_index=gp_results.period_index.astype(int)
-    gp_results.insert(0,"start",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d'))
-    gp_results.insert(1,"end",(bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))
-    gp_results.insert(0,"period", (gp_results["start"] + " - " + gp_results["end"]))
-    gp_results.crs = attrs["crs"].replace("+init=","")
-    gp_results = gp_results.drop(columns=['period_index'])
+    if gp_results.size != 0:
+        gp_results.period_index=gp_results.period_index.astype(int)
+        gp_results.insert(0,"start",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d'))
+        gp_results.insert(1,"end",(bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))
+        gp_results.insert(0,"period", (gp_results["start"] + " - " + gp_results["end"]))
+        gp_results.crs = attrs["crs"].replace("+init=","")
+        gp_results = gp_results.drop(columns=['period_index'])
+    else:
+        print("No detection in this area")
     return gp_results
 
 def get_state_at_date(state_code,relevant_area,attrs):
@@ -249,10 +252,11 @@ def vectorizing_confidence_class(confidence_index, nb_dates, relevant_area, bins
                                              transform=Affine(*attrs["transform"]))))
     
     gp_results = gp.GeoDataFrame.from_features(geoms_class)
-    gp_results.class_index=gp_results.class_index.astype(int)
-    gp_results.insert(1,"class",classes[gp_results.class_index])
-    gp_results.crs = attrs["crs"].replace("+init=","")
-    gp_results = gp_results.drop(columns=['class_index'])
+    if gp_results.size != 0:
+        gp_results.class_index=gp_results.class_index.astype(int)
+        gp_results.insert(1,"class",classes[gp_results.class_index])
+        gp_results.crs = attrs["crs"].replace("+init=","")
+        gp_results = gp_results.drop(columns=['class_index'])
     return gp_results
 
 
@@ -277,15 +281,18 @@ def union_confidence_class(periodic_results, confidence_class):
     
     
     # confidence_class = gp.read_file(path_confidence_class)
-    union = gp.overlay(periodic_results, confidence_class, how='union',keep_geom_type = True)
+    if periodic_results.size != 0:
+        union = gp.overlay(periodic_results, confidence_class, how='union',keep_geom_type = True)
+        union = union.fillna("Bare ground")
+    else:
+        return periodic_results
+
     # union = union.explode()
     # union = union[union.geom_type != 'Point']
     # union = union[union.geom_type != 'MultiLineString']
     # union = union[union.geom_type != 'LineString']
     # union = union[union.geom_type != 'MultiPoint']
-    union = union.fillna("Bare ground")
-    return union
-
+    
 def get_rasterized_validation_data(ground_obs_path, raster_metadata, ground_obs_buffer = None, name_column  = "id"):
 
         #Rasterize données terrain
