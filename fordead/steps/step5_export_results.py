@@ -144,7 +144,7 @@ def export_results(
 
             stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
             stress_total.to_file(tile.paths["stress_periods"])
-        print("dieback")
+
         if multiple_files:
             tile.add_dirpath("result_files", tile.data_directory / "Results")
             for date_bin_index, date_bin in enumerate(bins_as_date):
