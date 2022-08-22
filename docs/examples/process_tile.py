@@ -27,7 +27,7 @@ def parse_command_line():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-d", "--main_directory", dest = "main_directory",type = str, help = "Dossier contenant les dossiers des tuiles")
-    parser.add_argument('-t', '--tuiles', nargs='+',default = ["ZoneEtude"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
+    parser.add_argument('-t', '--tuiles', nargs='+',default = ["study_area"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
     parser.add_argument("--extent_shape_path", dest = "extent_shape_path",type = str,default = None, help = "Path of shapefile used as extent of detection")
     
     parser.add_argument("-i", "--sentinel_directory", dest = "sentinel_directory",type = str, help = "Path of the directory with a directory containing Sentinel data for each tile ")
@@ -38,8 +38,13 @@ def parse_command_line():
     parser.add_argument("--nb_min_date", dest = "nb_min_date",type = int,default = 10, help = "Nombre minimum de dates valides pour modéliser l'indice de végétation")
     parser.add_argument('--ignored_period', nargs='+',default = None, help="Period whose date to ignore (format 'MM-DD', ex : --ignored_period 11-01 05-01")
 
+<<<<<<< HEAD
     parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "/mnt/Data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "/mnt/Data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+=======
+    parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "E:/fordead/Data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+    parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "E:/fordead/Data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+>>>>>>> export_stress
     parser.add_argument("--list_forest_type", dest = "list_forest_type", nargs='+',default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--path_oso", dest = "path_oso",type = str,default = "/mnt/Data/OCS_2017_CESBIO.tif", help = "Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
     parser.add_argument("--list_code_oso", dest = "list_code_oso",type = str,default = [17], help = "List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'")
@@ -56,6 +61,9 @@ def parse_command_line():
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas suffering from dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback")
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
+    parser.add_argument("--export_stress", dest = "export_stress", action="store_true",default = False, help = "If activated, export stress results, a pixel is considered stress when it is detected but then returned to normal")
+
+    
     # parser.add_argument('--threshold_list', nargs='+',default = [0.2, 0.265], help="Liste des seuils utilisés pour classer les stades de dépérissement par discrétisation de l'indice de confiance")
     # parser.add_argument('--classes_list', nargs='+',default = ["Faible anomalie","Forte anomalie"], help="Liste des noms des classes pour la discrétisation de l'indice de confiance. Si threshold_list a une longueur n, classes_list doit avoir une longueur n+1")
 
@@ -70,12 +78,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
                   threshold_anomaly,
                   start_date_results, end_date_results, results_frequency, multiple_files,
-                  correct_vi):
+                  correct_vi, export_stress):
 
-    # sentinel_directory = "/mnt/Data/bug/sentinel/"
-    # main_directory = "/mnt/Data/bug/output2"   
-    # soil_detection = True
-    # tuiles = ["test_bug"]
     
     sentinel_directory = Path(sentinel_directory)
     main_directory = Path(main_directory)
@@ -140,7 +144,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             multiple_files = multiple_files, 
             conf_threshold_list = [0.2,0.265],
             conf_classes_list = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"],
-            
+            export_stress = export_stress
             )
         file = open(logpath, "a")
         file.write("Exporting results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()

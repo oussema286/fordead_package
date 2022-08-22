@@ -18,7 +18,7 @@ Les sorties de cette deuxième étape, dans le dossier data_directory, sont :
 - Dans le dossier **DataModel**, deux fichiers :
     - **first_detection_date_index.tif**, un raster qui contient l'index de la première date qui sera utilisée pour la détection de déperissement. Il permet de savoir pour chaque pixel quelles dates ont été utilisées pour l'apprentissage et lesquelles sont utilisées pour la détection.
     - **coeff_model.tif**, un stack à 5 bandes, une pour chaque coefficient du modèle de l'indice de végétation.
-- Dans le dossier **TimelessMasks**, le raster binaire **valid_model_mask.tif** qui vaut 1 pour les pixels où le modèle a pu être calculé, 0 si il n'y avait pas assez de dates valides
+- Dans le dossier **TimelessMasks**, le raster binaire **sufficient_coverage_mask.tif** qui vaut 1 pour les pixels où le modèle a pu être calculé, 0 si il n'y avait pas assez de dates valides
 - Le fichier TileInfo est mis à jour.
 
 ## Utilisation

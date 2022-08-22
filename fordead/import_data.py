@@ -481,6 +481,7 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
                    "sizes" : raster.sizes,
                    "shape" : raster.shape,
                    "extent" : raster.rio.bounds(), #Might need to be np.array
+                   "crs" : raster.rio.crs,
                    "transform" : raster.rio.transform()}
     
     return raster_meta

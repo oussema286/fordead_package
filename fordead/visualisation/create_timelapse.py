@@ -125,7 +125,7 @@ def create_timelapse(data_directory, shape_path = None, name_column = "id",  x =
     elif shape_path is not None:
         print("Timelapse(s) created from " + shape_path)
         ShapeInteret=gp.read_file(shape_path)
-        ShapeInteret=ShapeInteret.to_crs(crs = tile.raster_meta["attrs"]["crs"])
+        ShapeInteret=ShapeInteret.to_crs(crs = tile.raster_meta["crs"])
     else:
         raise Exception("No shape_path or coordinates")
     #%% Creating zip file

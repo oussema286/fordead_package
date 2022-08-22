@@ -114,7 +114,7 @@ def compute_forest_mask(data_directory,
         #Si correction de l'indice de végétation, le calcul du masque forêt se fait en step2 et d'autres résultats doivent être supprimés
         if hasattr(tile, "correct_vi") and tile.parameters["correct_vi"] : 
             tile.delete_dirs("coeff_model","AnomaliesDir","state_dieback" ,"periodic_results_dieback","result_files","timelapse","series", "validation", "nb_periods_stress") #Deleting previous training and detection results if they exist
-            tile.delete_files("sufficient_coverage_mask","valid_model_mask")
+            tile.delete_files("sufficient_coverage_mask","too_many_stress_periods_mask")
             tile.delete_attributes("last_computed_anomaly")
 
     if path_example_raster == None : path_example_raster = tile.paths["VegetationIndex"][tile.dates[0]]

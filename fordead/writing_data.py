@@ -122,17 +122,18 @@ def get_bins(start_date,end_date,frequency,dates):
     
     return bins_as_date, bins_as_datenumber
 
-def convert_dateindex_to_datenumber(dataset, dates):
+def convert_dateindex_to_datenumber(date_array, mask_array, dates):
     """
     Converts array containing dates as an index to an array containing dates as the number of days since "2015-01-01" or to a no data value if masked
 
     Parameters
     ----------
-    dataset : xarray dataset with at least arrays : 
-        "state", binary array with False where returned array will take a no data value (99999999)
-        "first date", array containing index of date in 'dates'
+    date_array : xarray DataArray 
+        array containing date indices
+    mask_array : xarray DataArray 
+        mask array, pixels containing False are given no data value of 99999999
     dates : array
-        Array of dates in the format "YYYY-MM-DD"
+        Array of dates in the format "YYYY-MM-DD", index of the date in this array corresponds to the indices in date_array.
 
     Returns
     -------
@@ -142,9 +143,9 @@ def convert_dateindex_to_datenumber(dataset, dates):
     """
     
     used_dates_numbers = (pd.to_datetime(dates)-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days
-    results_date_number = used_dates_numbers[dataset.first_date.data.ravel()]
-    results_date_number = np.reshape(np.array(results_date_number),dataset.first_date.shape)
-    results_date_number[~dataset.state.data] = 99999999
+    results_date_number = used_dates_numbers[date_array.data.ravel()]
+    results_date_number = np.reshape(np.array(results_date_number),date_array.shape)
+    results_date_number[~mask_array.data] = 99999999
     
     return results_date_number
 
@@ -186,10 +187,15 @@ def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_d
                     rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).compute().data , transform=relevant_area.rio.transform()))) #Affine(*attrs["transform"])
     gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
     gp_results.period_index=gp_results.period_index.astype(int)
-    gp_results.insert(0,"start",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d'))
-    gp_results.insert(1,"end",(bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))
-    gp_results.insert(0,"period", (gp_results["start"] + " - " + gp_results["end"]))
+        #If you want to reactivate start and end columns
+    # gp_results.insert(0,"start",(bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d'))
+    # gp_results.insert(1,"end",(bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d'))
+    # gp_results.insert(0,"period", (gp_results["start"] + " - " + gp_results["end"]))
+        #If you only want period column
+    gp_results.insert(0,"period", ((bins_as_date[gp_results.period_index-1] + pd.DateOffset(1)).strftime('%Y-%m-%d') + " - " + (bins_as_date[gp_results.period_index]).strftime('%Y-%m-%d')))
+    ###############
     gp_results.crs = relevant_area.rio.crs #attrs["crs"].replace("+init=","")
+
     gp_results = gp_results.drop(columns=['period_index'])
     return gp_results
 
@@ -359,11 +365,17 @@ def export_csv(
     tile.add_dirpath("validation", tile.data_directory / "Validation")
     
     forest_mask = import_binary_raster(tile.paths["forest_mask"])
-    valid_model_mask = import_binary_raster(tile.paths["valid_model_mask"])
+    forest_mask = import_binary_raster(tile.paths["forest_mask"], chunks= 1280)
+    sufficient_coverage_mask = import_binary_raster(tile.paths["sufficient_coverage_mask"], chunks= 1280)
+    if tile.parameters["stress_index_mode"] is not None:
+        too_many_stress_periods_mask = import_binary_raster(tile.paths["too_many_stress_periods_mask"], chunks= 1280)
+        relevant_area = forest_mask & sufficient_coverage_mask & too_many_stress_periods_mask
+    else:
+        relevant_area = forest_mask & sufficient_coverage_mask
     # if type(ground_obs) is str: ground_obs = gp.read_file(ground_obs)
 
     raster_id_validation_data=get_rasterized_validation_data(ground_obs_path, tile.raster_meta, ground_obs_buffer, name_column)
-    # raster_binary_validation_data = (raster_id_validation_data!=0) & valid_model_mask
+    # raster_binary_validation_data = (raster_id_validation_data!=0) & relevant_area
     raster_binary_validation_data = (raster_id_validation_data!=0)
 
     nb_pixels = int(np.sum(raster_binary_validation_data))
@@ -418,7 +430,8 @@ def export_csv(
                 {"coeff"+str(i) : coeff_model.sel(coeff = i).data[raster_binary_validation_data] for i in range(1,6)})
             dict_results.update(
                 {"forest_mask" : forest_mask.data[raster_binary_validation_data],
-                  "valid" : valid_model_mask.data[raster_binary_validation_data],
+                  "sufficient_coverage" : sufficient_coverage_mask.data[raster_binary_validation_data],
+                  "too_many_stress_periods" : too_many_stress_periods_mask.data[raster_binary_validation_data],
                   "first_detection_date" : tile.dates[first_detection_date_index.data[raster_binary_validation_data]],
                   "dieback_state" : dieback_data["state"].data[raster_binary_validation_data],
                   "dieback_first_date" : tile.dates[dieback_data["first_date"].data[raster_binary_validation_data]],
