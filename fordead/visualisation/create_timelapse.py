@@ -24,7 +24,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 #  IMPORT LIBRAIRIES PERSO
 # =============================================================================
 
-from fordead.results_visualisation import CreateTimelapse
+from fordead.results_visualisation import CreateTimelapse, intersects_area
 from fordead.import_data import TileInfo
 
 @click.group()
@@ -120,12 +120,12 @@ def create_timelapse(data_directory, shape_path = None, name_column = "id",  x =
     
     if (x is not None) and (y is not None):
         print("Timelapse created from coordinates")
-        ShapeInteret = gp.GeoDataFrame({"id" : [str(x)+"_"+str(y)]},geometry = gp.points_from_xy([x], [y]),crs =tile.raster_meta["attrs"]["crs"] )
+        shape_interest = gp.GeoDataFrame({"id" : [str(x)+"_"+str(y)]},geometry = gp.points_from_xy([x], [y]),crs =tile.raster_meta["crs"] )
         name_column = "id"
     elif shape_path is not None:
         print("Timelapse(s) created from " + shape_path)
-        ShapeInteret=gp.read_file(shape_path)
-        ShapeInteret=ShapeInteret.to_crs(crs = tile.raster_meta["crs"])
+        shape_interest=gp.read_file(shape_path)
+        shape_interest=shape_interest.to_crs(crs = tile.raster_meta["crs"])
     else:
         raise Exception("No shape_path or coordinates")
     #%% Creating zip file
@@ -137,20 +137,24 @@ def create_timelapse(data_directory, shape_path = None, name_column = "id",  x =
             zipObj = ZipFile(tile.paths["timelapse"] / "Timelapses.zip", 'a', compression = ZIP_DEFLATED, compresslevel = 6)
     #%%Creating timelapses
  
-    for ShapeIndex in range(ShapeInteret.shape[0]):
-        Shape=ShapeInteret.iloc[ShapeIndex:(ShapeIndex+1)]
+    for shapeindex in range(shape_interest.shape[0]):
+        shape=shape_interest.iloc[shapeindex:(shapeindex+1)]
         try:
-            NameFile = str(Shape[name_column].iloc[0])
+            NameFile = str(shape[name_column].iloc[0])
         except KeyError:
             raise Exception("No column "+name_column+" in " + shape_path)
         
-        # if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()):
-        print("Creating timelapse | Id : " + NameFile)
-        fig = CreateTimelapse(Shape.geometry.buffer(buffer),tile, vector_display_path, hover_column_list, max_date, show_confidence_class)
-        plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=False)
-        if zip_results: 
-            zipObj.write(str(tile.paths["timelapse"] / (NameFile + ".html")),NameFile + ".html") #Adding to zipfile
-            (tile.paths["timelapse"] / (NameFile + ".html")).unlink() #Removing html file
+        # if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()): 
+
+        if intersects_area(shape.geometry.buffer(buffer), tile.raster_meta["extent"], tile.raster_meta["crs"]):
+            print("Creating timelapse | Id : " + NameFile)
+            fig = CreateTimelapse(shape.geometry.buffer(buffer),tile, vector_display_path, hover_column_list, max_date, show_confidence_class)
+            plot(fig,filename=str(tile.paths["timelapse"] / (NameFile + ".html")),auto_open=False)
+            if zip_results: 
+                zipObj.write(str(tile.paths["timelapse"] / (NameFile + ".html")),NameFile + ".html") #Adding to zipfile
+                (tile.paths["timelapse"] / (NameFile + ".html")).unlink() #Removing html file
+        else:
+            print("Chosen area for the timelapse does not intersect extent of computed area")
     if zip_results: zipObj.close()
 
 if __name__ == '__main__':

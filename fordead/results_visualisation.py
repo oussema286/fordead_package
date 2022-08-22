@@ -77,7 +77,12 @@ def polygon_from_coordinate_and_radius(coordinates, radius, crs):
     polygon = gp.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom])
     return polygon
 
-
+def intersects_area(shape, extent, crs):
+    polygon_geom = Polygon(zip([extent[0],extent[2],extent[2],extent[0],extent[0]], 
+                               [extent[1],extent[1],extent[3],extent[3],extent[1]]))
+    polygon = gp.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom])       
+    return polygon.intersects(shape)[0]
+    
 
 def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date, show_confidence_class):
         nb_classes = len(tile.parameters["conf_classes_list"]) if show_confidence_class else 1
