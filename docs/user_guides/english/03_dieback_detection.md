@@ -8,7 +8,7 @@ This stress index can either be the mean of the difference between the vegetatio
 The input parameters are :
 - **data_directory**: The path of the output folder where the detection results will be written.
 - **threshold_anomaly**: Threshold at which the difference between the actual and predicted vegetation index is considered as an anomaly
-- **max_nb_stress_periods** : Maximum number of stress periods, pixels with a higher number of stress periods are masked in exports.
+- **max_nb_stress_periods** : Maximum number of stress periods, pixels with a higher number of stress periods are masked in exports.  Unused if **stress_index_mode** is None.
 - **stress_index_mode** : Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no informations are saved
 - **vi**: Vegetation index used, can be ignored if the [_compute_masked_vegetationindex_](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/) step has been used.
 - **path_dict_vi** : Path to a text file allowing to add usable vegetation indices. If not filled in, only the indices provided in the package are usable (CRSWIR, NDVI, NDWI). The file [examples/ex_dict_vi.txt](/examples/ex_dict_vi.txt) gives an example on how to format of this file. It is necessary to fill in its name, its formula, and "+" or "-" depending on whether the index's value increases or decreases in case of diebacks. Can be ignored in if it has been done previously in the [_compute_masked_vegetationindex_ step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/).
@@ -20,7 +20,7 @@ The outputs of this step, in the data_directory folder, are :
 	- **first_date_unconfirmed_dieback** : The date index of latest potential state change of the pixels, first anomaly if pixel is not detected as dieback, first non-anomaly if pixel is detected as dieback, not necessarily confirmed.
     - **first_date_dieback**: The index of the first date with an anomaly in the last series of anomalies
     - **state_dieback**: A binary raster whose value is 1 if the pixel is detected as suffering from dieback (at least three successive anomalies)
-- In the **DataStress** folder, four rasters:
+- In the **DataStress** folder, if **stress_index_mode** is not None, four rasters:
     - **dates_stress** : A raster with **max_nb_stress_periods***2+1 bands, containing the date indices of the first anomaly, and of return to normal for each stress period.
     - **nb_periods_stress**: A raster containing the total number of stress periods for each pixel 
     - **cum_diff_stress**: a raster with **max_nb_stress_periods**+1 bands containing containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean"
@@ -28,6 +28,7 @@ The outputs of this step, in the data_directory folder, are :
 	- **stress_index** : a raster with **max_nb_stress_periods**+1 bands containing the stress index of each stress period, it is the mean or weighted mean of the difference between the vegetation index and its prediction depending on **stress_index_mode**, obtained from cum_diff_stress and nb_dates_stress
 	The number of bands of these rasters is meant to account for each potential stress period, and another for a potential final dieback detection
 - In the **DataAnomalies** folder, a raster for each date **Anomalies_YYYY-MM-DD.tif** whose value is 1 where anomalies are detected.
+- If **stress_index_mode** is provided, in the **TimelessMasks" folder, the binary raster **too_many_stress_periods_mask.tif** which is 1 for pixels where the number of stress periods is inferior or equal to **max_nb_stress_periods**, otherwise 0.
 
 ## How to use
 ### From a script
@@ -84,10 +85,15 @@ The rasters containing stress periods information are updated, the number of str
 The difference between the vegetation index and its prediction is added to the cum_diff_stress raster, after being multiplied be the number of the date if stress_index_mode is "weighted_mean".
 > **_Functions used:_** [save_stress()](https://fordead.gitlab.io/fordead_package/reference/fordead/dieback_detection/#save_stress)
 
+### Creating a mask for pixels which went through too many stress periods
+The number of periods of stress for each pixel is compared to the **max_nb_stress_periods** parameter, resulting in the mask too_many_stress_periods_mask.
+This mask will invalidate data when exporting, making timelapses and so on.
+
 ### The stress index is calculated
 If stress_index_mode is "mean", the stress index raster is the cum_diff_stress raster divided by the nb_dates_stress raster
 If stress_index_mode is "weighted_mean", the stress index raster is the cum_diff_stress raster divided by the sum of the weights (1+2+3+...+ nb_dates_stress)
 
+
  ### Writing the results
-The information related to the detection of dieback, stress data and stress indices are written. All parameters, data paths and dates used are also saved.
+The information related to the detection of dieback, stress data, stress indices are written as well as the too_many_stress_periods_mask. All parameters, data paths and dates used are also saved.
 > **_Functions used:_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif),

@@ -8,14 +8,16 @@ Created on Mon Nov  2 09:34:34 2020
 from fordead.masking_vi import get_dict_vi
 import xarray as xr
 
-def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly, vi, path_dict_vi = None):
+def detection_anomalies(vegetation_index, mask, predicted_vi, threshold_anomaly, vi, path_dict_vi = None):
     """
     Detects anomalies by comparison between predicted and calculated vegetation index. The array returns contains True where the difference between the vegetation index and its prediction is above the threshold in the direction of the specified dieback change direction of the vegetation index. 
 
     Parameters
     ----------
-    masked_vi : xarray Dataset
-        Dataset containing two DataArrays, "vegetation_index" containing the vegetation index values, and "mask" containing the mask values (True if masked)
+    vegetation_index : xarray DataArray
+        DataArray containing uncorrected vegetation index values
+    mask : xarray DataArray
+        DataArray containing mask values.
     predicted_vi : array (x,y)
         Array containing the vegetation index predicted by the model
     threshold_anomaly : float
@@ -38,15 +40,15 @@ def detection_anomalies(masked_vi, predicted_vi, threshold_anomaly, vi, path_dic
     dict_vi = get_dict_vi(path_dict_vi)
     
     if dict_vi[vi]["dieback_change_direction"] == "+":
-        diff_vi = (masked_vi["vegetation_index"]-predicted_vi)*(~masked_vi["mask"])
+        diff_vi = (vegetation_index-predicted_vi)*(~mask)
     elif dict_vi[vi]["dieback_change_direction"] == "-":
-        diff_vi = (predicted_vi - masked_vi["vegetation_index"])*(~masked_vi["mask"])
+        diff_vi = (predicted_vi - vegetation_index)*(~mask)
     else:
         raise Exception("Unrecognized dieback_change_direction in " + path_dict_vi + " for vegetation index " + vi)
     
     anomalies = diff_vi > threshold_anomaly
     
-    return anomalies.squeeze("Time"), diff_vi.squeeze("Time")
+    return anomalies.squeeze("Time").squeeze("band"), diff_vi.squeeze("Time").squeeze("band") #.squeeze("Time").squeeze("band")
 
 def detection_dieback(dieback_data, anomalies, mask, date_index):
     """
@@ -130,6 +132,6 @@ def save_stress(stress_data, dieback_data, changing_pixels, diff_vi, mask, stres
         
     nb_changes = stress_data["nb_periods"]*2+dieback_data["state"] #Number of the change
     stress_data["date"] = stress_data["date"].where(~changing_pixels | (stress_data["date"]["change"] != nb_changes), dieback_data["first_date"])
-    return stress_data
+    return stress_data.squeeze("band")
     
     

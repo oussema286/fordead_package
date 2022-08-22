@@ -79,7 +79,7 @@ def dieback_detection(
     threshold_anomaly : float
         Minimum threshold for anomaly detection
     max_nb_stress_periods : int
-        Maximum number of stress periods, if this number is reached, the pixel is removed from the valid_area_mask, thus removed from future exports. Only used if stress_index_mode is not None.
+        Maximum number of stress periods, if this number is reached, the pixel is masked in the too_many_stress_periods, thus removed from future exports. Only used if stress_index_mode is not None.
     stress_index_mode : str
         Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed.
         If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly.
@@ -98,6 +98,7 @@ def dieback_detection(
     tile.add_parameters({"threshold_anomaly" : threshold_anomaly, "max_nb_stress_periods" : max_nb_stress_periods, "stress_index_mode" : stress_index_mode})
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("AnomaliesDir","state_dieback","periodic_results_dieback","result_files","timelapse","series","nb_periods_stress") #Deleting previous detection results if they exist
+        tile.delete_files("too_many_stress_periods_mask")
         tile.delete_attributes("last_computed_anomaly","last_date_export")
 
     if vi==None : vi = tile.parameters["vi"]
@@ -106,6 +107,8 @@ def dieback_detection(
     tile.add_dirpath("AnomaliesDir", tile.data_directory / "DataAnomalies") #Choose anomalies directory
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies
     tile.search_new_dates() #Get list of all used dates
+    
+    tile.add_path("too_many_stress_periods_mask", tile.data_directory / "TimelessMasks" / "too_many_stress_periods_mask.tif")
     
     tile.add_path("state_dieback", tile.data_directory / "DataDieback" / "state_dieback.tif")
     tile.add_path("first_date_dieback", tile.data_directory / "DataDieback" / "first_date_dieback.tif")
@@ -131,41 +134,49 @@ def dieback_detection(
         
         if tile.paths["state_dieback"].exists():
             dieback_data = import_dieback_data(tile.paths)
-            stress_data = import_stress_data(tile.paths)
+            if stress_index_mode is not None: stress_data = import_stress_data(tile.paths)
         else:
             dieback_data = initialize_dieback_data(first_detection_date_index.shape,first_detection_date_index.coords)
-            stress_data = initialize_stress_data(first_detection_date_index.shape,first_detection_date_index.coords, max_nb_stress_periods)
+            if stress_index_mode is not None: stress_data = initialize_stress_data(first_detection_date_index.shape,first_detection_date_index.coords, max_nb_stress_periods)
             
         if tile.parameters["correct_vi"]:
-            forest_mask = import_binary_raster(tile.paths["ForestMask"])
+            forest_mask = import_binary_raster(tile.paths["forest_mask"])
         #dieback DETECTION
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
-                masked_vi = import_masked_vi(tile.paths,date)
+                vegetation_index, mask = import_masked_vi(tile.paths,date)
                 if tile.parameters["correct_vi"]:
-                    masked_vi["vegetation_index"], tile.correction_vi = correct_vi_date(masked_vi,forest_mask, tile.large_scale_model, date, tile.correction_vi)
+                    vegetation_index, tile.correction_vi = correct_vi_date(vegetation_index, mask,forest_mask, tile.large_scale_model, date, tile.correction_vi)
 
-                masked_vi["mask"] = masked_vi["mask"] | (date_index < first_detection_date_index) #Masking pixels where date was used for training
+                mask = mask | (date_index < first_detection_date_index) #Masking pixels where date was used for training
                 
                 predicted_vi=prediction_vegetation_index(coeff_model,[date])
                 
-                anomalies, diff_vi = detection_anomalies(masked_vi, predicted_vi, threshold_anomaly, 
+                anomalies, diff_vi = detection_anomalies(vegetation_index, mask, predicted_vi, threshold_anomaly, 
                                                 vi = vi, path_dict_vi = path_dict_vi)
                                 
-                dieback_data, changing_pixels = detection_dieback(dieback_data, anomalies, masked_vi["mask"], date_index)
+                dieback_data, changing_pixels = detection_dieback(dieback_data, anomalies, mask, date_index)
                 
-                if stress_index_mode is not None: stress_data = save_stress(stress_data, dieback_data, changing_pixels, diff_vi, masked_vi["mask"], stress_index_mode) 
+                if stress_index_mode is not None: stress_data = save_stress(stress_data, dieback_data, changing_pixels, diff_vi, mask, stress_index_mode) 
 
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
-                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
-                del masked_vi, predicted_vi, anomalies, changing_pixels, diff_vi
+                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining         ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
+                del vegetation_index, mask, predicted_vi, anomalies, changing_pixels, diff_vi
+
         tile.last_computed_anomaly = new_dates[-1]
+  
+        write_tif(dieback_data["state"], first_detection_date_index.attrs,tile.paths["state_dieback"],nodata=0)
+        write_tif(dieback_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_dieback"],nodata=0)
+        write_tif(dieback_data["first_date_unconfirmed"], first_detection_date_index.attrs,tile.paths["first_date_unconfirmed_dieback"],nodata=0)
+        write_tif(dieback_data["count"], first_detection_date_index.attrs,tile.paths["count_dieback"],nodata=0)
+        del dieback_data
         
         if stress_index_mode is not None:
-            valid_area = import_binary_raster(tile.paths["valid_area_mask"])
-            valid_area = valid_area.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
-            write_tif(valid_area, first_detection_date_index.attrs,tile.paths["valid_area_mask"],nodata=0)        
-  
+            # valid_model = import_binary_raster(tile.paths["sufficient_coverage_mask"])
+            # valid_model = valid_model.where(stress_data["nb_periods"]<=max_nb_stress_periods,False)
+            too_many_stress_periods_mask = stress_data["nb_periods"]<=max_nb_stress_periods
+            write_tif(too_many_stress_periods_mask, first_detection_date_index.attrs,tile.paths["too_many_stress_periods_mask"],nodata=0) 
+
             if stress_index_mode == "mean":
                 stress_index = stress_data["cum_diff"]/stress_data["nb_dates"]
             elif stress_index_mode == "weighted_mean":
@@ -174,17 +185,13 @@ def dieback_detection(
                 raise Exception("Unrecognized stress_index_mode")
                    
             write_tif(stress_index, first_detection_date_index.attrs,tile.paths["stress_index"],nodata=0)
-        
+            del stress_index
             #Writing dieback data to rasters
             write_tif(stress_data["date"], first_detection_date_index.attrs,tile.paths["dates_stress"],nodata=0)
             write_tif(stress_data["nb_periods"], first_detection_date_index.attrs,tile.paths["nb_periods_stress"],nodata=0)
             write_tif(stress_data["cum_diff"], first_detection_date_index.attrs,tile.paths["cum_diff_stress"],nodata=0)
             write_tif(stress_data["nb_dates"], first_detection_date_index.attrs,tile.paths["nb_dates_stress"],nodata=0)
 
-        write_tif(dieback_data["state"], first_detection_date_index.attrs,tile.paths["state_dieback"],nodata=0)
-        write_tif(dieback_data["first_date"], first_detection_date_index.attrs,tile.paths["first_date_dieback"],nodata=0)
-        write_tif(dieback_data["first_date_unconfirmed"], first_detection_date_index.attrs,tile.paths["first_date_unconfirmed_dieback"],nodata=0)
-        write_tif(dieback_data["count"], first_detection_date_index.attrs,tile.paths["count_dieback"],nodata=0)
 
         # print("Détection du déperissement")
     tile.save_info()

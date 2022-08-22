@@ -103,7 +103,10 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     stack_vi, stack_masks = import_stackedmaskedVI(tile,chunks = chunks)
     stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
     coeff_model = import_coeff_model(tile.paths["coeff_model"],chunks = chunks)
-    stress_data = import_stress_data(tile.paths,chunks = chunks)
+    if tile.parameters["stress_index_mode"] is not None:
+        stress_data = import_stress_data(tile.paths,chunks = chunks)
+    else:
+        stress_data = None
 
     first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
     if tile.parameters["soil_detection"]:
@@ -111,7 +114,7 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     else:
         soil_data=None
     dieback_data = import_dieback_data(tile.paths,chunks = chunks)
-    forest_mask = import_binary_raster(tile.paths["ForestMask"],chunks = chunks)
+    forest_mask = import_binary_raster(tile.paths["forest_mask"],chunks = chunks)
     tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"])
     anomalies = import_stacked_anomalies(tile.paths["Anomalies"],chunks = chunks)
     
@@ -134,17 +137,17 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     if shape_path is not None:
         matplotlib.use('Agg')
         shape = gp.read_file(shape_path)
-        shape = shape.to_crs(crs = tile.raster_meta["attrs"]["crs"])
+        shape = shape.to_crs(crs = tile.raster_meta["crs"])
         
         for point_index in range(len(shape)):
             id_point = shape.iloc[point_index][name_column]
             geometry_point = shape.iloc[point_index]["geometry"]
             print(id_point)
-            row, col = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),geometry_point.x,geometry_point.y)
+            row, col = transform.rowcol(tile.raster_meta["transform"],geometry_point.x,geometry_point.y)
 
             select_and_plot_time_series(col,row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax, name_file = str(id_point))
     elif (x is not None) and (y is not None):
-        row, col = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),x,y)
+        row, col = transform.rowcol(tile.raster_meta["transform"],x,y)
         select_and_plot_time_series(col, row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
 
     else:
@@ -175,7 +178,7 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
                 x=int(x)
                 y=int(input("y ? "))
                 
-                if mode == "c": y, x = transform.rowcol(Affine(*tile.raster_meta["attrs"]["transform"]),x,y)
+                if mode == "c": y, x = transform.rowcol(tile.raster_meta["transform"],x,y)
 
                 select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax)
 

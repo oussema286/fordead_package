@@ -77,7 +77,12 @@ def polygon_from_coordinate_and_radius(coordinates, radius, crs):
     polygon = gp.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom])
     return polygon
 
-
+def intersects_area(shape, extent, crs):
+    polygon_geom = Polygon(zip([extent[0],extent[2],extent[2],extent[0],extent[0]], 
+                               [extent[1],extent[1],extent[3],extent[3],extent[1]]))
+    polygon = gp.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom])       
+    return polygon.intersects(shape)[0]
+    
 
 def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date, show_confidence_class):
         nb_classes = len(tile.parameters["conf_classes_list"]) if show_confidence_class else 1
@@ -106,14 +111,20 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             
         dieback_data = import_dieback_data(tile.paths)
         dieback_data = dieback_data.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        forest_mask = import_binary_raster(tile.paths["ForestMask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        valid_area = import_binary_raster(tile.paths["valid_area_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-        relevant_area = valid_area & forest_mask
+      
+        forest_mask = import_binary_raster(tile.paths["forest_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        sufficient_coverage_mask = import_binary_raster(tile.paths["sufficient_coverage_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+        if tile.parameters["stress_index_mode"] is not None:
+            too_many_stress_periods_mask = import_binary_raster(tile.paths["too_many_stress_periods_mask"]).loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
+            relevant_area = forest_mask & sufficient_coverage_mask & too_many_stress_periods_mask
+        else:
+            relevant_area = forest_mask & sufficient_coverage_mask
+            
         #Correcting extent if computed area is smaller than Sentinel-2 data area
-        extent = np.array([float(forest_mask[dict(x=0,y=0)].coords["x"])-forest_mask.attrs["transform"][0]/2,
-                                                float(forest_mask[dict(x=-1,y=-1)].coords["y"])-forest_mask.attrs["transform"][0]/2,
-                                                float(forest_mask[dict(x=-1,y=-1)].coords["x"])+forest_mask.attrs["transform"][0]/2,
-                                                float(forest_mask[dict(x=0,y=0)].coords["y"])+forest_mask.attrs["transform"][0]/2])
+        extent = np.array([float(forest_mask[dict(x=0,y=0)].coords["x"])-forest_mask.rio.transform()[0]/2,
+                                                float(forest_mask[dict(x=-1,y=-1)].coords["y"])-forest_mask.rio.transform()[0]/2,
+                                                float(forest_mask[dict(x=-1,y=-1)].coords["x"])+forest_mask.rio.transform()[0]/2,
+                                                float(forest_mask[dict(x=0,y=0)].coords["y"])+forest_mask.rio.transform()[0]/2])
         
         dates = tile.dates[tile.dates <= max_date] if max_date is not None else tile.dates
         stack_rgb = get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = dates)
@@ -158,7 +169,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                             {'properties': {'Etat': v}, 'geometry': s}
                             for i, (s, v) 
                             in enumerate(
-                                rasterio.features.shapes(affected.data.astype("uint8"), transform=Affine(*stack_rgb.attrs["transform"]))))
+                                rasterio.features.shapes(affected.data.astype("uint8"), transform=stack_rgb.rio.transform())))
                 
                 geomsaffected = list(results_affected)
                 for geom in geomsaffected:
@@ -168,8 +179,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                             xList=np.array([coord[0] for coord in poly])
                             yList=np.array([coord[1] for coord in poly])
                             
-                            DictCoordX[int(geom["properties"]["Etat"])]+=list((xList-np.array(stack_rgb.attrs["transform"][2]))/10-0.5)+[None]
-                            DictCoordY[int(geom["properties"]["Etat"])]+=list((np.array(stack_rgb.attrs["transform"][5])-yList)/10-0.5)+[None]
+                            DictCoordX[int(geom["properties"]["Etat"])]+=list((xList-np.array(stack_rgb.rio.transform()[2]))/10-0.5)+[None]
+                            DictCoordY[int(geom["properties"]["Etat"])]+=list((np.array(stack_rgb.rio.transform()[5])-yList)/10-0.5)+[None]
                 
 
 
@@ -221,7 +232,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", message="Sequential read of iterator was interrupted. Resetting iterator. This can negatively impact the performance.")
-                vector_display = gp.read_file(vector_display_path,bbox=shape.envelope).to_crs(crs=stack_rgb.crs).explode(index_parts=True)
+                vector_display = gp.read_file(vector_display_path,bbox=shape.envelope).to_crs(crs=stack_rgb.rio.crs).explode(index_parts=True)
             nb_vector_obj = vector_display.shape[0]
             
             if type(hover_column_list) is str: hover_column_list = [hover_column_list]
@@ -277,7 +288,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                     {'properties': {'Etat': v}, 'geometry': s}
                     for i, (s, v) 
                     in enumerate(
-                        rasterio.features.shapes(relevant_area.data.astype("uint8"), transform=Affine(*stack_rgb.attrs["transform"]))))
+                        rasterio.features.shapes(relevant_area.data.astype("uint8"), transform=stack_rgb.rio.transform())))
         dict_relevant_area = {"x" : [],
                             "y" : []}
         for geom in list(results_affected):
@@ -286,8 +297,8 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
                     xList=np.array([coord[0] for coord in poly])
                     yList=np.array([coord[1] for coord in poly])
                     
-                    dict_relevant_area["x"] +=list((xList-np.array(stack_rgb.attrs["transform"][2]))/10-0.5)+[None]
-                    dict_relevant_area["y"] +=list((np.array(stack_rgb.attrs["transform"][5])-yList)/10-0.5)+[None]
+                    dict_relevant_area["x"] +=list((xList-np.array(stack_rgb.rio.transform()[2]))/10-0.5)+[None]
+                    dict_relevant_area["y"] +=list((np.array(stack_rgb.rio.transform()[5])-yList)/10-0.5)+[None]
                     
         fig.add_trace(go.Scatter(
             x=dict_relevant_area["x"],
@@ -442,12 +453,12 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_d
             (yy-threshold_anomaly).plot.line("b--", label='Threshold for anomaly detection')
         
         
-        
-        for period in range(min(xy_stress_data.sizes["period"], int(xy_stress_data["nb_periods"]))):
-            period_dates = (pixel_series.Time[xy_stress_data["date"].isel(change = [period*2,period*2+1])]).data
-            label = {"label" : "Stress period"} if period==0 else {}
-            plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, **label)         
-            # plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, label = "Stress period")            
+        if xy_stress_data is not None:
+            for period in range(min(xy_stress_data.sizes["period"], int(xy_stress_data["nb_periods"]))):
+                period_dates = (pixel_series.Time[xy_stress_data["date"].isel(change = [period*2,period*2+1])]).data
+                label = {"label" : "Stress period"} if period==0 else {}
+                plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, **label)         
+                # plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, label = "Stress period")            
         
         # Plotting vertical lines when dieback or soil is detected
         if ~xy_dieback_data["state"] & ~xy_soil_data["state"]:
@@ -509,7 +520,11 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
     xy_soil_data = soil_data.isel(x = X, y = Y) if soil_data is not None else {"state" : False}
     xy_stack_masks = stack_masks.isel(x = X, y = Y)
     pixel_series = stack_vi.isel(x = X, y = Y)
-    xy_stress_data = stress_data.isel(x = X, y = Y)
+    if stress_data is not None:
+        xy_stress_data = stress_data.isel(x = X, y = Y)
+    else:
+        xy_stress_data = None
+        
     if xy_first_detection_date_index!=0:
         xy_anomalies = anomalies.isel(x = X, y = Y)
         xy_dieback_data = dieback_data.isel(x = X, y = Y)
@@ -536,7 +551,7 @@ def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, f
             print("Pixel outside forest mask")
         else:
             pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data = select_pixel_from_indices(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data)              
-            if xy_stress_data["nb_periods"]>tile.parameters["max_nb_stress_periods"]:
+            if xy_stress_data is not None and xy_stress_data["nb_periods"]>tile.parameters["max_nb_stress_periods"]:
                 print("Maximum number of stress periods exceeded")
             else:
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax, ignored_period = tile.parameters["ignored_period"])

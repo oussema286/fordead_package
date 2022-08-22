@@ -18,7 +18,7 @@ The outputs of this second step, in the data_directory folder, are:
 - In the **DataModel** folder, two files:
     - **first_detection_date_index.tif**, a raster that contains the index of the first date that will be used for detection. It allows to know for each pixel which dates were used for training and which ones are used for detection.
     - **coeff_model.tif**, a stack with 5 bands, one for each coefficient of the vegetation index model.
-- In the **ForestMask** directory, the binary raster **valid_area_mask.tif** which is 1 for pixels where the model could be computed, 0 if there were not enough valid dates.
+- In the **TimelessMasks** directory, the binary raster **sufficient_coverage_mask.tif** which is 1 for pixels where the model could be computed, 0 if there were not enough valid dates.
 - The TileInfo file is updated.
 
 ## How to use

@@ -210,7 +210,6 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
                             tmp_data = json.load(f_tmp)
                             print("Result is a text file")
                             print(tmp_data)
-                            sys.exit(-1)
                         except ValueError:
                             pass
     
@@ -309,8 +308,7 @@ def unzip_theia(bands, zip_dir,out_dir, empty_zip, correction_type):
         os.mkdir(out_dir)
     for zipfile in zipList:
         s2_unzip(zipfile,out_dir,bands, correction_type)
-        
-        if (len(ZipFile(zipfile).namelist()) != 0) and empty_zip:
+        if zipfile.exists() and (len(ZipFile(zipfile).namelist()) != 0) and empty_zip:
             print("Removal of " + str(zipfile))
             os.remove(zipfile)
             zipObj = ZipFile(zipfile, 'w')
@@ -345,7 +343,7 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
                         os.remove(tile.paths["zipped"][date])
                 except BadZipfile:
                     print("Bad zip file, removing file")
-                    os.remove(s2zipfile)
+                    os.remove(tile.paths["zipped"][date])
 
 def merge_same_date(bands,out_dir):
     """

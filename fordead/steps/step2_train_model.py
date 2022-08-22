@@ -106,13 +106,13 @@ def train_model(
     tile.add_parameters({"nb_min_date" : nb_min_date, "min_last_date_training" : min_last_date_training, "max_last_date_training" : max_last_date_training, "correct_vi" : correct_vi})
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("coeff_model","AnomaliesDir","state_dieback", "periodic_results_dieback","result_files","timelapse","series", "validation", "nb_periods_stress") #Deleting previous training and detection results if they exist
-        tile.delete_files("valid_area_mask")
+        tile.delete_files("sufficient_coverage_mask","too_many_stress_periods_mask")
         tile.delete_attributes("last_computed_anomaly","last_date_export")
 
     #Create missing directories and add paths to TileInfo object
     tile.add_path("coeff_model", tile.data_directory / "DataModel" / "coeff_model.tif")
     tile.add_path("first_detection_date_index", tile.data_directory / "DataModel" / "first_detection_date_index.tif")
-    tile.add_path("valid_area_mask", tile.data_directory / "ForestMask" / "valid_area_mask.tif")
+    tile.add_path("sufficient_coverage_mask", tile.data_directory / "TimelessMasks" / "sufficient_coverage_mask.tif")
     
     if tile.paths["coeff_model"].exists():
         print("Model already calculated")
@@ -130,7 +130,7 @@ def train_model(
         
         
         #Fusion du masque forêt et des zones non utilisables par manque de données
-        valid_area_mask = first_detection_date_index!=0
+        sufficient_coverage_mask = first_detection_date_index!=0
         
         if correct_vi:
             stack_vi, tile.large_scale_model, tile.correction_vi = model_vi_correction(stack_vi, stack_masks, tile.paths)
@@ -142,7 +142,7 @@ def train_model(
         #Ecrire rasters de l'index de la dernière date utilisée, les coefficients, la zone utilisable
         write_tif(first_detection_date_index,tile.raster_meta["attrs"], tile.paths["first_detection_date_index"],nodata=0)
         write_tif(coeff_model,tile.raster_meta["attrs"], tile.paths["coeff_model"])
-        write_tif(valid_area_mask,tile.raster_meta["attrs"], tile.paths["valid_area_mask"],nodata=0)
+        write_tif(sufficient_coverage_mask,tile.raster_meta["attrs"], tile.paths["sufficient_coverage_mask"],nodata=0)
         #Save the TileInfo object
     tile.save_info()
 

@@ -101,7 +101,9 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, p
                 for file in tmp_files:
                     file.unlink()
             except Exception: 
-                pass
+                tmp_files = (zipped_directory / tuile).glob("*.tmp")
+                for file in tmp_files:
+                    file.unlink()
         print("\nAll available Sentinel-2 acquisitions downloaded\n")
             
         unzip_theia(bands,zipped_directory / tuile, unzipped_directory / tuile, empty_zip, correction_type)

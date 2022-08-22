@@ -15,7 +15,7 @@ Les paramètres en entrée sont :
 
 #### SORTIES
 Les sorties de cette quatrième étape, dans le dossier data_directory, sont :
-- Dans le dossier **ForestMask**, le raster binaire Forest_Mask.tif qui vaut 1 sur les pixels de forêt à étudier et 0 ailleurs.
+- Dans le dossier **TimelessMasks**, le raster binaire Forest_Mask.tif qui vaut 1 sur les pixels de forêt à étudier et 0 ailleurs.
 
 ## Utilisation
 ### A partir d'un script

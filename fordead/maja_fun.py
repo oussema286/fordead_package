@@ -182,7 +182,7 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic,
         bands = {b: resample_raster(f, resampling=resampling, res=res, chunks=chunks, ram=vrt_ram) for b, f in
                  zip(band_names, files)}
     else:
-        bands = {b: rxr.open_rasterio(f, chunks=chunks) for b, f in zip(band_names, files)}
+        bands = {b: rrioxarray.open_rasterio(f, chunks=chunks) for b, f in zip(band_names, files)}
 
     crs = list(bands.values())[0].spatial_ref.crs_wkt
 
@@ -190,7 +190,7 @@ def read_maja(indir, shapefile=None, res=10, resampling=Resampling.cubic,
         mfile = mask_file(indir, res=10)
     else:
         mfile = mask_file(indir, res=res)
-    mask = rxr.open_rasterio(mfile, chunks=chunks).squeeze().drop('band')
+    mask = rrioxarray.open_rasterio(mfile, chunks=chunks).squeeze().drop('band')
 
     bands.update({'mask': mask})
 
@@ -271,7 +271,7 @@ def resample_raster(raster_path, resampling=Resampling.cubic, res=10,
                        height=height, width=width,
                        resampling=Resampling.cubic,
                        warp_extras={'NUM_THREADS': 2}) as vrt:
-            ds = rxr.open_rasterio(vrt).chunk(chunks)
+            ds = rrioxarray.open_rasterio(vrt).chunk(chunks)
 
     return ds
 

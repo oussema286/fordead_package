@@ -7,6 +7,7 @@ Created on Mon Nov  2 09:42:31 2020
 
 import numpy as np
 import xarray as xr
+import rioxarray
 import re
 # import datetime
 from pathlib import Path
@@ -428,13 +429,13 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     
 
     if sentinel_source=="THEIA":
-        tile_mask_info = xr.Dataset({"mask": xr.open_rasterio(date_paths["Mask"]),
-                                     "swath_cover": xr.open_rasterio(date_paths["B11"])})
+        tile_mask_info = xr.Dataset({"mask": rioxarray.open_rasterio(date_paths["Mask"]),
+                                     "swath_cover": rioxarray.open_rasterio(date_paths["B11"])})
         NbPixels = (tile_mask_info["swath_cover"]!=-10000).sum()
         NbCloudyPixels = (tile_mask_info["mask"]>0).sum()
 
     elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
-        cloud_mask = xr.open_rasterio(date_paths["Mask"])
+        cloud_mask = rioxarray.open_rasterio(date_paths["Mask"])
         NbPixels = (cloud_mask!=0).sum()
         NbCloudyPixels = (~cloud_mask.isin([4,5])).sum()
     
@@ -454,7 +455,7 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
     raster_path : str, optional
         path of a raster. The default is None.
     raster : xarray DataArray, optional
-        xarray DataArray opened with xr.open_rasterio. The default is None.
+        xarray DataArray opened with rioxarray.open_rasterio. The default is None.
     extent_shape_path : str, optional
         Path to a shapefile with a single polygon. The default is None.
 
@@ -465,15 +466,16 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
 
     """
     if raster_path != None:
-        raster = xr.open_rasterio(raster_path)
+        raster = rioxarray.open_rasterio(raster_path)
         if raster.sizes["band"] == 1:
             raster=raster.squeeze("band")
-    raster.attrs["crs"] = raster.attrs["crs"].replace("+init=","")
+    
+    # raster.rio.crs = raster.rio.crs.replace("+init=","")
     if extent_shape_path is not None:
         
         extent_shape = gp.read_file(extent_shape_path)
         
-        extent_shape = extent_shape.to_crs(raster.crs)
+        extent_shape = extent_shape.to_crs(raster.rio.crs)
         extent = extent_shape.total_bounds
         raster = raster.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
         
@@ -482,18 +484,10 @@ def get_raster_metadata(raster_path = None,raster = None, extent_shape_path = No
                    "attrs" : raster.attrs,
                    "sizes" : raster.sizes,
                    "shape" : raster.shape,
-                   "extent" : np.array([float(raster[dict(x=0,y=0)].coords["x"])-raster.attrs["transform"][0]/2,
-                                        float(raster[dict(x=-1,y=-1)].coords["y"])-raster.attrs["transform"][0]/2,
-                                        float(raster[dict(x=-1,y=-1)].coords["x"])+raster.attrs["transform"][0]/2,
-                                        float(raster[dict(x=0,y=0)].coords["y"])+raster.attrs["transform"][0]/2])}
+                   "extent" : raster.rio.bounds(), #Might need to be np.array
+                   "crs" : raster.rio.crs,
+                   "transform" : raster.rio.transform()}
     
-    raster_meta["attrs"]["transform"] = (raster_meta["attrs"]["transform"][0],
-                                         raster_meta["attrs"]["transform"][1],
-                                         raster_meta["extent"][0],
-                                         raster_meta["attrs"]["transform"][3],
-                                         raster_meta["attrs"]["transform"][4],
-                                         raster_meta["extent"][3])
-
     return raster_meta
     
 
@@ -539,40 +533,40 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
     """
     #Importing data from files
     if extent is None:
-            stack_bands = [xr.open_rasterio(band_paths[band]) for band in list_bands]
+        stack_bands = [rioxarray.open_rasterio(band_paths[band]) for band in list_bands]
     else:
-        stack_bands = [xr.open_rasterio(band_paths[band],chunks = 1280).loc[dict(x=slice(extent[0]-20, extent[2]+20),y = slice(extent[3]+20,extent[1]-20))].compute() for band in list_bands]
+        stack_bands = [rioxarray.open_rasterio(band_paths[band],chunks = 1280).loc[dict(x=slice(extent[0]-20, extent[2]+20),y = slice(extent[3]+20,extent[1]-20))].compute() for band in list_bands]
     
-    crs = stack_bands[0].crs.replace("+init=","")
+    crs = stack_bands[0].rio.crs
     #Resampling at 10m resolution
     for band_index in range(len(stack_bands)):
-        if stack_bands[band_index].attrs["res"]==(20.0,20.0):            
+        if stack_bands[band_index].rio.resolution()==(20.0,-20.0):            
             # stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=interpolation_order), 
             #                                        coords=stack_bands[0].coords)
             stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=interpolation_order), 
                                                    coords={"band" : [1], 
                                                            "y" : np.linspace(stack_bands[band_index].isel(x=0,y=0).y+5, stack_bands[band_index].isel(x=0,y=stack_bands[band_index].sizes["y"]-1).y-5, num=stack_bands[band_index].sizes["y"]*2),
                                                            "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x+5, num=stack_bands[band_index].sizes["x"]*2)},
-                                                   dims=["band","y","x"])
+                                                   dims=["band","y","x"]).rio.write_crs(crs)
         if extent is not None:
             stack_bands[band_index] = clip_xarray(stack_bands[band_index], extent)
 
+    # concatenated_stack_bands.rio.crs
     concatenated_stack_bands= xr.concat(stack_bands,dim="band")
     concatenated_stack_bands.coords["band"] = list_bands
-    # concatenated_stack_bands=concatenated_stack_bands.chunk({"band": 1,"x" : -1,"y" : 100})
     concatenated_stack_bands.attrs["nodata"] = 0
-    concatenated_stack_bands.attrs["crs"]=crs
+    
     return concatenated_stack_bands
 
 
         
-def import_binary_raster(forest_mask_path,chunks = None):
+def import_binary_raster(raster_path,chunks = None):
     """
     Imports forest mask
 
     Parameters
     ----------
-    forest_mask_path : str
+    raster_path : str
         Path of the forest mask binary raster.
     chunks : int, optional
         Chunks for import as dask array. If None, data is imported as xarray. The default is None.
@@ -583,9 +577,9 @@ def import_binary_raster(forest_mask_path,chunks = None):
         Binary array containing True if pixels are inside the region of interest.
 
     """
-    forest_mask = xr.open_rasterio(forest_mask_path,chunks = chunks).squeeze("band")
-    # forest_mask=forest_mask.rename({"band" : "Mask"})
-    return forest_mask.astype(bool)
+    raster = rioxarray.open_rasterio(raster_path,chunks = chunks).squeeze("band")
+    # raster=raster.rename({"band" : "Mask"})
+    return raster.astype(bool)
 
 
 def import_stackedmaskedVI(tuile,min_date = None, max_date=None,chunks = None):
@@ -619,22 +613,50 @@ def import_stackedmaskedVI(tuile,min_date = None, max_date=None,chunks = None):
     else:
         dates = [date for date in tuile.paths["VegetationIndex"]if date >= min_date & date <= max_date]
         
-    list_vi=[xr.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in dates]
+        
+        
+# =============================================================================
+    list_vi=[xr.open_dataset(tuile.paths["VegetationIndex"][date],chunks =chunks, engine = "rasterio") for date in dates]
     stack_vi=xr.concat(list_vi,dim="Time")
     stack_vi=stack_vi.assign_coords(Time=dates)
     stack_vi=stack_vi.squeeze("band")
     stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
-    # stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
-
     
-    list_mask=[xr.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in dates]
+    # list_mask=[xr.open_dataset(tuile.paths["Masks"][date],chunks =chunks, engine = "rasterio") for date in dates]
+    # stack_masks=xr.concat(list_mask,dim="Time")
+    # stack_masks=stack_masks.assign_coords(Time=dates).astype(bool)
+    # stack_masks=stack_masks.squeeze("band")
+    # stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
+
+
+# =============================================================================
+#Original rioxarray.open_rasterio
+    # list_vi=[rioxarray.open_rasterio(tuile.paths["VegetationIndex"][date],chunks =chunks) for date in dates]
+    # stack_vi=xr.concat(list_vi,dim="Time")
+    # stack_vi=stack_vi.assign_coords(Time=dates)
+    # stack_vi=stack_vi.squeeze("band")
+    # stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
+
+    list_mask=[rioxarray.open_rasterio(tuile.paths["Masks"][date],chunks =chunks) for date in dates]
     stack_masks=xr.concat(list_mask,dim="Time")
     stack_masks=stack_masks.assign_coords(Time=dates).astype(bool)
     stack_masks=stack_masks.squeeze("band")
     stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
-    # stack_masks["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_masks["Time"])]))
 
-    return stack_vi, stack_masks
+# =============================================================================
+# 
+# =============================================================================
+#xr.open_mfdataset
+    # stack_vi = xr.open_mfdataset([tuile.paths["VegetationIndex"][date] for date in dates],concat_dim = "Time",combine = "nested", chunks = chunks)
+    # stack_vi=stack_vi.assign_coords(Time=dates)
+    # stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
+
+    # stack_masks = xr.open_mfdataset([tuile.paths["Masks"][date] for date in dates],concat_dim = "Time",combine = "nested", chunks = chunks)
+    # stack_masks=stack_masks.assign_coords(Time=dates).astype(bool)
+    # stack_masks=stack_masks.squeeze("band")
+    # stack_masks=stack_masks.chunk({"Time": -1,"x" : chunks,"y" : chunks})
+
+    return stack_vi["Band1"], stack_masks #stack_masks["band_data"]
 
     
 def import_coeff_model(path, chunks = None):
@@ -654,8 +676,12 @@ def import_coeff_model(path, chunks = None):
         Array containing the coefficients to the model for vegetation index prediction.
 
     """
+
+    # coeff_model = xr.open_dataset(path, engine="rasterio")
     
-    coeff_model = xr.open_rasterio(path,chunks = chunks)
+    coeff_model = rioxarray.open_rasterio(path,chunks = chunks)
+    # coeff_model = coeff_model.rename({"Band1" : 1, "Band2" : 2,"Band3" : 3,"Band4" : 4,"Band5" : 5}).to_array(dim = "coeff").squeeze("band")
+
     coeff_model = coeff_model.rename({"band": "coeff"})
     return coeff_model
 
@@ -677,7 +703,7 @@ def import_first_detection_date_index(path,chunks = None):
 
     """
     
-    first_detection_date_index=xr.open_rasterio(path,chunks = chunks).squeeze("band")
+    first_detection_date_index=rioxarray.open_rasterio(path,chunks = chunks).squeeze("band")
     return first_detection_date_index
 
 def import_dieback_data(dict_paths, chunks = None):
@@ -701,10 +727,10 @@ def import_dieback_data(dict_paths, chunks = None):
 
     """
     
-    state_dieback = xr.open_rasterio(dict_paths["state_dieback"],chunks = chunks).astype(bool)
-    first_date_dieback = xr.open_rasterio(dict_paths["first_date_dieback"],chunks = chunks)
-    first_date_unconfirmed_dieback = xr.open_rasterio(dict_paths["first_date_unconfirmed_dieback"],chunks = chunks)
-    count_dieback = xr.open_rasterio(dict_paths["count_dieback"],chunks = chunks)
+    state_dieback = rioxarray.open_rasterio(dict_paths["state_dieback"],chunks = chunks).astype(bool)
+    first_date_dieback = rioxarray.open_rasterio(dict_paths["first_date_dieback"],chunks = chunks)
+    first_date_unconfirmed_dieback = rioxarray.open_rasterio(dict_paths["first_date_unconfirmed_dieback"],chunks = chunks)
+    count_dieback = rioxarray.open_rasterio(dict_paths["count_dieback"],chunks = chunks)
     
     dieback_data=xr.Dataset({"state": state_dieback,
                      "first_date": first_date_dieback,
@@ -731,6 +757,7 @@ def import_stress_data(dict_paths, chunks = None):
     stress_data : xarray DataSet or dask DataSet
         DataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
     """
+    
     dates_stress = xr.open_rasterio(dict_paths["dates_stress"],chunks = chunks).rename({"band": "change"})
     cum_diff = xr.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).rename({"band": "period"})
     nb_dates = xr.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).rename({"band": "period"})
@@ -740,6 +767,16 @@ def import_stress_data(dict_paths, chunks = None):
                      "cum_diff" : cum_diff,
                      "nb_dates" : nb_dates
                      })
+    
+    # dates_stress = rioxarray.open_rasterio(dict_paths["dates_stress"],chunks = chunks).squeeze("band").to_array(dim = "change")
+    # cum_diff = rioxarray.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).squeeze("band").to_array(dim = "period")
+    # nb_dates = rioxarray.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).squeeze("band").to_array(dim = "period")
+    # nb_periods_stress = rioxarray.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
+    # stress_data=xr.Dataset({"date": dates_stress.assign_coords({"change" : range(1,dates_stress.change.size+1)}),
+    #                  "nb_periods": nb_periods_stress,
+    #                  "cum_diff" : cum_diff.assign_coords({"period" : range(1,cum_diff.period.size+1)}),
+    #                  "nb_dates" : nb_dates.assign_coords({"period" : range(1,nb_dates.period.size+1)})
+    #                  })
 
     return stress_data
 
@@ -759,7 +796,11 @@ def import_stress_index(path, chunks = None):
     stress_index : xarray DataSet or dask DataSet (x,y,period)
         DataSet containing the value of the stress index for each pixel and each stress period.
     """
-    stress_index = xr.open_rasterio(path,chunks = chunks).rename({"band": "period"})
+    stress_index = rioxarray.open_rasterio(path,chunks = chunks).rename({"band": "period"})
+    # stress_index = rioxarray.open_rasterio(path,chunks = chunks).to_array(dim = "period").squeeze("band")
+
+    stress_index = stress_index.assign_coords({"period" : range(1,stress_index.period.size+1)})
+    # stress_index = stress_index.rename({"Band1" : 0, "Band2" : 1,"Band3" : 2,"Band4" : 3,"Band5" : 4, "Band6"}).to_array(dim = "period").squeeze("band")
 
     return stress_index 
 
@@ -845,9 +886,9 @@ def import_soil_data(dict_paths, chunks = None):
 
     """
     
-    state_soil = xr.open_rasterio(dict_paths["state_soil"], chunks = chunks).astype(bool)
-    first_date_soil = xr.open_rasterio(dict_paths["first_date_soil"], chunks = chunks)
-    count_soil = xr.open_rasterio(dict_paths["count_soil"], chunks = chunks)
+    state_soil = rioxarray.open_rasterio(dict_paths["state_soil"], chunks = chunks).astype(bool)
+    first_date_soil = rioxarray.open_rasterio(dict_paths["first_date_soil"], chunks = chunks)
+    count_soil = rioxarray.open_rasterio(dict_paths["count_soil"], chunks = chunks)
     
     soil_data=xr.Dataset({"state": state_soil,
                      "first_date": first_date_soil,
@@ -899,19 +940,21 @@ def import_masked_vi(dict_paths, date, chunks = None):
 
     Returns
     -------
-    masked_vi : xarray DataSet
-        DataSet containing two DataArrays, "vegetation_index" containing vegetation index values, and "mask" containing mask values.
-
+    vegetation_index : xarray DataArray
+        DataArray containing vegetation index values
+    mask : xarray DataArray
+        DataArray containing mask values.
     """
     
-    vegetation_index = xr.open_rasterio(dict_paths["VegetationIndex"][date],chunks = chunks)
-    mask=xr.open_rasterio(dict_paths["Masks"][date],chunks = chunks).astype(bool)
+    # vegetation_index = rioxarray.open_rasterio(dict_paths["VegetationIndex"][date],chunks = chunks)
+    vegetation_index = xr.open_dataset(dict_paths["VegetationIndex"][date],chunks = chunks, engine = "rasterio")['Band1']
+    mask=rioxarray.open_rasterio(dict_paths["Masks"][date],chunks = chunks).astype(bool)
     
-    masked_vi=xr.Dataset({"vegetation_index": vegetation_index,
-                             "mask": mask})
-    masked_vi=masked_vi.squeeze("band")
+    # masked_vi=xr.Dataset({"vegetation_index": vegetation_index,
+    #                          "mask": mask})
+    # masked_vi=masked_vi.squeeze("band")
 
-    return masked_vi
+    return vegetation_index, mask
 
 
 
@@ -932,7 +975,7 @@ def import_stacked_anomalies(paths_anomalies, chunks = None):
         3D binary DataArray with value True where there are anomalies, with Time coordinates.
 
     """
-    list_anomalies=[xr.open_rasterio(paths_anomalies[date], chunks = chunks) for date in paths_anomalies]
+    list_anomalies=[rioxarray.open_rasterio(paths_anomalies[date], chunks = chunks) for date in paths_anomalies]
     stack_anomalies=xr.concat(list_anomalies,dim="Time")
     stack_anomalies=stack_anomalies.assign_coords(Time=[date for date in paths_anomalies.keys()])
     stack_anomalies=stack_anomalies.squeeze("band")

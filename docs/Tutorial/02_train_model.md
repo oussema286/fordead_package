@@ -51,7 +51,7 @@ The outputs of this processing step are described hereafter :
     - **first_detection_date_index.tif** refers to a raster file containing the index of the first acquisition used for detection. 
 	It allows to know which dates are used for training for each pixel, and which ones are used for detection.
     - **coeff_model.tif** is a raster stack including 5 layers, one for each coefficient of the vegetation index model.
-- **ForestMask** directory: the binary raster **valid_area_mask.tif** is written. This mask identifies valid pixels for which a model was computed as 1, and non-valid pixels as 0.
+- **TimelessMasks** directory: the binary raster **sufficient_coverage_mask.tif** is written. This mask  takes the value 1 for valid pixels for which a model can be computed, 0 for invalid pixels.
 
 
 [PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/01_compute_masked_vegetationindex) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/03_dieback_detection)
