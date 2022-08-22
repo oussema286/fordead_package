@@ -20,15 +20,15 @@ from scipy import ndimage
 import json
 from fordead.import_data import import_stress_index, import_coeff_model, import_dieback_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_binary_raster, import_soil_data,import_resampled_sen_stack, import_stress_data
 
-def write_raster(data_array, path):
+def write_raster(data_array, path, compress_vi):
         
     # dem = data_array.to_dataset(name="dem")
     # encoding = {"dem": {'zlib': True, "dtype" : "int16", "scale_factor" : 0.001, "_FillValue" : 0}}
     # dem.to_netcdf(path, encoding=encoding)
-
-    data_array.encoding["dtype"]="int16"
-    data_array.encoding["scale_factor"]=0.001
-    data_array.encoding["_FillValue"]=-1
+    if compress_vi:
+        data_array.encoding["dtype"]="int16"
+        data_array.encoding["scale_factor"]=0.001
+        data_array.encoding["_FillValue"]=-1
     
     data_array.rio.to_raster(path, windowed = False, tiled = True)
 

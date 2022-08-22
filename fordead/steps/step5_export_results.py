@@ -122,26 +122,29 @@ def export_results(
             relevant_area = forest_mask & sufficient_coverage_mask
 
         if tile.parameters["stress_index_mode"] is not None:
-            stress_index = import_stress_index(tile.paths["stress_index"])
-            stress_data = import_stress_data(tile.paths)
-            stress_list = []
-            for period in range(tile.parameters["max_nb_stress_periods"]):
-                stress_period = stress_index.isel(period = period)
-                stress_class = vectorizing_confidence_class(stress_period, stress_data.nb_dates.isel(period = period), (relevant_area & (period < stress_data["nb_periods"])).compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
-                
-                stress_start_date = stress_data["date"].isel(change = period*2)
-                stress_start_date_number = convert_dateindex_to_datenumber(stress_start_date, period < stress_data["nb_periods"], tile.dates)
-                vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
-                # stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + str(period+1) + ".shp"))
-                # vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + str(period+1) + ".shp"))
-                stress_list += [gp.overlay(vector_stress_start, stress_class, how='intersection',keep_geom_type = True)]
+            if conf_threshold_list is None or conf_classes_list is None:
+                print("Parameters conf_threshold_list and conf_classes_list are not provided, stress results can't be exported")
+            else:
+                stress_index = import_stress_index(tile.paths["stress_index"])
+                stress_data = import_stress_data(tile.paths)
+                stress_list = []
+                for period in range(tile.parameters["max_nb_stress_periods"]):
+                    stress_period = stress_index.isel(period = period)
+                    stress_class = vectorizing_confidence_class(stress_period, stress_data.nb_dates.isel(period = period), (relevant_area & (period < stress_data["nb_periods"])).compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
+                    
+                    stress_start_date = stress_data["date"].isel(change = period*2)
+                    stress_start_date_number = convert_dateindex_to_datenumber(stress_start_date, period < stress_data["nb_periods"], tile.dates)
+                    vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
+                    # stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + str(period+1) + ".shp"))
+                    # vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + str(period+1) + ".shp"))
+                    stress_list += [gp.overlay(vector_stress_start, stress_class, how='intersection',keep_geom_type = True)]
 
                 # for period_date in pd.unique(vector_stress_start["period"]):
                 #     for class_stress in pd.unique(stress_class["class"]):
                 #         stress_list += [gp.overlay(vector_stress_start[vector_stress_start["period"]==period_date], stress_class[stress_class["class"] == class_stress], how='intersection',keep_geom_type = True)]
 
-            stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
-            stress_total.to_file(tile.paths["stress_periods"])
+                stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
+                stress_total.to_file(tile.paths["stress_periods"])
 
         if multiple_files:
             tile.add_dirpath("result_files", tile.data_directory / "Results")

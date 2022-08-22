@@ -232,7 +232,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", message="Sequential read of iterator was interrupted. Resetting iterator. This can negatively impact the performance.")
-                vector_display = gp.read_file(vector_display_path,bbox=shape.envelope).to_crs(crs=stack_rgb.crs).explode(index_parts=True)
+                vector_display = gp.read_file(vector_display_path,bbox=shape.envelope).to_crs(crs=stack_rgb.rio.crs).explode(index_parts=True)
             nb_vector_obj = vector_display.shape[0]
             
             if type(hover_column_list) is str: hover_column_list = [hover_column_list]
@@ -453,12 +453,12 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_d
             (yy-threshold_anomaly).plot.line("b--", label='Threshold for anomaly detection')
         
         
-        
-        for period in range(min(xy_stress_data.sizes["period"], int(xy_stress_data["nb_periods"]))):
-            period_dates = (pixel_series.Time[xy_stress_data["date"].isel(change = [period*2,period*2+1])]).data
-            label = {"label" : "Stress period"} if period==0 else {}
-            plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, **label)         
-            # plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, label = "Stress period")            
+        if xy_stress_data is not None:
+            for period in range(min(xy_stress_data.sizes["period"], int(xy_stress_data["nb_periods"]))):
+                period_dates = (pixel_series.Time[xy_stress_data["date"].isel(change = [period*2,period*2+1])]).data
+                label = {"label" : "Stress period"} if period==0 else {}
+                plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, **label)         
+                # plt.axvspan(xmin = period_dates[0],xmax = period_dates[1],color = "orange", alpha = 0.3, label = "Stress period")            
         
         # Plotting vertical lines when dieback or soil is detected
         if ~xy_dieback_data["state"] & ~xy_soil_data["state"]:
@@ -520,7 +520,11 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
     xy_soil_data = soil_data.isel(x = X, y = Y) if soil_data is not None else {"state" : False}
     xy_stack_masks = stack_masks.isel(x = X, y = Y)
     pixel_series = stack_vi.isel(x = X, y = Y)
-    xy_stress_data = stress_data.isel(x = X, y = Y)
+    if stress_data is not None:
+        xy_stress_data = stress_data.isel(x = X, y = Y)
+    else:
+        xy_stress_data = None
+        
     if xy_first_detection_date_index!=0:
         xy_anomalies = anomalies.isel(x = X, y = Y)
         xy_dieback_data = dieback_data.isel(x = X, y = Y)
@@ -547,7 +551,7 @@ def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, f
             print("Pixel outside forest mask")
         else:
             pixel_series, yy,  xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data = select_pixel_from_indices(x,y, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data)              
-            if xy_stress_data["nb_periods"]>tile.parameters["max_nb_stress_periods"]:
+            if xy_stress_data is not None and xy_stress_data["nb_periods"]>tile.parameters["max_nb_stress_periods"]:
                 print("Maximum number of stress periods exceeded")
             else:
                 fig = plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_date_index, xy_stress_data, x, y, yy, tile.parameters["threshold_anomaly"],tile.parameters["vi"],tile.parameters["path_dict_vi"],ymin,ymax, ignored_period = tile.parameters["ignored_period"])

@@ -30,6 +30,7 @@ Les sorties de cette troisième étape, dans le dossier data_directory, sont :
 	- **stress_index** : Un raster avec **max_nb_stress_periods**+1 bandes contenant l'indice de stress de chaque période de stress, c'est la moyenne ou la  moyenne pondérée de la différence entre l'indice de végétation et sa prédiction en fonction de **stress_index_mode**, obtenue à partir de cum_diff_stress et nb_dates_stress
 	Le nombre de bandes de ces matrices permet de sauvegarder les informations de chaque période de stress potentielle, et de la période du potentiel dépérissement final détecté.
 - Dans le dossier **DataAnomalies**, un raster pour chaque date **Anomalies_YYYY-MM-JJ.tif** qui vaut True là où sont détectées les anomalies.
+- Si **stress_index_mode** est défini, dans le dossier TimelessMasks, un raster binaire valant 1 pour les pixels dont le nombre de périodes de stress est inférieur ou égal à **max_nb_stress_periods**, sinon 0.
 
 ## Utilisation
 ### A partir d'un script
@@ -85,6 +86,10 @@ Les anomalies successives sont comptées, à partir de trois anomalies successiv
 Les rasters contenant les informations sur les périodes de stress sont mis à jour, le nombre de périodes de stress est mis à jour lorsque les pixels reviennent à la normale. Lorsque les changements d'état sont confirmés, la première date d'anomalie ou de retour à la normale est sauvegardée. Pour chaque date, le nombre de dates dans les périodes de stress est mis à jour si le pixel n'est pas masqué et en période de stress.
 La différence entre l'indice de végétation et sa prédiction est ajoutée au raster cum_diff_stress, après avoir été multipliée par le numéro de la date si stress_index_mode est "weighted_mean".
 **_Fonctions utilisées:_** [save_stress()](https://fordead.gitlab.io/fordead_package/reference/fordead/dieback_detection/#save_stress)
+
+### Création d'un masque pour les pixels subissant un nombre trop élevé de périodes de stress
+Le nombre de périodes de stress pour chaque pixel est comparé au paramètre **max_nb_stress_periods**, ce qui donne le masque too_many_stress_periods_mask.
+Ce masque invalide les données lors des exports et autres sorties.
 
 ### L'indice de stress est calculé
 Si stress_index_mode est "mean", la trame de l'indice de stress est la trame cum_diff_stress divisée par la trame nb_dates_stress.

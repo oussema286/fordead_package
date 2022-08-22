@@ -103,7 +103,10 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
     stack_vi, stack_masks = import_stackedmaskedVI(tile,chunks = chunks)
     stack_vi["DateNumber"] = ("Time", np.array([(datetime.datetime.strptime(date, '%Y-%m-%d')-datetime.datetime.strptime('2015-01-01', '%Y-%m-%d')).days for date in np.array(stack_vi["Time"])]))
     coeff_model = import_coeff_model(tile.paths["coeff_model"],chunks = chunks)
-    stress_data = import_stress_data(tile.paths,chunks = chunks)
+    if tile.parameters["stress_index_mode"] is not None:
+        stress_data = import_stress_data(tile.paths,chunks = chunks)
+    else:
+        stress_data = None
 
     first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
     if tile.parameters["soil_detection"]:
