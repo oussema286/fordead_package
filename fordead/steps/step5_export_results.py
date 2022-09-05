@@ -131,13 +131,13 @@ def export_results(
                 for period in range(tile.parameters["max_nb_stress_periods"]):
                     stress_period = stress_index.isel(period = period)
                     stress_class = vectorizing_confidence_class(stress_period, stress_data.nb_dates.isel(period = period), (relevant_area & (period < stress_data["nb_periods"])).compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
-                    
-                    stress_start_date = stress_data["date"].isel(change = period*2)
-                    stress_start_date_number = convert_dateindex_to_datenumber(stress_start_date, period < stress_data["nb_periods"], tile.dates)
-                    vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
-                    # stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + str(period+1) + ".shp"))
-                    # vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + str(period+1) + ".shp"))
-                    stress_list += [gp.overlay(vector_stress_start, stress_class, how='intersection',keep_geom_type = True)]
+                    if stress_class.size != 0:
+                        stress_start_date = stress_data["date"].isel(change = period*2)
+                        stress_start_date_number = convert_dateindex_to_datenumber(stress_start_date, period < stress_data["nb_periods"], tile.dates)
+                        vector_stress_start = get_periodic_results_as_shapefile(stress_start_date_number, bins_as_date, bins_as_datenumber, relevant_area, forest_mask.attrs)
+                        # stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + str(period+1) + ".shp"))
+                        # vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + str(period+1) + ".shp"))
+                        stress_list += [gp.overlay(vector_stress_start, stress_class, how='intersection',keep_geom_type = True)]
 
                 # for period_date in pd.unique(vector_stress_start["period"]):
                 #     for class_stress in pd.unique(stress_class["class"]):

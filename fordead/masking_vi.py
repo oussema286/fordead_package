@@ -115,7 +115,7 @@ def rasterize_vector(vector_path, example_path):
     """
     
     example_raster = rioxarray.open_rasterio(example_path).squeeze("band")
-    example_raster.rio.crs=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
+    # example_raster.rio.crs=example_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
     vector = gp.read_file(vector_path)
     forest_mask = rasterize_polygons_binary(vector, example_raster)
     return forest_mask
@@ -177,6 +177,7 @@ def clip_oso(path_oso, path_example_raster, list_code_oso):
     """
     
     example_raster = rioxarray.open_rasterio(path_example_raster).squeeze("band")
+    
     # reprojected_corner1 = OSO.isel(x=[0,1],y=[0,1]).rio.reproject(example_raster.crs).isel(x=0,y=0)
     # reprojected_corner2 = OSO.isel(x=[-2,-1],y=[-2,-1]).rio.reproject(example_raster.crs).isel(x=-1,y=-1)
     # xmin, ymax = transform.xy(Affine(*OSO.rio.transform()),0,0)
@@ -184,8 +185,8 @@ def clip_oso(path_oso, path_example_raster, list_code_oso):
                 
     vrt_options = {
         'resampling': Resampling.nearest,
-        'crs': CRS.from_epsg(int(''.join(filter(str.isdigit, example_raster.rio.crs)))), #extracts integer from example_raster crs
-        'transform': Affine(*example_raster.rio.transform()),
+        'crs': example_raster.rio.crs, #extracts integer from example_raster crs
+        'transform': example_raster.rio.transform(),
         'height': example_raster.sizes["y"],
         'width': example_raster.sizes["x"],
     }
@@ -200,8 +201,8 @@ def clip_oso(path_oso, path_example_raster, list_code_oso):
             forest_mask.data = vrt.read()[0]
     
     forest_mask = forest_mask.isin(list_code_oso)
-    forest_mask.attrs=example_raster.attrs
-
+    forest_mask["_FillValue"] = 0
+    
     return forest_mask
 
 def raster_full(path_example_raster, fill_value, dtype = None):

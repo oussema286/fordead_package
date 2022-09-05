@@ -151,7 +151,7 @@ def compute_forest_mask(data_directory,
         else:
             print("Unrecognized forest_mask_source")
 
-        write_tif(forest_mask, forest_mask.attrs,nodata = 0, path = tile.paths["forest_mask"])
+        write_tif(forest_mask, forest_mask.attrs, nodata = 0, path = tile.paths["forest_mask"])
         tile.save_info()
         
 if __name__ == '__main__':
