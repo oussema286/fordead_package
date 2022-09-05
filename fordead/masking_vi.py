@@ -182,7 +182,7 @@ def clip_oso(path_oso, path_example_raster, list_code_oso):
     # reprojected_corner2 = OSO.isel(x=[-2,-1],y=[-2,-1]).rio.reproject(example_raster.crs).isel(x=-1,y=-1)
     # xmin, ymax = transform.xy(Affine(*OSO.rio.transform()),0,0)
     # xmax, ymin = transform.xy(Affine(*OSO.rio.transform()),OSO.sizes["y"],OSO.sizes["x"])                
-                
+                # example_raster.rio.crs
     vrt_options = {
         'resampling': Resampling.nearest,
         'crs': example_raster.rio.crs, #extracts integer from example_raster crs
@@ -202,7 +202,8 @@ def clip_oso(path_oso, path_example_raster, list_code_oso):
     
     forest_mask = forest_mask.isin(list_code_oso)
     forest_mask["_FillValue"] = 0
-    
+    forest_mask = forest_mask.rio.write_crs(example_raster.rio.crs)
+
     return forest_mask
 
 def raster_full(path_example_raster, fill_value, dtype = None):
