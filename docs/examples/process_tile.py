@@ -34,21 +34,15 @@ def parse_command_line():
     parser.add_argument("-f", "--forest_mask_source", dest = "forest_mask_source",type = str,default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a binary raster with the extent and resolution of the computed area, or None in which case all pixels will be considered valid")
     parser.add_argument("-c", "--lim_perc_cloud", dest = "lim_perc_cloud",type = float,default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
     parser.add_argument("--vi", dest = "vi",type = str,default = "CRSWIR", help = "Chosen vegetation index")
+    parser.add_argument("--compress_vi", dest = "compress_vi", action="store_true",default = False, help = "If activated, stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file. Uses less disk space but can lead to very small difference in results as the vegetation is rounded to three decimal places")
     parser.add_argument("-s", "--threshold_anomaly", dest = "threshold_anomaly",type = float,default = 0.16, help = "Seuil minimum pour détection d'anomalies")
     parser.add_argument("--nb_min_date", dest = "nb_min_date",type = int,default = 10, help = "Nombre minimum de dates valides pour modéliser l'indice de végétation")
     parser.add_argument('--ignored_period', nargs='+',default = None, help="Period whose date to ignore (format 'MM-DD', ex : --ignored_period 11-01 05-01")
-
-<<<<<<< HEAD
     parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "/mnt/Data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "/mnt/Data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
-=======
-    parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "E:/fordead/Data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
-    parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "E:/fordead/Data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
->>>>>>> export_stress
     parser.add_argument("--list_forest_type", dest = "list_forest_type", nargs='+',default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--path_oso", dest = "path_oso",type = str,default = "/mnt/Data/OCS_2017_CESBIO.tif", help = "Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
     parser.add_argument("--list_code_oso", dest = "list_code_oso",type = str,default = [17], help = "List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'")
-
     parser.add_argument("--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
     parser.add_argument("--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
     parser.add_argument("--soil_detection", dest = "soil_detection", action="store_true",default = False, help = "If activated, detects bare ground")
@@ -61,7 +55,6 @@ def parse_command_line():
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas suffering from dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback")
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
-    parser.add_argument("--export_stress", dest = "export_stress", action="store_true",default = False, help = "If activated, export stress results, a pixel is considered stress when it is detected but then returned to normal")
 
     
     # parser.add_argument('--threshold_list', nargs='+',default = [0.2, 0.265], help="Liste des seuils utilisés pour classer les stades de dépérissement par discrétisation de l'indice de confiance")
@@ -74,11 +67,11 @@ def parse_command_line():
 
 def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source, extent_shape_path,ignored_period,
                   dep_path, bdforet_dirpath, list_forest_type, path_oso, list_code_oso, #compute_forest_mask arguments
-                  lim_perc_cloud, vi, sentinel_source, apply_source_mask, soil_detection, #compute_masked_vegetationindex arguments
+                  lim_perc_cloud, vi, compress_vi, sentinel_source, apply_source_mask, soil_detection, #compute_masked_vegetationindex arguments
                   min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
                   threshold_anomaly,
                   start_date_results, end_date_results, results_frequency, multiple_files,
-                  correct_vi, export_stress):
+                  correct_vi):
 
     
     sentinel_directory = Path(sentinel_directory)
@@ -101,7 +94,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                                        sentinel_source = sentinel_source, apply_source_mask = apply_source_mask,
                                        extent_shape_path = extent_shape_path,
                                        soil_detection = soil_detection,
-                                       ignored_period = ignored_period)
+                                       ignored_period = ignored_period,
+                                       compress_vi = compress_vi)
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
@@ -118,6 +112,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
+        
 # =====================================================================================================================
             
         train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
@@ -143,8 +138,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             frequency= results_frequency,
             multiple_files = multiple_files, 
             conf_threshold_list = [0.2,0.265],
-            conf_classes_list = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"],
-            export_stress = export_stress
+            conf_classes_list = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"]
             )
         file = open(logpath, "a")
         file.write("Exporting results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
