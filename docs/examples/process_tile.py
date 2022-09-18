@@ -20,7 +20,7 @@ from pathlib import Path
 import argparse
 import time
 import datetime
-
+import gc
 
 def parse_command_line():
     # execute only if run as a script
@@ -99,6 +99,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
+        gc.collect()
         
 # =====================================================================================================================
 
@@ -112,7 +113,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a") 
         file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
-        
+        gc.collect()
 # =====================================================================================================================
             
         train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
@@ -121,6 +122,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a")
         file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
+        gc.collect()
 # =====================================================================================================================    
 
         dieback_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
@@ -128,6 +130,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a")
         file.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
+        gc.collect()
         
 # # =====================================================================================================================
 
@@ -143,6 +146,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file = open(logpath, "a")
         file.write("Exporting results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
         file.close()
+        gc.collect()
 
 
         # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
