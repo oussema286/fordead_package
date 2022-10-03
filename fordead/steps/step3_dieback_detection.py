@@ -136,7 +136,7 @@ def dieback_detection(
             dieback_data = import_dieback_data(tile.paths)
         else:
             dieback_data = initialize_dieback_data(first_detection_date_index.shape,first_detection_date_index.coords)
-        if tile.paths["state_dieback"].exists(): 
+        if tile.paths["nb_dates_stress"].exists(): 
             stress_data = import_stress_data(tile.paths)
         else:
             stress_data = initialize_stress_data(first_detection_date_index.shape,first_detection_date_index.coords, max_nb_stress_periods)
