@@ -55,7 +55,7 @@ def parse_command_line():
     parser.add_argument("--multiple_files", dest = "multiple_files", action="store_true",default = False, help = "If activated, one shapefile is exported for each period containing the areas suffering from dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback")
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
-
+    parser.add_argument("--stress_index_mode", dest = "stress_index_mode",type = str,default = "weighted_mean", help = "Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no informations are saved")
     
     # parser.add_argument('--threshold_list', nargs='+',default = [0.2, 0.265], help="Liste des seuils utilisés pour classer les stades de dépérissement par discrétisation de l'indice de confiance")
     # parser.add_argument('--classes_list', nargs='+',default = ["Faible anomalie","Forte anomalie"], help="Liste des noms des classes pour la discrétisation de l'indice de confiance. Si threshold_list a une longueur n, classes_list doit avoir une longueur n+1")
@@ -71,7 +71,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
                   threshold_anomaly,
                   start_date_results, end_date_results, results_frequency, multiple_files,
-                  correct_vi):
+                  correct_vi, stress_index_mode):
 
     
     sentinel_directory = Path(sentinel_directory)
@@ -126,7 +126,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================    
 
         dieback_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-                                          threshold_anomaly = threshold_anomaly, stress_index_mode = "weighted_mean")
+                                          threshold_anomaly = threshold_anomaly, stress_index_mode = stress_index_mode)
         file = open(logpath, "a")
         file.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
