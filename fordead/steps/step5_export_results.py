@@ -122,7 +122,7 @@ def export_results(
             relevant_area = forest_mask & sufficient_coverage_mask
 
         if tile.parameters["stress_index_mode"] is not None:
-            if conf_threshold_list is None or conf_classes_list is None:
+            if conf_threshold_list is None or conf_classes_list is None or len(conf_threshold_list) == 0 or len(conf_classes_list) == 0:
                 print("Parameters conf_threshold_list and conf_classes_list are not provided, stress results can't be exported")
             else:
                 stress_index = import_stress_index(tile.paths["stress_index"])
@@ -159,7 +159,7 @@ def export_results(
         else:
             tile.add_path("periodic_results_dieback", tile.data_directory / "Results" / "periodic_results_dieback.shp")
             periodic_results = get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_datenumber, relevant_area, dieback_data.state.attrs)
-            if conf_threshold_list is not None and conf_classes_list is not None:
+            if conf_threshold_list is not None and conf_classes_list is not None and len(conf_threshold_list) != 0 and len(conf_classes_list) != 0:
                 if tile.parameters["stress_index_mode"] is None:
                     print("Stress index was not saved, parameters conf_threshold_list and conf_classes_list are ignored. Change stress_index_mode parameter in step 3 to compute stress index")
                 else:
