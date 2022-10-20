@@ -60,7 +60,7 @@ def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_c
     dict_query = {'location': tile,
                   "startDate" : start_date,
                   'completionDate': end_date, 
-                  'maxRecords': 500, 
+                  'maxRecords': 1500, 
                   'processingLevel': level}
     
     config = {'serveur': 'https://theia.cnes.fr/atdistrib', 
@@ -134,7 +134,7 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
     dict_query = {'location': tile,
                   "startDate" : start_date,
                   'completionDate': end_date, 
-                  'maxRecords': 500, 
+                  'maxRecords': 1500, 
                   'processingLevel': level}
     
     config = {'serveur': 'https://theia.cnes.fr/atdistrib', 
