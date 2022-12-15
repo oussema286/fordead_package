@@ -23,7 +23,7 @@ def export_reflectance_from_polygons(polygons_path, sentinel_dir, export_dir, bu
     
     print("Extracting reflectance")
     reflectance = get_reflectance_at_points(grid_points,sentinel_dir)
-        
+    
     print("Writing reflectance")
     grid_points.to_file(Path(export_dir) / (str(Path(polygons_path).stem) + "_grid.shp"))
     reflectance.to_csv(Path(export_dir) / "reflectance.csv", index=False)

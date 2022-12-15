@@ -169,6 +169,7 @@ def get_bounds(obs):
 
 
 def get_reflectance_at_points(grid_points,sentinel_dir):
+    reflectance_list = []
     for epsg in np.unique(grid_points.epsg):
         print("epsg : " + str(epsg))
         points_epsg = grid_points[grid_points.epsg == epsg]
@@ -179,8 +180,9 @@ def get_reflectance_at_points(grid_points,sentinel_dir):
             points_area = points_epsg[points_epsg.area_name == area_name]
             
             raster_values = extract_raster_values(points_area, sentinel_dir / area_name)
-            
-            
+            reflectance_list += [raster_values]
+    reflectance = gp.GeoDataFrame(pd.concat(reflectance_list, ignore_index=True), crs=reflectance_list[0].crs)
+    return reflectance
             
 def extract_raster_values(points,sentinel_dir):
     """Must have the same crs"""
@@ -202,7 +204,7 @@ def extract_raster_values(points,sentinel_dir):
             
         date_band_value_list += [dates_values]
         
-    reflectance = gp.GeoDataFrame( pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
+    reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
     return reflectance
 
 
