@@ -53,3 +53,5 @@ if __name__ == '__main__':
         
 
     print("Export reflectance : %s secondes ---" % (time.time() - start_time_debut))
+    
+    #Parquet

@@ -196,11 +196,11 @@ def extract_raster_values(points,sentinel_dir):
         dates_values.insert(4,"Date",date)
         # len(dates_values.columns)-1
         for band in tile.paths["Sentinel"][date]:
-            raster = rasterio.open(tile.paths["Sentinel"][date][band])
+            with rasterio.open(tile.paths["Sentinel"][date][band]) as raster:
     
             # reproj_points = points.to_crs(raster.crs)
-            coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
-            dates_values[band] = [x[0] for x in raster.sample(coord_list)]
+                coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
+                dates_values[band] = [x[0] for x in raster.sample(coord_list)]
             
         date_band_value_list += [dates_values]
         
