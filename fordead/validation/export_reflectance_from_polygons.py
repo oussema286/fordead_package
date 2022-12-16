@@ -15,18 +15,19 @@ def export_reflectance_from_polygons(polygons_path, sentinel_dir, export_dir, bu
     sentinel_dir = Path(sentinel_dir)
     polygons = gp.read_file(polygons_path)
     
-    print("Preprocessing polygons")
+    start_time_debut = time.time()
     preprocessed_polygons = preprocess_polygons(polygons, sentinel_dir, buffer, name_column)
+    print("Preprocessing polygons : %s secondes ---" % (time.time() - start_time_debut)) ; start_time_debut = time.time()
     
-    print("Making grid points")
     grid_points = get_grid_points(preprocessed_polygons, sentinel_dir, name_column)
-    
-    print("Extracting reflectance")
-    reflectance = get_reflectance_at_points(grid_points,sentinel_dir)
-    
-    print("Writing reflectance")
     grid_points.to_file(Path(export_dir) / (str(Path(polygons_path).stem) + "_grid.shp"))
+    print("Making grid points : %s secondes ---" % (time.time() - start_time_debut)) ; start_time_debut = time.time()
+
+    reflectance = get_reflectance_at_points(grid_points,sentinel_dir)
+    print("Extracting reflectance : %s secondes ---" % (time.time() - start_time_debut)) ; start_time_debut = time.time()
+
     reflectance.to_csv(Path(export_dir) / "reflectance.csv", index=False)
+    print("Writing reflectance : %s secondes ---" % (time.time() - start_time_debut)) ; start_time_debut = time.time()
 
 if __name__ == '__main__':
     start_time_debut = time.time()
