@@ -85,7 +85,7 @@ def get_polygons_from_sentinel_dirs(sentinel_dir):
         polygon_geom = Polygon(zip(lon_point_list, lat_point_list))
         polygon = gp.GeoDataFrame(index=[0], crs=raster_metadata["crs"], geometry=[polygon_geom])
         polygon.insert(1, "area_name", area)
-        polygon.insert(2, "epsg", polygon.crs.to_epsg())
+        polygon.insert(2, "epsg", raster_metadata["crs"].to_epsg())
         
         if area_index == 0:
             concat_areas = polygon
