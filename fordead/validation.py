@@ -236,8 +236,10 @@ def extract_raster_values3(points,sentinel_dir):
         gdal.BuildVRT(str(sentinel_dir / "vrt.vrt"), path_list, separate=True)
         with rasterio.open(str(sentinel_dir / "vrt.vrt")) as raster:
             reflect_band = raster.sample(coord_list)
-            for x in reflect_band:
-                dict_data[band] += list(x)
+            dict_data[band] = list(reflect_band)
+            # list(reflect_band)
+            # for x in reflect_band:
+            #     dict_data[band] += list(x)
 
     reflectance = pd.DataFrame(data=dict_data)
     return reflectance
