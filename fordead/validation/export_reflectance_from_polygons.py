@@ -31,23 +31,33 @@ def export_reflectance_from_polygons(polygons_path, sentinel_dir, export_dir, bu
 
 if __name__ == '__main__':
     start_time_debut = time.time()
+    import cProfile
+    import pstats
 
-    # sentinel_dir = "D:/fordead/Data/Sentinel"
+    
+    with cProfile.Profile() as pr:
+        # export_reflectance_from_polygons(
+        #     polygons_path = "D:/fordead/Data/Validation/Validation_data/Scolytes/ValidatedScolytes.shp",
+        #     sentinel_dir = "D:/fordead/Data/Sentinel", 
+        #     export_dir = "D:/fordead/Data/Test_programme",
+        #     name_column = "Id")
+        export_reflectance_from_polygons(
+            polygons_path = "/mnt/fordead/Data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
+            sentinel_dir = "/mnt/fordead/Data/Sentinel", 
+            export_dir = "/mnt/fordead/Data",
+            name_column = "Id")
+        
+    stats = pstats.Stats(pr)
+    stats.sort_stats(pstats.SortKey.TIME)
+    stats.print_stats()  
+    # stats.dump_stats("D:/fordead/Data/Test_programme/profiling_stats.prof")
+    stats.dump_stats("/mnt/fordead/Data/Test_programme/profiling_stats.prof")
     
     
     # raster_path = "D:/fordead/Data/Sentinel/SENTINEL2B_20220611-104734-621_L2A_T32ULU_C_V3-0_FRE_B8A.tif"
 
-    export_reflectance_from_polygons(
-        polygons_path = "/mnt/fordead/Data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
-        sentinel_dir = "/mnt/fordead/Data/Sentinel", 
-        export_dir = "/mnt/fordead/Data",
-        name_column = "Id")
-    
-    # export_reflectance_from_polygons(
-    #     polygons_path = "D:/fordead/Data/Validation/Validation_data/Scolytes/ValidatedScolytes.shp",
-    #     sentinel_dir = "D:/fordead/Data/Sentinel", 
-    #     export_dir = "D:/fordead/Data/Test_programme",
-    #     name_column = "Id")
+
+
     
     # points.to_file("D:/fordead/Data/Test_programme/points_with_value.shp")
         
