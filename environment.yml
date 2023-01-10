@@ -3,16 +3,16 @@ channels:
   - conda-forge
 dependencies:
   - python = 3.9.0
-  - numpy
-  - fiona
-  - geopandas
-  - rasterio
-  - xarray
-  - scipy
-  - dask
-  - pathlib
-  - rioxarray
-  - path
-  - plotly
-  - netcdf4
-  - matplotlib
+  - numpy = 1.23.0
+  - fiona = 1.8.21
+  - geopandas = 0.11.0
+  - rasterio = 1.3.0
+  - xarray = 2022.3.0
+  - scipy = 1.8.1
+  - dask = 2022.6.1
+  - pathlib = 1.0.1
+  - rioxarray = 0.11.1
+  - path = 16.4.0
+  - plotly = 5.9.0
+  - netcdf4 = 1.6.0
+  - matplotlib = 3.5.2
