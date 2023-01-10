@@ -62,6 +62,7 @@ def write_tif(data_array, attributes, path, nodata = None):
         data_array=data_array.astype(uint8)
         args["nbits"] = 1
     if nodata != None:
+        data_array.attrs["_FillValue"]=nodata
         data_array.attrs["nodata"]=nodata
         
     if len(data_array.dims)>=3: #If data_array has several bands
