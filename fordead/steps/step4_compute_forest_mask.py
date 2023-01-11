@@ -124,6 +124,7 @@ def compute_forest_mask(data_directory,
     
     if tile.paths["forest_mask"].exists():
         print("Forest mask already calculated")
+        tile.save_info()
     else:
         if path_example_raster == None : path_example_raster = tile.paths["VegetationIndex"][tile.dates[-1]]
         

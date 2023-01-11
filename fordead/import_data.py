@@ -860,7 +860,7 @@ def initialize_stress_data(shape,coords, max_nb_stress_periods):
     stress_data=xr.Dataset({"date": xr.DataArray(np.zeros(shape+((max_nb_stress_periods+1)*2-1,),dtype=np.uint16), 
                                                  coords= {"y" : coords["y"],"x" : coords["x"],"change" : range(1,(max_nb_stress_periods+1)*2)},dims = ["y","x","change"]),
                          "nb_periods": xr.DataArray(np.zeros(shape,dtype=np.uint8), coords=coords),
-                         "cum_diff": xr.DataArray(np.zeros(shape+(max_nb_stress_periods+1,),dtype=np.float), 
+                         "cum_diff": xr.DataArray(np.zeros(shape+(max_nb_stress_periods+1,),dtype=float), 
                                                                       coords= {"y" : coords["y"],"x" : coords["x"],"period" : range(1,max_nb_stress_periods+2)},dims = ["y","x","period"]),
                          "nb_dates": xr.DataArray(np.zeros(shape+(max_nb_stress_periods+1,),dtype=np.uint16), 
                                                                       coords= {"y" : coords["y"],"x" : coords["x"],"period" : range(1,max_nb_stress_periods+2)},dims = ["y","x","period"])
