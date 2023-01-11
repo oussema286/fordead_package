@@ -20,7 +20,7 @@ def export_reflectance_from_polygons(polygons_path, sentinel_dir, export_dir, bu
     print("Preprocessing polygons : %s secondes ---" % (time.time() - start_time_debut)) ; start_time_debut = time.time()
     
     grid_points = get_grid_points(preprocessed_polygons, sentinel_dir, name_column)
-    grid_points.to_file(Path(export_dir) / (str(Path(polygons_path).stem) + "_grid.shp"))
+    grid_points.to_crs(preprocessed_polygons.crs).to_file(Path(export_dir) / (str(Path(polygons_path).stem) + "_grid.shp"))
     print("Making grid points : %s secondes ---" % (time.time() - start_time_debut)) ; start_time_debut = time.time()
 
     reflectance = get_reflectance_at_points(grid_points,sentinel_dir)
@@ -36,20 +36,20 @@ if __name__ == '__main__':
 
     
     with cProfile.Profile() as pr:
-        # export_reflectance_from_polygons(
-        #     polygons_path = "D:/fordead/Data/Validation/Validation_data/Scolytes/ValidatedScolytes.shp",
-        #     sentinel_dir = "D:/fordead/Data/Sentinel", 
-        #     export_dir = "D:/fordead/Data/Test_programme",
-        #     name_column = "Id")
+        export_reflectance_from_polygons(
+            polygons_path = "D:/fordead/Data/Validation/Validation_data/Scolytes/ValidatedScolytes.shp",
+            sentinel_dir = "D:/fordead/Data/Sentinel", 
+            export_dir = "D:/fordead/Data/Test_programme",
+            name_column = "Id")
         # export_reflectance_from_polygons(
         #     polygons_path = "/mnt/fordead/Data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
         #     sentinel_dir = "/mnt/fordead/Data/Sentinel", 
         #     export_dir = "/mnt/fordead/Data",
         #     name_column = "Id")
-        export_reflectance_from_polygons(
-            polygons_path = "/mnt/fordead/Data/Vecteurs/Export_57_2022.shp",
-            sentinel_dir = "/mnt/fordead/Data/Sentinel", 
-            export_dir = "/mnt/fordead/Out/Validation/Gilette")
+        # export_reflectance_from_polygons(
+        #     polygons_path = "/mnt/fordead/Data/Vecteurs/Export_57_2022.shp",
+        #     sentinel_dir = "/mnt/fordead/Data/Sentinel", 
+        #     export_dir = "/mnt/fordead/Out/Validation/Gilette")
         
     print("Export reflectance : %s secondes ---" % (time.time() - start_time_debut))
 

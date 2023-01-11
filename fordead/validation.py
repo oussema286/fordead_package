@@ -97,6 +97,8 @@ def get_polygons_from_sentinel_dirs(sentinel_dir):
     return concat_areas
 
 def get_sen_intersection(obs_polygons, sen_polygons, name_column):
+    
+    obs_polygons = obs_polygons.to_crs(sen_polygons.crs)
     obs_area_tot = obs_polygons[[name_column]]
     obs_area_tot.insert(1, "area_tot", obs_polygons.area)
     
