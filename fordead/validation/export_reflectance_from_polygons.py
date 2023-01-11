@@ -36,20 +36,20 @@ if __name__ == '__main__':
 
     
     with cProfile.Profile() as pr:
-        export_reflectance_from_polygons(
-            polygons_path = "D:/fordead/Data/Validation/Validation_data/Scolytes/ValidatedScolytes.shp",
-            sentinel_dir = "D:/fordead/Data/Sentinel", 
-            export_dir = "D:/fordead/Data/Test_programme",
-            name_column = "Id")
+        # export_reflectance_from_polygons(
+        #     polygons_path = "D:/fordead/Data/Validation/Validation_data/Scolytes/ValidatedScolytes.shp",
+        #     sentinel_dir = "D:/fordead/Data/Sentinel", 
+        #     export_dir = "D:/fordead/Data/Test_programme",
+        #     name_column = "Id")
         # export_reflectance_from_polygons(
         #     polygons_path = "/mnt/fordead/Data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
         #     sentinel_dir = "/mnt/fordead/Data/Sentinel", 
         #     export_dir = "/mnt/fordead/Data",
         #     name_column = "Id")
-        # export_reflectance_from_polygons(
-        #     polygons_path = "/mnt/fordead/Data/Vecteurs/Export_57_2022.shp",
-        #     sentinel_dir = "/mnt/fordead/Data/Sentinel", 
-        #     export_dir = "/mnt/fordead/Out/Validation/Gilette")
+        export_reflectance_from_polygons(
+            polygons_path = "/mnt/fordead/Data/Vecteurs/Export_57_2022.shp",
+            sentinel_dir = "/mnt/fordead/Data/Sentinel", 
+            export_dir = "/mnt/fordead/Out/Validation/Gilette")
         
     print("Export reflectance : %s secondes ---" % (time.time() - start_time_debut))
 
