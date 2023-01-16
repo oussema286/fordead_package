@@ -41,15 +41,15 @@ if __name__ == '__main__':
         #     sentinel_dir = "D:/fordead/Data/Sentinel", 
         #     export_dir = "D:/fordead/Data/Test_programme",
         #     name_column = "Id")
-        # export_reflectance_from_polygons(
-        #     polygons_path = "/mnt/fordead/Data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
-        #     sentinel_dir = "/mnt/fordead/Data/Sentinel", 
-        #     export_dir = "/mnt/fordead/Data",
-        #     name_column = "Id")
         export_reflectance_from_polygons(
-            polygons_path = "/mnt/fordead/Data/Vecteurs/Export_57_2022.shp",
+            polygons_path = "/mnt/fordead/Data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
             sentinel_dir = "/mnt/fordead/Data/Sentinel", 
-            export_dir = "/mnt/fordead/Out/Validation/Gilette")
+            export_dir = "/mnt/fordead/Data",
+            name_column = "Id")
+        # export_reflectance_from_polygons(
+        #     polygons_path = "/mnt/fordead/Data/Vecteurs/Export_57_2022.shp",
+        #     sentinel_dir = "/mnt/fordead/Data/Sentinel", 
+        #     export_dir = "/mnt/fordead/Out/Validation/Gilette")
         
     print("Export reflectance : %s secondes ---" % (time.time() - start_time_debut))
 
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     stats.sort_stats(pstats.SortKey.TIME)
     stats.print_stats()
     # stats.dump_stats("D:/fordead/Data/Test_programme/profiling_stats.prof")
-    # stats.dump_stats("/mnt/fordead/Data/profiling_stats.prof")
+    stats.dump_stats("/mnt/fordead/Data/profiling_stats.prof")
     
     
     # raster_path = "D:/fordead/Data/Sentinel/SENTINEL2B_20220611-104734-621_L2A_T32ULU_C_V3-0_FRE_B8A.tif"
