@@ -151,7 +151,7 @@ def polygons_to_grid_points(obs_polygons, polygon_area_crs, name_column):
                 obs_grid.insert(1,"id_pixel",range(len(obs_grid)))
                 obs_grid.insert(0,"area_name",area_name)
                 obs_grid.insert(0,"epsg",epsg)
-                obs_grid.to_crs(polygons.crs)
+                obs_grid = obs_grid.to_crs(polygons.crs)
                 grid_list += [obs_grid]
             
     grid_points = gp.GeoDataFrame( pd.concat(grid_list, ignore_index=True), crs=grid_list[0].crs)
@@ -181,7 +181,7 @@ def get_reflectance_at_points(grid_points,sentinel_dir):
             print("area_name : " + area_name)
             points_area = points_epsg[points_epsg.area_name == area_name]
             
-            raster_values = extract_raster_values3(points_area, sentinel_dir / area_name)
+            raster_values = extract_raster_values(points_area, sentinel_dir / area_name)
             reflectance_list += [raster_values]
     # reflectance = gp.GeoDataFrame(pd.concat(reflectance_list, ignore_index=True), crs=reflectance_list[0].crs)
     reflectance = pd.concat(reflectance_list, ignore_index=True)
