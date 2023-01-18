@@ -199,9 +199,9 @@ def extract_raster_values(points,sentinel_dir):
     
     coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
     date_band_value_list = []
-    for date in tile.paths["Sentinel"]:
-        print(date)
-        dates_values = points.copy()
+    for date_index, date in enumerate(tile.paths["Sentinel"]):
+        print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
+        dates_values = points.copy().drop(columns='geometry')
         dates_values.insert(4,"Date",date)
         # len(dates_values.columns)-1
         for band in tile.paths["Sentinel"][date]:
@@ -212,8 +212,8 @@ def extract_raster_values(points,sentinel_dir):
                 dates_values[band] = [x[0] for x in raster.sample(coord_list)]
             
         date_band_value_list += [dates_values]
-        
-    reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
+    # reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
+    reflectance = pd.concat(date_band_value_list, ignore_index=True)
     return reflectance
 
 from osgeo import gdal

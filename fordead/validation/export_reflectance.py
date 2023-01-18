@@ -46,6 +46,7 @@ def export_reflectance(obs_path, sentinel_dir, export_dir, buffer = None, name_c
         points.to_crs(preprocessed_obs.crs).to_file(Path(export_dir) / (str(Path(obs_path).stem) + "_grid.shp"))
     else:
         points = obs
+    print("Extracting reflectance")
     reflectance = get_reflectance_at_points(points,sentinel_dir)
 
     reflectance.to_csv(Path(export_dir) / "reflectance.csv", index=False)
