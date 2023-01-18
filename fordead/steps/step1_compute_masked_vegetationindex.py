@@ -188,7 +188,7 @@ def compute_masked_vegetationindex(
             else:
                 soil_data = initialize_soil_data(tile.raster_meta["shape"],tile.raster_meta["coords"])
 
-        tile.used_bands, tile.vi_formula = get_bands_and_formula(vi, path_dict_vi, forced_bands = ["B2","B3","B4", "B11"] if soil_detection else get_bands_and_formula(formula = formula_mask)[0]) #Selects only relevant bands depending on used vegetation index plus forced_bands used in masks
+        tile.used_bands, tile.vi_formula = get_bands_and_formula(vi, path_dict_vi = path_dict_vi, forced_bands = ["B2","B3","B4", "B8A","B11"] if soil_detection else get_bands_and_formula(formula = formula_mask)[0]) #Selects only relevant bands depending on used vegetation index plus forced_bands used in masks
 
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:
