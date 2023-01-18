@@ -19,28 +19,28 @@ from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 # PREPROCESS POLYGONS
 # =============================================================================
 
-def preprocess_polygons(polygons, sentinel_dir, buffer, name_column):
+def preprocess_obs(obs, sentinel_dir, buffer, name_column):
         
-    polygons = attribute_id_to_obs(polygons, name_column)
+    obs = attribute_id_to_obs(obs, name_column)
 
     if buffer is not None:
-        polygons = buffer_obs(polygons, buffer, name_column)
+        obs = buffer_obs(obs, buffer, name_column)
         
-    return polygons
+    return obs
 
-def attribute_id_to_obs(polygons, name_column):
-    if name_column not in polygons.columns:
+def attribute_id_to_obs(obs, name_column):
+    if name_column not in obs.columns:
         print("Creating " + name_column + " column")
-        polygons.insert(1, name_column, range(1,len(polygons)+1))
-    return polygons
+        obs.insert(1, name_column, range(1,len(obs)+1))
+    return obs
 
-def buffer_obs(polygons, buffer, name_column):
-    polygons['geometry']=polygons.geometry.buffer(buffer)
-    empty_obs = polygons[polygons.is_empty]
+def buffer_obs(obs, buffer, name_column):
+    obs['geometry']=obs.geometry.buffer(buffer)
+    empty_obs = obs[obs.is_empty]
     if len(empty_obs) != 0:
         print(str(len(empty_obs)) + " observations were too small for the chosen buffer. \nIds are the following : \n" + ', '.join(map(str, empty_obs[name_column])) + " ")
-    polygons=polygons[~(polygons.is_empty)]
-    return polygons
+    obs=obs[~(obs.is_empty)]
+    return obs
 
 
 # =============================================================================

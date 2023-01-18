@@ -11,6 +11,8 @@ from fordead.cli.cli_read_tileinfo import cli_read_tileinfo
 from fordead.cli.cli_theia_preprocess import cli_theia_preprocess
 from fordead.visualisation.vi_series_visualisation import cli_vi_series_visualisation
 from fordead.visualisation.create_timelapse import cli_create_timelapse
+from fordead.validation.export_reflectance import cli_export_reflectance
+
 
 class OrderedGroup(click.Group):
     # ref: https://stackoverflow.com/questions/47972638/how-can-i-define-the-order-of-click-sub-commands-in-help
@@ -39,6 +41,7 @@ fordead.add_command(cli_read_tileinfo)
 fordead.add_command(cli_theia_preprocess)
 fordead.add_command(cli_vi_series_visualisation)
 fordead.add_command(cli_create_timelapse)
+fordead.add_command(cli_export_reflectance)
 
 if __name__ == '__main__':  # pragma: no cover
     fordead()
