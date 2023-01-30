@@ -19,7 +19,7 @@ from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 # PREPROCESS POLYGONS
 # =============================================================================
 
-def preprocess_obs(obs, sentinel_dir, buffer, name_column):
+def preprocess_validation_data(obs, buffer, name_column):
         
     obs = attribute_id_to_obs(obs, name_column)
 
@@ -147,7 +147,7 @@ def polygons_to_grid_points(obs_polygons, polygon_area_crs, name_column):
                 
                 obs_grid = gp.clip(obs_grid, polygon)
                 
-                obs_grid.insert(0,"id_obs",polygon[name_column].iloc[0])
+                obs_grid.insert(0,name_column,polygon[name_column].iloc[0])
                 obs_grid.insert(1,"id_pixel",range(len(obs_grid)))
                 obs_grid.insert(0,"area_name",area_name)
                 obs_grid.insert(0,"epsg",epsg)
@@ -188,8 +188,6 @@ def get_reflectance_at_points(grid_points,sentinel_dir):
 
     return reflectance
 
-# from rasterio.sample import sort_xy      
-
 
 def extract_raster_values(points,sentinel_dir):
     """Must have the same crs"""
@@ -198,10 +196,11 @@ def extract_raster_values(points,sentinel_dir):
     tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
     
     coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
+    points = points.drop(columns='geometry')
     date_band_value_list = []
     for date_index, date in enumerate(tile.paths["Sentinel"]):
         print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
-        dates_values = points.copy().drop(columns='geometry')
+        dates_values = points.copy()
         dates_values.insert(4,"Date",date)
         # len(dates_values.columns)-1
         for band in tile.paths["Sentinel"][date]:
@@ -216,76 +215,66 @@ def extract_raster_values(points,sentinel_dir):
     reflectance = pd.concat(date_band_value_list, ignore_index=True)
     return reflectance
 
-from osgeo import gdal
+# ==========================================================================================================================================================
 
-def extract_raster_values3(points,sentinel_dir):
-    """Must have the same crs"""
-    tile = TileInfo(sentinel_dir)
-    tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
-    tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
+# =============================================================================
+#   process_points
+# =============================================================================
+
+def process_points(points, sentinel_dir, name_column):
+    #Check if already has name_area
+    # sen_polygons = get_points_area_crs(points, sentinel_dir, name_column)
     
-    coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
-    dates = list(tile.paths["Sentinel"])
-    bands = list(tile.paths["Sentinel"][list(tile.paths["Sentinel"])[0]])
+    sen_polygons = get_polygons_from_sentinel_dirs(sentinel_dir)
+    
+    sen_intersection_points = get_sen_intersection_points(points, sen_polygons, name_column)
 
-    dict_data = {"id_obs" : [id_obs for id_obs in points.id_obs for date in dates],
-                 "id_pixel" : [id_pixel for id_pixel in points.id_pixel for date in dates],
-                 "Date" : [date for id_obs in points.id_obs for date in dates]}
-    for band in bands:
-        print(band)
-        dict_data[band] = []
-        path_list = [str(tile.paths["Sentinel"][date][band]) for date in dates]
-        gdal.BuildVRT(str(sentinel_dir / "vrt.vrt"), path_list, separate=True)
-        with rasterio.open(str(sentinel_dir / "vrt.vrt")) as raster:
-            reflect_band = raster.sample(coord_list)
-            # dict_data[band] = list(reflect_band)
-            # list(reflect_band)
-            for x in reflect_band:
-                dict_data[band] += list(x)
-
-    reflectance = pd.DataFrame(data=dict_data)
-    return reflectance
+    return sen_intersection_points[["epsg","area_name",name_column,"id_pixel","geometry"]]
+    
+    
+def get_sen_intersection_points(points, sen_polygons, name_column):
+    sen_polygons = sen_polygons.to_crs(points.crs)
+    obs_intersection = gp.overlay(points, sen_polygons)
+    # obs_intersection["id_pixel"] = 0
+    obs_intersection.insert(1,"id_pixel",0) #Insert column
+    return obs_intersection
     
 
+
+
+# def extract_raster_values_vrt(points,sentinel_dir):
+#     """Must have the same crs"""
+
+# from osgeo import gdal
+
+#     tile = TileInfo(sentinel_dir)
+#     tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+#     tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
     
-    # date_band_value_list = []
-    # for date in tile.paths["Sentinel"]:
-    #     print(date)
-    #     dates_values = points.copy()
-    #     dates_values.insert(4,"Date",date)
-    #     # len(dates_values.columns)-1
-    #     for band in tile.paths["Sentinel"][date]:
-    #         with rasterio.open(tile.paths["Sentinel"][date][band]) as raster:
-    
-    #         # reproj_points = points.to_crs(raster.crs)
-    #             # rasterio.sample.sort_xy(coord_list)
-    #             dates_values[band] = [x[0] for x in raster.sample(coord_list)]
-            
-    #     date_band_value_list += [dates_values]
-        
-    # reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
-    # return reflectance
-
-# outvrt = 'D:/fordead/Data/Test_programme/vrt.vrt' #/vsimem is special in-memory virtual "directory"
-# outtif = 'D:/fordead/Data/Test_programme/stacked.tif'
-
-
-    # dates = list(tile.paths["Sentinel"])
+#     coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
+#     dates = list(tile.paths["Sentinel"])
 #     bands = list(tile.paths["Sentinel"][list(tile.paths["Sentinel"])[0]])
-        # path_list = [str(tile.paths["Sentinel"][date][band]) for date in dates]
 
+#     dict_data = {"id_obs" : [id_obs for id_obs in points.id_obs for date in dates],
+#                  "id_pixel" : [id_pixel for id_pixel in points.id_pixel for date in dates],
+#                  "Date" : [date for id_obs in points.id_obs for date in dates]}
+#     for band in bands:
+#         print(band)
+#         dict_data[band] = []
+#         path_list = [str(tile.paths["Sentinel"][date][band]) for date in dates]
+#         gdal.BuildVRT(str(sentinel_dir / "vrt.vrt"), path_list, separate=True)
+#         with rasterio.open(str(sentinel_dir / "vrt.vrt")) as raster:
+#             reflect_band = raster.sample(coord_list)
+#             # dict_data[band] = list(reflect_band)
+#             # list(reflect_band)
+#             for x in reflect_band:
+#                 dict_data[band] += list(x)
 
+#     reflectance = pd.DataFrame(data=dict_data)
+#     return reflectance
+    
 
-
-# outds = gdal.Translate(outtif, outds)
-
-
-#Pour chaque bande
-#créer un vrt
-#Extraire les 369 dates
-#Créer un dictionnaire
-
-# def extract_raster_values2(points,sentinel_dir):
+# def extract_raster_values_chunks(points,sentinel_dir):
 #     """Must have the same crs"""
 #     tile = TileInfo(sentinel_dir)
 #     tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
