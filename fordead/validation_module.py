@@ -19,22 +19,50 @@ from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 # PREPROCESS POLYGONS
 # =============================================================================
 
-def preprocess_validation_data(obs, buffer, name_column):
-        
-    obs = attribute_id_to_obs(obs, name_column)
-
-    if buffer is not None:
-        obs = buffer_obs(obs, buffer, name_column)
-        
-    return obs
 
 def attribute_id_to_obs(obs, name_column):
+    """
+    Adds an ID column if it doesn't already exists. If column named after name_column parameter does not exist in the geodataframe, adds one with integers from 1 to the number of observations.
+
+    Parameters
+    ----------
+    obs : geopandas GeoDataFrame
+        Observation points or polygons
+    name_column : str
+        Name of the ID column.
+
+    Returns
+    -------
+    obs : geopandas GeoDataFrame
+        Observation points or polygons with added column named using parameter name_column if it doesn't already exist.
+
+    """
+    
     if name_column not in obs.columns:
         print("Creating " + name_column + " column")
         obs.insert(1, name_column, range(1,len(obs)+1))
     return obs
 
 def buffer_obs(obs, buffer, name_column):
+    """
+    Applies a buffer to dilate or erode observations. Names of discarded observations too small compared to a eroding buffer are printed.
+
+    Parameters
+    ----------
+    obs : geopandas GeoDataFrame
+        Observation points or polygons with a column named name_column used to identify observations.
+    buffer : int
+        Length in meters of the buffer used to dilate (positive integer) or erode (negative integer) the observations. Some observations may disappear completely if a negative buffer is applied.
+    name_column : str
+        Name of the column used to identify observations.
+
+    Returns
+    -------
+    obs : geopandas GeoDataFrame
+        Observation polygons with the buffer applied.
+
+    """
+    
     obs['geometry']=obs.geometry.buffer(buffer)
     empty_obs = obs[obs.is_empty]
     if len(empty_obs) != 0:
@@ -48,23 +76,76 @@ def buffer_obs(obs, buffer, name_column):
 # =============================================================================
 
 def get_grid_points(obs_polygons, sentinel_dir, name_column):
+    """
+    Generates points in a grid corresponding to the centroids of Sentinel-2 pixels inside the polygons.
     
-    polygon_area_crs = get_polygon_area_crs(obs_polygons, sentinel_dir, name_column)
+
+    Parameters
+    ----------
+    obs_polygons : geopandas GeoDataFrame
+        Observation polygons with a column named name_column used to identify observations.
+    sentinel_dir : str
+        Path of directory containing Sentinel-2 data.
+    name_column : str
+        Name of the column used to identify observations.
+
+    Returns
+    -------
+    grid_points : geopandas GeoDataFrame
+        Points corresponding to the centroids of the Sentinel-2 pixels of each Sentinel-2 tile intersecting with the polygons.
+
+    """
     
-    grid_points = polygons_to_grid_points(obs_polygons, polygon_area_crs, name_column)
+    sen_obs_intersection = get_sen_obs_intersection(obs_polygons, sentinel_dir, name_column)
+    
+    grid_points = polygons_to_grid_points(sen_obs_intersection, name_column)
     
     return grid_points
     
 
-def get_polygon_area_crs(obs_polygons, sentinel_dir, name_column):
+def get_sen_obs_intersection(obs_polygons, sentinel_dir, name_column):
+    """
+    Creates a Sentinel-2 tiles extent vector from existing Sentinel-2 data, then intersects it with observations polygons, adding their epsg and name.
+    Polygons which do not fit enterely in at least one existing Sentinel-2 tile are removed.
+    
+    Parameters
+    ----------
+    obs_polygons : geopandas GeoDataFrame
+        Observation polygons with ID column named after name_column parameter.
+    sentinel_dir : str
+        Path of directory containing Sentinel-2 data.
+    name_column : str
+        Name of the column used to identify observations.
+
+    Returns
+    -------
+    sen_intersection : geopandas GeoDataFrame
+        Intersection of obs_polygons and Sentinel-2 tiles, adding 'area_name' and 'epsg' columns corresponding to the name of the tile, and the projection system respectively. 
+
+    """
     
     sen_polygons = get_polygons_from_sentinel_dirs(sentinel_dir)
     
-    sen_intersection = get_sen_intersection(obs_polygons, sen_polygons, name_column)
+    sen_obs_intersection = get_sen_intersection(obs_polygons, sen_polygons, name_column)
     
-    return sen_intersection
+    return sen_obs_intersection
 
 def get_polygons_from_sentinel_dirs(sentinel_dir):
+    """
+    Creates a Sentinel-2 tiles extent vector from existing Sentinel-2 data
+
+    Parameters
+    ----------
+    sentinel_dir : str
+        Path of directory containing Sentinel-2 data.
+
+    Returns
+    -------
+    concat_areas : geopandas GeoDataFrame
+        Vector containing the extent of Sentinel-2 tiles contained in sentinel_dir directory, with 'epsg' and 'area_name' columns corresponding to the projection system and the name of the tile derived from the name of the directory containing its data.
+
+    """
+    
     list_dir = [x for x in sentinel_dir.iterdir() if x.is_dir()]
     dict_example_raster = {}
     for directory in list_dir:
@@ -97,6 +178,26 @@ def get_polygons_from_sentinel_dirs(sentinel_dir):
     return concat_areas
 
 def get_sen_intersection(obs_polygons, sen_polygons, name_column):
+    """
+    Observations polygons are intesected with Sentinel-2 tiles extent vector. Intersections where the observation polygon did not entirely fit in the sentinel-2 tile are removed.
+    Observation polygons which intersect no Sentinel-2 tiles are removed and their IDs are printed.
+
+
+    Parameters
+    ----------
+    obs_polygons : geopandas GeoDataFrame
+        Polygons of observations.
+    sen_polygons : geopandas GeoDataFrame
+        Polygons of Sentinel-2 tiles extent with 'area_name' and 'epsg' columns corresponding to the name of the tile, and the projection system respectively.
+    name_column : str
+        Name of the ID column.
+
+    Returns
+    -------
+    geopandas GeoDataFrame
+        Intersection of obs_polygons and sen_polygons, with incomplete intersections removed.
+
+    """
     
     obs_polygons = obs_polygons.to_crs(sen_polygons.crs)
     obs_area_tot = obs_polygons[[name_column]]
@@ -111,15 +212,33 @@ def get_sen_intersection(obs_polygons, sen_polygons, name_column):
     unvalid_obs = obs_polygons[~obs_polygons[name_column].isin(obs_intersection[name_column])]
     if len(unvalid_obs) != 0:
         print("Observations not fitting entirely on one tile found.\nThey are removed from the dataset. \nIds are the following : \n" + ', '.join(map(str, unvalid_obs[name_column])) + " ")
-    return obs_intersection[[name_column,"area_name","epsg"]]
+    
+    # return obs_intersection[[name_column,"area_name","epsg"]]
+    return obs_intersection.drop(columns = ["area_intersect","area_tot"])
 
 
 # =============================================================================
 
 
-def polygons_to_grid_points(obs_polygons, polygon_area_crs, name_column):
+def polygons_to_grid_points(polygons, name_column):
+    """
+    Converts polygons to points corresponding to the centroids of the Sentinel-2 pixels of each Sentinel-2 tile intersecting with the polygons.
+
+    Parameters
+    ----------
+    polygons : geopandas GeoDataFrame
+        Observation polygons with 'area_name' and 'epsg' columns, corresponding to the name of a Sentinel-2 tile and its CRS respectively.
+    name_column : str
+        Name of the ID column.
+
+    Returns
+    -------
+    grid_points : geopandas GeoDataFrame
+        Points corresponding to the centroids of the Sentinel-2 pixels of each Sentinel-2 tile intersecting with the polygons.
+
+    """
     
-    polygons = obs_polygons.merge(polygon_area_crs, on= name_column, how='inner')
+    # polygons = obs_polygons.merge(polygon_area_crs, on= name_column, how='inner') 
     
     grid_list = []
     for epsg in np.unique(polygons.epsg):
@@ -158,6 +277,21 @@ def polygons_to_grid_points(obs_polygons, polygon_area_crs, name_column):
     return grid_points
 
 def get_bounds(obs):
+    """
+    Get bounds of around of a polygons so it matches the limits of Sentinel-2 pixels
+    
+    Parameters
+    ----------
+    obs : geopandas GeoDataFrame
+        A polygon
+
+    Returns
+    -------
+    bounds : 1D array
+        Bounds around the polygon
+
+    """
+    
     bounds = obs["geometry"].total_bounds 
     bounds[[0,1]] = bounds[[0,1]] - bounds[[0,1]] % 10 - 5
     bounds[[2,3]] = bounds[[2,3]] - bounds[[2,3]] % 10 + 15
@@ -222,6 +356,25 @@ def extract_raster_values(points,sentinel_dir):
 # =============================================================================
 
 def process_points(points, sentinel_dir, name_column):
+    """
+    Creates a Sentinel-2 tiles extent vector from existing Sentinel-2 data, then intersects it with observations points, adding their epsg and name.
+
+    Parameters
+    ----------
+    points : geopandas GeoDataFrame
+        Points used to intersect with Sentinel-2 tiles.
+    sentinel_dir : str
+        Path of directory containing Sentinel-2 data.
+    name_column : str
+        Name of the ID column in points.
+
+    Returns
+    -------
+    geopandas GeoDataFrame
+        Points with added 'epsg', 'area_name' and 'id_pixel' columns.
+
+    """
+    
     #Check if already has name_area
     # sen_polygons = get_points_area_crs(points, sentinel_dir, name_column)
     
@@ -233,6 +386,26 @@ def process_points(points, sentinel_dir, name_column):
     
     
 def get_sen_intersection_points(points, sen_polygons, name_column):
+    """
+    Intersects observation points with Sentinel-2 tiles extent vector.
+    Adds an 'id_pixel' column filled with 0 so the resulting vector can be used in export_reflectance function.
+
+    Parameters
+    ----------
+    points : geopandas GeoDataFrame
+        Observation points used for intersection
+    sen_polygons : geopandas GeoDataFrame
+        Polygons of Sentinel-2 tiles extent with 'area_name' and 'epsg' columns corresponding to the name of the tile, and the projection system respectively.
+    name_column : str
+        Name of the ID column in points
+
+    Returns
+    -------
+    obs_intersection : geopandas GeoDataFrame
+        Intersection of points and sen_polygons, with added 'id_pixel' columns
+
+    """
+    
     sen_polygons = sen_polygons.to_crs(points.crs)
     obs_intersection = gp.overlay(points, sen_polygons)
     # obs_intersection["id_pixel"] = 0
