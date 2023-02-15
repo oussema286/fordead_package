@@ -11,9 +11,9 @@ from fordead.cli.cli_read_tileinfo import cli_read_tileinfo
 from fordead.cli.cli_theia_preprocess import cli_theia_preprocess
 from fordead.visualisation.vi_series_visualisation import cli_vi_series_visualisation
 from fordead.visualisation.create_timelapse import cli_create_timelapse
-from fordead.validation.preprocess_obs import cli_preprocess_obs
-from fordead.validation.obs_to_s2_grid import cli_obs_to_s2_grid
-from fordead.validation.extract_reflectance import cli_extract_reflectance
+from fordead.validation_module.preprocess_obs import cli_preprocess_obs
+from fordead.validation_module.obs_to_s2_grid import cli_obs_to_s2_grid
+from fordead.validation_module.extract_reflectance import cli_extract_reflectance
 
 class OrderedGroup(click.Group):
     # ref: https://stackoverflow.com/questions/47972638/how-can-i-define-the-order-of-click-sub-commands-in-help
