@@ -44,4 +44,4 @@ The outputs of this step, in the data_directory folder, are :
 
 > **_NOTE :_** Though this step is presented as the fourth, it can actually be used at any point, even on its own in which case the parameter **path_example_raster** is needed to give a raster from which to copy the extent, resolution, etc...
 
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/03_dieback_detection) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/05_export_results)
+[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/03_dieback_detection) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/05_export_results)

@@ -65,4 +65,4 @@ If **soil_detection** is False, any logical operation formula can be used in **f
 If **soil_detection** is True, then the masks include bare ground detection as describe in the [step guide](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/), which can be useful but it has only been tested on THEIA data over France's coniferous forests and might not be adapted to other contexts and types of data. This package has been used in France to map bark beetle infested stands. In this context, bare ground detection has been useful to filter out clear cuts, deciduous forests as well as late stage bark beetle infested forest stands. This option is described in the step guide, but will not be exploited in this tutorial.
 
 
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/00_Intro) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/02_train_model)
+[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/00_Intro) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/02_train_model)

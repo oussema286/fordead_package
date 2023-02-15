@@ -18,7 +18,7 @@ Data from other providers ([ESA-Copernicus](https://scihub.copernicus.eu/), [CNE
 
 For this tutorial, you should have 900Mo of memory space, to download the package, the tutorial dataset, and save the computed results.
 
-[NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/01_compute_masked_vegetationindex)
+[NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/01_compute_masked_vegetationindex)
 
 
 

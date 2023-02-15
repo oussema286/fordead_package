@@ -54,4 +54,4 @@ The outputs of this processing step are described hereafter :
 - **TimelessMasks** directory: the binary raster **sufficient_coverage_mask.tif** is written. This mask  takes the value 1 for valid pixels for which a model can be computed, 0 for invalid pixels.
 
 
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/01_compute_masked_vegetationindex) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/03_dieback_detection)
+[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/01_compute_masked_vegetationindex) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/03_dieback_detection)

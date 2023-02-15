@@ -53,4 +53,4 @@ It is possible to zoom in on the desired area by holding down the click while de
 
 > **_NOTE :_** It is also possible to have detected pixels appear as their confidence class using **show_confidence_class** parameter, or have points, lines or polygons from a custom shapefile appear on the timelapse using **vector_display_path** and **hover_column_list** parameters. The resulting html files can also be automatically zipped using the **zip_results** parameter.
 
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/05_export_results) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/07_create_graphs)
+[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/05_export_results) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/07_create_graphs)

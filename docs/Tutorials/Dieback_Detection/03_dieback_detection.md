@@ -62,4 +62,4 @@ The outputs of this step, in the data_directory folder, are :
 
 
 
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/02_train_model) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/04_compute_forest_mask)
+[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/02_train_model) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/04_compute_forest_mask)

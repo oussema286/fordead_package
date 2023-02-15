@@ -23,7 +23,7 @@ Here is an example of the result of these steps on a small area :
 
 Period of detection | Confidence class
 :-------------------------:|:-------------------------:
-![gif_results_original](docs/Tutorial/Figures/gif_results_original.gif "gif_results_original") | ![gif_results_confidence](docs/Tutorial/Figures/gif_results_confidence.gif "gif_results_confidence")
+![gif_results_original](docs/Tutorials/Dieback_Detection/Figures/gif_results_original.gif "gif_results_original") | ![gif_results_confidence](docs/Tutorials/Dieback_Detection/Figures/gif_results_confidence.gif "gif_results_confidence")
 
 ## Visualisation tools
 
@@ -32,11 +32,11 @@ The first one plots the time series of the vegetation index for a particular pix
 
 Healthy pixel | Attacked pixel
 :-------------------------:|:-------------------------:
-![graph_healthy](docs/Tutorial/Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](docs/Tutorial/Figures/graph_dieback.png "graph_dieback")
+![graph_healthy](docs/Tutorials/Dieback_Detection/Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](docs/Tutorials/Dieback_Detection/Figures/graph_dieback.png "graph_dieback")
 
 The second one makes a "timelapse" on a small area for visualizing the results at each used Sentinel-2 date, with SENTINEL-2 natural color composites in background. A slider also allows you to navigate between the different dates.
 
-![gif_timelapse](docs/Tutorial/Figures/gif_timelapse.gif "gif_timelapse")
+![gif_timelapse](docs/Tutorials/Dieback_Detection/Figures/gif_timelapse.gif "gif_timelapse")
 
 ## Installation
 
@@ -44,7 +44,7 @@ The installation guide can be found [here](https://fordead.gitlab.io/fordead_pac
 
 ## Tutorial
 
-A tutorial for getting started, and testing the package on a small dataset, can be found [here](https://fordead.gitlab.io/fordead_package/docs/Tutorial/00_Intro/).
+A tutorial for getting started, and testing the package on a small dataset, can be found [here](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/00_Intro/).
 
 ## Associated publications
 
