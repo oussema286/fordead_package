@@ -304,7 +304,7 @@ def get_bounds(obs):
 # =============================================================================
 
 
-def get_reflectance_at_points(grid_points,sentinel_dir):
+def get_reflectance_at_points(grid_points,sentinel_dir, extracted_reflectance, name_column):
     reflectance_list = []
     for epsg in np.unique(grid_points.epsg):
         print("epsg : " + str(epsg))
@@ -315,15 +315,23 @@ def get_reflectance_at_points(grid_points,sentinel_dir):
             print("area_name : " + area_name)
             points_area = points_epsg[points_epsg.area_name == area_name]
             
-            raster_values = extract_raster_values(points_area, sentinel_dir / area_name)
-            reflectance_list += [raster_values]
+            if extracted_reflectance is not None:
+                extracted_reflectance_area = extracted_reflectance[extracted_reflectance["area_name"] == area_name]
+            
+            raster_values = extract_raster_values(points_area, sentinel_dir / area_name, extracted_reflectance_area, name_column)
+            
+            if raster_values is not None:
+                reflectance_list += [raster_values]
     # reflectance = gp.GeoDataFrame(pd.concat(reflectance_list, ignore_index=True), crs=reflectance_list[0].crs)
-    reflectance = pd.concat(reflectance_list, ignore_index=True)
-
+    if len(reflectance_list) != 0:
+        reflectance = pd.concat(reflectance_list, ignore_index=True)
+    else:
+        reflectance = None
+        
     return reflectance
 
 
-def extract_raster_values(points,sentinel_dir):
+def extract_raster_values(points,sentinel_dir, extracted_reflectance, name_column):
     """Must have the same crs"""
     tile = TileInfo(sentinel_dir)
     tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
@@ -332,22 +340,46 @@ def extract_raster_values(points,sentinel_dir):
     coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
     points = points.drop(columns='geometry')
     date_band_value_list = []
+    
+    #Determiner les dates qui restent.
+    to_extract_reflectance = points[["area_name", name_column]].drop_duplicates()
+    #Supprimer duplicates id_pixel
+    
+    
+    #inner_join extracted_reflectance avec marqueur
+    extracted_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
+    # to_extract_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
+    #list_dates de unique dates
+    
+    
     for date_index, date in enumerate(tile.paths["Sentinel"]):
         print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
-        dates_values = points.copy()
-        dates_values.insert(4,"Date",date)
-        # len(dates_values.columns)-1
-        for band in tile.paths["Sentinel"][date]:
-            with rasterio.open(tile.paths["Sentinel"][date][band]) as raster:
-    
-            # reproj_points = points.to_crs(raster.crs)
-                # rasterio.sample.sort_xy(coord_list)
-                dates_values[band] = [x[0] for x in raster.sample(coord_list)]
-            
-        date_band_value_list += [dates_values]
+        extraction = points.copy()
+        
+        #Filter les points selon la date
+        extracted_reflectance_date = extracted_reflectance[extracted_reflectance["Date"] == date]
+        
+        #Filter extracted_reflectance avec les date
+        extraction = extraction[~extraction[name_column].isin(extracted_reflectance_date[name_column])]
+        
+        if len(extraction) != 0:
+            extraction.insert(4,"Date",date)
+            # len(extraction.columns)-1
+            for band in tile.paths["Sentinel"][date]:
+                with rasterio.open(tile.paths["Sentinel"][date][band]) as raster:
+        
+                # reproj_points = points.to_crs(raster.crs)
+                    # rasterio.sample.sort_xy(coord_list)
+                    extraction[band] = [x[0] for x in raster.sample(coord_list)]
+                
+            date_band_value_list += [extraction]
     # reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
-    reflectance = pd.concat(date_band_value_list, ignore_index=True)
-    return reflectance
+    if len(date_band_value_list) != 0:
+        reflectance = pd.concat(date_band_value_list, ignore_index=True)
+        return reflectance
+    else:
+        return None
+    
 
 # ==========================================================================================================================================================
 
@@ -413,8 +445,37 @@ def get_sen_intersection_points(points, sen_polygons, name_column):
     return obs_intersection
     
 
+def get_already_extracted(export_path, obs, obs_path, name_column):
+    if export_path.exists():
+        reflectance = pd.read_csv(export_path)
+        if name_column not in reflectance.columns:
+            # raise Exception("name_column '"+ name_column + "' not in reflectance.csv found in " + str(export_dir))
+            raise Exception("name_column '"+ name_column + "' not in " + str(export_path))
 
+        extracted_reflectance = reflectance[["area_name", name_column,"Date"]].drop_duplicates()
+        
+        obs_extracted = np.unique(extracted_reflectance[name_column])
+        obs_to_extract = np.unique(obs[name_column])
+        
+        diff_nb_obs = len(obs_extracted) != len(obs_to_extract)
+        missing_obs = not(all(item in obs_to_extract for item in obs_extracted))
+        added_obs = not(all(item in obs_extracted for item in obs_to_extract))
+        
+        if diff_nb_obs or missing_obs or added_obs:
+            print("Changes to "+ str(obs_path) + " have been detected since last extracting reflectances to " + str(export_path))
+            if diff_nb_obs:
+                print("Different number of observations detected")
+            if missing_obs:
+                print("Some observations are missing, already extracted reflectance will stay untouched")
+            if added_obs:
+                print("Some observations were added, their reflectance will be extracted")
+            answer = input("Do you want to continue ? (yes/no)")
+            if answer != "yes":
+                raise Exception("Extraction of reflectance stopped")
 
+        return extracted_reflectance
+    else:
+        return None
 # def extract_raster_values_vrt(points,sentinel_dir):
 #     """Must have the same crs"""
 
