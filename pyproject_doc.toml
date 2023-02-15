@@ -76,7 +76,7 @@ Installation = "docs/Installation.md"
 			"Updating detection" = "docs/Tutorials/Dieback_Detection/08_updating_detection.md"
 	[[tool.portray.mkdocs.nav.Tutorials]]
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
-			"Introduction" = "docs/Tutorials/Dieback_Detection/00_Intro.md"
+			"Introduction" = "docs/Tutorials/Validation/00_Intro.md"
 
 	
 [[tool.portray.mkdocs.nav]]
