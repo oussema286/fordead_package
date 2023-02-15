@@ -25,7 +25,7 @@ Run the following instructions to perform this processing step:
 ```python
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 
-input_directory = "<MyWorkingDirectory>/study_area"
+input_directory = "<MyWorkingDirectory>/sentinel_data/dieback_detection_tutorial/study_area"
 data_directory = "<output directory>"
 
 compute_masked_vegetationindex(input_directory = input_directory, 
@@ -43,7 +43,7 @@ compute_masked_vegetationindex(input_directory = input_directory,
 
 The steps in this package can also be ran from the command prompt. The command `fordead masked_vi -h` will print the help information of this step. For example, to use it with the same parameters, the following command can be used:
 ```bash
-fordead masked_vi -i <MyWorkingDirectory>/study_area -o <output directory> -n 0.4 --interpolation_order 0 --sentinel_source THEIA --formula_mask "(B2 > 600)" --vi CRSWIR --apply_source_mask
+fordead masked_vi -i <MyWorkingDirectory>/sentinel_data/dieback_detection_tutorial/study_area -o <output directory> -n 0.4 --interpolation_order 0 --sentinel_source THEIA --formula_mask "(B2 > 600)" --vi CRSWIR --apply_source_mask
 ```
 
 > **_NOTE :_** If the same parameters are used, the SENTINEL-2 dates already computed are ignored. However, if you change any parameter, all previous results will be deleted and calculated again. If new SENTINEL-2 data are added in the **input_directory**, they will be computed as long as they are more recent than the last computed SENTINEL-2 date. This way of saving information on previous processes and paths is done using fordead's [TileInfo](https://fordead.gitlab.io/fordead_package/docs/examples/ex_tileinfo_object/) class, of which an object is saved in the data_directory and is retrieved each time a process is launched.

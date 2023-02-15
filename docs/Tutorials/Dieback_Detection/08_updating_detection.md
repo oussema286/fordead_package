@@ -14,7 +14,7 @@ from fordead.steps.step5_export_results import export_results
 from fordead.visualisation.create_timelapse import create_timelapse
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
 
-input_directory = "<MyWorkingDirectory>/study_area"
+input_directory = "<MyWorkingDirectory>/sentinel_data/dieback_detection_tutorial/study_area"
 data_directory = "<output directory>"
 
 compute_masked_vegetationindex(input_directory = input_directory, 
