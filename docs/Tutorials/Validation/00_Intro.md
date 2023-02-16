@@ -28,6 +28,8 @@ The Sentinel-2 data we will use in this example, follows the following file tree
 And the vector file containing observation data has the following path : fordead_data/vector/observations_tuto.shp
 Here they are shown, against the Sentinel-2 acquisition of 27-02-2019 on tile T31UGP along with their attributes.
 
+Observations on the Sentinel-2 acquisition of 27-02-2019   |  Attribute table of the observations
+:-------------------------:|:-------------------------:
 ![observations](Figures/observations.png "observations")  |  ![observation_dataframe](Figures/observation_dataframe.png "observation_dataframe")
 
 The observations can be polygons or points, but they must have an ID column which is called "id" in this dataset.

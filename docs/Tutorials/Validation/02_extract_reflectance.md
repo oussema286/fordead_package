@@ -29,6 +29,7 @@ fordead extract_reflectance --obs_path <MyWorkingDirectory>/vector/preprocessed_
 ```
 
 This step yields a csv file at export_path, with the following attributes : 
+
 ![extracted_reflectance](Figures/extracted_reflectance.png "extracted_reflectance")
 
 If you run the script again, the file will stay untouched as there is no new data to extract. Unless you add observations or new Sentinel-2 acquisitions.
