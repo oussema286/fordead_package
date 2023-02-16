@@ -4,7 +4,8 @@ The first step consists in calculating a vegetation index and a mask for each SE
 
 Here we have the following file tree for the input directory, named **study_area**:
 ```
-├── fordead_data-main
+
+├── fordead_data/sentinel_data/dieback_detection_tutorial
 │   ├── study_area
 │       ├── SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1
 │           ├── MASKS
