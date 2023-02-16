@@ -30,7 +30,7 @@ Here they are shown, against the Sentinel-2 acquisition of 27-02-2019 on tile T3
 
 Observations on the Sentinel-2 acquisition of 27-02-2019   |  Attribute table of the observations
 :-------------------------:|:-------------------------:
-<img src="Figures/observations.png"  width="300"> | <img src="Figures/observation_dataframe.png"  width="300">
+![observations](Figures/observations.png "observations")  |  ![observation_dataframe](Figures/observation_dataframe.png "observation_dataframe")
 
 The observations can be polygons or points, but they must have an ID column which is called "id" in this dataset.
 
