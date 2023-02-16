@@ -30,6 +30,8 @@ fordead obs_to_s2_grid --obs_path <MyWorkingDirectory>/vector/observations_tuto.
 
 
 As we can see from the attribute table and a view from QGIS zoomed on observation 7, the attributes "epsg", "area_name", and "id_pixel" were added, linking each point with a Sentinel-2 tile.
+Observations converted to points against the Sentinel-2 acquisition of 27-02-2019   |  Attribute table of the observations points
+:-------------------------:|:-------------------------:
 ![preprocessed_obs](Figures/preprocessed_obs.png "preprocessed_obs")  |  ![preprocessed_obs](Figures/preprocessed_obs.png "preprocessed_obs")
 
 That way the points are at the centroid of their corresponding Sentinel-2 pixel before they are clipped by the observation polygon. Here is another illustration of the resulting points, with the other Sentinel-2 tile T32ULU instead of T31UGP as background.
