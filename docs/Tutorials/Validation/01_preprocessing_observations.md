@@ -36,6 +36,7 @@ Observations converted to points against the Sentinel-2 acquisition of 27-02-201
 ![preprocessed_obs](Figures/preprocessed_obs.png "preprocessed_obs")  |  ![preprocessed_obs](Figures/preprocessed_obs.png "preprocessed_obs")
 
 That way the points are at the centroid of their corresponding Sentinel-2 pixel before they are clipped by the observation polygon. Here is another illustration of the resulting points, with the other Sentinel-2 tile T32ULU instead of T31UGP as background.
+
 ![preprocessed_obs_T32ULU](Figures/preprocessed_obs_T32ULU.png "preprocessed_obs_T32ULU")
 
 [PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/00_Intro) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/02_extract_reflectance)
