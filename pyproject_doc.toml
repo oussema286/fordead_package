@@ -77,7 +77,10 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav.Tutorials]]
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
 			"Introduction" = "docs/Tutorials/Validation/00_Intro.md"
-
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Preprocessing observations" = "docs/Tutorials/Validation/01_preprocessing_observations.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Extracting reflectance" = "docs/Tutorials/Validation/02_extract_reflectance.md"
 	
 [[tool.portray.mkdocs.nav]]
     [[tool.portray.mkdocs.nav."User guides".English]]
