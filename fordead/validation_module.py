@@ -317,6 +317,8 @@ def get_reflectance_at_points(grid_points,sentinel_dir, extracted_reflectance, n
             
             if extracted_reflectance is not None:
                 extracted_reflectance_area = extracted_reflectance[extracted_reflectance["area_name"] == area_name]
+            else:
+                extracted_reflectance_area = None
             
             raster_values = extract_raster_values(points_area, sentinel_dir / area_name, extracted_reflectance_area, name_column)
             
@@ -341,27 +343,28 @@ def extract_raster_values(points,sentinel_dir, extracted_reflectance, name_colum
     points = points.drop(columns='geometry')
     date_band_value_list = []
     
-    #Determiner les dates qui restent.
-    to_extract_reflectance = points[["area_name", name_column]].drop_duplicates()
-    #Supprimer duplicates id_pixel
-    
-    
-    #inner_join extracted_reflectance avec marqueur
-    extracted_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
-    # to_extract_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
-    #list_dates de unique dates
+    if extracted_reflectance is not None:
+        #Determiner les dates qui restent.
+        to_extract_reflectance = points[["area_name", name_column]].drop_duplicates()
+        #Supprimer duplicates id_pixel
+        
+        
+        #inner_join extracted_reflectance avec marqueur
+        extracted_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
+        # to_extract_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
+        #list_dates de unique dates
     
     
     for date_index, date in enumerate(tile.paths["Sentinel"]):
         print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
         extraction = points.copy()
-        
-        #Filter les points selon la date
-        extracted_reflectance_date = extracted_reflectance[extracted_reflectance["Date"] == date]
-        
-        #Filter extracted_reflectance avec les date
-        extraction = extraction[~extraction[name_column].isin(extracted_reflectance_date[name_column])]
-        
+        if extracted_reflectance is not None:
+            #Filter les points selon la date
+            extracted_reflectance_date = extracted_reflectance[extracted_reflectance["Date"] == date]
+            
+            #Filter extracted_reflectance avec les date
+            extraction = extraction[~extraction[name_column].isin(extracted_reflectance_date[name_column])]
+            
         if len(extraction) != 0:
             extraction.insert(4,"Date",date)
             # len(extraction.columns)-1

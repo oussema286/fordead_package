@@ -13,7 +13,6 @@ from fordead.validation.obs_to_s2_grid import obs_to_s2_grid
 obs_path = "<MyWorkingDirectory>/vector/observations_tuto.shp"
 sentinel_dir = "<MyWorkingDirectory>/sentinel_data/validation_tutorial/sentinel_data/"
 preprocessed_obs_path = "<MyWorkingDirectory>/vector/preprocessed_obs_tuto.shp"
-name_column = "id"
 
 obs_to_s2_grid(
 	obs_path = obs_path,
