@@ -76,5 +76,5 @@ if __name__ == '__main__':
         obs_to_s2_grid(
             obs_path = "D:/fordead/Data/Test_programme/export_reflectance/reflectance_scolytes/preprocessed_Export_57_2022.shp",
             sentinel_dir = "D:/fordead/Data/Test_programme/export_reflectance/Sentinel", 
-            export_path = "D:/fordead/Data/Test_programme/export_reflectance/reflectance_scolytes/processed_Export_57_2022.shp",
+            export_path = "D:/fordead/Data/Test_programme/export_reflectance/reflectance_scolytes/processed_Export_57_2022.gpkg",
             name_column = "id")

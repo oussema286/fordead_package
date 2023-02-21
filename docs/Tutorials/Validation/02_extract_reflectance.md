@@ -23,7 +23,7 @@ You can add these instructions to your script, but if you try to run the previou
 
 ##### Running this step from the command invite
 
-This step can also be ran from the command prompt. The command `fordead masked_vi -h` will print the help information of this step. For example, to use it with the same parameters, the following command can be used:
+This step can also be ran from the command prompt. The command `fordead extract_reflectance -h` will print the help information of this step. For example, to use it with the same parameters, the following command can be used:
 ```bash
 fordead extract_reflectance --obs_path <MyWorkingDirectory>/vector/preprocessed_obs_tuto.shp --sentinel_dir <MyWorkingDirectory>/sentinel_data/validation_tutorial/sentinel_data/ --export_path <MyWorkingDirectory>/extracted_reflectance.csv --name_column id
 ```
