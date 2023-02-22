@@ -8,6 +8,14 @@ import pystac
 import planetary_computer
 
 def get_vectorBbox(vector_path):
+    """
+    get layer bounding box
+
+    - vector_path: <string> vectorfile path
+
+    return: <list> of bbox coordinates in lat/lon 
+            [lon_min, lat_min, lon_max, lat_max]
+    """
     obs = gp.read_file(vector_path)
     obs = obs.to_crs("EPSG:4326")
     bbox = list(obs.total_bounds)
@@ -47,14 +55,14 @@ def getItemCollection(startdate, enddate, bbox, cloud_nb = 0):
 # Conversion de tous les items découverts par la recherche, 
 # on crée un objet ItemcCollection pour avoir la liste des items. 
 
-
 def get_s2_epsgXY(item_collection):
     """
     get S2 tile name, epsg and geometry (in lat/long)
     
     - item_collection: pystac item_collection object
 
-    return: list with the following elements : tile_name <string>, epsg_code <string>, geometry <list>
+    return: list with the following elements : 
+            tile_name <string>, epsg_code <string>, geometry <list>
     """
     out_list = []
     for item in item_collection:
@@ -73,7 +81,8 @@ def coord2epsg(tilesinfo, in_epsg = '4326'):
     - tilesinfo : <list> output of get_s2_epsgXY () function
     - in_epsg : <string> epsg code [default : 4326]
 
-    return: list with the following elements : tile_name <string>, epsg_code <string>, geometry <list>
+    return: list with the following elements : 
+            tile_name <string>, epsg_code <string>, geometry <list>
     """
     out_list = []
     inProj = Proj(init=f'epsg:{in_epsg}')
@@ -89,6 +98,14 @@ def coord2epsg(tilesinfo, in_epsg = '4326'):
     return out_list
 
 def tile_filter(item_collection, tile_name):
+    """
+    Filter S2 item_collection according to Tile ID
+
+    - item_collection: <pystac object> input S2 item_collection
+    - tile_name: <string> S2 tile ID 
+
+    return: <pystac object> filtered item_collection
+    """
     filt_item = []
     for item in item_collection:
         if item.properties["s2:mgrs_tile"] == tile_name:
@@ -97,6 +114,13 @@ def tile_filter(item_collection, tile_name):
     return new_coll
 
 def get_items_tiles(item_collection):
+    """
+    Link S2 tile with corresponding EPSG
+
+    - item_collection: <pystac object> S2 item collection
+
+    return: <list> of list with following elements [tile name, epsg code]
+    """
     out_list = []
     for item in item_collection:
         tile = item.properties['s2:mgrs_tile']
