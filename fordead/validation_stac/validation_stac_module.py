@@ -289,6 +289,16 @@ def get_bounds(obs):
 
 
 def get_reflectance_at_points(grid_points, item_collection, extracted_reflectance, name_column):
+    """
+    Create table with raster values sampled for each XY points
+
+    - grid_points: <geodataframe> of observation points
+    - item_collection: <pystac object> item_collection
+    - extracted_reflectance: <dataframe> output table 
+    - name_column: <string> column name (ID)
+
+    return: <dataframe> update output table 
+    """
 
     reflectance_list = []
     for epsg in np.unique(grid_points.epsg):
@@ -319,8 +329,18 @@ def get_reflectance_at_points(grid_points, item_collection, extracted_reflectanc
     return reflectance
 
 
-def extract_raster_values(points,tile_coll, extracted_reflectance, name_column):
-    """Must have the same crs"""
+def extract_raster_values(points, tile_coll, extracted_reflectance, name_column):
+    """
+    Sample raster values for each XY points
+
+    - points: <geodataframe> observation points
+    - tile_coll: <pystac object> item_collection filtered according to S2 Tile
+    - extracted_reflectance: <dataframe> table of sampled raster value
+    - name_column: <string> column name
+
+    return: <dataframe> table of sampled raster value
+    """
+    #"""Must have the same crs"""
     # tile = TileInfo(sentinel_dir)
     # tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
     # tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
