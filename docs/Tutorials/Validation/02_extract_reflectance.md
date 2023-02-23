@@ -4,7 +4,9 @@ In this step, we can use the vector file created in the previous step to extract
 
 ##### Running this step using a script
 
-To extract the reflectance, run the following instructions :
+To extract the reflectance :
+- Add the parameter `overwrite = True` to the obs_to_s2_grid function or comment it out so there is no conflict with the result of the previous step
+- run the following instructions :
 
 ```python
 from fordead.validation.extract_reflectance import extract_reflectance

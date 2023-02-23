@@ -16,7 +16,8 @@ from fordead.validation_module import get_grid_points, process_points
 @click.option("--sentinel_dir", type = str,default = None, help = "Path of the directory containing Sentinel-2 data", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path used to write resulting vector file, with added 'epsg','area_name' and 'id_pixel' columns", show_default=True)
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
-def cli_obs_to_s2_grid(obs_path, sentinel_dir, export_path, buffer, name_column):
+@click.option("--overwrite",  is_flag=True, help = "Overwrites file at obs_path", show_default=True)
+def cli_obs_to_s2_grid(obs_path, sentinel_dir, export_path, buffer, name_column, overwrite):
     """
     Attributes intersecting Sentinel-2 tiles to observation points or polygons, adding their epsg and name. If polygons are used, they are converted to grid points located at the centroid of Sentinel-2 pixels.
     If points or polygons intersect several Sentinel-2 tiles, they are duplicated for each of them.
@@ -29,12 +30,13 @@ def cli_obs_to_s2_grid(obs_path, sentinel_dir, export_path, buffer, name_column)
     sentinel_dir
     export_path
     name_column
+    overwrite
 
     """
     
-    obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column)
+    obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column, overwrite)
 
-def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id"):
+def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id", list_tiles = None, overwrite = False):
     """
     Attributes intersecting Sentinel-2 tiles to observation points or polygons, adding their epsg and name. If polygons are used, they are converted to grid points located at the centroid of Sentinel-2 pixels.
     If points or polygons intersect several Sentinel-2 tiles, they are duplicated for each of them.
@@ -50,22 +52,31 @@ def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id"):
         Path used to write resulting vector file, with added "epsg","area_name" and "id_pixel" columns.
     name_column : str, optional
         Name of the ID column. The default is "id".
-
+    list_tiles : list
+        A list of names of Sentinel-2 directories. If this parameter is used, extraction is  limited to those directories.
+    overwrite : bool
+        If True, allows overwriting of file at obs_path
 
     """
     
     sentinel_dir = Path(sentinel_dir) ; export_path = Path(export_path)
     obs = gp.read_file(obs_path)
 
+    # if export_path.exists() and not(overwrite):
+    #     raise Exception(str(export_path) + " already exists")
     if export_path.exists():
-        raise Exception(str(export_path) + " already exists")
+        print(str(export_path) + " already exists")
+        if overwrite:
+            print("It will be overwritten\n")
+        else:
+            raise Exception("Set 'overwrite' parameter as True to overwrite")
     
     geom_type = obs.geom_type.drop(columns = "geometry")
     points = obs[(geom_type == 'Point') | (geom_type == 'MultiPoint')]
     polygons = obs[(geom_type == 'Polygon') | (geom_type == 'MultiPolygon')]
     
-    points_from_points = process_points(points, sentinel_dir, name_column) if len(points) != 0 else None
-    points_from_poly = get_grid_points(polygons, sentinel_dir, name_column) if len(polygons) != 0 else None
+    points_from_points = process_points(points, sentinel_dir, name_column, list_tiles) if len(points) != 0 else None
+    points_from_poly = get_grid_points(polygons, sentinel_dir, name_column, list_tiles) if len(polygons) != 0 else None
 
     total_points = pd.concat([points_from_poly,points_from_points])
     total_points.to_file(export_path)
@@ -77,4 +88,5 @@ if __name__ == '__main__':
             obs_path = "D:/fordead/Data/Test_programme/export_reflectance/reflectance_scolytes/preprocessed_Export_57_2022.shp",
             sentinel_dir = "D:/fordead/Data/Test_programme/export_reflectance/Sentinel", 
             export_path = "D:/fordead/Data/Test_programme/export_reflectance/reflectance_scolytes/processed_Export_57_2022.gpkg",
-            name_column = "id")
+            name_column = "id",
+            overwrite = True)
