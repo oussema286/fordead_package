@@ -98,7 +98,7 @@ def get_grid_points(obs_polygons, sentinel_dir, name_column, list_tiles):
 
     """
     
-    sen_obs_intersection = get_sen_obs_intersection(obs_polygons, sentinel_dir, name_column)
+    sen_obs_intersection = get_sen_obs_intersection(obs_polygons, sentinel_dir, name_column, list_tiles)
     
     grid_points = polygons_to_grid_points(sen_obs_intersection, name_column)
     
@@ -155,7 +155,7 @@ def get_polygons_from_sentinel_dirs(sentinel_dir, list_tiles):
     list_dir = [x for x in sentinel_dir.iterdir() if x.is_dir()]
     dict_example_raster = {}
     for directory in list_dir :
-        if directory.stem in list_tiles:
+        if list_tiles is None or directory.stem in list_tiles:
         # for directory in list_dir :
             tile = TileInfo(directory)
             tile.getdict_datepaths("Sentinel",directory) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
@@ -231,7 +231,8 @@ def get_sen_intersection(obs_polygons, sen_polygons, name_column):
 def polygons_to_grid_points(polygons, name_column):
     """
     Converts polygons to points corresponding to the centroids of the Sentinel-2 pixels of each Sentinel-2 tile intersecting with the polygons.
-
+    Prints polygons with no pixels centroids inside of them.  
+    
     Parameters
     ----------
     polygons : geopandas GeoDataFrame
@@ -279,9 +280,18 @@ def polygons_to_grid_points(polygons, name_column):
                 obs_grid.insert(0,"area_name",area_name)
                 obs_grid.insert(0,"epsg",epsg)
                 obs_grid = obs_grid.to_crs(polygons.crs)
+                
+                if len(obs_grid) == 0:
+                    print("Polygon " + str(polygon.iloc[0][name_column]) + " contains no pixel centroid")
+                
                 grid_list += [obs_grid]
-            
-    grid_points = gp.GeoDataFrame( pd.concat(grid_list, ignore_index=True), crs=grid_list[0].crs)
+                
+        
+    try:
+        grid_points = gp.GeoDataFrame( pd.concat(grid_list, ignore_index=True), crs=grid_list[0].crs)
+    except ValueError:
+        raise Exception("It is probable that none of the observations intersect with the Sentinel-2 data available")
+        
     return grid_points
 
 def get_bounds(obs):
@@ -436,7 +446,8 @@ def get_sen_intersection_points(points, sen_polygons, name_column):
     """
     Intersects observation points with Sentinel-2 tiles extent vector.
     Adds an 'id_pixel' column filled with 0 so the resulting vector can be used in export_reflectance function.
-
+    Points outside of available Sentinel-2 tiles are detected and their IDs are printed.
+    
     Parameters
     ----------
     points : geopandas GeoDataFrame
@@ -457,6 +468,15 @@ def get_sen_intersection_points(points, sen_polygons, name_column):
     obs_intersection = gp.overlay(points, sen_polygons)
     # obs_intersection["id_pixel"] = 0
     obs_intersection.insert(1,"id_pixel",0) #Insert column
+    
+    outside_points = points[~points[name_column].isin(obs_intersection[name_column])]
+    
+    if len(outside_points) != 0:
+        print(str(len(outside_points)) + " point observations were outside available Sentinel-2 tiles.\nThey are removed from the dataset. \nIds are the following : \n" + ', '.join(map(str, outside_points[name_column])) + " \n")
+
+    if len(obs_intersection) == 0 :
+        raise Exception("No available Sentinel-2 tiles at point locations")
+    
     return obs_intersection
     
 
