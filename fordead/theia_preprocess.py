@@ -246,7 +246,7 @@ def s2_unzip(s2zipfile, out_dir, bands, correction_type):
     """
     
     corrBand = dict(zip(['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12'] + ['CLMR1', 'CLMR2', 'EDGR1', 'EDGR2', 'SATR1', 'SATR2',"DTS1","DTS2","FLG1","FLG2","WGT1","WGT2"],
-         ["_"+correction_type+"_"+band for band in ['B2.tif', 'B3.tif', 'B4.tif', 'B5.tif', 'B6.tif', 'B7.tif', 'B8.tif', 'B8A.tif', 'B11.tif', 'B12.tif']] + ['_CLM_R1.tif', '_CLM_R2.tif', '_EDG_R1.tif', '_EDG_R2.tif', '_SAT_R1.tif', '_SAT_R2.tif',"_FLG_R1.tif","_FLG_R2.tif","_WGT_R1.tif","_WGT_R2.tif"]))
+         ["_"+correction_type+"_"+band for band in ['B2.tif', 'B3.tif', 'B4.tif', 'B5.tif', 'B6.tif', 'B7.tif', 'B8.tif', 'B8A.tif', 'B11.tif', 'B12.tif']] + ['_CLM_R1.tif', '_CLM_R2.tif', '_EDG_R1.tif', '_EDG_R2.tif', '_SAT_R1.tif', '_SAT_R2.tif',"_DTS_R1.tif","_DTS_R2.tif","_FLG_R1.tif","_FLG_R2.tif","_WGT_R1.tif","_WGT_R2.tif"]))
     
 
     
