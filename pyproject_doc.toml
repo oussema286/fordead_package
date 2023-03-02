@@ -97,6 +97,12 @@ Installation = "docs/Installation.md"
     "Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
 	
 	[[tool.portray.mkdocs.nav."User guides".English]]
+		[[tool.portray.mkdocs.nav."Validation tools".English."Validation tools"]]
+		"Computing vegetation index" = "docs/user_guides/english/other_tools/ex_computing_vegetation_index.md"
+		[[tool.portray.mkdocs.nav."Validation tools".English."Validation tools"]]
+		"Computing vegetation index" = "docs/user_guides/english/other_tools/ex_computing_vegetation_index.md"
+		
+	[[tool.portray.mkdocs.nav."User guides".English]]
 		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
 		"Computing vegetation index" = "docs/user_guides/english/other_tools/ex_computing_vegetation_index.md"
 		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
