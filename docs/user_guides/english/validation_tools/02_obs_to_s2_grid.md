@@ -42,14 +42,11 @@ The vector file at **obs_path** is imported using the geopandas package.
 - The extent of each listed Sentinel-2 tiles is extracted and converted to a GeoDataFrame 
 - Each GeoDataFrame is given the attributes *area_name* and *epsg*, corresponding to the name of the directory containing the tile data, and the epsg of the tile.
 - All GeoDataFrames are concatenated
- > **_Functions used:_** [get_polygons_from_sentinel_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#get_polygons_from_sentinel_dirs)
+ > **_Function used:_** [get_polygons_from_sentinel_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#get_polygons_from_sentinel_dirs)
 
 ### If vector file at **obs_path** contains points :
  - Observation points are intersected with the Sentinel-2 tiles extent vector, transfering the attributes *area_name* and *epsg*
  - An *id_pixel* column is added and filled with 0 so the resulting vector can be used in [export_reflectance function]().
+ - Points outside of available Sentinel-2 tiles are detected and their IDs are printed.
+ > **_Function used:_** [get_sen_intersection_points()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#get_sen_intersection_points)
 
- > **_Functions used:_** [get_sen_intersection_points()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#get_sen_intersection_points)
- 
- 
-    Adds an 'id_pixel' column filled with 0 so the resulting vector can be used in export_reflectance function.
-    Points outside of available Sentinel-2 tiles are detected and their IDs are printed.

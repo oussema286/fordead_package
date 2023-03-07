@@ -97,11 +97,11 @@ Installation = "docs/Installation.md"
     "Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
 	
 	[[tool.portray.mkdocs.nav."User guides".English]]
-		[[tool.portray.mkdocs.nav."Validation tools".English."Validation tools"]]
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
 		"01_preprocess_obs" = "docs/user_guides/english/validation_tools/01_preprocess_obs.md"
-		[[tool.portray.mkdocs.nav."Validation tools".English."Validation tools"]]
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
 		"02_obs_to_s2_grid" = "docs/user_guides/english/validation_tools/02_obs_to_s2_grid.md"
-		[[tool.portray.mkdocs.nav."Validation tools".English."Validation tools"]]
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
 		"03_extract_reflectance" = "docs/user_guides/english/validation_tools/03_extract_reflectance.md"
 		
 	[[tool.portray.mkdocs.nav."User guides".English]]
