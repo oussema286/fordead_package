@@ -98,9 +98,11 @@ Installation = "docs/Installation.md"
 	
 	[[tool.portray.mkdocs.nav."User guides".English]]
 		[[tool.portray.mkdocs.nav."Validation tools".English."Validation tools"]]
-		"Computing vegetation index" = "docs/user_guides/english/other_tools/ex_computing_vegetation_index.md"
+		"01_preprocess_obs" = "docs/user_guides/english/validation_tools/01_preprocess_obs.md"
 		[[tool.portray.mkdocs.nav."Validation tools".English."Validation tools"]]
-		"Computing vegetation index" = "docs/user_guides/english/other_tools/ex_computing_vegetation_index.md"
+		"02_obs_to_s2_grid" = "docs/user_guides/english/validation_tools/02_obs_to_s2_grid.md"
+		[[tool.portray.mkdocs.nav."Validation tools".English."Validation tools"]]
+		"03_extract_reflectance" = "docs/user_guides/english/validation_tools/03_extract_reflectance.md"
 		
 	[[tool.portray.mkdocs.nav."User guides".English]]
 		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]

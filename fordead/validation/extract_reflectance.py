@@ -25,13 +25,6 @@ def cli_extract_reflectance(obs_path, sentinel_dir, export_path, name_column, ba
     If new acquisitions are added to the Sentinel-2 directory, new data is extracted and added to the existing csv file.
     
     \f
-    Parameters
-    ----------
-    obs_path : str
-    sentinel_dir : str
-    export_path : str
-    name_column : str
-    bands_to_extract : list
 
     """
     

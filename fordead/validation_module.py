@@ -19,7 +19,6 @@ from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 # PREPROCESS POLYGONS
 # =============================================================================
 
-
 def attribute_id_to_obs(obs, name_column):
     """
     Adds an ID column if it doesn't already exists. If column named after name_column parameter does not exist in the geodataframe, adds one with integers from 1 to the number of observations.
@@ -423,7 +422,7 @@ def process_points(points, sentinel_dir, name_column, list_tiles):
     name_column : str
         Name of the ID column in points.
     list_tiles : list
-        A list of names of Sentinel-2 directories. If this parameter is used, extraction is  limited to those directories.
+        A list of names of Sentinel-2 directories. If this parameter is used, extraction is limited to those directories.
 
     Returns
     -------
@@ -438,10 +437,10 @@ def process_points(points, sentinel_dir, name_column, list_tiles):
     sen_polygons = get_polygons_from_sentinel_dirs(sentinel_dir, list_tiles)
     
     sen_intersection_points = get_sen_intersection_points(points, sen_polygons, name_column)
-
+    
     return sen_intersection_points[["epsg","area_name",name_column,"id_pixel","geometry"]]
     
-    
+
 def get_sen_intersection_points(points, sen_polygons, name_column):
     """
     Intersects observation points with Sentinel-2 tiles extent vector.

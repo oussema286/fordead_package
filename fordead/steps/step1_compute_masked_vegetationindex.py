@@ -64,24 +64,6 @@ def cli_compute_masked_vegetationindex(
     Results are written in the chosen directory.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/
     \f
-    Parameters
-    ----------
-    input_directory
-    data_directory
-    lim_perc_cloud
-    interpolation_order
-    sentinel_source
-    apply_source_mask
-    soil_detection
-    formula_mask
-    vi
-    compress_vi
-    ignored_period
-    extent_shape_path
-    path_dict_vi
-
-    Returns
-    -------
 
     """
     compute_masked_vegetationindex(input_directory,data_directory, lim_perc_cloud, interpolation_order, sentinel_source, apply_source_mask, soil_detection, formula_mask, vi, compress_vi, ignored_period, extent_shape_path, path_dict_vi)

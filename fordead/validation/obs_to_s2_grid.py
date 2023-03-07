@@ -24,13 +24,6 @@ def cli_obs_to_s2_grid(obs_path, sentinel_dir, export_path, buffer, name_column,
     If some intersect no Sentinel-2 tiles, they are removed and their IDs are printed.
 
     \f
-    Parameters
-    ----------
-    obs_path
-    sentinel_dir
-    export_path
-    name_column
-    overwrite
 
     """
     
@@ -62,8 +55,6 @@ def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id", list
     sentinel_dir = Path(sentinel_dir) ; export_path = Path(export_path)
     obs = gp.read_file(obs_path)
 
-    # if export_path.exists() and not(overwrite):
-    #     raise Exception(str(export_path) + " already exists")
     if export_path.exists():
         print(str(export_path) + " already exists")
         if overwrite:

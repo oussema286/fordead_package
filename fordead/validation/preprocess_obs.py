@@ -19,14 +19,7 @@ from fordead.validation_module import attribute_id_to_obs, buffer_obs
 def cli_preprocess_obs(obs_path, export_path, buffer, name_column):
     """
     Used as a preprocessing function for a vector file containing observation points or polygons. Can add an ID column if one does not already exist, and can also apply a buffer to erode or dilate observations.
-
     \f
-    Parameters
-    ----------
-    obs_path
-    export_path
-    buffer
-    name_column
 
     """
     
@@ -47,7 +40,6 @@ def preprocess_obs(obs_path, export_path, buffer = None, name_column = "id"):
         Length in meters of the buffer used to dilate (positive integer) or erode (negative integer) the observations. If None, no buffer is applied. Some observations may disappear completely if a negative buffer is applied. The default is None.
     name_column : str, optional
         Name of the column used to identify observations. If the column doesn't already exists, it is added as an integer between 1 and the number of observations. The default is "id".
-
 
     """
     

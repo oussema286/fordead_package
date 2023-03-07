@@ -37,19 +37,6 @@ def cli_export_results(
     Export results to a vectorized shapefile format.
     \f
 
-    Parameters
-    ----------
-    data_directory
-    start_date
-    end_date
-    frequency
-    multiple_files
-    conf_threshold_list
-    conf_classes_list
-
-    Returns
-    -------
-
     """
     export_results(data_directory, start_date, end_date, frequency, multiple_files, conf_threshold_list, conf_classes_list)
 
