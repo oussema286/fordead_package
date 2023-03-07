@@ -1,4 +1,6 @@
-This step aims at extracts reflectance from Sentinel-2 data using a vector file containing points, exports the data to a csv file. 
+# Extracting reflectance from Sentinel-2 data
+
+This step aims at extracting reflectance from Sentinel-2 data using a vector file containing points and exporting the data to a csv file. 
 If new acquisitions are added to the Sentinel-2 directory, new data is extracted and added to the existing csv file.
 
 #### INPUTS

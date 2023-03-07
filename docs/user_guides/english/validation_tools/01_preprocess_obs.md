@@ -1,4 +1,4 @@
-# Preprocessing observations
+# Adding an ID and applying a buffer
 
 This step aims at preprocessing a vector file containing observation points or polygons. It adds an ID column if one does not already exist, and can also apply a buffer to erode or dilate observations.
 
@@ -11,7 +11,13 @@ The input parameters are:
 - **obs_path** : Path of vector file containing observation points or polygons to preprocess
 - **export_path** : Path used to export the resulting preprocessed observation points or polygons
 - **buffer** *(optional)* : Length in meters of the buffer used to dilate (positive integer) or erode (negative integer) the observations. If None, no buffer is applied. Some observations may disappear completely if a negative buffer is applied. 
-- **name_column** : Name of the column used to identify observations. If the column doesn't already exists, it is added as an integer between 1 and the number of observations. The default is "id".
+- **name_column** (*optional*) : Name of the column used to identify observations. If the column doesn't already exists, it is added as an integer between 1 and the number of observations. The default is "id".
+
+#### OUTPUT
+
+The output is a vector file at **export_path** derived from the vector file at **obs_path**, with up to two modifications :
+- An ID attribute named after the **name_column** parameter is added, if not already present.
+- A buffer can be applied, positive or negative
 
 ## How to use
 ### From a script
