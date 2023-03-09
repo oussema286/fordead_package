@@ -76,8 +76,8 @@ def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id", list
 if __name__ == '__main__':
 
         obs_to_s2_grid(
-            obs_path = "D:/fordead/Data/Test_programme/export_reflectance/vectors/test.shp",
+            obs_path = "D:/fordead/fordead_data/vector/observations_tuto.shp",
             sentinel_dir = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
-            export_path = "D:/fordead/Data/Test_programme/export_reflectance/vectors/pp_test_points.shp",
+            export_path = "D:/fordead/fordead_data/output/pp_observations_tuto.shp",
             name_column = "id",
             overwrite = True)

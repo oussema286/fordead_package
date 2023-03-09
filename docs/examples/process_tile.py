@@ -110,6 +110,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                             list_forest_type = list_forest_type,
                             path_oso = path_oso,
                             list_code_oso = list_code_oso)
+        
         file = open(logpath, "a") 
         file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
@@ -148,7 +149,6 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
         gc.collect()
 
-
         # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
         #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
         #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
@@ -156,7 +156,6 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
         # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2, shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/points_visualisation.shp")
 
-        
     tile = TileInfo(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile)
     tile = tile.import_info()
     file = open(logpath, "a")

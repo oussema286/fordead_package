@@ -18,7 +18,7 @@ Also, information about those periods between false detection and return to norm
 
 A stress index can be computed for those stress periods, and for the final detection. It can be either the mean of the difference between the vegetation index and its prediction, or a weighted mean where the weight corresponds to the number of the date since the first anomaly of the period as illustrated in the following figure :
 
-![graph_ind_conf](Diagrams/graph_ind_conf.png "graph_ind_conf")
+![graph_ind_conf](Figures/graph_ind_conf.png "graph_ind_conf")
 
 This stress index is meant to describe the intensity of detected anomalies in the period, and can be used as a confidence index for the final detection.
 

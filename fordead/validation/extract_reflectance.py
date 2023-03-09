@@ -17,9 +17,8 @@ from fordead.validation_module import get_reflectance_at_points, get_already_ext
 @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted reflectance", show_default=True)
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
 @click.option("-b","--bands_to_extract", type = list, default = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"], help = "Bands to extract ex : -b B2 -b  B3 -b B11", show_default=True)
-@click.option("--overwrite",  is_flag=True, help = "Overwrites file at obs_path", show_default=True)
 # @click.option("--export_path_cloudiness", type = str, default = None, help = "Path to ", show_default=True)
-def cli_extract_reflectance(obs_path, sentinel_dir, export_path, name_column, bands_to_extract, export_path_cloudiness):
+def cli_extract_reflectance(obs_path, sentinel_dir, export_path, name_column, bands_to_extract):
     """
     Extracts reflectance from Sentinel-2 data using a vector file containing points, exports the data to a csv file.
     If new acquisitions are added to the Sentinel-2 directory, new data is extracted and added to the existing csv file.
@@ -29,7 +28,7 @@ def cli_extract_reflectance(obs_path, sentinel_dir, export_path, name_column, ba
     """
     
     start_time_debut = time.time()
-    extract_reflectance(obs_path, sentinel_dir, export_path, name_column,bands_to_extract)
+    extract_reflectance(obs_path, sentinel_dir, export_path, name_column, bands_to_extract)
     print("Exporting reflectance : %s secondes ---" % (time.time() - start_time_debut))
 
 
@@ -50,7 +49,7 @@ def extract_reflectance(obs_path, sentinel_dir, export_path, name_column = "id",
     name_column : str, optional
         Name of the ID column. The default is "id".
     bands_to_extract : list
-        Bands to extract
+        List of bands to extract
 
     """
     
@@ -70,8 +69,8 @@ def extract_reflectance(obs_path, sentinel_dir, export_path, name_column = "id",
 if __name__ == '__main__':
 
         extract_reflectance(
-            obs_path = "D:/fordead/Data/Test_programme/export_reflectance/reflectance_scolytes/processed_Export_57_2022.shp",
-            sentinel_dir = "D:/fordead/Data/Test_programme/export_reflectance/Sentinel", 
-            export_path = "D:/fordead/Data/Test_programme/export_reflectance/reflectance_scolytes/reflectance.csv",
+            obs_path = "D:/fordead/fordead_data/output/pp_observations_tuto.shp",
+            sentinel_dir = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
+            export_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
             name_column = "id")
         

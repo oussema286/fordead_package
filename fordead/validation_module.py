@@ -384,13 +384,8 @@ def extract_raster_values(points,sentinel_dir, extracted_reflectance, name_colum
             
         if len(extraction) != 0:
             extraction.insert(4,"Date",date)
-            # len(extraction.columns)-1
-            bands_to_extract
-            # for band in tile.paths["Sentinel"][date]:
             for band in bands_to_extract:
                 with rasterio.open(tile.paths["Sentinel"][date][band]) as raster:
-        
-                # reproj_points = points.to_crs(raster.crs)
                     # rasterio.sample.sort_xy(coord_list)
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
                 
