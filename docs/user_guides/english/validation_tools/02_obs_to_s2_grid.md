@@ -1,7 +1,7 @@
 # Matching with available Sentinel-2 data
 
 This step aims at matching observation data with available Sentinel-2 tiles or polygons to Sentinel-2 tiles so it can be used to extract the matching Sentinel-2 data using the [extraction function](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/03_extract_reflectance/).
-If polygons are used, they are converted to grid points located at the centroid of Sentinel-2 pixels.
+If polygons are used, they are converted to grid points located at the centroid of 10m Sentinel-2 pixels.
 
 If points or polygons intersect several Sentinel-2 tiles, the resulting points are duplicated for each of them.
 Observation polygons which are not contained in a Sentinel-2 tile, or are too small to contain a pixel centroid are removed and their IDs are printed to the console.
@@ -19,10 +19,13 @@ The input parameters are :
 
 #### OUTPUT
 
-The output is a vector file at **export_path** containing points for each Sentinel-2 pixel of available tiles at the location of points, or contained in the polygons in the vector file at **obs_path**. 
+The output is a vector file at **export_path** containing points for each 10m Sentinel-2 pixel of available tiles at the location of points, or contained in the polygons in the vector file at **obs_path**. 
 The following attributes are added :
 - *area_name* : The name of the matching Sentinel-2 tile, parsed from its directory name in **sentinel_dir**.
 - *epsg* : The CRS of the matching Sentinel-2 tile
+- *id_pixel* : The ID of the pixel whose centroid is at the point location in 10m Sentinel data in the corresponding epsg. *id_pixel* goes from 1 to the number of pixels in the observation.
+
+> **_NOTE :_** Since observation polygons can be in overlapping Sentinel-2 tiles with different CRS. One needs to use *name_column* and *id_pixel* as well as *epsg* to identify a unique point location (and therefore Sentinel-2 pixel).
 
 ## How to use
 ### From a script

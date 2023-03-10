@@ -275,7 +275,7 @@ def polygons_to_grid_points(polygons, name_column):
                 obs_grid = gp.clip(obs_grid, polygon)
                 
                 obs_grid.insert(0,name_column,polygon[name_column].iloc[0])
-                obs_grid.insert(1,"id_pixel",range(len(obs_grid)))
+                obs_grid.insert(1,"id_pixel",range(1,len(obs_grid)+1))
                 obs_grid.insert(0,"area_name",area_name)
                 obs_grid.insert(0,"epsg",epsg)
                 obs_grid = obs_grid.to_crs(polygons.crs)
@@ -461,7 +461,7 @@ def get_sen_intersection_points(points, sen_polygons, name_column):
     sen_polygons = sen_polygons.to_crs(points.crs)
     obs_intersection = gp.overlay(points, sen_polygons)
     # obs_intersection["id_pixel"] = 0
-    obs_intersection.insert(1,"id_pixel",0) #Insert column
+    obs_intersection.insert(1,"id_pixel",1) #Insert column
     
     outside_points = points[~points[name_column].isin(obs_intersection[name_column])]
     
