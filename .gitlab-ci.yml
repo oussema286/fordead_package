@@ -29,10 +29,9 @@ install:
     - pip install .
     - python -c "import fordead"
   only:
-    - master
     - schedules
 
-#[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=make-badge&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
+#[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
 badges:
   stage: deploy
   image: python:latest
