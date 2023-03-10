@@ -1,5 +1,5 @@
 stages:
-  - install
+  - test
   - deploy
 ## docker build does not end within the 1h limit
 ## thus it was build locally and transfered manually
@@ -20,13 +20,12 @@ stages:
 #    - docker_ci
 
 install:
-  stage: install
+  stage: test
   image: mambaorg/micromamba
   variables:
     MAMBA_DOCKERFILE_ACTIVATE: 1
   script:
     - micromamba install -y -n base -f environment.yml
-    - pip install .
     - python -c "import fordead"
   only:
     - schedules
@@ -61,4 +60,4 @@ pages:
      - public
   only:
    - master
-   - schedules
+   - pages

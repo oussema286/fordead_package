@@ -6,28 +6,46 @@ cd fordead_package
 ```
 Or without git, simply download and unzip the package from the [gitlab page](https://gitlab.com/fordead/fordead_package)
 
-### Conda install 
-If you have the [anaconda](https://www.anaconda.com/products/individual) python distribution installed, simply run the following commands from the command prompt in the directory of the package :
+## Conda install (recommended)
+
+Conda install is recommended as it will include all necessary dependencies (especially GDAL).
+
+### Requirements
+It is recommened with [mamba](https://github.com/mamba-org/mamba), that is much faster than conda to solve environment constraints.
+
+If you already have a conda installed, [install mamba in base environment](https://mamba.readthedocs.io/en/latest/installation.html#existing-conda-install):
+```bash
+conda install mamba -n base -c conda-forge
+```
+
+If you do not have conda installed, we recommend installing [mambaforge](https://github.com/conda-forge/miniforge#mambaforge).
+
+### Install
 
 ```bash
-conda env create --name fordead_env
-conda activate fordead_env
-pip install .
+mamba env create -n fordead -f https://gitlab.com/fordead/fordead_package/-/raw/master/environment.yml
+conda activate fordead
 ```
 
 The conda environment can be deleted using the following command :
 ```bash
-conda env remove -n fordead_env
+conda env remove -n fordead
 ```
 
-### Install without conda
+## Pypi install
 
-If you don't have conda, you can find the required dependencies in the [environment.yml](https://gitlab.com/fordead/fordead_package/-/blob/master/environment.yml) file and install them by hand before running the following command in the package directory :
+Virtualenv is recommended in order to avoid side effects on other installed packages: see [Creation of a virtualenv](https://docs.python.org/3/library/venv.html)
+
+### Requirements
+Fordead depends on rasterio for raster manipulations: see requirements for [Rasterio](https://rasterio.readthedocs.io/en/stable/installation.html)
+
+### Install
+
 ```bash
-pip install .
+pip install -r https://gitlab.com/fordead/fordead_package/-/raw/master/requirements.txt
 ```
 
-### Using Docker
+## Using Docker
 
 It is also possible to use this package using a docker. The docker image associated with this package already includes a conda environment with python and required dependencies, allowing to run containers in  which to use this package.
 To use this docker image, if you are on windows, you must first install [Docker Desktop](https://www.docker.com/products/docker-desktop).

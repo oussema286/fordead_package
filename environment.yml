@@ -16,3 +16,5 @@ dependencies:
   - plotly = 5.9.0
   - netcdf4
   - matplotlib
+  - pip:
+    - git+https://gitlab.com/fordead/fordead_package.git
