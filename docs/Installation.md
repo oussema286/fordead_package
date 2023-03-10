@@ -1,11 +1,3 @@
-
-If you have [git](https://git-scm.com/) installed, then go to the directory of your choice and run the following commands :
-```bash
-git clone https://gitlab.com/fordead/fordead_package.git
-cd fordead_package
-```
-Or without git, simply download and unzip the package from the [gitlab page](https://gitlab.com/fordead/fordead_package)
-
 ## Conda install (recommended)
 
 Conda install is recommended as it will include all necessary dependencies (especially GDAL).
@@ -34,10 +26,13 @@ conda env remove -n fordead
 
 ## Pypi install
 
-Virtualenv is recommended in order to avoid side effects on other installed packages: see [Creation of a virtualenv](https://docs.python.org/3/library/venv.html)
+Virtualenv is recommended in order to avoid side effects on other installed packages: see [Creation of a virtualenv](https://docs.python.org/3/library/venv.html).
 
 ### Requirements
-Fordead depends on rasterio for raster manipulations: see requirements for [Rasterio](https://rasterio.readthedocs.io/en/stable/installation.html)
+
+Fordead depends on Rasterio for raster manipulations: see requirements for [Rasterio](https://rasterio.readthedocs.io/en/stable/installation.html).
+
+Git may also be needed [git](https://git-scm.com/).
 
 ### Install
 
