@@ -485,14 +485,50 @@ def get_source_mask(band_paths, sentinel_source, extent = None):
 
 
 
-def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_dict_vi = None):
+# def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_dict_vi = None):
+#     """
+#     Computes vegetation index
+
+#     Parameters
+#     ----------
+#     stack_bands : xarray DataArray
+#         3D xarray with band dimension
+#     vi : str, optional
+#         Name of vegetation index, see get_dict_vi documentation to know available vegetation indices. A formula can be given instead The default is "CRSWIR".
+#     formula : str, optional
+#         Formula used to calculate the vegetation index. Bands can be called by their name. All operations on xarrays and using numpy functions are possible.
+#         Examples :
+#             NDVI : formula = '(B8-B4)/(B8+B4)'
+#             Squared-root of B2 : formula = 'np.sqrt(B2)'
+#             Logical operations :  formula = '(B2 > 600) & (B11 > 1000) | ~(B3 <= 500)'
+#             The default is None.
+#     path_dict_vi : str, optional
+#         Path to a text file containing vegetation indices formulas so they can be used using 'vi' parameter. See get_dict_vi documentation. The default is None.
+
+#     Returns
+#     -------
+#     xarray DataArray
+#         Computed vegetation index
+
+#     """
+#     if formula is None:
+#         dict_vegetation_index = get_dict_vi(path_dict_vi)
+#         formula = dict_vegetation_index[vi]["formula"]
+
+#     match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})" # B + un chiffre + une lettre OU B + deux chiffres OU B + un chiffre
+#     formula = re.sub(match_string, remove_0_from_match, formula) #Removes 0 from band name (B03 -> B3)
+#     p = re.compile(match_string)
+#     code_formula = p.sub(r'stack_bands.sel(band= "B\1")', formula)
+#     return eval(code_formula)
+
+def compute_vegetation_index(reflectance, vi = "CRSWIR", formula = None, path_dict_vi = None):
     """
     Computes vegetation index
 
     Parameters
     ----------
-    stack_bands : xarray DataArray
-        3D xarray with band dimension
+    reflectance : xarray DataArray or pandas DataFrame
+        3D xarray with band dimension or pandas Dataframe with bands as attributes 
     vi : str, optional
         Name of vegetation index, see get_dict_vi documentation to know available vegetation indices. A formula can be given instead The default is "CRSWIR".
     formula : str, optional
@@ -518,6 +554,11 @@ def compute_vegetation_index(stack_bands, vi = "CRSWIR", formula = None, path_di
     match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})" # B + un chiffre + une lettre OU B + deux chiffres OU B + un chiffre
     formula = re.sub(match_string, remove_0_from_match, formula) #Removes 0 from band name (B03 -> B3)
     p = re.compile(match_string)
-    code_formula = p.sub(r'stack_bands.sel(band= "B\1")', formula)
+    
+    if isinstance(reflectance, pd.DataFrame):
+        code_formula = p.sub(r'reflectance["B\1"]', formula)
+    else:
+        code_formula = p.sub(r'reflectance.sel(band= "B\1")', formula)
+        
     return eval(code_formula)
 

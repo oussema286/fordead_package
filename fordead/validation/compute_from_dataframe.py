@@ -6,7 +6,7 @@ Created on Fri Mar 10 11:00:53 2023
 """
 
 import pandas as pd
-from fordead.validation_process import get_dated_changes, compute_and_apply_mask, source_mask_dataframe, get_last_training_date_dataframe, model_vi_dataframe,prediction_vegetation_index_dataframe, detection_anomalies_dataframe, stress_detection, dieback_detection
+from fordead.validation_process import get_dated_changes, compute_and_apply_mask, get_last_training_date_dataframe, model_vi_dataframe,prediction_vegetation_index_dataframe, detection_anomalies_dataframe, stress_detection, dieback_detection
 from fordead.masking_vi import compute_vegetation_index
 from pathlib import Path
 import time
@@ -33,22 +33,22 @@ def compute_from_dataframe(reflectance_path,
                        ):
     
     reflect = pd.read_csv(reflectance_path)
-    reflect = reflect.sort_values(by=["IdZone",'IdPixel', 'Date'])
+    reflect = reflect.sort_values(by=[name_column,'id_pixel', 'Date'])
     
-    reflect = compute_and_apply_mask(reflect, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source)
+    reflect = compute_and_apply_mask(reflect, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source, name_column)
 
     reflect["vi"] = compute_vegetation_index(reflect, vi = "CRSWIR", formula = None, path_dict_vi = None)
     reflect = reflect[~reflect["vi"].isnull()]
     reflect = reflect[~np.isinf(reflect["vi"])]
 
 
-    last_date_training = get_last_training_date_dataframe(reflect, min_last_date_training, max_last_date_training, nb_min_date) #reflect[["IdPixel","Date","mask"]]
+    last_date_training = get_last_training_date_dataframe(reflect, min_last_date_training, max_last_date_training, nb_min_date) #reflect[["id_pixel","Date","mask"]]
 
-    reflect = reflect.merge(last_date_training, on=['IdPixel'], how='left')
+    reflect = reflect.merge(last_date_training, on=['id_pixel'], how='left')
 
     coeff_model = model_vi_dataframe(reflect)
 
-    reflect = reflect.merge(coeff_model, on=['IdPixel'], how='left')
+    reflect = reflect.merge(coeff_model, on=['id_pixel'], how='left')
 
     #Make list of abandonned pixels and remove them
     reflect = reflect[reflect["Date"] > reflect["last_date_training"]].reset_index()
@@ -70,7 +70,8 @@ def compute_from_dataframe(reflectance_path,
 if __name__ == '__main__':
     start_time_debut = time.time()
     
-    compute_from_dataframe(reflectance_path = "D:/fordead/Data/Validation/results_from_csv/Reflectance/reflect_scolyte.csv",
-                       export_directory = "D:/fordead/Data/Validation/results_from_csv",
-                           vi = "CRSWIR")
+    compute_from_dataframe(reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
+                       export_directory = "D:/fordead/fordead_data/output/results_tuto.csv",
+                           vi = "CRSWIR",
+                           name_column = "id")
     print("Temps de calcul : %s secondes ---" % (time.time() - start_time_debut))

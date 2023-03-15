@@ -32,6 +32,8 @@ def get_band_paths(dict_sen_paths):
 
     """
     
+    #It would be 
+    
     DictSentinelPaths={}
     for date in dict_sen_paths:
         AllPaths = dict_sen_paths[date].glob("**/*.tif")

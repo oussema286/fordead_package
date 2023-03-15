@@ -199,13 +199,14 @@ def get_pre_masks_dataframe(reflect, list_bands):
     invalid = shadows | outside_swath | (reflect["B2"] >= 600)
     return soil_anomaly, shadows, outside_swath, invalid
 
-def detect_soil(data_frame, invalid):
+def detect_soil(data_frame, invalid, name_column):
+    
     data_frame = data_frame[~invalid].reset_index()
     data_frame["group"] = ((data_frame.soil_anomaly != data_frame.soil_anomaly.shift()).cumsum())
     
     consecutive_soil = data_frame[data_frame["soil_anomaly"]].groupby(by = ["id_pixel", "group"]).size()
     soil_detect_groups = consecutive_soil[consecutive_soil >= 3].reset_index().groupby("id_pixel").first()
-    int_df = pd.merge(data_frame, soil_detect_groups, how='inner', on=['id_pixel', 'group']).groupby("id_pixel").first().reset_index()[["id_pixel","Date"]]
+    int_df = pd.merge(data_frame, soil_detect_groups, how='inner', on=['id_pixel', 'group']).groupby("id_pixel").first().reset_index()[["area_name",name_column,"id_pixel","Date"]]
     return int_df
 
 def detect_clouds_dataframe(data_frame):
@@ -218,18 +219,20 @@ def detect_clouds_dataframe(data_frame):
     clouds = cond4 & (cond3 | (cond1 & cond2))   
     return clouds
 
-def compute_and_apply_mask(data_frame, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source):
+def compute_and_apply_mask(data_frame, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source, name_column):
+ 
     if soil_detection:
-        mask = compute_masks_dataframe(data_frame, list_bands)
+        mask, bare_ground = compute_masks_dataframe(data_frame, list_bands, name_column)
+        data_frame["bare_ground"] = bare_ground.to_numpy()
     else:
         mask = compute_user_mask_dataframe(data_frame, formula_mask, list_bands)
-
+        
     data_frame = data_frame[~mask.to_numpy()]
     
     if apply_source_mask:
         data_frame = data_frame[~source_mask_dataframe(data_frame["Mask"], sentinel_source)]
+        
     return data_frame
-
 
 def compute_user_mask_dataframe(data_frame, formula_mask, list_bands):
     shadows = (data_frame[list_bands]==0).any(axis=1)
@@ -238,21 +241,27 @@ def compute_user_mask_dataframe(data_frame, formula_mask, list_bands):
     mask = shadows | outside_swath | user_mask
     return mask
 
-def compute_masks_dataframe(data_frame, list_bands):
+def compute_masks_dataframe(data_frame, list_bands, name_column):
     
     data_frame["soil_anomaly"], shadows, outside_swath, invalid = get_pre_masks_dataframe(data_frame, list_bands)
     
-    soil_data = detect_soil(data_frame, invalid)
+    soil_data = detect_soil(data_frame, invalid, name_column)
     
     soil_data["bare_ground"] = True
-    data_frame = data_frame.merge(soil_data, on=["id_pixel","Date"], how='left')
+    data_frame = data_frame.merge(soil_data, on=["area_name", name_column, "id_pixel","Date"], how='left')
+    
+    # data_frame["bare_ground"].sum()
+    
     data_frame["bare_ground"] = data_frame.groupby("id_pixel").bare_ground.ffill().fillna(False)
 
     clouds = detect_clouds_dataframe(data_frame)
     
-    mask = shadows | clouds | outside_swath | data_frame["bare_ground"] | data_frame["soil_anomaly"]
-    
-    return mask    
+    # mask = shadows | clouds | outside_swath | data_frame["bare_ground"] | data_frame["soil_anomaly"]
+    mask = shadows | clouds | outside_swath | (data_frame["soil_anomaly"] & ~data_frame["bare_ground"])
+
+    # mask = shadows | clouds | outside_swath | data_frame["bare_ground"] | data_frame["soil_anomaly"]
+
+    return mask, data_frame["bare_ground"]
   
         
 def source_mask_dataframe(source_mask, sentinel_source):

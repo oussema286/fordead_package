@@ -344,6 +344,8 @@ def get_reflectance_at_points(grid_points,sentinel_dir, extracted_reflectance, n
     # reflectance = gp.GeoDataFrame(pd.concat(reflectance_list, ignore_index=True), crs=reflectance_list[0].crs)
     if len(reflectance_list) != 0:
         reflectance = pd.concat(reflectance_list, ignore_index=True)
+        if "Mask" in bands_to_extract:
+            reflectance["Mask"] = reflectance["Mask"].astype(np.uint8)
     else:
         reflectance = None
         
@@ -384,11 +386,12 @@ def extract_raster_values(points,sentinel_dir, extracted_reflectance, name_colum
             
         if len(extraction) != 0:
             extraction.insert(4,"Date",date)
+            
             for band in bands_to_extract:
-                with rasterio.open(tile.paths["Sentinel"][date][band]) as raster:
+                with rasterio.open(tile.paths["Sentinel"][date][band],dtype = "uint8") as raster:
                     # rasterio.sample.sort_xy(coord_list)
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
-                
+                    
             date_band_value_list += [extraction]
     # reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
     if len(date_band_value_list) != 0:
