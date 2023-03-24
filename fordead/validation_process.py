@@ -272,16 +272,25 @@ def source_mask_dataframe(source_mask, sentinel_source):
     return source_mask
         
         
-def get_last_training_date_dataframe(data_frame, min_last_date_training, max_last_date_training, nb_min_date=10):
-   
+def get_last_training_date_dataframe(data_frame, min_last_date_training, max_last_date_training, nb_min_date=10, name_column = "id"):
+
+    data_frame = data_frame[["epsg","area_name",name_column,"id_pixel","Date"]]
     
-    last_training_date = data_frame[(data_frame["Date"] < min_last_date_training) & (data_frame.groupby("id_pixel").cumcount()+1 >= nb_min_date)].groupby("id_pixel").last().reset_index() #Keeping date just before min_last_date_training if enough acquisitions
-    data_frame = data_frame[~data_frame["id_pixel"].isin(last_training_date["id_pixel"])]
+    last_training_date = data_frame[(data_frame["Date"] < min_last_date_training) & (data_frame.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1 >= nb_min_date)].groupby(["area_name",name_column,"id_pixel"]).last().reset_index() #Keeping date just before min_last_date_training if enough acquisitions
     
-    last_training_date = pd.concat([last_training_date, data_frame[(data_frame["Date"] <= max_last_date_training) & (data_frame.groupby("id_pixel").cumcount()+1 == nb_min_date)]]) # Adding pixels with nb_min_date reach before max_last_training_date
+    
+    retrieve_dataframe = data_frame.merge(last_training_date[["area_name",name_column,"id_pixel"]], how = "left", on = ["area_name",name_column,"id_pixel"], indicator = True)
+    retrieve_dataframe = retrieve_dataframe[retrieve_dataframe["_merge"] != "both"].drop(columns = "_merge")
+    last_training_date = pd.concat([last_training_date, retrieve_dataframe[(retrieve_dataframe["Date"] <= max_last_date_training) & (retrieve_dataframe.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1 == nb_min_date)]]) # Adding pixels with nb_min_date reach before max_last_training_date
+    
+    abandonned_dataframe = retrieve_dataframe.merge(last_training_date[["area_name",name_column,"id_pixel"]], how = "left", on = ["area_name",name_column,"id_pixel"], indicator = True)
+    abandonned_dataframe = abandonned_dataframe[abandonned_dataframe["_merge"] != "both"].drop(columns = "_merge")
+    last_training_date = pd.concat([last_training_date, abandonned_dataframe[["epsg","area_name",name_column,"id_pixel"]].drop_duplicates()]) # Adding pixels with nb_min_date reach before max_last_training_date
+    
+    
     last_training_date = last_training_date.rename(columns = {"Date" : "last_date_training"})
     
-    return last_training_date[["id_pixel","last_date_training"]]
+    return last_training_date
 
 def compute_HarmonicTerms(DateAsNumber):
     return np.array([1,np.sin(2*np.pi*DateAsNumber/365.25), np.cos(2*np.pi*DateAsNumber/365.25),np.sin(2*2*np.pi*DateAsNumber/365.25),np.cos(2*2*np.pi*DateAsNumber/365.25)])
@@ -292,31 +301,34 @@ def model(date_as_number, vi, id_pixel):
 
     return p
 
-def model_vi_dataframe(data_frame):
+def model_vi_dataframe(data_frame, name_column):
+    
     data_frame = data_frame[data_frame["Date"] <= data_frame["last_date_training"]].reset_index()
     
     data_frame['Date'] = pd.to_datetime(data_frame['Date'])
     data_frame["date_as_number"] = (data_frame['Date'] - pd.to_datetime("2015-01-01")).dt.days
   
-    coeff_vi = data_frame.groupby('id_pixel').apply(lambda x: model(x.date_as_number, x.vi, x.id_pixel)).reset_index()
+    coeff_vi = data_frame.groupby(["area_name",name_column,"id_pixel"]).apply(lambda x: model(x.date_as_number, x.vi, x.id_pixel)).reset_index()
+    
+    coeff_vi.columns = ["area_name",name_column,"id_pixel", "coeff"]
+    coeff_vi[["coeff1","coeff2","coeff3", "coeff4","coeff5"]] = pd.DataFrame(coeff_vi.coeff.tolist(), index= coeff_vi.index)
 
-    coeff_vi.columns = ["id_pixel","coeff"]
-    # p, _, _, _ = lstsq(HarmonicTerms[~stack_masks][0], stack_vi.where(~stack_masks,drop=True))
-    
-    return coeff_vi
+    return coeff_vi[["area_name",name_column,"id_pixel", "coeff1","coeff2","coeff3", "coeff4","coeff5"]]
 
-def prediction_vegetation_index_dataframe(data_frame):
+def prediction_vegetation_index_dataframe(masked_vi, pixel_info, name_column):
     
-    data_frame['Date'] = pd.to_datetime(data_frame['Date'])
-    date_as_number = (data_frame['Date'] - pd.to_datetime("2015-01-01")).dt.days
+    masked_vi['Date'] = pd.to_datetime(masked_vi['Date'])
+    date_as_number = (masked_vi['Date'] - pd.to_datetime("2015-01-01")).dt.days
     
-    # data_frame["coeff_model"].to_numpy()
-    coeff_model = np.stack(data_frame["coeff"].values)
+    # masked_vi["coeff_model"].to_numpy()
+    coeff_model = np.stack(masked_vi["coeff"].values)
     harmonic_terms = np.array([[1]*len(date_as_number), np.sin(2*np.pi*np.array(date_as_number)/365.25), np.cos(2*np.pi*np.array(date_as_number)/365.25), np.sin(2*2*np.pi*np.array(date_as_number)/365.25), np.cos(2*2*np.pi*np.array(date_as_number)/365.25)]).T
 
     # predicted_vi = prediction_vegetation_index_dataframe(coeff_model,[date])
     
     predicted_vi = np.sum(coeff_model * harmonic_terms,axis = 1)
+    
+    
     return predicted_vi
 
                                 
@@ -376,58 +388,60 @@ def get_stress_index(data_frame, stress_periods):
 def get_dated_changes(data_frame, name_column):
     
     data_frame["group"] = ((data_frame.anomaly != data_frame.anomaly.shift()).cumsum()) #Group successive rows with same anomaly value
-    consecutive_anomaly = data_frame.groupby(by = [name_column,"id_pixel","group", "anomaly"]).size().reset_index(name = "size")     #Count successive rows with same anomaly value
+    consecutive_anomaly = data_frame.groupby(by = ["area_name", name_column,"id_pixel","group", "anomaly"]).size().reset_index(name = "size")     #Count successive rows with same anomaly value
 
     consecutive_anomaly = consecutive_anomaly[consecutive_anomaly["size"] >= 3]
     
     consecutive_anomaly["group2"] = ((consecutive_anomaly.anomaly != consecutive_anomaly.anomaly.shift()).cumsum())
     
-    changes = consecutive_anomaly.groupby(by = [name_column,"id_pixel","group2", "anomaly"]).first().reset_index()#.drop(columns=['group2', 'size']) #Remove successive rows with same anomaly value
+    changes = consecutive_anomaly.groupby(by = ["area_name", name_column,"id_pixel","group2", "anomaly"]).first().reset_index()#.drop(columns=['group2', 'size']) #Remove successive rows with same anomaly value
     # keep first date and get size at the same time could be more efficient
     
     # changes = changes[(changes.groupby("id_pixel").cumcount() !=0) | (changes.anomaly)] #Remove first group of successive false values which is not a change
     
-    first_dates = data_frame.groupby(by = [name_column,"id_pixel","group"]).first().reset_index()[["id_pixel","group","Date"]]
+    first_dates = data_frame.groupby(by = ["area_name", name_column,"id_pixel","group"]).first().reset_index()[["area_name", name_column, "id_pixel","group","Date"]]
     
-    dated_changes = changes.merge(first_dates, on=["id_pixel","group"], how='left') #Rajouter la première date du groupe, perdue pendant le goup_by
+    dated_changes = changes.merge(first_dates, on=["area_name", name_column, "id_pixel","group"], how='left') #Rajouter la première date du groupe, perdue pendant le goup_by
     
-    sizes = dated_changes.groupby(by = [name_column,"id_pixel"]).size()
+    sizes = dated_changes.groupby(by = ["area_name", name_column,"id_pixel"]).size()
     dated_changes["state"] = [item for n in sizes for item in ["start_date", "end_date"]*int((n - n % 2)/2) + ["dieback"] * (n % 2) ]
     
     return dated_changes
 
 def stress_detection(data_frame, dated_changes, max_nb_stress_periods, name_column):
+    
     stress = dated_changes[dated_changes["state"] != "dieback"].reset_index()
 
     stress["stress_period_id"] = [item for stress_id in range(0, int(len(stress) / 2)) for item in [stress_id,stress_id]]
 
-    spread_stress = stress.pivot_table(values = "Date", index = [name_column,'id_pixel',"stress_period_id"], columns = ['state']).reset_index()
+    spread_stress = stress.pivot_table(values = "Date", index = ["name_area", name_column,'id_pixel',"stress_period_id"], columns = ['state']).reset_index()
     
-    # stress_data = data_frame.groupby(by = [name_column,"id_pixel"]).apply(lambda x: get_stress_index(x, spread_stress)).reset_index()
-    # dieback_data = data_frame.groupby(by = [name_column,"id_pixel"]).apply(lambda x: get_conf_index(x, dieback)).reset_index()
+    # stress_data = data_frame.groupby(by = ["name_area", name_column,"id_pixel"]).apply(lambda x: get_stress_index(x, spread_stress)).reset_index()
+    # dieback_data = data_frame.groupby(by = ["name_area", name_column,"id_pixel"]).apply(lambda x: get_conf_index(x, dieback)).reset_index()
     
     stress_data_list = []
     for i in range(max_nb_stress_periods):
         # print(i)
-        stress_period = spread_stress.groupby([name_column,'id_pixel']).nth(i)
-        filtered_period_dataframe = data_frame.merge(stress_period, on=[name_column,"id_pixel"], how='left') #Rajouter la première date du groupe, perdue pendant le goup_by
+        stress_period = spread_stress.groupby(["name_area", name_column,'id_pixel']).nth(i)
+        filtered_period_dataframe = data_frame.merge(stress_period, on=["name_area", name_column,"id_pixel"], how='left') #Rajouter la première date du groupe, perdue pendant le goup_by
         filtered_period_dataframe = filtered_period_dataframe[(filtered_period_dataframe["Date"] >= filtered_period_dataframe["start_date"]) & (filtered_period_dataframe["Date"] < filtered_period_dataframe["end_date"])]
-        stress_period["stress_index"] = filtered_period_dataframe.groupby(by = [name_column,"id_pixel"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).to_numpy()
-        stress_period["stress_period_id"] = i+1
+        stress_period["anomaly_intensity"] = filtered_period_dataframe.groupby(by = ["name_area", name_column,"id_pixel"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).to_numpy()
+        stress_period["period_id"] = i+1
         stress_data_list += [stress_period.reset_index()]
 
     stress_data = pd.concat(stress_data_list)
-    stress_data = stress_data[[name_column,"id_pixel","stress_period_id","start_date","end_date", "stress_index"]]
+    stress_data = stress_data[["name_area", name_column,"id_pixel","period_id","start_date","end_date", "stress_index"]]
 
     return stress_data
 
 def dieback_detection(data_frame, dated_changes, name_column):
+    
     dieback = dated_changes[dated_changes["state"] == "dieback"].drop(columns=["group2","anomaly","group","size","state"]).rename(columns = {"Date" : "first_date"})
     # dieback = dated_changes[dated_changes["state"] == "dieback"].rename(columns = {"Date" : "first_date"})[[]]
-    dieback_data = data_frame.merge(dieback, on=[name_column,"id_pixel"], how='left') #Rajouter la première date du groupe, perdue pendant le goup_by
+    dieback_data = data_frame.merge(dieback, on=["name_area", name_column,"id_pixel"], how='left') #Rajouter la première date du groupe, perdue pendant le goup_by
     dieback_data = dieback_data[dieback_data["Date"] >= dieback_data["first_date"]]
     
-    dieback["conf_index"] = dieback_data.groupby(by = [name_column,"id_pixel"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).to_numpy()
+    dieback["anomaly_intensity"] = dieback_data.groupby(by = ["name_area", name_column,"id_pixel"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).to_numpy()
 
     return dieback
     # consecutive_anomaly = data_frame.groupby(by = [name_column,"id_pixel","group2", "anomaly"]).size().reset_index(name = "size")

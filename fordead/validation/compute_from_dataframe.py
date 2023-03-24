@@ -32,14 +32,14 @@ def compute_from_dataframe(reflectance_path,
                        max_nb_stress_periods = 5
                        ):
     
-    reflect = pd.read_csv(reflectance_path)
-    reflect = reflect.sort_values(by=[name_column,'id_pixel', 'Date'])
+    # reflect = pd.read_csv(reflectance_path)
+    # reflect = reflect.sort_values(by=[name_column,'id_pixel', 'Date'])
     
-    reflect = compute_and_apply_mask(reflect, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source, name_column)
+    # reflect = compute_and_apply_mask(reflect, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source, name_column)
 
-    reflect["vi"] = compute_vegetation_index(reflect, vi = "CRSWIR", formula = None, path_dict_vi = None)
-    reflect = reflect[~reflect["vi"].isnull()]
-    reflect = reflect[~np.isinf(reflect["vi"])]
+    # reflect["vi"] = compute_vegetation_index(reflect, vi = "CRSWIR", formula = None, path_dict_vi = None)
+    # reflect = reflect[~reflect["vi"].isnull()]
+    # reflect = reflect[~np.isinf(reflect["vi"])]
 
 
     last_date_training = get_last_training_date_dataframe(reflect, min_last_date_training, max_last_date_training, nb_min_date) #reflect[["id_pixel","Date","mask"]]

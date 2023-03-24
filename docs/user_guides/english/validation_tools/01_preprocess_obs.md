@@ -25,7 +25,7 @@ The output is a vector file at **export_path** derived from the vector file at *
 ```bash
 from fordead.validation.preprocess_obs import preprocess_obs
 
-preprocess_obs(obs_path = <obs_path>, export_path = <obs_path>, name_column = <name_column>)
+preprocess_obs(obs_path = <obs_path>, export_path = <export_path>, name_column = <name_column>, buffer = <buffer>)
 
 ```
 

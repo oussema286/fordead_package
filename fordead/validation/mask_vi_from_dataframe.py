@@ -15,7 +15,7 @@ import numpy as np
 #Sortir première date de bare_ground
 
 
-def compute_masked_vi(reflectance_path,
+def mask_vi_from_dataframe(reflectance_path,
                            export_path,
                            name_column,
                            vi,
@@ -48,8 +48,9 @@ if __name__ == '__main__':
     #                    vi = "CRSWIR",
     #                    name_column = "id")
     
-    compute_masked_vi(reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
+    mask_vi_from_dataframe(reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
                        export_path = "D:/fordead/fordead_data/output/mask_vi_tuto.csv",
                        vi = "CRSWIR",
                        name_column = "id")
+    
     print("Temps de calcul : %s secondes ---" % (time.time() - start_time_debut))
