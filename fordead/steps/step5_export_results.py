@@ -143,9 +143,12 @@ def export_results(
                 # for period_date in pd.unique(vector_stress_start["period"]):
                 #     for class_stress in pd.unique(stress_class["class"]):
                 #         stress_list += [gp.overlay(vector_stress_start[vector_stress_start["period"]==period_date], stress_class[stress_class["class"] == class_stress], how='intersection',keep_geom_type = True)]
-
-                stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
-                stress_total.to_file(tile.paths["stress_periods"])
+                
+                if len(stress_list) != 0:
+                    stress_total = gp.GeoDataFrame( pd.concat(stress_list, ignore_index=True), crs=stress_list[0].crs)
+                    stress_total.to_file(tile.paths["stress_periods"])
+                else:
+                    print("No stress periods detected")
 
         if multiple_files:
             tile.add_dirpath("result_files", tile.data_directory / "Results")
