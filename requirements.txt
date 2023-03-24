@@ -1,0 +1,14 @@
+ numpy
+ fiona
+ geopandas
+ rasterio
+ xarray
+ scipy
+ dask
+ pathlib
+ rioxarray
+ path
+ plotly == 5.9.0
+ netcdf4
+ matplotlib
+git+https://gitlab.com/fordead/fordead_package.git

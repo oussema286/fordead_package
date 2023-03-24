@@ -1,4 +1,5 @@
 stages:
+  - test
   - deploy
 ## docker build does not end within the 1h limit
 ## thus it was build locally and transfered manually
@@ -18,6 +19,31 @@ stages:
 #  only:
 #    - docker_ci
 
+install:
+  stage: test
+  image: mambaorg/micromamba
+  variables:
+    MAMBA_DOCKERFILE_ACTIVATE: 1
+  script:
+    - micromamba install -y -n base -f environment.yml
+    - python -c "import fordead"
+  only:
+    - schedules
+
+#[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
+badges:
+  stage: deploy
+  image: python:latest
+  script:
+    - version=`grep __version__ fordead/_version.py| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
+    - echo "{\"version\":\"$version\"}" > badges.json
+  artifacts:
+    paths:
+      - badges.json
+  only:
+    - master
+
+
 pages:
   stage: deploy
   image: $CI_REGISTRY/fordead/fordead_package:latest
@@ -34,4 +60,4 @@ pages:
      - public
   only:
    - master
-   - schedules
+   - pages
