@@ -17,8 +17,9 @@ from fordead.validation_module import get_reflectance_at_points, get_already_ext
 @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted reflectance", show_default=True)
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
 @click.option("-b","--bands_to_extract", type = list, default = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"], help = "Bands to extract ex : -b B2 -b  B3 -b B11", show_default=True)
+@click.option("-t","--tile_selection", type = list, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.", show_default=True)
 # @click.option("--export_path_cloudiness", type = str, default = None, help = "Path to ", show_default=True)
-def cli_extract_reflectance(obs_path, sentinel_dir, export_path, name_column, bands_to_extract):
+def cli_extract_reflectance(obs_path, sentinel_dir, export_path, name_column, bands_to_extract, tile_selection):
     """
     Extracts reflectance from Sentinel-2 data using a vector file containing points, exports the data to a csv file.
     If new acquisitions are added to the Sentinel-2 directory, new data is extracted and added to the existing csv file.
@@ -32,7 +33,9 @@ def cli_extract_reflectance(obs_path, sentinel_dir, export_path, name_column, ba
     print("Exporting reflectance : %s secondes ---" % (time.time() - start_time_debut))
 
 
-def extract_reflectance(obs_path, sentinel_dir, export_path, name_column = "id", bands_to_extract = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"]):
+def extract_reflectance(obs_path, sentinel_dir, export_path, name_column = "id", 
+                        bands_to_extract = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"],
+                        tile_selection = None):
     """
     Extracts reflectance from Sentinel-2 data using a vector file containing points, exports the data to a csv file.
     If new acquisitions are added to the Sentinel-2 directory, new data is extracted and added to the existing csv file.
@@ -49,7 +52,8 @@ def extract_reflectance(obs_path, sentinel_dir, export_path, name_column = "id",
         Name of the ID column. The default is "id".
     bands_to_extract : list
         List of bands to extract
-
+    tile_selection : list
+        List of tiles from which to extract reflectance (ex : ["T31UFQ", "T31UGQ"]). If None, all tiles are extracted.
     """
     
     sentinel_dir = Path(sentinel_dir) ; export_path = Path(export_path)
@@ -57,7 +61,7 @@ def extract_reflectance(obs_path, sentinel_dir, export_path, name_column = "id",
     
     extracted_reflectance = get_already_extracted(export_path, obs, obs_path, name_column)
 
-    reflectance = get_reflectance_at_points(obs, sentinel_dir, extracted_reflectance, name_column, bands_to_extract)
+    reflectance = get_reflectance_at_points(obs, sentinel_dir, extracted_reflectance, name_column, bands_to_extract, tile_selection)
     
     if reflectance is None:
         print("No new data to extract")
