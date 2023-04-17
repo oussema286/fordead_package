@@ -192,7 +192,7 @@ def get_params(params_to_test):    # params_to_test = {}
 
 
 
-def get_pre_masks_dataframe(reflect, list_bands):
+def get_pre_masks_dataframe(reflect, list_bands, name_column):
     soil_anomaly = compute_vegetation_index(reflect, formula = "(B11 > 1250) & (B2 < 600) & ((B3 + B4) > 800)")
     shadows = (reflect[list_bands]==0).any(axis=1)
     outside_swath = reflect[list_bands[0]]<0
@@ -204,9 +204,9 @@ def detect_soil(data_frame, invalid, name_column):
     data_frame = data_frame[~invalid].reset_index()
     data_frame["group"] = ((data_frame.soil_anomaly != data_frame.soil_anomaly.shift()).cumsum())
     
-    consecutive_soil = data_frame[data_frame["soil_anomaly"]].groupby(by = ["id_pixel", "group"]).size()
-    soil_detect_groups = consecutive_soil[consecutive_soil >= 3].reset_index().groupby("id_pixel").first()
-    int_df = pd.merge(data_frame, soil_detect_groups, how='inner', on=['id_pixel', 'group']).groupby("id_pixel").first().reset_index()[["area_name",name_column,"id_pixel","Date"]]
+    consecutive_soil = data_frame[data_frame["soil_anomaly"]].groupby(by = ["area_name", name_column, "id_pixel", "group"]).size()
+    soil_detect_groups = consecutive_soil[consecutive_soil >= 3].reset_index().groupby(["area_name", name_column, "id_pixel"]).first()
+    int_df = pd.merge(data_frame, soil_detect_groups, how='inner', on=["area_name", name_column, "id_pixel", "group"]).groupby(["area_name", name_column, "id_pixel"]).first().reset_index()[["area_name",name_column,"id_pixel","Date"]]
     return int_df
 
 def detect_clouds_dataframe(data_frame):
@@ -227,7 +227,10 @@ def compute_and_apply_mask(data_frame, soil_detection, formula_mask, list_bands,
     else:
         mask = compute_user_mask_dataframe(data_frame, formula_mask, list_bands)
         
-    data_frame = data_frame[~mask.to_numpy()]
+        
+        
+    data_frame["mask"] = mask
+    data_frame = data_frame[~data_frame["mask"]]
     
     if apply_source_mask:
         data_frame = data_frame[~source_mask_dataframe(data_frame["Mask"], sentinel_source)]
@@ -243,7 +246,7 @@ def compute_user_mask_dataframe(data_frame, formula_mask, list_bands):
 
 def compute_masks_dataframe(data_frame, list_bands, name_column):
     
-    data_frame["soil_anomaly"], shadows, outside_swath, invalid = get_pre_masks_dataframe(data_frame, list_bands)
+    data_frame["soil_anomaly"], shadows, outside_swath, invalid = get_pre_masks_dataframe(data_frame, list_bands, name_column)
     
     soil_data = detect_soil(data_frame, invalid, name_column)
     
@@ -252,7 +255,7 @@ def compute_masks_dataframe(data_frame, list_bands, name_column):
     
     # data_frame["bare_ground"].sum()
     
-    data_frame["bare_ground"] = data_frame.groupby("id_pixel").bare_ground.ffill().fillna(False)
+    data_frame["bare_ground"] = data_frame.groupby(["area_name", name_column, "id_pixel"]).bare_ground.ffill().fillna(False)
 
     clouds = detect_clouds_dataframe(data_frame)
     
@@ -261,6 +264,7 @@ def compute_masks_dataframe(data_frame, list_bands, name_column):
 
     # mask = shadows | clouds | outside_swath | data_frame["bare_ground"] | data_frame["soil_anomaly"]
 
+    
     return mask, data_frame["bare_ground"]
   
         
@@ -327,7 +331,6 @@ def prediction_vegetation_index_dataframe(masked_vi, pixel_info, name_column):
     # predicted_vi = prediction_vegetation_index_dataframe(coeff_model,[date])
     
     predicted_vi = np.sum(coeff_model * harmonic_terms,axis = 1)
-    
     
     return predicted_vi
 
