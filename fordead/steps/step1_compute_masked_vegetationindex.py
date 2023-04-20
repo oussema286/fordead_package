@@ -7,7 +7,7 @@ Created on Thu Nov 19 16:06:51 2020
 """
 
 #%% =============================================================================
-#   LIBRAIRIES
+#   LIBRARIES
 # =============================================================================
 
 # import time
@@ -16,7 +16,7 @@ from pathlib import Path
 # import geopandas as gp
 import numpy as np
 #%% ===========================================================================
-#   IMPORT LIBRAIRIES PERSO
+#   IMPORT FORDEAD MODULES 
 # =============================================================================
 
 from fordead.import_data import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata

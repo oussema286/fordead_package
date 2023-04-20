@@ -14,6 +14,8 @@ from fordead.visualisation.create_timelapse import cli_create_timelapse
 from fordead.validation.preprocess_obs import cli_preprocess_obs
 from fordead.validation.obs_to_s2_grid import cli_obs_to_s2_grid
 from fordead.validation.extract_reflectance import cli_extract_reflectance
+from fordead.validation.extract_cloudiness import cli_extract_cloudiness
+
 
 class OrderedGroup(click.Group):
     # ref: https://stackoverflow.com/questions/47972638/how-can-i-define-the-order-of-click-sub-commands-in-help
@@ -44,6 +46,7 @@ fordead.add_command(cli_vi_series_visualisation)
 fordead.add_command(cli_create_timelapse)
 fordead.add_command(cli_preprocess_obs)
 fordead.add_command(cli_obs_to_s2_grid)
+fordead.add_command(cli_extract_cloudiness)
 fordead.add_command(cli_extract_reflectance)
 
 if __name__ == '__main__':  # pragma: no cover

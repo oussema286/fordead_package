@@ -267,7 +267,14 @@ def compute_masks_dataframe(data_frame, list_bands, name_column):
     
     return mask, data_frame["bare_ground"]
   
-        
+      
+def filter_cloudy_acquisitions(reflect, cloudiness_path, lim_perc_cloud):
+    cloudiness = pd.read_csv(cloudiness_path)
+    reflect = reflect.merge(cloudiness, how = "left", on = ["area_name", "Date"])
+    reflect = reflect[reflect["cloudiness"] <= lim_perc_cloud]
+    reflect = reflect.drop(columns=["cloudiness"])
+    return reflect
+    
 def source_mask_dataframe(source_mask, sentinel_source):
     if sentinel_source=="THEIA":
         source_mask = source_mask>0

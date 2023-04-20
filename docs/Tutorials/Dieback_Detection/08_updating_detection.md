@@ -1,6 +1,7 @@
 ## Updating detection
 
-The dieback detection can be updated simply by adding new Sentinel-2 dates which can be very useful for monitoring vegetation. To illustrate this, copy the files from the directory **update_study_area** to the directory **study_area**, then run the entire script again.
+The dieback detection can be updated simply by adding new Sentinel-2 dates which can be very useful for monitoring vegetation. 
+To illustrate this, copy the files from the directory **update_study_area** to the directory **study_area**, then run the entire script again.
 You can save results from the **Results**, **Timelapses** and **TimeSeries** in an other folder if you wish to compare them with the updated results which will overwrite them.
 
 Here, you can find the complete script all in one place :
@@ -14,7 +15,7 @@ from fordead.steps.step5_export_results import export_results
 from fordead.visualisation.create_timelapse import create_timelapse
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
 
-input_directory = "<MyWorkingDirectory>/sentinel_data/dieback_detection_tutorial/study_area"
+input_directory = "<MyWorkingDirectory>/study_area"
 data_directory = "<output directory>"
 
 compute_masked_vegetationindex(input_directory = input_directory, 
@@ -59,7 +60,7 @@ vi_series_visualisation(data_directory = data_directory,
                         chunks = 100)
 ```
 
-Results can be updated using only the new Sentinel-2 dates, saving on computation time. 
+Results can only be updated using Sentinel-2 acquisitons more recent than those previously processed. 
 
 The following figures show how the bark beetle attack progressed for the entire area, and for a single pixel :
 
@@ -68,4 +69,4 @@ Original | Updated
 ![gif_results_original](Figures/gif_results_original.gif "gif_results_original") | ![gif_results_updated](Figures/gif_results_updated.gif "gif_results_updated")
 ![graph_healthy](Figures/graph_healthy.png "graph_healthy") | ![graph_updated](Figures/graph_updated.png "graph_updated")
 
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/07_create_graphs)
+[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/07_create_graphs)

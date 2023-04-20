@@ -1,22 +1,30 @@
 # <div align="center"> Validation of the detections from observations </div>
 
-In this tutorial, we will show how observations can be used to extract Sentinel-2 data, so the method provided in this package can be applied on a specific dataset, allowing a user to run tests very quickly which can be used to optimize the parameters and to validate the method using this observation dataset.
+This tutorial illustrates how to use the calibration / validation module (CALVAL) in order to apply _fordead_ on a set of geolocated spatial entities defined in a vector layer. 
+This CALVAL module applies _fordead_ on a limited number of pixels, such as labelled ground observations, and is therefore computationally efficient once information is extracted from Sentinel-2 time series.
+This CALVAL module can be used to explore and compare the results obtained from multiple input settings, in order to :
+- identify the combination of spectral index, anomaly treshold and other input variables, resulting in optimal detection for a given type of dieback/degradation.
+- validate the optimal combination with quantitative indicators
 
 ## Requirements
 ### Package installation 
-If the package is not already installed, follow the instructions of the [installation guide](https://fordead.gitlab.io/fordead_package/docs/Installation/). 
-If it is already installed, simply launch the command prompt and activate the environment with the command `conda activate <environment name>`
+Follow the [installation instruction guide](https://fordead.gitlab.io/fordead_package/docs/Installation/) if relevant. 
+Then launch the command prompt and activate the environment with the command `conda activate <environment name>`
 
 ### Downloading the tutorial dataset
 
-To apply the steps shown in this tutorial, one simply needs a vector file containing points or polygons with an ID column as well as a folder containing a subfolder for each available Sentinel-2 tile.
-Sentinel-2 acquisition dates and bands are then parsed from the folder names and the filenames inside as to extract the whole time series on the points or polygons of the vector file.
+This tutorial requires :
+- a vector file including points or polygons with an ID column 
+- a directory containing raster data following the same structure as described in the [main tutorial](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/01_compute_masked_vegetationindex/)
 
-Here, we provide a small tutorial dataset which you can download from the [fordead_data repository](https://gitlab.com/fordead/fordead_data), if you have not already downloaded it for the [dieback detection tutorial](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/00_Intro/).
-The Sentinel-2 data relevant to this specific tutorial is located in the folder ~/sentinel_data/validation_tutorial, it focuses on another small study area infested with bark beetles, but the validation tools presented here can be run on several Sentinel-2 tiles.
+Sentinel-2 acquisitions and spectral bands are then parsed from each subdirectory in order to extract the spectral information corresponding to the points or polygons defined in the vector file for the whole time series.
 
-In this example,  we use data provided by [THEIA](https://www.theia-land.fr/), but data from other providers ([ESA-Copernicus](https://scihub.copernicus.eu/), [CNES-PEPS](https://peps.cnes.fr/rocket/#/home)) can also be used.
-More specifically, we use level-2A FRE (**F**lat **RE**flectance) data, which means it is atmospherically and topographically corrected, and contains a Scene Classification Map (for more information, please visit the [related page](https://labo.obs-mip.fr/multitemp/sentinel-2/theias-sentinel-2-l2a-product-format/#English) ).
+A reduced dataset is available from the [fordead_data repository](https://gitlab.com/fordead/fordead_data), if you have not already downloaded it for the [dieback detection tutorial](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/00_Intro/).
+The Sentinel-2 data used in this tutorial correspond to the folder ~/sentinel_data/validation_tutorial.
+
+In this tutorial, we used data provided by [THEIA](https://www.theia-land.fr/), but data from other providers ([ESA-Copernicus](https://scihub.copernicus.eu/), [CNES-PEPS](https://peps.cnes.fr/rocket/#/home)) can also be used.
+We used level-2A FRE (**F**lat **RE**flectance) data, which corresponds to atmospherically and topographically corrected reflectance data.
+The Sentinel-2 product contains a Scene Classification Map (for more information, please visit the [related page](https://labo.obs-mip.fr/multitemp/sentinel-2/theias-sentinel-2-l2a-product-format/#English) ).
 
 Here is the file tree for the Sentinel-2 directory example for this tutorial :
 
@@ -33,17 +41,19 @@ Here is the file tree for the Sentinel-2 directory example for this tutorial :
 │       ├── ...
 ```
 
-And the vector file containing observation data has the following path : fordead_data/vector/observations_tuto.shp. It contaings an ID column called "id".
-Here they are shown, against the Sentinel-2 acquisition of 27-02-2019 on tile T31UGP along with their attributes.
+The path of the vector file corresponding to observation data is **fordead_data/vector/observations_tuto.shp**. 
+**Figure 1** displays these polygons over a Sentinel-2 acquisition.
+Each spatial entity corresponds to a polygon and requires an ID column which is called "id" in this case.
+In addition to the ID column, these polygons also include optional information, "Date" and "Class", corresponding to the date of observation and the corresponding status.
 
-Observations on the Sentinel-2 acquisition of 27-02-2019   |  Attribute table of the observations
+*Fig 1 : Observations on the Sentinel-2 acquisition of 27-02-2019 on tile 31UGP*   |  *Fig 2 : Attribute table of the observations*
 :-------------------------:|:-------------------------:
 ![observations](Figures/observations.png "observations")  |  ![observation_dataframe](Figures/observation_dataframe.png "observation_dataframe")
 
 
-### Memory space required
+### Disk space required
 
-For this tutorial, you should have 1Go of memory space, to download the package, the tutorial dataset, and save the computed results.
+Once _fordead_ is installed, a minimum of 1 Go of free disk space is recommended to run this tutorial.
 
 [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/01_preprocessing_observations)
 

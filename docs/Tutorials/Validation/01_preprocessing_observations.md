@@ -1,11 +1,14 @@
 # <div align="center"> Preprocessing observations used for validation </div>
 
-In this step, we will use observation polygons to generate a vector file containing points at the center of each 10m Sentinel-2 pixel inside of the polygons. 
-They keep the original polygon ID, and are also given the following attributes :
-- **id_pixel**: 
-- **name_area** : Name of the associated Sentinel-2 tile 
+The initial vector file is first used to generate a new vector file containing points at the center of each 10 m Sentinel-2 pixel included in the polygon.
+
+Each new point includes the following attributes :
+- original polygon ID
+- **id_pixel**: ID of the pixel
+- **name_area** : Name of the corresponding area (e.g. Sentinel-2 tile ID)
 - **epsg**: CRS of the associated Sentinel-2 tile as the EPSG integer.
-They can then be used in the next step to extract Sentinel-2 data at those point locations.
+
+These datapoints are used in the next step to extract Sentinel-2 data more efficiently.
 
 The points generated are kept in the CRS of the original vector file.
 
@@ -27,6 +30,9 @@ obs_to_s2_grid(
 	name_column = "id")
 ```
 
+> **_NOTE :_** Set **obs_to_s2_grid** input variable `overwrite = True` to re-run this processing stage, otherwise it will raise an error.
+
+
 ##### Running this step from the command invite
 
 This step can also be ran from the command prompt. The command `fordead obs_to_s2_grid -h` will print the help information of this step. For example, to use it with the same parameters, the following command can be used:
@@ -36,12 +42,15 @@ fordead obs_to_s2_grid --obs_path <MyWorkingDirectory>/vector/observations_tuto.
 
 #### OUTPUTS
 
-Running this script will create a new vector file at <MyWorkingDirectory>/vector/preprocessed_obs_tuto.shp containing only points.
-Since there is an observation outside of the available Sentinel-2 data, it is removed from the resulting vector and its ID is printed to the console.
+The vector file containing only points is written in the following file: **fordead_data/vector/preprocessed_obs_tuto.shp**
 
-Here we can see a view from QGIS zoomed on observation 7, as well as the attribute table.
+Observations outside of the footprint of the Sentinel-2 data are removed from the resulting vector and their ID printed in the command prompt.
+
+The following figure shows a zoomed view on observation 7 and corresponding attribute table.
 
 ![points_obs](Figures/points_obs.png "points_obs")
 
+> **_NOTE :_** If the initial vector file contains points, their locations are preserved and their id_pixel attribute is set to 1.
 
 [PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/00_Intro) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/02_extract_reflectance)
+
