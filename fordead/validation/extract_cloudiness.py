@@ -17,7 +17,7 @@ from fordead.import_data import TileInfo, get_band_paths, get_cloudiness
 @click.command(name='extract_cloudiness')
 @click.option("--sentinel_dir", type = str,default = None, help = "Path of the directory containing Sentinel-2 data.", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted reflectance", show_default=True)
-@click.option("-t","--tile_selection", type = list, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.", show_default=True)
+@click.option("-t","--tile_selection", multiple=True, type = str, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.", show_default=True)
 @click.option("--sentinel_source", type = str,default = "THEIA", help = "", show_default=True)
 def cli_extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_source):
     """
@@ -50,6 +50,7 @@ def extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_sourc
     
     cloudiness_list = []
     for area_name in tile_selection:
+        print(area_name)
         tile = TileInfo(sentinel_dir / area_name)
         tile.getdict_datepaths("Sentinel",sentinel_dir / area_name) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
         tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
@@ -66,7 +67,8 @@ def extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_sourc
 if __name__ == '__main__':
 
         extract_cloudiness(
-            sentinel_dir = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
+            # sentinel_dir = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
+            sentinel_dir = "D:/fordead/Data/Sentinel",
             export_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
-            tile_selection = ["T31UGP"])
+            tile_selection = ["ZoneMarne","Zone_superposition","zone_feuillu"])
         
