@@ -527,6 +527,45 @@ def get_already_extracted(export_path, obs, obs_path, name_column):
         return extracted_reflectance
     else:
         return None
+    
+    
+    
+# =============================================================================
+#     
+# =============================================================================
+
+#tested_parameters / tested_parameters_source?
+def get_params(params_to_test):    # params_to_test = {}
+    
+    if isinstance(params_to_test, dict):
+        return params_to_test
+    #     #Check that variables all exist in process_tile
+    elif isinstance(params_to_test, pd.DataFrame):
+        param_dict = params_to_test #faux
+        return param_dict
+    #     #Check that variables (columns names) all exist in process_tile
+    elif isinstance(params_to_test, str):
+        #Check if all columns or all first rows exist
+        #If not in both cases, return problematic variables là où il y en a le moins
+        if Path(params_to_test).exists():
+            param_dict = {}
+            with open(params_to_test, 'r') as f:
+                
+                for line in f:
+                    list_line = line.split()
+                    try:
+                        param_dict[list_line[0]] = [ast.literal_eval(list_line[1:][i].rstrip('\n')) for i in range(len(list_line[1:]))]
+                    except:
+                        param_dict[list_line[0]] = list_line[1:]
+            return param_dict
+        else:
+            raise Exception("Text file " + params_to_test + " not found.")
+    else:
+        raise Exception("Unrecognized params_to_test parameter")
+        
+        
+        
+        
 # def extract_raster_values_vrt(points,sentinel_dir):
 #     """Must have the same crs"""
 
