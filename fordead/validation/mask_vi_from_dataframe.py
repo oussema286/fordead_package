@@ -18,8 +18,8 @@ import numpy as np
 def mask_vi_from_dataframe(reflectance_path,
                            export_path,
                            name_column,
-                           vi,
-                           cloudiness_path = None,
+                           cloudiness_path,
+                           vi = "CRSWIR",
                            lim_perc_cloud = 0.45,
                            soil_detection = True,
                            formula_mask = "(B2 >= 700)",
@@ -28,6 +28,7 @@ def mask_vi_from_dataframe(reflectance_path,
                            apply_source_mask = False,
                            sentinel_source = "THEIA"
                            ):
+
     
     reflect = pd.read_csv(reflectance_path)
     if cloudiness_path is not None:
@@ -37,7 +38,7 @@ def mask_vi_from_dataframe(reflectance_path,
     
     reflect = compute_and_apply_mask(reflect, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source, name_column)
 
-    reflect["vi"] = compute_vegetation_index(reflect, vi = "CRSWIR", formula = None, path_dict_vi = None)
+    reflect["vi"] = compute_vegetation_index(reflect, vi = vi, formula = None, path_dict_vi = None)
     reflect = reflect[~reflect["vi"].isnull()]
     reflect = reflect[~np.isinf(reflect["vi"])]
     
@@ -55,9 +56,9 @@ if __name__ == '__main__':
     #                    name_column = "id")
     
     mask_vi_from_dataframe(reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
-                       export_path = "D:/fordead/fordead_data/output/mask_vi_tuto.csv",
-                       cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
-                       vi = "CRSWIR",
-                       name_column = "id")
+                        export_path = "D:/fordead/fordead_data/output/mask_vi_tuto.csv",
+                        cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
+                        vi = "CRSWIR",
+                        name_column = "id")
     
     print("Temps de calcul : %s secondes ---" % (time.time() - start_time_debut))

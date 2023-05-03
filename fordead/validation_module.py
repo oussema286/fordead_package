@@ -14,6 +14,12 @@ from rasterio.crs import CRS
 from fordead.masking_vi import get_dict_vi
 from fordead.masking_vi import compute_vegetation_index
 from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
+
+
+from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
+from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
+from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
+
 # import rasterio.sample
 # =============================================================================
 # PREPROCESS POLYGONS
@@ -535,15 +541,15 @@ def get_already_extracted(export_path, obs, obs_path, name_column):
 # =============================================================================
 
 #tested_parameters / tested_parameters_source?
-def get_params(params_to_test):    # params_to_test = {}
+def get_args(params_to_test):    # params_to_test = {}
     
     if isinstance(params_to_test, dict):
         return params_to_test
-    #     #Check that variables all exist in process_tile
-    elif isinstance(params_to_test, pd.DataFrame):
-        param_dict = params_to_test #faux
-        return param_dict
-    #     #Check that variables (columns names) all exist in process_tile
+    #     #Check that variables all exist in functions
+    # elif isinstance(params_to_test, pd.DataFrame):
+    #     param_dict = params_to_test #faux
+    #     return param_dict
+    #     #Check that variables (columns names) all exist in functions
     elif isinstance(params_to_test, str):
         #Check if all columns or all first rows exist
         #If not in both cases, return problematic variables là où il y en a le moins
@@ -563,9 +569,83 @@ def get_params(params_to_test):    # params_to_test = {}
     else:
         raise Exception("Unrecognized params_to_test parameter")
         
+def filter_args(func,param_dict,combs):
+    param_filter_list = func.__code__.co_varnames[:func.__code__.co_argcount]
+    args = {variable : dict(zip(param_dict.keys(),combs))[variable] for variable in param_filter_list if variable in dict(zip(param_dict.keys(),combs))}
+    return args
+
+def already_existing_test(df1,df2):
+    common_columns = df2.columns.intersection(df1.columns)
+
+    all_df = pd.merge(df1[common_columns], df2[common_columns], 
+                      on=list(common_columns), how='left', indicator='exists')
         
+    already_existing_test_ids = df1[all_df["exists"] == "both"]["test_id"]
+    if len(already_existing_test_ids) != 0:
+        return already_existing_test_ids.values[0]
+    else:
+        return None
+
+def get_test_id(test_info_path, tile_parameters_dataframe):
+    if test_info_path.exists():
+        test_info_dataframe = pd.read_csv(test_info_path, dtype = str)
+        existing_test_id = already_existing_test(test_info_dataframe, tile_parameters_dataframe)
+        if existing_test_id is not None:
+            print("Already existing test with the same parameters (test_id : " + str(existing_test_id) + ")\nResults were not copied\n")
+            test_id =  None
+        else:
+            test_id = test_info_dataframe["test_id"].astype(int).max()+1
+    else:
+        test_id = 1
         
-        
+    return test_id
+
+
+import inspect
+
+def get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
+
+
+def get_args_dataframe(comb_dict):
+    args_dict = get_default_args(mask_vi_from_dataframe)
+    d2 = get_default_args(train_model_from_dataframe)
+    d3 = get_default_args(dieback_detection_from_dataframe)
+    args_dict.update(d2)
+    args_dict.update(d3)
+    args_dict.update(comb_dict)
+    for key in args_dict:
+        args_dict[key] = str(args_dict[key])
+    args_dataframe = pd.DataFrame(data=args_dict, index=[0])
+    
+    return args_dataframe
+
+
+def combine_validation_results(merged_pixel_info_path, merged_periods_path, test_info_path,
+                               pixel_info_path, periods_path,
+                               args_dataframe, test_id):
+    
+    #Di déjà un fichier, comparer les paramètres, si pas de différence : même test, si on retrouve des IdZone, erreur.
+    #rajouter csv avec numéros des tests et paramètres
+    
+    periods = pd.read_csv(periods_path)
+    pixel_info = pd.read_csv(pixel_info_path)
+    
+    args_dataframe["test_id"] = test_id
+    periods["test_id"] = test_id
+    pixel_info["test_id"] = test_id
+    
+    args_dataframe.to_csv(test_info_path, mode='a', index=False,header=not(test_info_path.exists()))
+    periods.to_csv(merged_periods_path, mode='a', index=False,header=not(merged_periods_path.exists()))
+    pixel_info.to_csv(merged_pixel_info_path, mode='a', index=False,header=not(merged_pixel_info_path.exists()))   
+
+
+
 # def extract_raster_values_vrt(points,sentinel_dir):
 #     """Must have the same crs"""
 

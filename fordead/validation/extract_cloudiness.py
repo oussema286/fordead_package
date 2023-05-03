@@ -67,8 +67,8 @@ def extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_sourc
 if __name__ == '__main__':
 
         extract_cloudiness(
-            # sentinel_dir = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
-            sentinel_dir = "D:/fordead/Data/Sentinel",
+            sentinel_dir = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
+            # sentinel_dir = "D:/fordead/Data/Sentinel",
             export_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
-            tile_selection = ["ZoneMarne","Zone_superposition","zone_feuillu"])
+            tile_selection = ["T31UGP"])
         
