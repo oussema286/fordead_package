@@ -199,15 +199,16 @@ def get_pre_masks_dataframe(reflect, list_bands, name_column):
     invalid = shadows | outside_swath | (reflect["B2"] >= 600)
     return soil_anomaly, shadows, outside_swath, invalid
 
-def detect_soil(data_frame, invalid, name_column):
+def detect_soil(data_frame, name_column):
     
-    data_frame = data_frame[~invalid].reset_index()
+    data_frame = data_frame[~data_frame["invalid"]].reset_index()
     data_frame["group"] = ((data_frame.soil_anomaly != data_frame.soil_anomaly.shift()).cumsum())
     
     consecutive_soil = data_frame[data_frame["soil_anomaly"]].groupby(by = ["area_name", name_column, "id_pixel", "group"]).size()
     soil_detect_groups = consecutive_soil[consecutive_soil >= 3].reset_index().groupby(["area_name", name_column, "id_pixel"]).first()
-    int_df = pd.merge(data_frame, soil_detect_groups, how='inner', on=["area_name", name_column, "id_pixel", "group"]).groupby(["area_name", name_column, "id_pixel"]).first().reset_index()[["area_name",name_column,"id_pixel","Date"]]
-    return int_df
+    bare_ground_first_date = pd.merge(data_frame, soil_detect_groups, how='inner', on=["area_name", name_column, "id_pixel", "group"]).groupby(["area_name", name_column, "id_pixel"]).first().reset_index()[["area_name",name_column,"id_pixel","Date"]].rename(columns={"Date": "bare_ground_first_date"})
+  
+    return bare_ground_first_date
 
 def detect_clouds_dataframe(data_frame):
     NG = compute_vegetation_index(data_frame, formula = "B3/(B8A+B4+B3)")
@@ -222,50 +223,48 @@ def detect_clouds_dataframe(data_frame):
 def compute_and_apply_mask(data_frame, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source, name_column):
  
     if soil_detection:
-        mask, bare_ground = compute_masks_dataframe(data_frame, list_bands, name_column)
-        data_frame["bare_ground"] = bare_ground.to_numpy()
+        data_frame, bare_ground = compute_masks_dataframe(data_frame, list_bands, name_column)
+        # data_frame["bare_ground"] = bare_ground.to_numpy()
     else:
-        mask = compute_user_mask_dataframe(data_frame, formula_mask, list_bands)
+        data_frame = compute_user_mask_dataframe(data_frame, formula_mask, list_bands)
         
-        
-        
-    data_frame["mask"] = mask
-    data_frame = data_frame[~data_frame["mask"]]
+    masked_dataframe = data_frame[~data_frame["mask"]]
     
     if apply_source_mask:
-        data_frame = data_frame[~source_mask_dataframe(data_frame["Mask"], sentinel_source)]
+        masked_dataframe = masked_dataframe[~source_mask_dataframe(masked_dataframe["Mask"], sentinel_source)]
         
-    return data_frame
+    return masked_dataframe, bare_ground
 
 def compute_user_mask_dataframe(data_frame, formula_mask, list_bands):
     shadows = (data_frame[list_bands]==0).any(axis=1)
     outside_swath = data_frame[list_bands[0]]<0
     user_mask = compute_vegetation_index(data_frame, formula = formula_mask)
-    mask = shadows | outside_swath | user_mask
-    return mask
+    data_frame["mask"] = shadows | outside_swath | user_mask
+    return data_frame
 
 def compute_masks_dataframe(data_frame, list_bands, name_column):
     
-    data_frame["soil_anomaly"], shadows, outside_swath, invalid = get_pre_masks_dataframe(data_frame, list_bands, name_column)
+    data_frame["soil_anomaly"], data_frame["shadows"], data_frame["outside_swath"], data_frame["invalid"] = get_pre_masks_dataframe(data_frame, list_bands, name_column)
     
-    soil_data = detect_soil(data_frame, invalid, name_column)
+    bare_ground_first_date = detect_soil(data_frame, name_column)
     
-    soil_data["bare_ground"] = True
-    data_frame = data_frame.merge(soil_data, on=["area_name", name_column, "id_pixel","Date"], how='left')
-    
+    # soil_data["bare_ground"] = True
+    data_frame = data_frame.merge(bare_ground_first_date, on=["area_name", name_column, "id_pixel"], how='left')
+ 
+    data_frame["bare_ground"] = (data_frame["Date"] >= data_frame["bare_ground_first_date"])
     # data_frame["bare_ground"].sum()
     
-    data_frame["bare_ground"] = data_frame.groupby(["area_name", name_column, "id_pixel"]).bare_ground.ffill().fillna(False)
+    # data_frame["bare_ground"] = data_frame.groupby(["area_name", name_column, "id_pixel"]).bare_ground.ffill().fillna(False)
 
-    clouds = detect_clouds_dataframe(data_frame)
+    data_frame["clouds"] = detect_clouds_dataframe(data_frame)
     
-    # mask = shadows | clouds | outside_swath | data_frame["bare_ground"] | data_frame["soil_anomaly"]
-    mask = shadows | clouds | outside_swath | (data_frame["soil_anomaly"] & ~data_frame["bare_ground"])
+    data_frame["mask"] = data_frame["shadows"] | data_frame["clouds"] | data_frame["outside_swath"] | (~data_frame["bare_ground"] & data_frame["soil_anomaly"])
+    # mask = shadows | clouds | outside_swath | (data_frame["soil_anomaly"]
 
     # mask = shadows | clouds | outside_swath | data_frame["bare_ground"] | data_frame["soil_anomaly"]
 
     
-    return mask, data_frame["bare_ground"]
+    return data_frame, bare_ground_first_date
   
       
 def filter_cloudy_acquisitions(reflect, cloudiness_path, lim_perc_cloud):
@@ -314,7 +313,7 @@ def model(date_as_number, vi, id_pixel):
 
 def model_vi_dataframe(data_frame, name_column):
     
-    data_frame = data_frame[data_frame["Date"] <= data_frame["last_date_training"]].reset_index()
+    
     
     data_frame['Date'] = pd.to_datetime(data_frame['Date'])
     data_frame["date_as_number"] = (data_frame['Date'] - pd.to_datetime("2015-01-01")).dt.days
@@ -364,10 +363,10 @@ def detection_anomalies_dataframe(data_frame, threshold_anomaly, vi, path_dict_v
     
 #     stress_index_list = []
 #     for index, period in periods.iterrows():      
-#         data_period = data_frame[(data_frame["Date"] >= period['start_date']) & (data_frame["Date"] < period['end_date'])]
+#         data_period = data_frame[(data_frame["Date"] >= period['first_date']) & (data_frame["Date"] < period['last_date'])]
 #         stress_index_list += [(data_period.diff_vi*range(1,len(data_period)+1)).sum()/(len(data_period)*(len(data_period)+1)/2)]
 
-#     # id_pixel stress_period_id start_date end_date stress_index
+#     # id_pixel stress_period_id first_date last_date stress_index
 #     periods["stress_index"] = stress_index_list
     
     
@@ -383,10 +382,10 @@ def get_stress_index(data_frame, stress_periods):
     
     stress_index_list = []
     for index, period in periods.iterrows():      
-        data_period = data_frame[(data_frame["Date"] >= period['start_date']) & (data_frame["Date"] < period['end_date'])]
+        data_period = data_frame[(data_frame["Date"] >= period['first_date']) & (data_frame["Date"] < period['last_date'])]
         stress_index_list += [(data_period.diff_vi*range(1,len(data_period)+1)).sum()/(len(data_period)*(len(data_period)+1)/2)]
 
-    # id_pixel stress_period_id start_date end_date stress_index
+    # id_pixel stress_period_id first_date last_date stress_index
     periods["stress_index"] = stress_index_list
     
     
@@ -394,57 +393,105 @@ def get_stress_index(data_frame, stress_periods):
         
     # data_frame[]
 
+def get_state(data):
+    
+    states = np.where(data["anomaly"], np.where(data["anomaly"], "Stress", "Healthy"), "Healthy")
+    if states[-1] == "Stress":
+        states[-1] = "Dieback"
+    return pd.Series(states)
+
+# df = df.groupby(['category1', 'category2']).apply(myfunc_data)
+
+
 
 def detect_state_changes(data_frame, name_column):
     
     data_frame["group"] = ((data_frame.anomaly != data_frame.anomaly.shift()).cumsum()) #Group successive rows with same anomaly value
     consecutive_anomaly = data_frame.groupby(by = ["area_name", name_column,"id_pixel","group", "anomaly"]).size().reset_index(name = "size")     #Count successive rows with same anomaly value
+   
 
-    consecutive_anomaly = consecutive_anomaly[consecutive_anomaly["size"] >= 3]
-    
+    consecutive_anomaly['row_count'] = consecutive_anomaly.groupby(["area_name", name_column,"id_pixel"]).cumcount() + 1
+
+    consecutive_anomaly = consecutive_anomaly[(consecutive_anomaly["size"] >= 3) | (consecutive_anomaly["row_count"] == 1)]
+    consecutive_anomaly.loc[(consecutive_anomaly["size"] < 3) & (consecutive_anomaly["row_count"] == 1), "anomaly"] = False
+
+    # test = consecutive_anomaly[(consecutive_anomaly["size"] < 3) & (consecutive_anomaly["row_count"] == 1)]
+    # ex = consecutive_anomaly[(consecutive_anomaly.id == 5) & (consecutive_anomaly.id_pixel == 220)]
+
+
     consecutive_anomaly["group2"] = ((consecutive_anomaly.anomaly != consecutive_anomaly.anomaly.shift()).cumsum())
     
     # keep first date and get size at the same time could be more efficient
     changes = consecutive_anomaly.groupby(by = ["area_name", name_column,"id_pixel","group2", "anomaly"]).first().reset_index()#.drop(columns=['group2', 'size']) #Remove successive rows with same anomaly value
 
-    changes["period_id"] = changes.groupby(by = ["area_name", name_column,"id_pixel"])['anomaly'].cumsum()
-    
-    # changes = changes[(changes.groupby("id_pixel").cumcount() !=0) | (changes.anomaly)] #Remove first group of successive false values which is not a change
-    changes = changes[changes["period_id"] != 0]
+
+    #Remove first group of successive false values which is not a change
+        # changes = changes[(changes.groupby("id_pixel").cumcount() !=0) | (changes.anomaly)] 
+    # changes["period_id"] = changes.groupby(by = ["area_name", name_column,"id_pixel"])['anomaly'].cumsum()
+    # changes = changes[changes["period_id"] != 0]
     
     first_dates = data_frame.groupby(by = ["area_name", name_column,"id_pixel","group"]).first().reset_index()[["area_name", name_column, "id_pixel","group","Date"]]
     
     dated_changes = changes.merge(first_dates, on=["area_name", name_column, "id_pixel","group"], how='left') #Rajouter la première date du groupe, perdue pendant le goup_by
+    dated_changes["state"] = dated_changes.groupby(["area_name", name_column,"id_pixel"]).apply(get_state).reset_index(name="state").state
+    dated_changes = dated_changes[['area_name', name_column, 'id_pixel','Date','state']].rename(columns = {"Date" : "first_date"})
     
     
-    dated_changes["limit"] = np.where(dated_changes['anomaly'], "start_date", "end_date")
- 
-    periods = dated_changes.pivot(index=["area_name", name_column, "id_pixel","period_id"], columns='limit', values = "Date")
-    periods["state"] = np.where(pd.isnull(periods['end_date']), "Dieback", "Stress")
     
-    # sizes = dated_changes.groupby(by = ["area_name", name_column,"id_pixel"]).size()
-    # dated_changes["state"] = [item for n in sizes for item in ["start_date", "end_date"]*int((n - n % 2)/2) + ["dieback"] * (n % 2) ]
+    # dated_changes
+    # dated_changes["limit"] = np.where(dated_changes['anomaly'], "first_date", "last_date")
 
-    return periods.reset_index()
+    # periods = dated_changes.pivot(index=["area_name", name_column, "id_pixel", "period_id"], columns='limit', values = "Date")
+    # periods["state"] = np.where(pd.isnull(periods['last_date']), "Dieback", "Stress")
 
-def compute_stress_index(data_frame, periods, max_nb_stress_periods, name_column):
+    return dated_changes
+
+# def compute_stress_index(data_frame, periods, name_column):
     
-    period_data_list = []
-    for i in range(1,max_nb_stress_periods+1):
-        print(i)
-        # stress_period = periods.groupby(["area_name", name_column,'id_pixel']).nth(i)
-        period = periods[periods["period_id"] == i]
-        if len(period) != 0 :
-            filtered_period_dataframe = data_frame.merge(period, on=["area_name", name_column,"id_pixel"], how='left') #Rajouter la première date du groupe, perdue pendant le goup_by
-            filtered_period_dataframe = filtered_period_dataframe[(filtered_period_dataframe["Date"] >= filtered_period_dataframe["start_date"]) & (pd.isnull(filtered_period_dataframe["end_date"]) | (filtered_period_dataframe["Date"] < filtered_period_dataframe["end_date"]))]
-            period["anomaly_intensity"] = filtered_period_dataframe.groupby(by = ["area_name", name_column,"id_pixel"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).to_numpy()
-            # stress_period["period_id"] = i+1
-            period_data_list += [period.reset_index()]
+#     period_id = 1
+#     period_exists = True
+#     period_data_list = []
+#     period_data_list += [periods[periods["period_id"] == 0]]
+#     while period_exists:
+#         print(period_id)
+#         # stress_period = periods.groupby(["area_name", name_column,'id_pixel']).nth(period_id)
+#         period = periods[periods["period_id"] == period_id]
+#         # period = period[periods["state"].isin(["Stress","Dieback"])]
+        
+#         # if period_id == 12:
+#         #     print("test")
+#         if len(period) != 0 :
+#             # data_frame = data_frame.reset_index()
+#             # period = period.reset_index()
+#             filtered_period_dataframe = data_frame.merge(period, on=["area_name", name_column,"id_pixel"], how='left') 
+#             # filtered_period_dataframe = filtered_period_dataframe[(filtered_period_dataframe["Date"] >= filtered_period_dataframe["first_date"]) & (pd.isnull(filtered_period_dataframe["last_date"]) | (filtered_period_dataframe["Date"] < filtered_period_dataframe["last_date"]))]
+#             filtered_period_dataframe = filtered_period_dataframe[(filtered_period_dataframe["Date"] >= filtered_period_dataframe["first_date"]) & (filtered_period_dataframe["Date"] <= filtered_period_dataframe["last_date"])]
+#             period = period.set_index(["area_name", name_column,"id_pixel", "first_date"])
+#             period["anomaly_intensity"] = filtered_period_dataframe.groupby(by = ["area_name", name_column,"id_pixel","first_date"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2))
+#             # test = filtered_period_dataframe.groupby(by = ["area_name", name_column,"id_pixel","first_date"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2))
 
-    period_data = pd.concat(period_data_list)
-    period_data = period_data[["area_name", name_column,"id_pixel","state","start_date","end_date", "anomaly_intensity"]]
 
-    return period_data
+#             # stress_period["period_id"] = i+1
+            
+#             period_data_list += [period.reset_index()]
+#         else:
+#             period_exists = False
+
+#         period_id+=1
+        
+#     period_data = pd.concat(period_data_list)
+    
+#     period_data = period_data[["area_name", name_column,"id_pixel","state","first_date","last_date", "anomaly_intensity"]].sort_values(["area_name",name_column,"id_pixel","first_date"], ascending = True)
+
+#     return period_data
+
+def compute_stress_index(detection_dates, periods, name_column):
+    
+    detection_dates = detection_dates.merge(periods.rename(columns = {"first_date" : "Date"}).drop(columns=["last_date"]), on=["area_name", name_column,"id_pixel","Date"], how='left') 
+    detection_dates = detection_dates.ffill()
+    period_stress_index = detection_dates.groupby(by = ["area_name", name_column,"id_pixel","period_id"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).reset_index(name = "anomaly_intensity")
+    periods = periods.merge(period_stress_index, on=["area_name", name_column,"id_pixel","period_id"], how='left') 
+    return periods, detection_dates
 
 def dieback_detection(data_frame, dated_changes, name_column):
     
@@ -461,3 +508,56 @@ def dieback_detection(data_frame, dated_changes, name_column):
     # consecutive_anomaly[consecutive_anomaly >= 3].groupby(by = [name_column,"id_pixel","group", "anomaly"]).size()
     # anomaly_detect_groups = consecutive_anomaly[consecutive_anomaly >= 3].reset_index().groupby("id_pixel").first()
     # int_df = pd.merge(data_frame, anomaly_detect_groups, how='inner', on=['id_pixel', 'group']).groupby("id_pixel").first().reset_index()[["id_pixel","Date"]]
+
+# def get_training_period(masked_vi, name_column):
+    
+#     training_dates = masked_vi[masked_vi["Date"] <= masked_vi["last_date_training"]].reset_index()
+#     g = training_dates.groupby(by = ["area_name", name_column,"id_pixel"])
+
+#     test = pd.concat([g.head(1), g.tail(1)])
+    # masked_vi = masked_vi[masked_vi["Date"] <= masked_vi["last_date_training"]].reset_index()
+
+def get_mask_vi_periods(reflect, first_date_bare_ground, name_column):
+    first_training_date = reflect.groupby(by = ["area_name", name_column,"id_pixel"]).first().reset_index()[["area_name", name_column, "id_pixel", "Date"]].rename(columns = {"Date" : "first_date"})
+    first_training_date["state"] = "Training"
+    first_date_bare_ground = first_date_bare_ground.rename(columns = {"bare_ground_first_date" : "first_date"})
+    first_date_bare_ground["state"] = "Bare ground"
+    mask_vi_periods = pd.concat([first_training_date, first_date_bare_ground]).sort_values(["area_name",name_column,"id_pixel"], ascending = True)
+    return mask_vi_periods
+    # periods_tot.to_csv(export_path, mode='w', index=False,header=True)
+
+def update_training_period(last_date_training, periods_path, name_column):
+    last_date_training = last_date_training.rename(columns = {"last_date_training" : "last_date"})
+    last_date_training["state"] = "Training"
+    
+    periods = pd.read_csv(periods_path)
+    periods = periods.merge(last_date_training, on=["area_name", name_column, "id_pixel","state"], how='left')
+    
+    periods = periods[["area_name", name_column,"id_pixel","first_date","last_date","state"]]
+    
+    periods.to_csv(periods_path, mode='w', index=False,header=True)
+
+
+def fill_periods(periods,dated_changes, masked_vi, name_column):
+    
+    masked_vi["date_before"] = masked_vi.Date.shift()
+    masked_vi=masked_vi[["area_name",name_column,"id_pixel","Date","date_before"]].rename(columns = {"Date" : "first_date"})
+    
+    periods = pd.concat([periods, dated_changes]).sort_values(["area_name",name_column,"id_pixel","first_date"], ascending = True)
+   
+    #Adding last_date
+    periods = periods.merge(masked_vi, on = ["area_name",name_column,"id_pixel","first_date"], how='left')
+    periods["date_before_shift"] = periods.date_before.shift(periods = -1)
+    
+    periods["last_date"] = np.where(periods["state"] != "Training", periods["date_before_shift"], periods["last_date"])
+    
+    # #Adding first healthy period without anomalies
+    # masked_vi = masked_vi.rename(columns = {"first_date" : "last_date"})
+    # masked_vi["date_after"] = masked_vi.last_date.shift(periods = -1)
+    # test = test.merge(masked_vi, on = ["area_name",name_column,"id_pixel","last_date"], how='left')
+    periods['period_id'] = periods.groupby(["area_name", name_column,"id_pixel"]).cumcount()
+    periods = periods[["area_name",name_column,"id_pixel","period_id","state","first_date","last_date"]]
+    return periods
+    
+    # check = test[~test.last_date.isna() & (test.date_before_shift != test.last_date)]
+    # ex = test[(test.id == 5) & (test.id_pixel == 220)]

@@ -626,24 +626,20 @@ def get_args_dataframe(comb_dict):
     return args_dataframe
 
 
-def combine_validation_results(merged_pixel_info_path, merged_periods_path, test_info_path,
-                               pixel_info_path, periods_path,
+def combine_validation_results(csv_path_list, merged_csv_path_list, test_info_path,
                                args_dataframe, test_id):
     
     #Di déjà un fichier, comparer les paramètres, si pas de différence : même test, si on retrouve des IdZone, erreur.
     #rajouter csv avec numéros des tests et paramètres
-    
-    periods = pd.read_csv(periods_path)
-    pixel_info = pd.read_csv(pixel_info_path)
-    
-    args_dataframe["test_id"] = test_id
-    periods["test_id"] = test_id
-    pixel_info["test_id"] = test_id
-    
-    args_dataframe.to_csv(test_info_path, mode='a', index=False,header=not(test_info_path.exists()))
-    periods.to_csv(merged_periods_path, mode='a', index=False,header=not(merged_periods_path.exists()))
-    pixel_info.to_csv(merged_pixel_info_path, mode='a', index=False,header=not(merged_pixel_info_path.exists()))   
+    for i in range(len(csv_path_list)):
+        csv_path = csv_path_list[i]
+        merged_path = merged_csv_path_list[i]
+        data = pd.read_csv(csv_path)
+        data["test_id"] = test_id
+        data.to_csv(merged_path, mode='a', index=False,header=not(merged_path.exists()))
 
+    args_dataframe["test_id"] = test_id
+    args_dataframe.to_csv(test_info_path, mode='a', index=False,header=not(test_info_path.exists()))
 
 
 # def extract_raster_values_vrt(points,sentinel_dir):
