@@ -37,7 +37,7 @@ def cli_testing_parameters():
 
                                    
                                    
-def testing_parameters(testing_directory, reflectance_path, extracted_cloudiness_path, args_to_test, overwrite = True, name_column = "id"):
+def testing_parameters(testing_directory, reflectance_path, extracted_cloudiness_path, args_to_test, update_masked_vi = False, overwrite = True, name_column = "id"):
     
     
     testing_directory = Path(testing_directory)
@@ -62,7 +62,6 @@ def testing_parameters(testing_directory, reflectance_path, extracted_cloudiness
             masked_vi_path = dir_path / "masked_vi.csv"
             pixel_info_path = dir_path / "pixel_info.csv"
             periods_path = dir_path / "periods.csv"
-            additional_data_path = dir_path / "additional_data.csv"
             
             mask_vi_from_dataframe(reflectance_path = reflectance_path,
                                     masked_vi_path = masked_vi_path,
@@ -88,23 +87,22 @@ def testing_parameters(testing_directory, reflectance_path, extracted_cloudiness
                                              pixel_info_path = pixel_info_path, 
                                              periods_path = periods_path, 
                                              name_column = name_column,
+                                             update_masked_vi = update_masked_vi,
                                              **filter_args(dieback_detection_from_dataframe, args_dict, combs))
             
             # export_csv(data_directory = dir_path / str(area_name),
             #             obs_shape = obs_area, name_column = name_column)
-            additional_output(masked_vi_path = masked_vi_path,
-                                              pixel_info_path = pixel_info_path,
-                                              periods_path = periods_path,
-                                              export_path = additional_data_path,
-                                              name_column = name_column)
+            # additional_output(masked_vi_path = masked_vi_path,
+            #                                   pixel_info_path = pixel_info_path,
+            #                                   periods_path = periods_path,
+            #                                   export_path = additional_data_path,
+            #                                   name_column = name_column)
 
                 
             combine_validation_results(csv_path_list = [pixel_info_path, 
-                                                        periods_path,
-                                                        additional_data_path],
+                                                        periods_path],
                                        merged_csv_path_list = [testing_directory / "merged_pixel_info.csv", 
-                                                        testing_directory / "merged_periods.csv",
-                                                        testing_directory / "merged_additional_data.csv"],
+                                                        testing_directory / "merged_periods.csv"],
                                        test_info_path = test_info_path,
                                        args_dataframe = args_dataframe, test_id = test_id)
 
@@ -112,7 +110,9 @@ def testing_parameters(testing_directory, reflectance_path, extracted_cloudiness
 if __name__ == '__main__':
     start_time_debut = time.time()
     # args_to_test = {"stress_index_mode" : ["mean","weighted_mean"], "threshold_anomaly" : [0.15,0.16], "list_bands" :  ["B2","B3","B4", "B8A", "B11","B12"]}
-    args_to_test = {"threshold_anomaly" : [0.19], "list_bands" :  [["B2","B3","B4", "B8A", "B11","B12"]], "vi" : ["CRSWIR"]}
+    args_to_test = {"threshold_anomaly" : [0.16], 
+                    "list_bands" :  [["B2","B3","B4", "B8A", "B11","B12"]], 
+                    "vi" : ["CRSWIR"]}
 
     # args_to_test = "D:/fordead/Data/Validation/results_from_raster/Feuillu/args_dict.txt"
     

@@ -332,6 +332,9 @@ def prediction_vegetation_index_dataframe(masked_vi, pixel_info, name_column):
     
     # masked_vi["coeff_model"].to_numpy()
     coeff_model = np.stack(masked_vi["coeff"].values)
+    test = masked_vi["coeff"].values
+    test.shape
+    # np.stack(test, axis = 1)
     harmonic_terms = np.array([[1]*len(date_as_number), np.sin(2*np.pi*np.array(date_as_number)/365.25), np.cos(2*np.pi*np.array(date_as_number)/365.25), np.sin(2*2*np.pi*np.array(date_as_number)/365.25), np.cos(2*2*np.pi*np.array(date_as_number)/365.25)]).T
 
     # predicted_vi = prediction_vegetation_index_dataframe(coeff_model,[date])
@@ -491,7 +494,8 @@ def compute_stress_index(detection_dates, periods, name_column):
     detection_dates = detection_dates.ffill()
     period_stress_index = detection_dates.groupby(by = ["area_name", name_column,"id_pixel","period_id"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).reset_index(name = "anomaly_intensity")
     periods = periods.merge(period_stress_index, on=["area_name", name_column,"id_pixel","period_id"], how='left') 
-    return periods, detection_dates
+  
+    return periods
 
 def dieback_detection(data_frame, dated_changes, name_column):
     
@@ -561,3 +565,22 @@ def fill_periods(periods,dated_changes, masked_vi, name_column):
     
     # check = test[~test.last_date.isna() & (test.date_before_shift != test.last_date)]
     # ex = test[(test.id == 5) & (test.id_pixel == 220)]
+    
+def add_diff_vi_to_vi(masked_vi, pixel_info, threshold_anomaly, vi, path_dict_vi, name_column):
+    masked_vi = masked_vi.merge(pixel_info, on=["epsg", "area_name",name_column,"id_pixel"], how='left')
+    masked_vi["predicted_vi"] = prediction_vegetation_index_dataframe(masked_vi, pixel_info, name_column)
+    masked_vi["anomaly"], masked_vi["diff_vi"] = detection_anomalies_dataframe(masked_vi, threshold_anomaly, vi = vi, path_dict_vi = path_dict_vi)
+    return masked_vi[['epsg', 'area_name', 'id', 'id_pixel', 'Date', 'vi','predicted_vi','anomaly', 'diff_vi']]
+
+def add_status_to_vi(masked_vi, periods, name_column):
+        
+    masked_vi = masked_vi.merge(periods.rename(columns = {"first_date" : "Date"}).drop(columns=["last_date","anomaly_intensity"]), on=["area_name", name_column,"id_pixel","Date"], how='left') 
+    if "bare_ground" in masked_vi.columns:
+        masked_vi = masked_vi.drop(columns=["bare_ground"])
+    masked_vi = masked_vi.ffill()
+
+    
+    
+    return masked_vi
+    # period_stress_index = masked_vi.groupby(by = ["area_name", name_column,"id_pixel","period_id"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).reset_index(name = "anomaly_intensity")
+    # periods = periods.merge(period_stress_index, on=["area_name", name_column,"id_pixel","period_id"], how='left') 

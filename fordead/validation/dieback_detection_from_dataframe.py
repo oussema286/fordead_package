@@ -6,11 +6,11 @@ Created on Wed Mar 22 13:01:07 2023
 """
 import pandas as pd
 import time
-from fordead.validation_process import fill_periods, detect_state_changes, detection_anomalies_dataframe, compute_stress_index, prediction_vegetation_index_dataframe
+from fordead.validation_process import add_diff_vi_to_vi, add_status_to_vi, fill_periods, detect_state_changes, detection_anomalies_dataframe, compute_stress_index, prediction_vegetation_index_dataframe
 from pathlib import Path
 
 
-def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_path, name_column,
+def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_path, name_column, update_masked_vi = False,
                                      threshold_anomaly = 0.16, max_nb_stress_periods = 5, vi = "CRSWIR", path_dict_vi = None):
     
     
@@ -19,7 +19,7 @@ def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_pa
     periods = pd.read_csv(periods_path)
     
     if "anomaly_intensity" in periods.columns:
-        raise Exception(periods_path + " already exists.")
+        raise Exception(str(periods_path) + " already exists.")
         
     pixel_info["coeff"] = pixel_info[["coeff1","coeff2","coeff3", "coeff4","coeff5"]].values.tolist()
     
@@ -50,7 +50,13 @@ def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_pa
     periods = fill_periods(periods,dated_changes, masked_vi, name_column)
 
     periods = compute_stress_index(detection_dates, periods, name_column)
-
+    
+    if update_masked_vi:
+        masked_vi = add_diff_vi_to_vi(masked_vi, pixel_info, threshold_anomaly, vi, path_dict_vi, name_column)
+        masked_vi = add_status_to_vi(masked_vi, periods, name_column)
+        masked_vi.to_csv(masked_vi_path, mode='w', index=False,header=True)
+        
+        
     # periods = compute_stress_index(detection_dates, periods, name_column)
     # dieback_data = dieback_detection(detection_dates, dated_changes, name_column)
 
@@ -62,14 +68,18 @@ def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_pa
 if __name__ == '__main__':
     start_time_debut = time.time()
     #Exemple tuto
-    # dieback_detection_from_dataframe(masked_vi_path = "D:/fordead/fordead_data/output/mask_vi_tuto.csv",
-    #                                  pixel_info_path = "D:/fordead/fordead_data/output/pixel_info_tuto.csv",
-    #                                    periods_path = "D:/fordead/fordead_data/output/periods_tuto.csv",
-    #                                    name_column = "id")
-    output_dir = Path("D:/fordead/Data/Validation/scolytes/02_calibrating_vi_threshold_anomaly/03_RESULTS/fordead_results3")
+    output_dir = Path("D:/fordead/fordead_data/output/calval_tuto")
 
-    dieback_detection_from_dataframe(masked_vi_path = output_dir / "masked_vi_scolytes.csv",
-                                       pixel_info_path = output_dir / "pixel_info_tuto.csv",
-                                       periods_path = output_dir / "periods_scolytes.csv",
-                                       name_column = "Id")
+    dieback_detection_from_dataframe(masked_vi_path = output_dir / "mask_vi_tuto.csv",
+                                      pixel_info_path = output_dir / "pixel_info_tuto.csv",
+                                        periods_path = output_dir / "periods_tuto.csv",
+                                        name_column = "id",
+                                        update_masked_vi = True)
+    # output_dir = Path("D:/fordead/fordead_data/output/calval_tuto")
+
+    # dieback_detection_from_dataframe(masked_vi_path = output_dir / "masked_vi_scolytes.csv",
+    #                                    pixel_info_path = output_dir / "pixel_info_tuto.csv",
+    #                                    periods_path = output_dir / "periods_scolytes.csv",
+    #                                    update_masked_vi = True,
+    #                                    name_column = "Id")
     print("Temps de calcul : %s secondes ---" % (time.time() - start_time_debut))

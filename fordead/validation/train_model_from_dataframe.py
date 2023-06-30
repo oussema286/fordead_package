@@ -46,15 +46,16 @@ def train_model_from_dataframe(masked_vi_path,
 if __name__ == '__main__':
     start_time_debut = time.time()
     # Exemple tuto
-    # train_model_from_dataframe(masked_vi_path = "D:/fordead/fordead_data/output/mask_vi_tuto.csv",
-    #                        pixel_info_path = "D:/fordead/fordead_data/output/pixel_info_tuto.csv",
-    #                        periods_path = "D:/fordead/fordead_data/output/periods_tuto.csv",
-    #                        name_column = "id")
-    output_dir = Path("D:/fordead/Data/Validation/scolytes/02_calibrating_vi_threshold_anomaly/03_RESULTS/fordead_results3")
+    output_dir = Path("D:/fordead/fordead_data/output/calval_tuto")
+    train_model_from_dataframe(masked_vi_path = output_dir / "mask_vi_tuto.csv",
+                            pixel_info_path = output_dir / "pixel_info_tuto.csv",
+                            periods_path = output_dir / "periods_tuto.csv",
+                            name_column = "id")
+    # output_dir = Path("D:/fordead/Data/Validation/scolytes/02_calibrating_vi_threshold_anomaly/03_RESULTS/fordead_results3")
 
-    train_model_from_dataframe(masked_vi_path = output_dir / "masked_vi_scolytes.csv",
-                               pixel_info_path = output_dir / "pixel_info_tuto.csv",
-                               periods_path = output_dir / "periods_scolytes.csv",
-                               name_column = "Id")
+    # train_model_from_dataframe(masked_vi_path = output_dir / "masked_vi_scolytes.csv",
+    #                            pixel_info_path = output_dir / "pixel_info_tuto.csv",
+    #                            periods_path = output_dir / "periods_scolytes.csv",
+    #                            name_column = "Id")
         
     print("Temps de calcul : %s secondes ---" % (time.time() - start_time_debut))
