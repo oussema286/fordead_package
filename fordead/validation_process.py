@@ -284,23 +284,40 @@ def source_mask_dataframe(source_mask, sentinel_source):
         
 def get_last_training_date_dataframe(data_frame, min_last_date_training, max_last_date_training, nb_min_date=10, name_column = "id"):
 
-    data_frame = data_frame[["epsg","area_name",name_column,"id_pixel","Date"]]
+    # test = data_frame.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1
+    data_frame = data_frame.reset_index()
+    data_frame["cumcount"] = (data_frame.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1)
     
-    last_training_date = data_frame[(data_frame["Date"] < min_last_date_training) & (data_frame.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1 >= nb_min_date)].groupby(["area_name",name_column,"id_pixel"]).last().reset_index() #Keeping date just before min_last_date_training if enough acquisitions
-    
-    
-    retrieve_dataframe = data_frame.merge(last_training_date[["area_name",name_column,"id_pixel"]], how = "left", on = ["area_name",name_column,"id_pixel"], indicator = True)
-    retrieve_dataframe = retrieve_dataframe[retrieve_dataframe["_merge"] != "both"].drop(columns = "_merge")
-    last_training_date = pd.concat([last_training_date, retrieve_dataframe[(retrieve_dataframe["Date"] <= max_last_date_training) & (retrieve_dataframe.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1 == nb_min_date)]]) # Adding pixels with nb_min_date reach before max_last_training_date
-    
-    abandonned_dataframe = retrieve_dataframe.merge(last_training_date[["area_name",name_column,"id_pixel"]], how = "left", on = ["area_name",name_column,"id_pixel"], indicator = True)
-    abandonned_dataframe = abandonned_dataframe[abandonned_dataframe["_merge"] != "both"].drop(columns = "_merge")
-    last_training_date = pd.concat([last_training_date, abandonned_dataframe[["epsg","area_name",name_column,"id_pixel"]].drop_duplicates()]) # Adding pixels with nb_min_date reach before max_last_training_date
-    
-    
-    last_training_date = last_training_date.rename(columns = {"Date" : "last_date_training"})
-    
+    last_training_date = data_frame[(data_frame["Date"] < min_last_date_training) | ((data_frame["cumcount"] <= nb_min_date) & (data_frame["Date"] < max_last_date_training))].groupby(["area_name",name_column,"id_pixel"]).last().reset_index()
+
+    last_training_date.loc[(last_training_date["Date"] >= max_last_date_training) | (last_training_date["cumcount"] < nb_min_date), "Date"] = np.nan
+    last_training_date = last_training_date[["epsg","area_name",name_column,"id_pixel","Date"]].rename(columns = {"Date" : "last_training_date"})
+
     return last_training_date
+    # last_training_date = data_frame[["epsg","area_name",name_column,"id_pixel","Date"]].groupby(["area_name",name_column,"id_pixel"]).last().reset_index()
+    
+    
+    
+    
+    
+    # last_training_date = data_frame[(data_frame["Date"] < min_last_date_training) & (data_frame.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1 >= nb_min_date)].groupby(["area_name",name_column,"id_pixel"]).last().reset_index() #Keeping date just before min_last_date_training if enough acquisitions
+    
+    
+    # retrieve_dataframe = data_frame.merge(last_training_date[["area_name",name_column,"id_pixel"]], how = "left", on = ["area_name",name_column,"id_pixel"], indicator = True)
+    # retrieve_dataframe = retrieve_dataframe[retrieve_dataframe["_merge"] != "both"].drop(columns = "_merge")
+    # last_training_date = pd.concat([last_training_date, retrieve_dataframe[(retrieve_dataframe["Date"] <= max_last_date_training) & (retrieve_dataframe.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1 == nb_min_date)]]) # Adding pixels with nb_min_date reach before max_last_training_date
+    
+    # abandonned_dataframe = retrieve_dataframe.merge(last_training_date[["area_name",name_column,"id_pixel"]], how = "left", on = ["area_name",name_column,"id_pixel"], indicator = True)
+    # abandonned_dataframe = abandonned_dataframe[abandonned_dataframe["_merge"] != "both"].drop(columns = "_merge")
+    # last_training_date = pd.concat([last_training_date, abandonned_dataframe[["epsg","area_name",name_column,"id_pixel"]].drop_duplicates()]) # Adding pixels with nb_min_date reach before max_last_training_date
+    
+    
+    # last_training_date = last_training_date.rename(columns = {"Date" : "last_date_training"})
+    
+    # # print("test")
+    
+    
+    # return last_training_date
 
 def compute_HarmonicTerms(DateAsNumber):
     return np.array([1,np.sin(2*np.pi*DateAsNumber/365.25), np.cos(2*np.pi*DateAsNumber/365.25),np.sin(2*2*np.pi*DateAsNumber/365.25),np.cos(2*2*np.pi*DateAsNumber/365.25)])
@@ -330,11 +347,7 @@ def prediction_vegetation_index_dataframe(masked_vi, pixel_info, name_column):
     masked_vi['Date_as_datetime'] = pd.to_datetime(masked_vi['Date'])
     date_as_number = (masked_vi['Date_as_datetime'] - pd.to_datetime("2015-01-01")).dt.days
     
-    # masked_vi["coeff_model"].to_numpy()
     coeff_model = np.stack(masked_vi["coeff"].values)
-    test = masked_vi["coeff"].values
-    test.shape
-    # np.stack(test, axis = 1)
     harmonic_terms = np.array([[1]*len(date_as_number), np.sin(2*np.pi*np.array(date_as_number)/365.25), np.cos(2*np.pi*np.array(date_as_number)/365.25), np.sin(2*2*np.pi*np.array(date_as_number)/365.25), np.cos(2*2*np.pi*np.array(date_as_number)/365.25)]).T
 
     # predicted_vi = prediction_vegetation_index_dataframe(coeff_model,[date])
@@ -531,14 +544,16 @@ def get_mask_vi_periods(reflect, first_date_bare_ground, name_column):
     # periods_tot.to_csv(export_path, mode='w', index=False,header=True)
 
 def update_training_period(last_date_training, periods_path, name_column):
-    last_date_training = last_date_training.rename(columns = {"last_date_training" : "last_date"})
+    last_date_training = last_date_training.rename(columns = {"last_training_date" : "last_date"})
     last_date_training["state"] = "Training"
+    
     
     periods = pd.read_csv(periods_path)
     periods = periods.merge(last_date_training, on=["area_name", name_column, "id_pixel","state"], how='left')
     
     periods = periods[["area_name", name_column,"id_pixel","first_date","last_date","state"]]
     
+    periods.loc[(periods["state"] == "Training") & (periods["last_date"]).isna(), "state"]  = "Invalid"
     periods.to_csv(periods_path, mode='w', index=False,header=True)
 
 
@@ -568,19 +583,25 @@ def fill_periods(periods,dated_changes, masked_vi, name_column):
     
 def add_diff_vi_to_vi(masked_vi, pixel_info, threshold_anomaly, vi, path_dict_vi, name_column):
     masked_vi = masked_vi.merge(pixel_info, on=["epsg", "area_name",name_column,"id_pixel"], how='left')
-    masked_vi["predicted_vi"] = prediction_vegetation_index_dataframe(masked_vi, pixel_info, name_column)
-    masked_vi["anomaly"], masked_vi["diff_vi"] = detection_anomalies_dataframe(masked_vi, threshold_anomaly, vi = vi, path_dict_vi = path_dict_vi)
-    return masked_vi[['epsg', 'area_name', 'id', 'id_pixel', 'Date', 'vi','predicted_vi','anomaly', 'diff_vi']]
+    valid_vi = masked_vi[~masked_vi["last_training_date"].isna()].reset_index()
+    valid_vi["predicted_vi"] = prediction_vegetation_index_dataframe(valid_vi, pixel_info, name_column)
+    valid_vi["anomaly"], valid_vi["diff_vi"] = detection_anomalies_dataframe(valid_vi, threshold_anomaly, vi = vi, path_dict_vi = path_dict_vi)
+    
+    valid_vi = valid_vi[['epsg', 'area_name', name_column, 'id_pixel', 'Date','predicted_vi', 'diff_vi','anomaly']]
+    masked_vi = masked_vi[['epsg', 'area_name', name_column, 'id_pixel', 'Date', 'vi']]
+    masked_vi = masked_vi.merge(valid_vi, on=["epsg", "area_name",name_column,"id_pixel","Date"], how='left')
+    # masked_vi.loc[~masked_vi["last_training_date"].isna(),["predicted_vi","anomaly","diff_vi"]] = valid_vi.loc[:,["predicted_vi","anomaly","diff_vi"]]
+
+    return masked_vi
 
 def add_status_to_vi(masked_vi, periods, name_column):
         
     masked_vi = masked_vi.merge(periods.rename(columns = {"first_date" : "Date"}).drop(columns=["last_date","anomaly_intensity"]), on=["area_name", name_column,"id_pixel","Date"], how='left') 
     if "bare_ground" in masked_vi.columns:
         masked_vi = masked_vi.drop(columns=["bare_ground"])
-    masked_vi = masked_vi.ffill()
+    for col in ['period_id', 'state']:
+        masked_vi[col].ffill(inplace=True)
 
-    
-    
     return masked_vi
     # period_stress_index = masked_vi.groupby(by = ["area_name", name_column,"id_pixel","period_id"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).reset_index(name = "anomaly_intensity")
     # periods = periods.merge(period_stress_index, on=["area_name", name_column,"id_pixel","period_id"], how='left') 

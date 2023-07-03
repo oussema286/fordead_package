@@ -39,7 +39,7 @@ def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_pa
    
     # training_periods = get_training_period(masked_vi, name_column)
     
-    detection_dates = detection_dates[detection_dates["Date"] > detection_dates["last_date_training"]].reset_index()
+    detection_dates = detection_dates[detection_dates["Date"] > detection_dates["last_training_date"]].reset_index()
 
     detection_dates["predicted_vi"] = prediction_vegetation_index_dataframe(detection_dates, pixel_info, name_column)
     

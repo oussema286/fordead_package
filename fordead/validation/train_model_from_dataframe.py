@@ -32,6 +32,8 @@ def train_model_from_dataframe(masked_vi_path,
 
     masked_vi = masked_vi.merge(last_date_training, on = ["area_name",name_column,"id_pixel"], how='left')
 
+    masked_vi = masked_vi[masked_vi["Date"] <= masked_vi["last_training_date"]].reset_index()
+    
     coeff_model = model_vi_dataframe(masked_vi, name_column)
     
     pixel_info = last_date_training.merge(coeff_model, on = ["area_name",name_column,"id_pixel"], how='outer')
