@@ -26,7 +26,7 @@ elif sys.version_info[0] > 2:
     
 
         
-def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_cloud, login_theia, password_theia, level):
+def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_cloud, login_theia, password_theia, level, logpath = None):
     """
     Checks if there are undownloaded Sentinel-2 acquisitions available
 
@@ -89,18 +89,32 @@ def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_c
         data = json.load(data_file)
     
     try:
+        if logpath is not None:
+            file = open(logpath, "w") 
+
         for i in range(len(data["features"])):
             prod = data["features"][i]["properties"]["productIdentifier"]
             cloudtemp = data["features"][i]["properties"]["cloudCover"]
+            
+            acqDate = data["features"][i]["properties"]["startDate"]
+            prodDate = data["features"][i]["properties"]["productionDate"]
+            pubDate = data["features"][i]["properties"]["published"]
+            
             if cloudtemp != None:
                 cloudCover = int(cloudtemp)
             else:
                 cloudCover = 0
+                
+            if logpath is not None:
+                file.write("acq date" + acqDate[0:14] + "prod date" + prodDate[0:14] + "pub date" + pubDate[0:14] + "cloudCover " +  str(cloudtemp) + "\n")
+                # file.write("test")
+                
             file_exists = os.path.exists("%s/%s.zip" % (write_dir, prod))
             if not(file_exists) and (cloudCover <= lim_perc_cloud):
                 # download only if cloudCover below maxcloud
                 return True
-    
+        if logpath is not None:
+            file.close()
     except KeyError:
         print("No undownloaded product corresponds to selection criteria")
     return False

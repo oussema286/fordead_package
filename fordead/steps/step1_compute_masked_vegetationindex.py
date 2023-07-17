@@ -7,7 +7,7 @@ Created on Thu Nov 19 16:06:51 2020
 """
 
 #%% =============================================================================
-#   LIBRAIRIES
+#   LIBRARIES
 # =============================================================================
 
 # import time
@@ -16,7 +16,7 @@ from pathlib import Path
 # import geopandas as gp
 import numpy as np
 #%% ===========================================================================
-#   IMPORT LIBRAIRIES PERSO
+#   IMPORT FORDEAD MODULES 
 # =============================================================================
 
 from fordead.import_data import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
@@ -38,10 +38,9 @@ from fordead.writing_data import write_raster, write_tif
 @click.option("--formula_mask", type = str,default = "(B2 >= 700)", help = "formula whose result would be binary, as described here https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index. Is only used if soil_detection is False.", show_default=True)
 @click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
 @click.option("--compress_vi",  is_flag=True, help = "Stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file. Uses less disk space but can lead to very small difference in results as the vegetation is rounded to three decimal places", show_default=True)
-@click.option("--ignored_period", type = list, default = None, help = "Period whose Sentinel dates to ignore (format 'MM-DD', ex : --ignored_period 11-01 --ignored_period 05-01", show_default=True)
+@click.option("--ignored_period", multiple=True, type = str, default = None, help = "Period whose Sentinel dates to ignore (format 'MM-DD', ex : --ignored_period 11-01 --ignored_period 05-01", show_default=True)
 @click.option("--extent_shape_path", type = str,default = None, help = "Path of shapefile used as extent of detection, if None, the whole tile is used", show_default=True)
 @click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
-@click.option("--compress_vi",  is_flag=True, help = "Stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file. Uses less disk space but can lead to very small difference in results as the vegetation index is rounded to three decimal places", show_default=True)
 def cli_compute_masked_vegetationindex(
     input_directory,
     data_directory,
@@ -65,24 +64,6 @@ def cli_compute_masked_vegetationindex(
     Results are written in the chosen directory.
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/
     \f
-    Parameters
-    ----------
-    input_directory
-    data_directory
-    lim_perc_cloud
-    interpolation_order
-    sentinel_source
-    apply_source_mask
-    soil_detection
-    formula_mask
-    vi
-    compress_vi
-    ignored_period
-    extent_shape_path
-    path_dict_vi
-
-    Returns
-    -------
 
     """
     compute_masked_vegetationindex(input_directory,data_directory, lim_perc_cloud, interpolation_order, sentinel_source, apply_source_mask, soil_detection, formula_mask, vi, compress_vi, ignored_period, extent_shape_path, path_dict_vi)

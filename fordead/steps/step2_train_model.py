@@ -37,19 +37,6 @@ def cli_train_model(
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/
     
     \f
-
-    Parameters
-    ----------
-    data_directory
-    nb_min_date
-    min_last_date_training
-    max_last_date_training
-    correct_vi
-    path_vi
-    path_masks
-
-    Returns
-    -------
     """
     train_model(data_directory,nb_min_date,min_last_date_training,max_last_date_training, correct_vi, path_vi,path_masks)
 

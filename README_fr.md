@@ -23,7 +23,7 @@ Voici un exemple de résultat sur une zone atteinte par le scolyte :
 
 Période de détection | Classe de confiance
 :-------------------------:|:-------------------------:
-![gif_results_original](docs/Tutorial/Figures/gif_results_original.gif "gif_results_original") | ![gif_results_confidence](docs/Tutorial/Figures/gif_results_confidence.gif "gif_results_confidence")
+![gif_results_original](docs/Tutorials/Dieback_Detection/Figures/gif_results_original.gif "gif_results_original") | ![gif_results_confidence](docs/Tutorials/Dieback_Detection/Figures/gif_results_confidence.gif "gif_results_confidence")
 
 ## Outils de visualisation
 
@@ -33,11 +33,11 @@ Le premier outil réalise un graphique de la série temporelle de l'indice de v�
 
 Pixel sain | Pixel atteint
 :-------------------------:|:-------------------------:
-![graph_healthy](docs/Tutorial/Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](docs/Tutorial/Figures/graph_dieback.png "graph_dieback")
+![graph_healthy](docs/Tutorials/Dieback_Detection/Figures/graph_healthy.png "graph_healthy") | ![graph_dieback](docs/Tutorials/Dieback_Detection/Figures/graph_dieback.png "graph_dieback")
 
 Le deuxième outil réalise un "timelapse" sur une petite zone pour visualiser l'évolution des résultats à chaque date SENTINEL-2 utilisée, avec en fond des compositions "couleurs naturelles" (RVB) SENTINEL-2. Un curseur permet en outre de naviguer entre les dates. 
 
-![gif_timelapse](docs/Tutorial/Figures/gif_timelapse.gif "gif_timelapse")
+![gif_timelapse](docs/Tutorials/Dieback_Detection/Figures/gif_timelapse.gif "gif_timelapse")
 
 ## Installation
 
@@ -45,4 +45,4 @@ Le guide d'installation est disponible [ici](https://fordead.gitlab.io/fordead_p
 
 ## Tutoriel
 
-Un tutoriel pour bien commencer et, tester le package sur un jeu de données fourni, est disponible [ici](https://fordead.gitlab.io/fordead_package/docs/Tutorial/00_Intro/).
+Un tutoriel pour bien commencer et, tester le package sur un jeu de données fourni, est disponible [ici](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/00_Intro/).

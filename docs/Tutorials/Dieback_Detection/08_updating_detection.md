@@ -1,6 +1,7 @@
 ## Updating detection
 
-The dieback detection can be updated simply by adding new Sentinel-2 dates which can be very useful for monitoring vegetation. To illustrate this, copy the files from the directory **update_study_area** to the directory **study_area**, then run the entire script again.
+The dieback detection can be updated simply by adding new Sentinel-2 dates which can be very useful for monitoring vegetation. 
+To illustrate this, copy the files from the directory **update_study_area** to the directory **study_area**, then run the entire script again.
 You can save results from the **Results**, **Timelapses** and **TimeSeries** in an other folder if you wish to compare them with the updated results which will overwrite them.
 
 Here, you can find the complete script all in one place :
@@ -59,7 +60,7 @@ vi_series_visualisation(data_directory = data_directory,
                         chunks = 100)
 ```
 
-Results can be updated using only the new Sentinel-2 dates, saving on computation time. 
+Results can only be updated using Sentinel-2 acquisitons more recent than those previously processed. 
 
 The following figures show how the bark beetle attack progressed for the entire area, and for a single pixel :
 

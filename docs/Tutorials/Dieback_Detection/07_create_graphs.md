@@ -1,18 +1,17 @@
 ## Using built-in visualisation tools to explore detection results
 
-The second built-in visualisation tool allows to visualize for a particular pixel the time series of the vegetation index with the associated model, the anomaly detection threshold and the associated detections.
+The second built-in visualisation tool allows to visualize the time series of the vegetation index with the associated model, the anomaly detection threshold and the associated detections, for a given pixel.
 
 ### Creating graphs of time series evolution at pixel level
 
-This tool creates figures that present: 
+This tool creates figures including : 
 - the vegetation index value for each SENTINEL-2 acquisition
-- the corresponding seasonal model
+- the corresponding harmonic model
 - the threshold used for anomaly detection
 - the period used for training.
 
-This allows better understanding of the dynamic related to anomaly detection for pixels of interest.
-The following illustration displays time series for a healthy pixel, and for a pixel corresponding to bark beetle outbreak :
-
+This allows illustration of the dynamic related to anomaly detection for pixels of interest.
+The following illustration displays time series for a healthy pixel, and for a pixel experiencing bark beetle outbreak :
 
 Healthy pixel | Attacked pixel
 :-------------------------:|:-------------------------:
@@ -48,9 +47,9 @@ fordead graph_series  -o <output directory> --shape_path <MyWorkingDirectory>/ve
 
 ##### Outputs
 
-The plots are saved as .png files in **data_directory/TimeSeries**, one file for each point with the value in the column **name_column** as file name. 
+The plots are saved as .png files in **data_directory/TimeSeries**. One file is stored for each point with the value in the column **name_column** as file name. 
 The y axis limits are set using **ymin** and **ymax** parameters.
 
-> **_NOTE :_** The **chunks** parameter is not really necessary in this case, since we're working on a small area, but it is needed to reduce computation time in large datasets.
+> **_NOTE :_** The **chunks** parameter is not necessary in this case, since the process is applied on limited surfaces. However, it is needed to reduce computation time in large datasets.
 
 [PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/06_create_timelapse) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/08_updating_detection)

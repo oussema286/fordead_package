@@ -29,20 +29,6 @@ def cli_theia_preprocess(zipped_directory, unzipped_directory, tiles, login_thei
     Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
 
     \f
-    Parameters
-    ----------
-    zipped_directory
-    unzipped_directory
-    tiles
-    login_theia
-    password_theia
-    level
-    start_date
-    end_date
-    lim_perc_cloud
-    bands
-    correction_type
-    empty_zip
 
     """
     

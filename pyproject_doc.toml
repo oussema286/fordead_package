@@ -13,7 +13,7 @@
 #    docs_dir = "docs"
 # output_dir = "site"
 #    modules = ["fordead"]
-    modules = ["fordead.dieback_detection", "fordead.import_data", "fordead.masking_vi", "fordead.maja_fun", "fordead.model_vegetation_index", "fordead.writing_data"]
+    modules = ["fordead.dieback_detection", "fordead.import_data", "fordead.masking_vi", "fordead.maja_fun", "fordead.model_vegetation_index", "fordead.writing_data", "fordead.validation_module"]
     extra_markdown_extensions = ['mdx_breakless_lists', 'mkdocs-click']
 
 [[tool.portray.extra_markdown_extensions]]
@@ -55,25 +55,41 @@ Home = "README.md"
 Installation = "docs/Installation.md"
 
 [[tool.portray.mkdocs.nav]]
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Introduction" = "docs/Tutorial/00_Intro.md"
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Step 1. Compute masked vegetation index" = "docs/Tutorial/01_compute_masked_vegetationindex.md"
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Step 2. Train model" = "docs/Tutorial/02_train_model.md"
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Step 3. Dieback detection" = "docs/Tutorial/03_dieback_detection.md"
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Step 4. Compute forest mask" = "docs/Tutorial/04_compute_forest_mask.md"
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Step 5. Export results" = "docs/Tutorial/05_export_results.md"
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Creating a timelapse" = "docs/Tutorial/06_create_timelapse.md"
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Creating graphs" = "docs/Tutorial/07_create_graphs.md"
-	[[tool.portray.mkdocs.nav.Tutorial]]
-	"Updating detection" = "docs/Tutorial/08_updating_detection.md"
-	
+	[[tool.portray.mkdocs.nav.Tutorials]]
+			[[tool.portray.mkdocs.nav.Tutorials.Dieback_Detection]]
+			"Introduction" = "docs/Tutorials/Dieback_Detection/00_Intro.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Dieback_Detection]]
+			"Step 1. Compute masked vegetation index" = "docs/Tutorials/Dieback_Detection/01_compute_masked_vegetationindex.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Dieback_Detection]]
+			"Step 2. Train model" = "docs/Tutorials/Dieback_Detection/02_train_model.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Dieback_Detection]]
+			"Step 3. Dieback detection" = "docs/Tutorials/Dieback_Detection/03_dieback_detection.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Dieback_Detection]]
+			"Step 4. Compute forest mask" = "docs/Tutorials/Dieback_Detection/04_compute_forest_mask.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Dieback_Detection]]
+			"Step 5. Export results" = "docs/Tutorials/Dieback_Detection/05_export_results.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Dieback_Detection]]
+			"Creating a timelapse" = "docs/Tutorials/Dieback_Detection/06_create_timelapse.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Dieback_Detection]]
+			"Creating graphs" = "docs/Tutorials/Dieback_Detection/07_create_graphs.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Dieback_Detection]]
+			"Updating detection" = "docs/Tutorials/Dieback_Detection/08_updating_detection.md"
+	[[tool.portray.mkdocs.nav.Tutorials]]
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Introduction" = "docs/Tutorials/Validation/00_Intro.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Preprocessing observations" = "docs/Tutorials/Validation/01_preprocessing_observations.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Extracting reflectance" = "docs/Tutorials/Validation/02_extract_reflectance.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Extracting cloudiness (optional)" = "docs/Tutorials/Validation/03_extract_cloudiness.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Vegetation index and masks computing" = "docs/Tutorials/Validation/04_computing_vegetation_index_and_masks.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Training harmonic model for each pixel" = "docs/Tutorials/Validation/05_training_model_from_dataframe.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Dieback and stress detection" = "docs/Tutorials/Validation/06_dieback_detection_from_dataframe.md"
+
 [[tool.portray.mkdocs.nav]]
     [[tool.portray.mkdocs.nav."User guides".English]]
     "1. Compute masked vegetation index" = "docs/user_guides/english/01_compute_masked_vegetationindex.md"
@@ -88,6 +104,23 @@ Installation = "docs/Installation.md"
 	[[tool.portray.mkdocs.nav."User guides".English]]
     "Visualisation tools" = "docs/user_guides/english/Results_visualisation.md"
 	
+	[[tool.portray.mkdocs.nav."User guides".English]]
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"01_preprocess_obs" = "docs/user_guides/english/validation_tools/01_preprocess_obs.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"02_obs_to_s2_grid" = "docs/user_guides/english/validation_tools/02_obs_to_s2_grid.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"03_extract_reflectance" = "docs/user_guides/english/validation_tools/03_extract_reflectance.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"04_extract_cloudiness" = "docs/user_guides/english/validation_tools/04_extract_cloudiness.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"05_compute_masks_and_vegetation_index_from_dataframe" = "docs/user_guides/english/validation_tools/05_compute_masks_and_vegetation_index_from_dataframe.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"06_training_model_from_dataframe" = "docs/user_guides/english/validation_tools/06_training_model_from_dataframe.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"07_dieback_detection_from_dataframe" = "docs/user_guides/english/validation_tools/07_dieback_detection_from_dataframe.md"
+		
+		
 	[[tool.portray.mkdocs.nav."User guides".English]]
 		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]
 		"Computing vegetation index" = "docs/user_guides/english/other_tools/ex_computing_vegetation_index.md"

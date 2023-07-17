@@ -40,18 +40,6 @@ def cli_dieback_detection(
     Anomalies and dieback data are written in the data_directory
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/
     \f
-    Parameters
-    ----------
-    data_directory
-    threshold_anomaly
-    max_nb_stress_periods
-    stress_index_mode
-    vi
-    path_dict_vi
-
-    Returns
-    -------
-
     """
     dieback_detection(data_directory, threshold_anomaly, max_nb_stress_periods, stress_index_mode, vi, path_dict_vi)
 

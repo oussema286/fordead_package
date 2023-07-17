@@ -32,6 +32,8 @@ def get_band_paths(dict_sen_paths):
 
     """
     
+    #It would be 
+    
     DictSentinelPaths={}
     for date in dict_sen_paths:
         AllPaths = dict_sen_paths[date].glob("**/*.tif")
@@ -92,7 +94,7 @@ def retrieve_date_from_string(string):
     elif matchYMD!=None:
         raw_date=matchYMD.group()
         if len(raw_date)==10:
-            formatted_date=raw_date[:4]+"-"+raw_date[5:7]+"-"+raw_date[-2:]
+            formatted_date=raw_date[:4]+"-"+raw_date[4:6]+"-"+raw_date[-2:]
         elif len(raw_date)==8:
             formatted_date=raw_date[:4]+"-"+raw_date[4:6]+"-"+raw_date[-2:]
     else:
