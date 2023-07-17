@@ -29,8 +29,46 @@ def mask_vi_from_dataframe(reflectance_path,
                            apply_source_mask = False,
                            sentinel_source = "THEIA"
                            ):
-
+    """
+    Computes the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.
+    Filters out data by applying the fordead mask (if soil_detection is True) or a user mask defined by the user. 
+    (optional) Filters out acquisition by applying a limit on the percentage of cloud cover as calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/)
+    Writes the results in a csv file, as well as the first date of the training period for each pixel and, if soil_detection is True, the first date of detected bare ground.
     
+    Parameters
+    ----------
+    reflectance_path : str
+        Path of the csv file with extracted reflectance.
+    masked_vi_path : str
+        Path used to write the csv containing the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.
+    periods_path : str
+        Path used to write the csv containing the first date of the training periods for each pixel and, if soil_detection is True, the first date of detected bare ground.
+    name_column : str
+        Name of the ID column. The default is 'id'.
+    cloudiness_path : str (optional)
+        Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/)
+    vi : str, optional
+        Chosen vegetation index. If using a custom one or one unavailable in this package, it can be added using the path_dict_vi parameter. The default is "CRSWIR".
+    lim_perc_cloud : float, optional
+        The maximum percentage of clouds of the whole area. If the cloudiness percentage of the SENTINEL acquisition, calculated from the provider's classification, is higher than this threshold, the acquisition is filtered out. Only used if cloudiness_path is not None. The default is 0.45.
+    soil_detection : bool, optional
+        If True, bare ground is detected and used as mask, but the process might not be adapted to other situations than THEIA data on France's coniferous forests. If False, mask from formula_mask is applied. The default is True.
+    formula_mask : str, optional
+        Formula whose result would be binary, format described [here](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index). Is only used if soil_detection is False.. The default is "(B2 >= 700)".
+    path_dict_vi : str, optional
+        Path to a text file used to add potential vegetation indices. If not filled in, only the indices provided in the package can be used (CRSWIR, NDVI, NDWI). The file [ex_dict_vi.txt](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_vi.txt) gives an example for how to format this file. One must fill the index's name, formula, and "+" or "-" according to whether the index increases or decreases when anomalies occur.. The default is None.
+    list_bands : list of str, optional
+        List of the bands used. The default is ["B2","B3","B4", "B8", "B8A", "B11","B12"].
+    apply_source_mask : bool, optional
+        If True, the mask of the provider is also used to mask the data. The default is False.
+    sentinel_source : str, optional
+        Provider of the data among 'THEIA' and 'Scihub' and 'PEPS'.. The default is "THEIA".
+
+    """
+    
+
+
+
     reflect = pd.read_csv(reflectance_path)
     if cloudiness_path is not None:
         reflect = filter_cloudy_acquisitions(reflect, cloudiness_path, lim_perc_cloud)

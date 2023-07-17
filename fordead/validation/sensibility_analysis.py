@@ -15,29 +15,51 @@ from fordead.validation_module import get_args, filter_args, combine_validation_
 from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
 from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
 from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
-from fordead.validation.additional_output import additional_output
 
 
 
-@click.command(name='testing_parameters')
+@click.command(name='sensitivity_analysis')
 # @click.option("--testing_directory", type = str,default = None, help = "Path of the directory containing Sentinel-2 data.", show_default=True)
 # @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted reflectance", show_default=True)
 # @click.option("-t","--tile_selection", multiple=True, type = str, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.", show_default=True)
 # @click.option("--sentinel_source", type = str,default = "THEIA", help = "", show_default=True)
-def cli_testing_parameters():
+def cli_sensitivity_analysis():
     """
     
     \f
 
     """
     
-    testing_parameters()
+    sensitivity_analysis()
 
 
 
                                    
                                    
-def testing_parameters(testing_directory, reflectance_path, extracted_cloudiness_path, args_to_test, update_masked_vi = False, overwrite = True, name_column = "id"):
+def sensitivity_analysis(testing_directory, reflectance_path, extracted_cloudiness_path, args_to_test, update_masked_vi = False, overwrite = True, name_column = "id"):
+    """
+    
+
+    Parameters
+    ----------
+    testing_directory : str
+        DESCRIPTION.
+    reflectance_path : str
+        DESCRIPTION.
+    extracted_cloudiness_path : str
+        DESCRIPTION.
+    args_to_test : dict or str
+        DESCRIPTION.
+    update_masked_vi : bool, optional
+        DESCRIPTION. The default is False.
+    overwrite : bool, optional
+        DESCRIPTION. The default is True.
+    name_column : str, optional
+        DESCRIPTION. The default is "id".
+
+
+
+    """
     
     
     testing_directory = Path(testing_directory)
@@ -116,7 +138,7 @@ if __name__ == '__main__':
 
     # args_to_test = "D:/fordead/Data/Validation/results_from_raster/Feuillu/args_dict.txt"
     
-    testing_parameters(testing_directory = "D:/fordead/fordead_data/output",
+    sensitivity_analysis(testing_directory = "D:/fordead/fordead_data/output",
                        reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
                        extracted_cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
                        # tiles = ["T31UGP"],

@@ -4,19 +4,20 @@ The vector file created in the previous step is used to extract reflectance from
 
 ##### Running this step using a script
 
-Run the following instructions to extract reflectance corresponding to datapoints saved in **preprocessed_obs_path** from Sentinel-2 time series.
+Add the following instructions to your script to extract reflectance corresponding to datapoints saved in **preprocessed_obs_path** from Sentinel-2 time series.
 First make sure that the directory defined in the **export_path** variable exists.
 
 ```python
 from fordead.validation.extract_reflectance import extract_reflectance
 
-extracted_reflectance_path = "<MyWorkingDirectory>/extracted_reflectance.csv"
+extracted_reflectance_path = output_dir / "extracted_reflectance.csv"
 
 extract_reflectance(
-	obs_path = preprocessed_obs_path,
-	sentinel_dir = sentinel_dir, 
-	export_path = extracted_reflectance_path,
-	name_column = "id")
+    obs_path = preprocessed_obs_path,
+    sentinel_dir = sentinel_dir, 
+    export_path = extracted_reflectance_path,
+    name_column = "id")
+
 
 ```
 
@@ -43,10 +44,8 @@ The csv written in **export_path** includes the following attributes correspondi
 The file will not be overwritten if the process is re-run with the same data.
 New Sentinel-2 acquisitions or ground observations will be appended to the file if added to the input data. 
 
-The update procedure can be tested with additional Sentinel-2 data located in **<MyWorkingDirectory>/validation_tutorial/sentinel_data_update**:
+The update procedure can be tested with additional Sentinel-2 data located in <MyWorkingDirectory>/validation_tutorial/sentinel_data_update:
 copy and paste this additional data to the sentinel_data directory and run this step again.
-
-** need an additional example to test what happens hen adding polygons **
 
 [PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/01_preprocessing_observations)
 

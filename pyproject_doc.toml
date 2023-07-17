@@ -81,7 +81,15 @@ Installation = "docs/Installation.md"
 			"Preprocessing observations" = "docs/Tutorials/Validation/01_preprocessing_observations.md"
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
 			"Extracting reflectance" = "docs/Tutorials/Validation/02_extract_reflectance.md"
-	
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Extracting cloudiness (optional)" = "docs/Tutorials/Validation/03_extract_cloudiness.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Vegetation index and masks computing" = "docs/Tutorials/Validation/04_computing_vegetation_index_and_masks.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Training harmonic model for each pixel" = "docs/Tutorials/Validation/05_training_model_from_dataframe.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Dieback and stress detection" = "docs/Tutorials/Validation/06_dieback_detection_from_dataframe.md"
+
 [[tool.portray.mkdocs.nav]]
     [[tool.portray.mkdocs.nav."User guides".English]]
     "1. Compute masked vegetation index" = "docs/user_guides/english/01_compute_masked_vegetationindex.md"
@@ -103,6 +111,15 @@ Installation = "docs/Installation.md"
 		"02_obs_to_s2_grid" = "docs/user_guides/english/validation_tools/02_obs_to_s2_grid.md"
 		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
 		"03_extract_reflectance" = "docs/user_guides/english/validation_tools/03_extract_reflectance.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"04_extract_cloudiness" = "docs/user_guides/english/validation_tools/04_extract_cloudiness.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"05_compute_masks_and_vegetation_index_from_dataframe" = "docs/user_guides/english/validation_tools/05_compute_masks_and_vegetation_index_from_dataframe.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"06_training_model_from_dataframe" = "docs/user_guides/english/validation_tools/06_training_model_from_dataframe.md"
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"07_dieback_detection_from_dataframe" = "docs/user_guides/english/validation_tools/07_dieback_detection_from_dataframe.md"
+		
 		
 	[[tool.portray.mkdocs.nav."User guides".English]]
 		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]

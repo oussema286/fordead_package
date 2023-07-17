@@ -17,11 +17,17 @@ The points generated are kept in the CRS of the original vector file.
 Run the following instructions to perform this preprocessing step:
 
 ```python
+from pathlib import Path
+
 from fordead.validation.obs_to_s2_grid import obs_to_s2_grid
 
-obs_path = "<MyWorkingDirectory>/vector/observations_tuto.shp"
-sentinel_dir = "<MyWorkingDirectory>/sentinel_data/validation_tutorial/sentinel_data/"
-preprocessed_obs_path = "<MyWorkingDirectory>/vector/preprocessed_obs_tuto.shp"
+output_dir = Path("<MyOutputDirectory>")
+input_dir = Path("<MyInputDirectory>")
+
+obs_path = input_dir / "vector/observations_tuto.shp"
+sentinel_dir = input_dir / "sentinel_data/validation_tutorial/sentinel_data/"
+preprocessed_obs_path = output_dir / "preprocessed_obs_tuto.shp"
+
 
 obs_to_s2_grid(
 	obs_path = obs_path,
