@@ -10,10 +10,12 @@ Run the following instructions :
 ```python
 from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
 
-mask_vi_from_dataframe(reflectance_path = output_dir / "reflectance_tuto.csv",
-					masked_vi_path = output_dir / "fordead_results/mask_vi_tuto.csv",
-					periods_path = output_dir / "fordead_results/periods_tuto.csv",
-					cloudiness_path = output_dir / "cloudiness_tuto.csv",
+fordead_results_dirpath = Path("<MyResultsDirectory>")
+
+mask_vi_from_dataframe(reflectance_path = output_dir / "extracted_reflectance.csv",
+					masked_vi_path = fordead_results_dirpath / "mask_vi_tuto.csv",
+					periods_path = fordead_results_dirpath / "periods_tuto.csv",
+					cloudiness_path = output_dir / "extracted_cloudiness.csv",
 					vi = "CRSWIR",
 					lim_perc_cloud = 0.45,
 					soil_detection = True,

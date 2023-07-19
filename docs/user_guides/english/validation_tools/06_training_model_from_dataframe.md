@@ -21,7 +21,7 @@ It also writes a new csv file at *pixel_info_path* with the following columns :
 - **area_name** : The name of the Sentinel-2 tile from which data was extracted
 - an ID column corresponding to the **name_column** parameter
 - **id_pixel** : The ID of the pixel
-- **last_training_date** : 
+- **last_training_date** : The last date used for training
 - **coeff1**, **coeff2**, ...,  **coeff5** : Value of the corresponding coefficient of the harmonic model :
 ```math
 coeff1 + coeff2\sin{\frac{2\pi t}{T}} + coeff3\cos{\frac{2\pi t}{T}} + coeff4\sin{\frac{4\pi t}{T}} + coeff5\cos{\frac{4\pi t}{T}}

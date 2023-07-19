@@ -7,6 +7,7 @@ Created on Tue Apr 25 18:55:28 2023
 
 import time
 import click
+import shutil
 from pathlib import Path
 from itertools import product
 
@@ -36,35 +37,40 @@ def cli_sensitivity_analysis():
 
                                    
                                    
-def sensitivity_analysis(testing_directory, reflectance_path, extracted_cloudiness_path, args_to_test, update_masked_vi = False, overwrite = True, name_column = "id"):
+def sensitivity_analysis(testing_directory, reflectance_path, cloudiness_path, args_to_test, update_masked_vi = False, overwrite = True, name_column = "id"):
     """
+    Allows the testing of many parameter combinations, running three detection steps mask_vi_from_dataframe, train_model_from_dataframe and dieback_detection_from_dataframe using default parameters as well as user defined parameter combinations.
+    The synthetic results are saved in a csv with data on successive detected periods for each pixel, along with a 'test_id' column.
+    A 'test_info.csv' is written in 'testing_directory', where each test_id is associated with the value of all parameters used in the iteration.
     
+    See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/08_sensitivity_analysis/)
 
     Parameters
     ----------
     testing_directory : str
-        DESCRIPTION.
+        Directory where the results will be exported.
     reflectance_path : str
-        DESCRIPTION.
-    extracted_cloudiness_path : str
-        DESCRIPTION.
+        Path of the csv file with extracted reflectance.
+    cloudiness_path : str
+        Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/).
     args_to_test : dict or str
-        DESCRIPTION.
+        Either a dict where each key is any argument to functions mask_vi_from_dataframe, train_model_from_dataframe or dieback_detection_from_dataframe, and the values are list of values to test. All combinations will be tested.
+        If a str is given, it is interpreted as the path to a text file where each line begins parameter name, then each value is separated with a space. See an example [here](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_vi.txt)
     update_masked_vi : bool, optional
-        DESCRIPTION. The default is False.
+        If True, updates the csv containing the vegetation for each acquisition with the columns 'period_id', 'state', 'predicted_vi', 'diff_vi' and 'anomaly'. Doesn't apply if 'overwrite = True'. The default is False.
     overwrite : bool, optional
-        DESCRIPTION. The default is True.
+        If False, complete results for each parameter combination are kept in a directory named after the ID of the iteration test. The default is True.
     name_column : str, optional
-        DESCRIPTION. The default is "id".
-
-
+        Name of the ID column. The default is "id".
 
     """
     
     
     testing_directory = Path(testing_directory)
     test_info_path = testing_directory / "test_info.csv"
-
+    
+    update_masked_vi = False if overwrite else update_masked_vi
+    
     args_dict = get_args(args_to_test)
     
     for combs in product(*args_dict.values()):
@@ -75,10 +81,10 @@ def sensitivity_analysis(testing_directory, reflectance_path, extracted_cloudine
         if test_id is not None:
         
             if overwrite:
-                dir_path = testing_directory / "last_test_directory"
+                dir_path = testing_directory / "temp_dir"
             else:
-                dir_path = testing_directory / '__'.join([list(args_dict.keys())[i] + "_" + str(combs[i]) for i in range(len(combs))])
-     
+                # dir_path = testing_directory / '__'.join([list(args_dict.keys())[i] + "_" + str(combs[i]) for i in range(len(combs))])
+                dir_path = testing_directory / str(test_id)
             dir_path.mkdir(parents=True, exist_ok=True) 
     
             masked_vi_path = dir_path / "masked_vi.csv"
@@ -89,7 +95,7 @@ def sensitivity_analysis(testing_directory, reflectance_path, extracted_cloudine
                                     masked_vi_path = masked_vi_path,
                                     periods_path = periods_path,
                                     name_column = name_column,
-                                    cloudiness_path = extracted_cloudiness_path,
+                                    cloudiness_path = cloudiness_path,
                                     **filter_args(mask_vi_from_dataframe, args_dict, combs))
          
             
@@ -100,11 +106,6 @@ def sensitivity_analysis(testing_directory, reflectance_path, extracted_cloudine
                                         **filter_args(train_model_from_dataframe, args_dict, combs)
                                         )
             
-            # train_model_from_dataframe(masked_vi_path = masked_vi_path,
-            #                            export_path = pixel_info_path,
-            #                            name_column = name_column
-            #                            )
-            
             dieback_detection_from_dataframe(masked_vi_path = masked_vi_path, 
                                              pixel_info_path = pixel_info_path, 
                                              periods_path = periods_path, 
@@ -112,21 +113,16 @@ def sensitivity_analysis(testing_directory, reflectance_path, extracted_cloudine
                                              update_masked_vi = update_masked_vi,
                                              **filter_args(dieback_detection_from_dataframe, args_dict, combs))
             
-            # export_csv(data_directory = dir_path / str(area_name),
-            #             obs_shape = obs_area, name_column = name_column)
-            # additional_output(masked_vi_path = masked_vi_path,
-            #                                   pixel_info_path = pixel_info_path,
-            #                                   periods_path = periods_path,
-            #                                   export_path = additional_data_path,
-            #                                   name_column = name_column)
 
-                
             combine_validation_results(csv_path_list = [pixel_info_path, 
                                                         periods_path],
                                        merged_csv_path_list = [testing_directory / "merged_pixel_info.csv", 
                                                         testing_directory / "merged_periods.csv"],
                                        test_info_path = test_info_path,
                                        args_dataframe = args_dataframe, test_id = test_id)
+    
+    if (testing_directory / "temp_dir").exists():
+        shutil.rmtree(testing_directory / "temp_dir")
 
     
 if __name__ == '__main__':
@@ -140,7 +136,7 @@ if __name__ == '__main__':
     
     sensitivity_analysis(testing_directory = "D:/fordead/fordead_data/output",
                        reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
-                       extracted_cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
+                       cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
                        # tiles = ["T31UGP"],
                        args_to_test = args_to_test,
                        overwrite = True)

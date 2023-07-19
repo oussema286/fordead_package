@@ -30,6 +30,7 @@ def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_pa
         - diff_vi : Difference between the vegetation and its prediction, in the expected direction of anomalies for the vegetation index
         - anomaly : True if 'diff_vi' exceeds 'threshold_anomaly', else False
     
+    See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/07_dieback_detection_from_dataframe/)
 
     Parameters
     ----------
