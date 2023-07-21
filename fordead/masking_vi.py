@@ -228,8 +228,11 @@ def raster_full(path_example_raster, fill_value, dtype = None):
     
     filled_raster = rioxarray.open_rasterio(path_example_raster).sel(band=1)
     filled_raster[:,:]=fill_value
-    filled_raster.rio.crs=filled_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
-    if dtype!= None : filled_raster = filled_raster.astype(dtype)
+    
+    
+    
+    # filled_raster.rio.crs=filled_raster.crs.replace("+init=","") #Remove "+init=" which it deprecated
+    if dtype!= None : filled_raster.data = filled_raster.data.astype(dtype)
     return filled_raster
 
 def get_pre_masks(stack_bands):   

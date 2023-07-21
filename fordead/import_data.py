@@ -93,6 +93,7 @@ def retrieve_date_from_string(string):
             formatted_date=raw_date[-4:]+"-"+raw_date[2:4]+"-"+raw_date[:2]
     elif matchYMD!=None:
         raw_date=matchYMD.group()
+        raw_date = re.sub("[^0-9]", "", raw_date) #Keeping only digits
         if len(raw_date)==10:
             formatted_date=raw_date[:4]+"-"+raw_date[4:6]+"-"+raw_date[-2:]
         elif len(raw_date)==8:
