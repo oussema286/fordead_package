@@ -142,7 +142,7 @@ def create_timelapse(data_directory, shape_path = None, name_column = "id",  x =
         try:
             NameFile = str(shape[name_column].iloc[0])
         except KeyError:
-            raise Exception("No column "+name_column+" in " + shape_path)
+            raise Exception("No column "+name_column+" in " + str(shape_path))
         
         # if not((tile.paths["timelapse"] / (NameFile + ".html")).exists()): 
 
