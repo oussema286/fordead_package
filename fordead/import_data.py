@@ -534,6 +534,8 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
 
     """
     #Importing data from files
+    print(extent)
+    print(stack_bands)
     if extent is None:
         stack_bands = [rioxarray.open_rasterio(band_paths[band]) for band in list_bands]
     else:
@@ -557,7 +559,7 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
     concatenated_stack_bands= xr.concat(stack_bands,dim="band")
     concatenated_stack_bands.coords["band"] = list_bands
     concatenated_stack_bands.attrs["nodata"] = 0
-    
+    print(concatenated_stack_bands)
     return concatenated_stack_bands
 
 

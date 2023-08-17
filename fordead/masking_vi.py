@@ -253,12 +253,10 @@ def get_pre_masks(stack_bands):
         Binary DataArray, aggregates shadows, very visible clouds and pixels outside swath
 
     """
-    print(stack_bands)
     
     soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & ((B3 + B4) > 800)")
     # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B11 > 1250) & (B2 < 600) & (B4 > 600)")
     # soil_anomaly = compute_vegetation_index(stack_bands, formula = "(B4 + B2 - B3)/(B4 + B2 + B3)") #Bare soil index
-    print(soil_anomaly)
     shadows = (stack_bands==0).any(dim = "band")
     outside_swath = stack_bands.isel(band=0)<0
     
