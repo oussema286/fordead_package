@@ -535,12 +535,11 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
     """
     #Importing data from files
     print(extent)
-    print(stack_bands)
     if extent is None:
         stack_bands = [rioxarray.open_rasterio(band_paths[band]) for band in list_bands]
     else:
         stack_bands = [rioxarray.open_rasterio(band_paths[band],chunks = 1280).loc[dict(x=slice(extent[0]-20, extent[2]+20),y = slice(extent[3]+20,extent[1]-20))].compute() for band in list_bands]
-    
+    print(stack_bands)
     crs = stack_bands[0].rio.crs
     #Resampling at 10m resolution
     for band_index in range(len(stack_bands)):
