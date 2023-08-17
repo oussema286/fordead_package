@@ -287,6 +287,9 @@ def detect_soil(soil_data, soil_anomaly, invalid, date_index):
         Updated soil_data DataSet
 
     """
+    print(soil_data)
+    print(invalid)
+    print(soil_anomaly)
     
     soil_data["count"]=xr.where(~invalid & soil_anomaly,soil_data["count"]+1,soil_data["count"])
     soil_data["count"]=xr.where(~invalid & ~soil_anomaly,0,soil_data["count"])
