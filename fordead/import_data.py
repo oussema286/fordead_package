@@ -763,10 +763,10 @@ def import_stress_data(dict_paths, chunks = None):
         DataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
     """
     
-    dates_stress = xr.open_rasterio(dict_paths["dates_stress"],chunks = chunks).rename({"band": "change"})
-    cum_diff = xr.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).rename({"band": "period"})
-    nb_dates = xr.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).rename({"band": "period"})
-    nb_periods_stress = xr.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
+    dates_stress = rioxarray.open_rasterio(dict_paths["dates_stress"],chunks = chunks).rename({"band": "change"})
+    cum_diff = rioxarray.open_rasterio(dict_paths["cum_diff_stress"],chunks = chunks).rename({"band": "period"})
+    nb_dates = rioxarray.open_rasterio(dict_paths["nb_dates_stress"],chunks = chunks).rename({"band": "period"})
+    nb_periods_stress = rioxarray.open_rasterio(dict_paths["nb_periods_stress"],chunks = chunks).squeeze("band")
     stress_data=xr.Dataset({"date": dates_stress,
                      "nb_periods": nb_periods_stress,
                      "cum_diff" : cum_diff,
