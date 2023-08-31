@@ -35,7 +35,7 @@ If the detection includes bare ground detection (see [01_compute_masked_vegetati
 - Black polygons: bare ground
 - Blue polygons: areas detected as bare ground after being detected as dieback
 
-Pixels outside of the vegetation masked used, or invalid due to not enough dates to compute a vegetation index model, or too many stress periods are shown  in grey as "Permanently masked pixels".
+Pixels outside of the forest mask used (set in the[compute_forest_mask step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/), or invalid due to not enough dates to compute a vegetation index model in [train_model step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/), or too many stress periods as computed in the [dieback_detection step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/) are shown  in grey as "Permanently masked pixels".
 
 A legend is included, and clicking on a legend item toggles its visibility, double clicking makes it the sole visible item on the graph.
 
