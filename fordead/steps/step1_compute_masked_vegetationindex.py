@@ -190,7 +190,7 @@ def compute_masked_vegetationindex(
                 mask = mask | invalid_values
                 if apply_source_mask:
                     mask = mask | get_source_mask(tile.paths["Sentinel"][date], sentinel_source, extent = tile.raster_meta["extent"]) #Masking with source mask if option chosen
-                    
+                
                 #Writing vegetation index and mask
                 # write_tif(vegetation_index, tile.raster_meta["attrs"],tile.paths["VegetationIndexDir"] / ("VegetationIndex_"+date+".nc"),nodata=0)
                 write_tif(mask, tile.raster_meta["attrs"], tile.paths["MaskDir"] / ("Mask_"+date+".tif"),nodata=0)

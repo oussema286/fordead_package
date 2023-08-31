@@ -21,7 +21,7 @@ def mask_vi_from_dataframe(reflectance_path,
                            name_column,
                            cloudiness_path,
                            vi = "CRSWIR",
-                           lim_perc_cloud = 0.45,
+                           lim_perc_cloud = 0.4,
                            soil_detection = True,
                            formula_mask = "(B2 >= 700)",
                            path_dict_vi = None,
@@ -34,6 +34,8 @@ def mask_vi_from_dataframe(reflectance_path,
     Filters out data by applying the fordead mask (if soil_detection is True) or a user mask defined by the user. 
     (optional) Filters out acquisition by applying a limit on the percentage of cloud cover as calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/)
     Writes the results in a csv file, as well as the first date of the training period for each pixel and, if soil_detection is True, the first date of detected bare ground.
+    
+    See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/05_compute_masks_and_vegetation_index_from_dataframe/)
     
     Parameters
     ----------

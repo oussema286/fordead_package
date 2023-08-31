@@ -22,7 +22,7 @@ from pathlib import Path
 from fordead.validation.obs_to_s2_grid import obs_to_s2_grid
 
 output_dir = Path("<MyOutputDirectory>")
-input_dir = Path("<MyInputDirectory>")
+input_dir = Path("<MyInputDirectory>/fordead_data")
 
 obs_path = input_dir / "vector/observations_tuto.shp"
 sentinel_dir = input_dir / "sentinel_data/validation_tutorial/sentinel_data/"
@@ -34,6 +34,7 @@ obs_to_s2_grid(
 	sentinel_dir = sentinel_dir, 
 	export_path = preprocessed_obs_path,
 	name_column = "id")
+	
 ```
 
 > **_NOTE :_** Set **obs_to_s2_grid** input variable `overwrite = True` to re-run this processing stage, otherwise it will raise an error.

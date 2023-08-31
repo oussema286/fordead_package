@@ -27,13 +27,12 @@ The 'state' column can now hold the following values :
 - **Invalid** : The pixel is invalid, there were not enough valid acquisitions to compute a harmonic model
 A new column 'anomaly_intensity' is also added, it is a weighted mean of the difference between the calculated vegetation indices and their predicted value for the period. The weight is the number of the date within that period (1+2+3+...+ nb_dates). It is only calculated for 'Healthy', 'Stress' and 'Dieback' periods
 
-if 'update_masked_vi' is True, this function also updates the csv at 'masked_vi_path' with the following columns:
+if `update_masked_vi = True`, this function also updates the csv at 'masked_vi_path' with the following columns:
 - **period_id** : id of the period the acquisition is associated with
 - **state** : Status of of the associated period, can be 'Training', 'Healthy', 'Stress', 'Dieback' or 'Invalid'.
 - **predicted_vi** : The prediction of the vegetation index using the harmonic model
 - **diff_vi** : Difference between the vegetation and its prediction, in the expected direction of anomalies for the vegetation index
 - **anomaly** : True if 'diff_vi' exceeds 'threshold_anomaly', else False
-
 
 ----------
 ## Running this step

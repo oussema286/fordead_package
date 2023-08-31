@@ -1,0 +1,3 @@
+vi CRSWIR
+threshold_anomaly 0.15 0.16 0.17 0.18
+list_bands ["B2","B3","B4","B8A","B11","B12"] ["B2","B3","B4","B8A","B11"]

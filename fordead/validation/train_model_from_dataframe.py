@@ -27,6 +27,8 @@ def train_model_from_dataframe(masked_vi_path,
     
     Adjusts an harmonic model to predict the temporal periodicity of the vegetation index, based on the acquisitions of a specified training period.
 
+    See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/06_training_model_from_dataframe/)
+
     Parameters
     ----------
     masked_vi_path : str

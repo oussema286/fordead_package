@@ -89,6 +89,8 @@ Installation = "docs/Installation.md"
 			"Training harmonic model for each pixel" = "docs/Tutorials/Validation/05_training_model_from_dataframe.md"
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
 			"Dieback and stress detection" = "docs/Tutorials/Validation/06_dieback_detection_from_dataframe.md"
+			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
+			"Sensitivity analysis" = "docs/Tutorials/Validation/07_sensitivity_analysis.md"
 
 [[tool.portray.mkdocs.nav]]
     [[tool.portray.mkdocs.nav."User guides".English]]
@@ -119,7 +121,9 @@ Installation = "docs/Installation.md"
 		"06_training_model_from_dataframe" = "docs/user_guides/english/validation_tools/06_training_model_from_dataframe.md"
 		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
 		"07_dieback_detection_from_dataframe" = "docs/user_guides/english/validation_tools/07_dieback_detection_from_dataframe.md"
-		
+		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"08_sensitivity_analysis" = "docs/user_guides/english/validation_tools/08_sensitivity_analysis.md"
+
 		
 	[[tool.portray.mkdocs.nav."User guides".English]]
 		[[tool.portray.mkdocs.nav."User guides".English."Other tools"]]

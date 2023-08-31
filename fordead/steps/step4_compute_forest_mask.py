@@ -104,7 +104,6 @@ def compute_forest_mask(data_directory,
             tile.delete_attributes("last_computed_anomaly")
 
 
-    if path_example_raster == None : path_example_raster = tile.paths["VegetationIndex"][tile.dates[0]]
     tile.add_path("forest_mask", tile.data_directory / "TimelessMasks" / "Forest_Mask.tif")
 
     
@@ -112,7 +111,7 @@ def compute_forest_mask(data_directory,
         print("Forest mask already calculated")
         tile.save_info()
     else:
-        if path_example_raster == None : path_example_raster = tile.paths["VegetationIndex"][tile.dates[-1]]
+        if path_example_raster is None : path_example_raster = tile.paths["Masks"][tile.dates[-1]]
         
         if forest_mask_source is None:
             print("No mask used, computing forest mask with every pixel marked as True")
@@ -137,7 +136,8 @@ def compute_forest_mask(data_directory,
             
         else:
             print("Unrecognized forest_mask_source")
-
+        
+        
         write_tif(forest_mask, forest_mask.attrs, nodata = 0, path = tile.paths["forest_mask"])
         tile.save_info()
         

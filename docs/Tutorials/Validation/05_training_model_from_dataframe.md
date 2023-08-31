@@ -10,9 +10,9 @@ Run the following instructions :
 ```python
 from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
 
-train_model_from_dataframe(masked_vi_path = output_dir / "mask_vi_tuto.csv",
-							pixel_info_path = output_dir / "pixel_info_tuto.csv",
-							periods_path = output_dir / "periods_tuto.csv",
+train_model_from_dataframe(masked_vi_path = fordead_results_dirpath / "mask_vi_tuto.csv",
+							pixel_info_path = fordead_results_dirpath / "pixel_info_tuto.csv",
+							periods_path = fordead_results_dirpath / "periods_tuto.csv",
 						   name_column = 'id',
 						   min_last_date_training = "2018-01-01",
 						   max_last_date_training = "2018-06-01",

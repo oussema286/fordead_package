@@ -11,9 +11,9 @@ Run the following instructions :
 from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
 
 dieback_detection_from_dataframe(
-				masked_vi_path = output_dir / "fordead_results/mask_vi_tuto.csv",
-                pixel_info_path = output_dir / "fordead_results/pixel_info_tuto.csv",
-                periods_path = output_dir / "fordead_results/periods_tuto.csv",
+				masked_vi_path = fordead_results_dirpath / "fordead_results/mask_vi_tuto.csv",
+                pixel_info_path = fordead_results_dirpath / "fordead_results/pixel_info_tuto.csv",
+                periods_path = fordead_results_dirpath / "fordead_results/periods_tuto.csv",
                 name_column = "id",
                 update_masked_vi = True)
 
