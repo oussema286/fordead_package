@@ -94,12 +94,13 @@ def retrieve_date_from_string(string):
     elif matchYMD!=None:
         raw_date=matchYMD.group()
         if len(raw_date)==10:
-            formatted_date=raw_date[:4]+"-"+raw_date[4:6]+"-"+raw_date[-2:]
+            formatted_date=raw_date[:4]+"-"+raw_date[5:7]+"-"+raw_date[-2:]
         elif len(raw_date)==8:
             formatted_date=raw_date[:4]+"-"+raw_date[4:6]+"-"+raw_date[-2:]
+            
     else:
         return None
-            
+    # print(formatted_date)
     return formatted_date
 
 class TileInfo:
