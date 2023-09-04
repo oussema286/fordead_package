@@ -16,7 +16,7 @@ import pandas as pd
 @click.option("-o", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
 @click.option("--start_date",  type=str, default='2015-06-23',
                     help="Start date for exporting results", show_default=True)
-@click.option("--end_date",  type=str, default="2025-01-02",
+@click.option("--end_date",  type=str, default="2030-01-02",
                     help="End date for exporting results", show_default=True)
 @click.option("--frequency",  type=str, default='M',
                     help="Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)", show_default=True)
@@ -27,7 +27,7 @@ import pandas as pd
 def cli_export_results(
     data_directory,
     start_date = '2015-06-23',
-    end_date = "2022-01-02",
+    end_date = "2030-01-02",
     frequency = 'M',
     multiple_files = False,
     conf_threshold_list = None,
@@ -45,7 +45,7 @@ def cli_export_results(
 def export_results(
     data_directory,
     start_date = '2015-06-23',
-    end_date = "2022-01-02",
+    end_date = "2030-01-02",
     frequency = 'M',
     multiple_files = False,
     conf_threshold_list = None,

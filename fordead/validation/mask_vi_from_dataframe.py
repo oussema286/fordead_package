@@ -69,8 +69,6 @@ def mask_vi_from_dataframe(reflectance_path,
     """
     
 
-
-
     reflect = pd.read_csv(reflectance_path)
     if cloudiness_path is not None:
         reflect = filter_cloudy_acquisitions(reflect, cloudiness_path, lim_perc_cloud)
@@ -83,7 +81,10 @@ def mask_vi_from_dataframe(reflectance_path,
     reflect = reflect[~reflect["vi"].isnull()]
     reflect = reflect[~np.isinf(reflect["vi"])]
     
-    reflect = reflect[["epsg", "area_name", name_column, "id_pixel", "Date","vi", "bare_ground"]]
+    if soil_detection:
+        reflect = reflect[["epsg", "area_name", name_column, "id_pixel", "Date","vi", "bare_ground"]]
+    else:
+        reflect = reflect[["epsg", "area_name", name_column, "id_pixel", "Date","vi"]]
     # reflect = reflect.drop(columns=list_bands + ["soil_anomaly", "Mask"]) #soil_anomaly shouldn't be added in the first place
     
     mask_vi_periods = get_mask_vi_periods(reflect, first_date_bare_ground, name_column)
