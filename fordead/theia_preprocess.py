@@ -288,7 +288,7 @@ def s2_unzip(s2zipfile, out_dir, bands, correction_type):
                             else:
                                 print('File already extracted: {}'.format(os.path.basename(fileName)))
     except BadZipfile:
-        print("Bad zip file, removing file")
+        print(str(s2zipfile) + " : \nBad zip file, removing file")
         os.remove(s2zipfile)
 
 def unzip_theia(bands, zip_dir,out_dir, empty_zip, correction_type):
