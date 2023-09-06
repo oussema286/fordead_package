@@ -73,6 +73,8 @@ def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_pa
         # period_bare_ground["state"] = "Bare ground"
         # period_bare_ground = period_bare_ground.rename(columns={"Date": "start_date"}).drop(columns = ["vi", "bare_ground", "epsg"])
         detection_dates = masked_vi[~masked_vi["bare_ground"]]
+    else:
+        detection_dates = masked_vi
     
     # test = masked_vi[(masked_vi[name_column] == 5) & (masked_vi["id_pixel"] == 41)]
     
