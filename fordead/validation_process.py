@@ -227,12 +227,13 @@ def compute_and_apply_mask(data_frame, soil_detection, formula_mask, list_bands,
         # data_frame["bare_ground"] = bare_ground.to_numpy()
     else:
         data_frame = compute_user_mask_dataframe(data_frame, formula_mask, list_bands)
+        bare_ground = None
         
     masked_dataframe = data_frame[~data_frame["mask"]]
     
     if apply_source_mask:
         masked_dataframe = masked_dataframe[~source_mask_dataframe(masked_dataframe["Mask"], sentinel_source)]
-        
+    
     return masked_dataframe, bare_ground
 
 def compute_user_mask_dataframe(data_frame, formula_mask, list_bands):
@@ -535,11 +536,17 @@ def dieback_detection(data_frame, dated_changes, name_column):
     # masked_vi = masked_vi[masked_vi["Date"] <= masked_vi["last_date_training"]].reset_index()
 
 def get_mask_vi_periods(reflect, first_date_bare_ground, name_column):
-    first_training_date = reflect.groupby(by = ["area_name", name_column,"id_pixel"]).first().reset_index()[["area_name", name_column, "id_pixel", "Date"]].rename(columns = {"Date" : "first_date"})
-    first_training_date["state"] = "Training"
-    first_date_bare_ground = first_date_bare_ground.rename(columns = {"bare_ground_first_date" : "first_date"})
-    first_date_bare_ground["state"] = "Bare ground"
-    mask_vi_periods = pd.concat([first_training_date, first_date_bare_ground]).sort_values(["area_name",name_column,"id_pixel"], ascending = True)
+    
+    
+    mask_vi_periods = reflect.groupby(by = ["area_name", name_column,"id_pixel"]).first().reset_index()[["area_name", name_column, "id_pixel", "Date"]].rename(columns = {"Date" : "first_date"})
+    mask_vi_periods["state"] = "Training"
+    
+    if first_date_bare_ground is not None:
+        first_date_bare_ground = first_date_bare_ground.rename(columns = {"bare_ground_first_date" : "first_date"})
+        first_date_bare_ground["state"] = "Bare ground"
+        mask_vi_periods = pd.concat([mask_vi_periods, first_date_bare_ground])
+    
+    mask_vi_periods = mask_vi_periods.sort_values(["area_name",name_column,"id_pixel"], ascending = True)
     return mask_vi_periods
     # periods_tot.to_csv(export_path, mode='w', index=False,header=True)
 
