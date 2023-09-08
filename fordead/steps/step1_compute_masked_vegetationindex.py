@@ -135,6 +135,9 @@ def compute_masked_vegetationindex(
         tile.delete_files("sufficient_coverage_mask","too_many_stress_periods_mask")
         tile.delete_attributes("last_computed_anomaly","dates","last_date_export")
 
+    
+    tile.catalog(data_directory)
+    
     # All SENTINEL data in the input directory is detected, and paths are added to the TileInfo object. For example, after this operation tile.paths["Sentinel"]["YYYY-MM-DD"]["B2"] brings up the path to the B2 band file of the specified date?
     tile.getdict_datepaths("Sentinel",Path(input_directory)) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
     tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
@@ -175,7 +178,7 @@ def compute_masked_vegetationindex(
             if date in new_dates:
                 
                 # Resample and import SENTINEL data
-                stack_bands = import_resampled_sen_stack(tile.paths["Sentinel"][date], tile.used_bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])
+                stack_bands = tile.catalog.read(date, tile.used_bands)#import_resampled_sen_stack(tile.paths["Sentinel"][date], tile.used_bands, interpolation_order = interpolation_order, extent = tile.raster_meta["extent"])
                 
                 # Compute vegetation index
                 vegetation_index = compute_vegetation_index(stack_bands, formula = tile.vi_formula)
