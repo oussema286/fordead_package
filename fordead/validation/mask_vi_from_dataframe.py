@@ -5,6 +5,8 @@ Created on Tue Mar 14 12:48:06 2023
 @author: Raphaël Dutrieux
 """
 
+from fordead import __version__
+
 import pandas as pd
 from fordead.validation_process import compute_and_apply_mask, filter_cloudy_acquisitions, get_mask_vi_periods
 from fordead.masking_vi import compute_vegetation_index
@@ -77,7 +79,7 @@ def mask_vi_from_dataframe(reflectance_path,
     
     reflect, first_date_bare_ground = compute_and_apply_mask(reflect, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source, name_column)
 
-    reflect["vi"] = compute_vegetation_index(reflect, vi = vi, formula = None, path_dict_vi = None)
+    reflect["vi"] = compute_vegetation_index(reflect, vi = vi, path_dict_vi = path_dict_vi)
     reflect = reflect[~reflect["vi"].isnull()]
     reflect = reflect[~np.isinf(reflect["vi"])]
     
@@ -97,11 +99,13 @@ if __name__ == '__main__':
     start_time_debut = time.time()
     
     # Exemple tuto
-    mask_vi_from_dataframe(reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
-                        masked_vi_path = "D:/fordead/fordead_data/output/calval_tuto/mask_vi_tuto.csv",
-                        periods_path = "D:/fordead/fordead_data/output/calval_tuto/periods_tuto.csv",
-                        cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
-                        vi = "CRSWIR",
+    mask_vi_from_dataframe(reflectance_path = "D:/fordead/fordead_data/calval_output/extracted_reflectance.csv",
+                        masked_vi_path = "D:/fordead/fordead_data/calval_output/mask_vi_tuto.csv",
+                        periods_path = "D:/fordead/fordead_data/calval_output/periods_tuto.csv",
+                        cloudiness_path = "D:/fordead/fordead_data/calval_output/extracted_cloudiness.csv",
+                        soil_detection = False,
+                        vi = "GNDVI",
+                        path_dict_vi="D:/fordead/Data/Test_programme/bug_helene/dict_vi.txt",
                         name_column = "id")
     
     # Données de scolytes
