@@ -131,6 +131,7 @@ def dieback_detection(
    
         if tile.parameters["correct_vi"]:
             forest_mask = import_binary_raster(tile.paths["forest_mask"])
+            
         #dieback DETECTION
         for date_index, date in enumerate(tile.dates):
             if date in new_dates:

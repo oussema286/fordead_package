@@ -97,19 +97,20 @@ if __name__ == '__main__':
     start_time_debut = time.time()
     
     # Exemple tuto
-    mask_vi_from_dataframe(reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
-                        masked_vi_path = "D:/fordead/fordead_data/output/calval_tuto/mask_vi_tuto.csv",
-                        periods_path = "D:/fordead/fordead_data/output/calval_tuto/periods_tuto.csv",
-                        cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
-                        vi = "CRSWIR",
-                        name_column = "id")
+    # mask_vi_from_dataframe(reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
+    #                     masked_vi_path = "D:/fordead/fordead_data/output/calval_tuto/mask_vi_tuto.csv",
+    #                     periods_path = "D:/fordead/fordead_data/output/calval_tuto/periods_tuto.csv",
+    #                     cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
+    #                     vi = "CRSWIR",
+    #                     name_column = "id")
     
     # Données de scolytes
-    # output_dir = Path("D:/fordead/Data/Validation/scolytes/02_calibrating_vi_threshold_anomaly/03_RESULTS/fordead_results3")
-    # mask_vi_from_dataframe(reflectance_path = "D:/fordead/Data/Validation/scolytes/02_calibrating_vi_threshold_anomaly/01_DATA/reflectance_scolytes.csv",
-    #                     masked_vi_path = output_dir / "masked_vi_scolytes.csv",
-    #                     periods_path = output_dir / "periods_scolytes.csv",
-    #                     cloudiness_path = "D:/fordead/Data/Validation/scolytes/02_calibrating_vi_threshold_anomaly/01_DATA/extracted_cloudiness.csv",
-    #                     vi = "CRSWIR",
-    #                     name_column = "Id")
+    output_dir = Path("D:/fordead/Data/Test_programme/bug_helene")
+    mask_vi_from_dataframe(reflectance_path = output_dir / "Reflectance_brute_all2.csv",
+                        masked_vi_path = output_dir / "masked_vi_scolytes.csv",
+                        periods_path = output_dir / "periods_scolytes.csv",
+                        cloudiness_path = None,
+                        # cloudiness_path = "D:/fordead/Data/Validation/scolytes/02_calibrating_vi_threshold_anomaly/01_DATA/extracted_cloudiness.csv",
+                        vi = "CRSWIR",
+                        name_column = "idp")
     print("Temps de calcul : %s secondes ---" % (time.time() - start_time_debut))

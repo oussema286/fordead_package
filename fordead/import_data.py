@@ -21,7 +21,7 @@ import geopandas as gp
     
 #     def read(self, date, tuile)
 
-class sat_catalog_theia(object):
+class Sat_catalog_theia(object):
     
     def __init__(self,input_directory):
         self.input_directory = input_directory
