@@ -85,6 +85,7 @@ from shapely.geometry import box
 from shapely import to_geojson
 import warnings
 import stackstac
+from stac_static.search import to_geodataframe
 
 #### Generic functions and classes ####
 def valid_name(x, pattern, directory=False):
@@ -202,7 +203,7 @@ class ExtendPystacClasses:
         """Returns a DASK xarray()"""
         return stackstac.stack(self, **kwargs)
     
-    def filter(self, **kwargs):
+    def filter(self, asset_names=None, **kwargs):
         """Filter items with stac-static search.
         
         All parameters correspond to query parameters described in the `STAC API - Item Search: Query Parameters Table
@@ -261,6 +262,11 @@ class ExtendPystacClasses:
             filter_lang: Language variant used in the filter body. If `filter` is a
                 dictionary or not provided, defaults
                 to 'cql2-json'. If `filter` is a string, defaults to `cql2-text`.
+            
+            asset_names: List of string with the band names to select
+                If the aim is to produce an xarray in the end, 
+                from tests it takes almost the same time then selecting bands
+                in the xarray directly.
 
         Notes:
             Argument filter would search into the first level of metadata of the asset.
@@ -269,8 +275,15 @@ class ExtendPystacClasses:
              - filter="constellation = 'sentinel-2' and tilename = 'T31UFQ'"
              - filter="tilename in ('T31UFQ', 'T31UFQ')"
         """
-        return ItemCollection(stac_static.search(self, **kwargs).item_collection())
+        res = ItemCollection(stac_static.search(self, **kwargs).item_collection())
+        if asset_names is not None:
+            for item in res.items:
+                item.assets = {k:a for k, a in item.assets.items() if k in asset_names}
+        
+        return res
 
+    def to_geodataframe(self, **kwargs):
+       return to_geodataframe(self)
 class ItemCollection(pystac.ItemCollection, ExtendPystacClasses):
     pass
 
