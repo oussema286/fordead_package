@@ -1,0 +1,32 @@
+name: fordeadv2
+channels:
+  - conda-forge
+dependencies:
+  - dask
+  - eodag
+  - eoreader
+  - fiona
+  - geopandas
+  - matplotlib
+  - netcdf4
+  - numpy
+  - path
+  - pathlib
+  - planetary-computer
+  - plotly
+  - python
+  - pystac
+  - pystac-client
+  - rasterio
+  - rioxarray
+  - scipy
+  - stac-static
+  - stackstac
+  - xarray
+  - xpystac
+  # - pip:
+  #   - git+https://forgemia.inra.fr/fordeadv2/fordeadv2.git
+  - pip:
+    # conda version of stac-geoparquet is old, v0.3.2+ needed for datetime correct conversion
+    - stac-geoparquet
+    - git+https://github.com/floriandeboissieu/stac-static
