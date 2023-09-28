@@ -200,12 +200,29 @@ class ExtendPystacClasses:
     """Add capacities to_xarray and filter to pystac Catalog, Collection, ItemCollection"""
 
     def to_xarray(self, **kwargs):
-        """Returns a DASK xarray()"""
+        """Returns a DASK xarray()
+        
+        This is a proxy to stackstac.stac
+
+        Arguments are:
+        assets=frozenset({'image/jp2', 'image/tiff', 'image/vnd.stac.geotiff', 'image/x.geotiff'}),
+        epsg=None, resolution=None, bounds=None, bounds_latlon=None,
+        snap_bounds=True, resampling=Resampling.nearest, chunksize=1024,
+        dtype=dtype('float64'), fill_value=nan, rescale=True,
+        sortby_date='asc', xy_coords='topleft', properties=True,
+        band_coords=True, gdal_env=None,
+        errors_as_nodata=(RasterioIOError('HTTP response code: 404'), ),
+        reader=<class 'stackstac.rio_reader.AutoParallelRioReader'>
+
+        For details, see [stackstac.stac](https://stackstac.readthedocs.io/en/latest/api/main/stackstac.stack.html)
+        """
         return stackstac.stack(self, **kwargs)
     
     def filter(self, asset_names=None, **kwargs):
         """Filter items with stac-static search.
         
+        Documentation copied from stac-static.
+
         All parameters correspond to query parameters described in the `STAC API - Item Search: Query Parameters Table
         <https://github.com/radiantearth/stac-api-spec/tree/master/item-search#query-parameter-table>`__
         docs. Please refer to those docs for details on how these parameters filter search results.
@@ -263,17 +280,14 @@ class ExtendPystacClasses:
                 dictionary or not provided, defaults
                 to 'cql2-json'. If `filter` is a string, defaults to `cql2-text`.
             
-            asset_names: List of string with the band names to select
-                If the aim is to produce an xarray in the end, 
-                from tests it takes almost the same time then selecting bands
-                in the xarray directly.
-
         Notes:
             Argument filter would search into the first level of metadata of the asset.
             If the metadata to filter is a string, it should be used as 
             a string into a string, examples:
              - filter="constellation = 'sentinel-2' and tilename = 'T31UFQ'"
              - filter="tilename in ('T31UFQ', 'T31UFQ')"
+            
+             In order to filter/select assets, use to_xarray(asset=...) or to_xarray().sel(band=...)
         """
         res = ItemCollection(stac_static.search(self, **kwargs).item_collection())
         if asset_names is not None:

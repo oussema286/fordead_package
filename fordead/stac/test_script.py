@@ -50,7 +50,7 @@ subcoll
 # %%
 # filter items and lazy export to xarray
 # three ways, about the same time, the first one being slightly faster: to try on big collection
-subxr = coll.filter(asset_names=['B8', 'B8A'], datetime="2016-01-01/2017-01-01").to_xarray()
+subxr = coll.filter(datetime="2016-01-01/2017-01-01").to_xarray(assets=['B8', 'B8A'])
 subxr2 = coll.filter(datetime="2016-01-01/2017-01-01").to_xarray().sel(band=['B8', 'B8A'])
 assert subxr.equals(subxr2)
 subxr
@@ -65,6 +65,14 @@ subxr3
 # plot the first days
 # notice the interpolation (nearest) on the fly of B8A from 20m to 10m compared to B8 (10m)
 subxr[:2, :, :, :].plot(row='time', col='band') # 2 dates, 3 bands
+
+# %%
+# resolution can be changed on the fly
+# when converting collection to xarray
+# see stackstac.stack for other option
+subxr4 = coll.filter(asset_names=['B8', 'B8A'], 
+            datetime="2016-01/2016-05").to_xarray(resolution=60)
+subxr4.plot(row='time', col='band')
 
 # %%
 # convert collection to geodataframe
