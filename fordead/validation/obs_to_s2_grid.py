@@ -16,8 +16,9 @@ from fordead.validation_module import get_grid_points, process_points
 @click.option("--sentinel_dir", type = str,default = None, help = "Path of the directory containing Sentinel-2 data", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path used to write resulting vector file, with added 'epsg','area_name' and 'id_pixel' columns", show_default=True)
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
+@click.option("-t","--tile_selection", type = list, default = None, help = "A list of names of Sentinel-2 directories. (ex : -t T31UFQ -t T31UGQ). If None, all tiles are used.", show_default=True)
 @click.option("--overwrite",  is_flag=True, help = "Overwrites file at obs_path", show_default=True)
-def cli_obs_to_s2_grid(obs_path, sentinel_dir, export_path, buffer, name_column, overwrite):
+def cli_obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column, tile_selection, overwrite):
     """
     Attributes intersecting Sentinel-2 tiles to observation points or polygons, adding their epsg and name. If polygons are used, they are converted to grid points located at the centroid of Sentinel-2 pixels.
     If points or polygons intersect several Sentinel-2 tiles, they are duplicated for each of them.
@@ -27,9 +28,9 @@ def cli_obs_to_s2_grid(obs_path, sentinel_dir, export_path, buffer, name_column,
 
     """
     
-    obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column, overwrite)
+    obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column, tile_selection, overwrite)
 
-def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id", list_tiles = None, overwrite = False):
+def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id", tile_selection = None, overwrite = False):
     """
     Attributes intersecting Sentinel-2 tiles to observation points or polygons, adding their epsg and name. If polygons are used, they are converted to grid points located at the centroid of Sentinel-2 pixels.
     If points or polygons intersect several Sentinel-2 tiles, they are duplicated for each of them.
@@ -45,8 +46,8 @@ def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id", list
         Path used to write resulting vector file, with added "epsg","area_name" and "id_pixel" columns.
     name_column : str, optional
         Name of the ID column. The default is "id".
-    list_tiles : list
-        A list of names of Sentinel-2 directories. If this parameter is used, extraction is  limited to those directories.
+    tile_selection : list
+        A list of names of Sentinel-2 directories. If this parameter is used, extraction is limited to those directories.
     overwrite : bool
         If True, allows overwriting of file at obs_path
 
@@ -66,8 +67,8 @@ def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id", list
     points = obs[(geom_type == 'Point') | (geom_type == 'MultiPoint')]
     polygons = obs[(geom_type == 'Polygon') | (geom_type == 'MultiPolygon')]
     
-    points_from_points = process_points(points, sentinel_dir, name_column, list_tiles) if len(points) != 0 else None
-    points_from_poly = get_grid_points(polygons, sentinel_dir, name_column, list_tiles) if len(polygons) != 0 else None
+    points_from_points = process_points(points, sentinel_dir, name_column, tile_selection) if len(points) != 0 else None
+    points_from_poly = get_grid_points(polygons, sentinel_dir, name_column, tile_selection) if len(polygons) != 0 else None
 
     total_points = pd.concat([points_from_poly,points_from_points])
     total_points.to_file(export_path)
