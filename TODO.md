@@ -1,7 +1,13 @@
 
-Les input ont les dimensions nécessaire, voir s"il est possible de garder la même fonction mais avec des dimensions extra
-tout en propageant les dimensions supplémentaires au résultat.
+# Faire un test gitlab-ci avec stac
+Raphael a eu qq problèmes lors de l'installation (packages manquant, channel pas prioritaire, ...)
+Un test en CI d'installation de l'environnement dev et du script de test stac pourrait vérifier si tout y est.
 
+# Fonctions et classes
+
+Dans la description ci-dessous, les input ont les dimensions nécessaires, voir s'il est possible de garder les mêmes fonctions mais avec des dimensions extra, i.e. en propageant les dimensions supplémentaires au résultat: apply along ou boucle for.
+
+```python
 compute_mask(xr[x, y, band], formula="B2>700, use_CLM=True) -> xr[x,y,band="FORDEAD_MASK"]
 
 compute_soil(xr[x, y, band], formula="B5>700") -> xr[x,y,band="FORDEAD_SOIL"]
@@ -34,7 +40,7 @@ add_asset(coll, xr[x,y,band,time], output_dir, band_parser):
             item.add_asset(asset)
 
 
-
+# en cours de construction
 Class FordeadApp(config, coll=None):
 
     def __init__(self)
@@ -48,5 +54,5 @@ Class FordeadApp(config, coll=None):
 
         config = load(config_file)
         coll = load_coll
-
+```
 
