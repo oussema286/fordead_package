@@ -3,6 +3,15 @@
 Raphael a eu qq problèmes lors de l'installation (packages manquant, channel pas prioritaire, ...)
 Un test en CI d'installation de l'environnement dev et du script de test stac pourrait vérifier si tout y est.
 
+# ajouter central_wavelength et bandwidth au assets
+i.e. simplifier la configuration en partant d'un json ou d'un dictionnaire comme
+dans gdalcubes ou eoreader.
+
+# wavelength ou common_name pour le calcul des indices
+Il est possible d'utiliser la wavelength (nearest de la wavelength souhaitée) ou
+les common_name (green, red, rededge, nir, ...) pour le calcul des indices.
+Ca permettrait d'être indépendant du capteur.
+
 # Fonctions et classes
 
 Dans la description ci-dessous, les input ont les dimensions nécessaires, voir s'il est possible de garder les mêmes fonctions mais avec des dimensions extra, i.e. en propageant les dimensions supplémentaires au résultat: apply along ou boucle for.
