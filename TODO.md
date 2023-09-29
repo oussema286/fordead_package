@@ -1,7 +1,8 @@
-
 # Faire un test gitlab-ci avec stac
 Raphael a eu qq problèmes lors de l'installation (packages manquant, channel pas prioritaire, ...)
 Un test en CI d'installation de l'environnement dev et du script de test stac pourrait vérifier si tout y est.
+
+# Tester la construction de la collection sur un gros jeu de données (1000 images)
 
 # ajouter central_wavelength et bandwidth au assets
 i.e. simplifier la configuration en partant d'un json ou d'un dictionnaire comme
