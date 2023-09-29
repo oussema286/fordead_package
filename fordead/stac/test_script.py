@@ -20,7 +20,7 @@ with tempfile.TemporaryDirectory() as tmpdir2:
 data_dir = tmpdir.glob('fordead_data-main')[0] 
 input_dir = data_dir / "sentinel_data/dieback_detection_tutorial/study_area"
 
-# make a temporary directory wher the catalog will be written
+# make a temporary directory where the catalog will be written
 coll_path = tmpdir / "catalog.json"
 
 # %%
@@ -42,7 +42,7 @@ assert set([item.id for item in coll2.items])==set([item.id for item in coll.ite
 # filter items
 start = to_datetime("2016-01-01")
 end = to_datetime("2017-01-01")
-subcoll = coll.filter(datetime="2016-01-01/2017-01-01")
+subcoll = coll.filter(datetime="2016-01-01/2017-01-01", filter="tilename = 'T31UFQ'")
 assert set([item.datetime.timestamp() for item in subcoll])== \
     set([item.datetime.timestamp() for item in coll if \
          item.datetime>=start and item.datetime<=end])
@@ -53,7 +53,7 @@ subcoll
 subxr = coll.filter(datetime="2016-01-01/2017-01-01").to_xarray(assets=['B8', 'B8A'])
 subxr2 = coll.filter(datetime="2016-01-01/2017-01-01").to_xarray().sel(band=['B8', 'B8A'])
 assert subxr.equals(subxr2)
-subxr
+subxr.sel(band = subxr.common_name=="red")
 
 # %%
 # In this last case band dimension was converted to variables, 
@@ -93,6 +93,7 @@ smallxr[:2,:,:,:].plot(row='time', col='band')
 tmpdir.rmtree()
 
 # Et voilà!
+
 
 
 
