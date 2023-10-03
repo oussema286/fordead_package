@@ -22,7 +22,6 @@ dependencies:
   - rasterio
   - rioxarray
   - scipy
-  - stac-static
   - stackstac
   - xarray
   - xpystac
