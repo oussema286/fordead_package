@@ -1,6 +1,7 @@
 name: fordeadv2
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - dask
   - eodag
