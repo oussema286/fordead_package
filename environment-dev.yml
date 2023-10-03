@@ -12,6 +12,7 @@ dependencies:
   - numpy
   - path
   - pathlib
+  - pip
   - planetary-computer
   - plotly
   - python
