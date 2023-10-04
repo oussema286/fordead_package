@@ -3,11 +3,6 @@
 # PROGRAMMERS:
 #
 # Florian de Boissieu <fdeboiss@gmail.com>
-# https://gitlab.com/floriandeboissieu/ofm
-#
-# COPYRIGHT:
-#
-# Copyright 2020-2021 Florian de Boissieu
 #
 #
 # The code is free software: you can redistribute it and/or modify
