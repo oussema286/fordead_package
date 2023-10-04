@@ -49,7 +49,7 @@ def getItemCollection(startdate, enddate, bbox, cloud_nb = 0):
         sortby="datetime"
     )
 
-    itemsColl = search.item_collection()
+    itemsColl = search.get_item_collections()
     return itemsColl
 
 # Conversion de tous les items découverts par la recherche, 
