@@ -1,6 +1,7 @@
 name: fordeadv2
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - dask
   - eodag
@@ -12,6 +13,7 @@ dependencies:
   - numpy
   - path
   - pathlib
+  - pip
   - planetary-computer
   - plotly
   - python

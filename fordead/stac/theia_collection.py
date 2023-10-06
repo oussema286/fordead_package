@@ -346,7 +346,7 @@ def parse_theia_name(x):
 # Expected pattern for a Theia image name
 # x = "SENTINEL2A_20151203-105818-575_L2A_T31UFQ_D_V1-1"
 theia_image_pattern = "_".join(
-       ["SENTINEL2[A-B]",
+       ["SENTINEL2[AB]",
         "[0-9]{8}-[0-9]{6}-[0-9]{3}",
         "L2A",
         "T[0-9A-Z]{5}",
