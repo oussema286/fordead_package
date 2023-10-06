@@ -358,7 +358,7 @@ theia_image_pattern = "_".join(
 theia_band_pattern = "_".join([
     theia_image_pattern,
     "FRE",
-    "B[1-9][0-9A]*"
+    "B[1-9][0-9A]*.tif$"
     ])
 
 # Expected band names

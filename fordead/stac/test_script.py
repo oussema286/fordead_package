@@ -9,15 +9,16 @@ import xarray as xr
 
 tmpdir = Path(tempfile.TemporaryDirectory(prefix="fordead_").name).mkdir()
 
-data_url = Path("https://gitlab.com/fordead/fordead_data/-/archive/main/fordead_data-main.zip")
+# data_url = Path("https://gitlab.com/fordead/fordead_data/-/archive/main/fordead_data-main.zip")
 
-with tempfile.TemporaryDirectory() as tmpdir2:
-    dl_dir = Path(tmpdir2)
-    zip_path, _ = urlretrieve(data_url, dl_dir / data_url.name)
-    with zipfile.ZipFile(zip_path, "r") as f:
-        f.extractall(tmpdir)
+# with tempfile.TemporaryDirectory() as tmpdir2:
+#     dl_dir = Path(tmpdir2)
+#     zip_path, _ = urlretrieve(data_url, dl_dir / data_url.name)
+#     with zipfile.ZipFile(zip_path, "r") as f:
+#         f.extractall(tmpdir)
 
-data_dir = tmpdir.glob('fordead_data-main')[0] 
+# data_dir = tmpdir.glob('fordead_data-main')[0] 
+data_dir = Path("D:/fordead/fordead_data")
 input_dir = data_dir / "sentinel_data/dieback_detection_tutorial/study_area"
 
 # make a temporary directory wher the catalog will be written
@@ -47,6 +48,7 @@ assert set([item.datetime.timestamp() for item in subcoll])== \
     set([item.datetime.timestamp() for item in coll if \
          item.datetime>=start and item.datetime<=end])
 subcoll
+
 # %%
 # filter items and lazy export to xarray
 # three ways, about the same time, the first one being slightly faster: to try on big collection
@@ -58,7 +60,8 @@ subxr
 # %%
 # In this last case band dimension was converted to variables, 
 # which could be done with subxr.to_dataset(dim="band", promote_attrs=True)
-subxr3 = xr.open_dataset(coll.filter(asset_names=['B8', 'B8A'], datetime="2016-01-01/2017-01-01"))
+subxr3 = xr.open_dataset(coll.filter(asset_names=['B8', 'B8A'], datetime="2016-01-01/2017-01-01",
+filter="tilename='T31UFQ'"))
 subxr3
 
 # %%
@@ -86,6 +89,7 @@ subcoll_gdf
 # extract a small zone
 extract_zone = subcoll_gdf.buffer(-1000).total_bounds
 smallxr = subxr.rio.clip_box(*extract_zone)
+smallxr
 smallxr[:2,:,:,:].plot(row='time', col='band')
 
 # %%

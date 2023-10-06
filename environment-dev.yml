@@ -20,13 +20,14 @@ dependencies:
   - rasterio
   - rioxarray
   - scipy
-  - stac-static
   - stackstac
   - xarray
   - xpystac
+  - jsonschema
+  - referencing
   # - pip:
   #   - git+https://forgemia.inra.fr/fordeadv2/fordeadv2.git
   - pip:
     # conda version of stac-geoparquet is old, v0.3.2+ needed for datetime correct conversion
     - stac-geoparquet
-    - git+https://github.com/floriandeboissieu/stac-static
+    - git+https://github.com/floriandeboissieu/stac-static@patch-1
