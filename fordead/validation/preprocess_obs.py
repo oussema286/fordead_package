@@ -22,8 +22,8 @@ def cli_preprocess_obs(obs_path, export_path, buffer, name_column):
     \f
 
     """
-    
-    preprocess_obs(obs_path, export_path, buffer, name_column)
+
+    preprocess_obs(**locals())
     
     
 def preprocess_obs(obs_path, export_path, buffer = None, name_column = "id"):

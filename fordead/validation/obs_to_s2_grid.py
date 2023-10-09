@@ -28,7 +28,7 @@ def cli_obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column, tile_se
 
     """
     
-    obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column, tile_selection, overwrite)
+    obs_to_s2_grid(**locals())
 
 def obs_to_s2_grid(obs_path, sentinel_dir, export_path, name_column = "id", tile_selection = None, overwrite = False):
     """

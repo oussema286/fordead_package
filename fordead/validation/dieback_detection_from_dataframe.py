@@ -8,7 +8,39 @@ import pandas as pd
 import time
 from fordead.validation_process import add_diff_vi_to_vi, add_status_to_vi, fill_periods, detect_state_changes, detection_anomalies_dataframe, compute_stress_index, prediction_vegetation_index_dataframe
 from pathlib import Path
+import click
 
+@click.command(name='calval_dieback_detection')
+@click.option("--masked_vi_path", type = str, help = "Path of the csv containing the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.")
+@click.option("--pixel_info_path", type = str, help = "Path used to write the csv containing pixel info such as the validity of the model and its coefficients.")
+@click.option("--periods_path", type = str, help = "Path of the csv containing pixel periods")
+@click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
+@click.option("--update_masked_vi",  is_flag=True, help = "If True, updates the csv at masked_vi_path with the columns 'period_id', 'state', 'predicted_vi', 'diff_vi' and 'anomaly'", show_default=True)
+@click.option("-s", "--threshold_anomaly",  type=float, default=0.16, help="Minimum threshold for anomaly detection", show_default=True)
+@click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
+@click.option("--path_dict_vi", type = str,default = None, help = "Path to a text file used to add potential vegetation indices. If not filled in, only the indices provided in the package can be used (CRSWIR, NDVI, NDWI). The file [ex_dict_vi.txt](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_vi.txt) gives an example for how to format this file. One must fill the index's name, formula, and "+" or "-" according to whether the index increases or decreases when anomalies occur.", show_default=True)
+def cli_dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_path, name_column, update_masked_vi, threshold_anomaly, vi, path_dict_vi):
+    """
+    Updates of the csv file containing periods, so for each pixel, the whole time series is covered with the first and last unmasked Sentinel-2 acquisition date of each period, and its associated state.
+    The 'state' column can now hold the following values :
+        - Training : Period used in training the harmonic model
+        - Healthy : Period detected as healthy, with no stress, dieback or bare ground detected
+        - Stress : Period beginning with 3 successive anomalies, ending with the last anomaly before three successive non-anomalies of the beginning of a 'Healthy' period.
+        - Dieback : Period beginning with 3 successive anomalies, ending with the last available acquisition, or the beggining of a Bare ground period.
+        - Invalid : The pixel is invalid, there were not enough valid acquisitions to compute a harmonic model
+    A new column 'anomaly_intensity' is also added, it is a weighted mean of the difference between the calculated vegetation indices and their predicted value for the period. The weight is the number of the date within that period (1+2+3+...+ nb_dates). It is only calculated for 'Healthy', 'Stress' and 'Dieback' periods
+
+    if 'update_masked_vi' is True, this function also updates the csv at 'masked_vi_path' with the following columns:
+        - period_id : id of the period the acquisition is associated with
+        - state : Status of of the associated period, can be 'Training', 'Healthy', 'Stress', 'Dieback' or 'Invalid'.
+        - predicted_vi : The prediction of the vegetation index using the harmonic model
+        - diff_vi : Difference between the vegetation and its prediction, in the expected direction of anomalies for the vegetation index
+        - anomaly : True if 'diff_vi' exceeds 'threshold_anomaly', else False
+    
+    See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/07_dieback_detection_from_dataframe/)
+    """
+    dieback_detection_from_dataframe(**locals())
+    
 
 def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_path, name_column = "id", update_masked_vi = False,
                                      threshold_anomaly = 0.16, vi = "CRSWIR", path_dict_vi = None):

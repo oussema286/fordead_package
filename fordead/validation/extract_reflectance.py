@@ -29,7 +29,7 @@ def cli_extract_reflectance(obs_path, sentinel_dir, export_path, name_column, ba
     """
     
     start_time_debut = time.time()
-    extract_reflectance(obs_path, sentinel_dir, export_path, name_column, bands_to_extract)
+    extract_reflectance(**locals())
     print("Exporting reflectance : %s secondes ---" % (time.time() - start_time_debut))
 
 
