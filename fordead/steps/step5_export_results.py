@@ -167,6 +167,7 @@ def export_results(
                    
                     confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, confidence_area.compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
                     periodic_results = union_confidence_class(periodic_results, confidence_class)
+                    
             if not(periodic_results.empty):
                 periodic_results.to_file(tile.paths["periodic_results_dieback"],index = None)
             del periodic_results

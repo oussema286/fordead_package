@@ -185,7 +185,7 @@ def get_periodic_results_as_shapefile(first_date_number, bins_as_date, bins_as_d
                 {'properties': {'period_index': v}, 'geometry': s}
                 for i, (s, v) 
                 in enumerate(
-                    rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) &  (inds_soil!=len(bins_as_date))).compute().data , transform=relevant_area.rio.transform()))) #Affine(*attrs["transform"])
+                    rasterio.features.shapes(inds_soil.astype("uint16"), mask =  (relevant_area & (inds_soil!=0) & (inds_soil!=len(bins_as_date))).compute().data , transform=relevant_area.rio.transform()))) #Affine(*attrs["transform"])
     gp_results = gp.GeoDataFrame.from_features(geoms_period_index)
 
     if gp_results.size != 0:
