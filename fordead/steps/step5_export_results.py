@@ -89,8 +89,8 @@ def export_results(
     # tile.add_path("stress_periods", tile.data_directory / "Results" / "stress_periods.shp")
     tile.add_path("stress_periods", tile.data_directory / "Results" / "stress_periods.shp")
 
-    # exporting = (tile.dates[-1] != tile.last_date_export) if hasattr(tile, "last_date_export") else True
-    exporting = True
+    exporting = (tile.dates[-1] != tile.last_date_export) if hasattr(tile, "last_date_export") else True
+    # exporting = True
     if exporting:
         print("Exporting results")
         bins_as_date, bins_as_datenumber = get_bins(start_date,end_date,frequency,tile.dates)

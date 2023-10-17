@@ -305,6 +305,7 @@ def union_confidence_class(periodic_results, confidence_class):
     # confidence_class = gp.read_file(path_confidence_class)
     if periodic_results.size != 0:
         union = gp.overlay(periodic_results, confidence_class, how='union',keep_geom_type = True)
+        union = union.dropna(subset=['period'])
         union = union.fillna("Bare ground")
         
         return union
