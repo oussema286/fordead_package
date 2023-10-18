@@ -167,9 +167,6 @@ def export_results(
                     write_tif(confidence_index.where(confidence_area,0), forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
                    
                     confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, confidence_area.compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
-                    
-                    confidence_class.to_file(tile.data_directory / "Results" / "confidence_test.shp",index = None)
-                    periodic_results.to_file(tile.data_directory / "Results" / "dieback_test.shp",index = None)
 
                     periodic_results = union_confidence_class(periodic_results, confidence_class)
                     
