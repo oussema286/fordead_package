@@ -4,7 +4,7 @@ Created on Tue Mar 21 14:21:33 2023
 
 @author: rdutrieux
 """
-
+import click
 import pandas as pd
 from fordead.validation_process import get_last_training_date_dataframe, model_vi_dataframe, update_training_period
 from pathlib import Path
@@ -14,7 +14,24 @@ import time
 #Pas besoin de recalculer les masques si compute_vegetation_index change
 #Sortir première date de bare_ground
 
+@click.command(name='calval_train_model')
+@click.option("--masked_vi_path", type = str, help = "Path of the csv containing the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.")
+@click.option("--pixel_info_path", type = str, help = "Path used to write the csv containing pixel info such as the validity of the model and its coefficients.")
+@click.option("--periods_path", type = str, help = "Path of the csv containing pixel periods, it will be updated with the last_date of the training.")
+@click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
+@click.option("--min_last_date_training", type = str,default = "2018-01-01", help = "The date in YYYY-MM-DD format after which SENTINEL dates are no longer used for training, as long as there are at least nb_min_date dates valid for the pixel", show_default=True)
+@click.option("--max_last_date_training", type = str,default = "2018-06-01", help = "Date in YYYY-MM-DD format until which SENTINEL dates can be used for training to reach the number of nb_min_date valid dates", show_default=True)
+@click.option("--nb_min_date", type = int,default = "10", help = "Minimum number of valid dates to calculate a model.", show_default=True)
+def cli_train_model_from_dataframe(masked_vi_path, pixel_info_path, periods_path, name_column, min_last_date_training, max_last_date_training, nb_min_date):
+    """
+    
+    Adjusts an harmonic model to predict the temporal periodicity of the vegetation index, based on the acquisitions of a specified training period.
 
+    See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/06_training_model_from_dataframe/)
+    """
+    train_model_from_dataframe(**locals())
+    
+    
 def train_model_from_dataframe(masked_vi_path,
                            pixel_info_path,
                            periods_path,

@@ -5,6 +5,8 @@ Created on Tue Mar 14 12:48:06 2023
 @author: Raphaël Dutrieux
 """
 
+from fordead import __version__
+import click
 import pandas as pd
 from fordead.validation_process import compute_and_apply_mask, filter_cloudy_acquisitions, get_mask_vi_periods
 from fordead.masking_vi import compute_vegetation_index
@@ -13,6 +15,33 @@ import time
 import numpy as np
 #Pas besoin de recalculer les masques si compute_vegetation_index change
 #Sortir première date de bare_ground
+
+@click.command(name='calval_masked_vi')
+@click.option("--reflectance_path", type = str, help = "Path of the csv file with extracted reflectance.")
+@click.option("--masked_vi_path", type = str, help = "Path used to write the csv containing the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.")
+@click.option("--periods_path", type = str, help = "Path used to write the csv containing the first date of the training periods for each pixel and, if soil_detection is True, the first date of detected bare ground.")
+@click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
+@click.option("--cloudiness_path", type = str, help = "Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/)")
+@click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
+@click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
+@click.option("--soil_detection",  is_flag=True, help = "If True, bare ground is detected and used as mask, but the process has not been tested on other data than THEIA data in France (see https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/). If False, mask from formula_mask is applied.", show_default=True)
+@click.option("--formula_mask", type = str,default = "(B2 >= 700)", help = "formula whose result would be binary, as described here https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index. Is only used if soil_detection is False.", show_default=True)
+@click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
+@click.option("-b","--list_bands", type = list, default = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"], help = "Bands to import and use ex : -b B2 -b  B3 -b B11", show_default=True)
+@click.option("--apply_source_mask",  is_flag=True, help = "If True, applies the mask from SENTINEL-data supplier", show_default=True)
+@click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
+def cli_mask_vi_from_dataframe(reflectance_path,masked_vi_path, periods_path,name_column,cloudiness_path, vi, lim_perc_cloud, soil_detection,formula_mask, path_dict_vi,list_bands, apply_source_mask,sentinel_source):
+    """
+    Computes the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.
+    Filters out data by applying the fordead mask (if soil_detection is True) or a user mask defined by the user. 
+    (optional) Filters out acquisition by applying a limit on the percentage of cloud cover as calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/)
+    Writes the results in a csv file, as well as the first date of the training period for each pixel and, if soil_detection is True, the first date of detected bare ground.
+    
+    See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/05_compute_masks_and_vegetation_index_from_dataframe/)
+    """
+    
+   
+    mask_vi_from_dataframe(**locals())
 
 
 def mask_vi_from_dataframe(reflectance_path,
@@ -77,7 +106,7 @@ def mask_vi_from_dataframe(reflectance_path,
     
     reflect, first_date_bare_ground = compute_and_apply_mask(reflect, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source, name_column)
 
-    reflect["vi"] = compute_vegetation_index(reflect, vi = vi, formula = None, path_dict_vi = None)
+    reflect["vi"] = compute_vegetation_index(reflect, vi = vi, path_dict_vi = path_dict_vi)
     reflect = reflect[~reflect["vi"].isnull()]
     reflect = reflect[~np.isinf(reflect["vi"])]
     
@@ -97,20 +126,12 @@ if __name__ == '__main__':
     start_time_debut = time.time()
     
     # Exemple tuto
-    # mask_vi_from_dataframe(reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
-    #                     masked_vi_path = "D:/fordead/fordead_data/output/calval_tuto/mask_vi_tuto.csv",
-    #                     periods_path = "D:/fordead/fordead_data/output/calval_tuto/periods_tuto.csv",
-    #                     cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
-    #                     vi = "CRSWIR",
-    #                     name_column = "id")
-    
-    # Données de scolytes
-    output_dir = Path("D:/fordead/Data/Test_programme/bug_helene")
-    mask_vi_from_dataframe(reflectance_path = output_dir / "Reflectance_brute_all2.csv",
-                        masked_vi_path = output_dir / "masked_vi_scolytes.csv",
-                        periods_path = output_dir / "periods_scolytes.csv",
-                        cloudiness_path = None,
-                        # cloudiness_path = "D:/fordead/Data/Validation/scolytes/02_calibrating_vi_threshold_anomaly/01_DATA/extracted_cloudiness.csv",
+    mask_vi_from_dataframe(reflectance_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
+                        masked_vi_path = "D:/fordead/fordead_data/output/calval_tuto/mask_vi_tuto.csv",
+                        periods_path = "D:/fordead/fordead_data/output/calval_tuto/periods_tuto.csv",
+                        cloudiness_path = "D:/fordead/fordead_data/output/cloudiness_tuto.csv",
                         vi = "CRSWIR",
-                        name_column = "idp")
+                        name_column = "id")
+
+
     print("Temps de calcul : %s secondes ---" % (time.time() - start_time_debut))

@@ -20,18 +20,24 @@ from fordead.validation.dieback_detection_from_dataframe import dieback_detectio
 
 
 @click.command(name='sensitivity_analysis')
-# @click.option("--testing_directory", type = str,default = None, help = "Path of the directory containing Sentinel-2 data.", show_default=True)
-# @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted reflectance", show_default=True)
-# @click.option("-t","--tile_selection", multiple=True, type = str, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.", show_default=True)
-# @click.option("--sentinel_source", type = str,default = "THEIA", help = "", show_default=True)
-def cli_sensitivity_analysis():
+@click.option("--testing_directory", type = str,default = None, help = "Directory where the results will be exported", show_default=True)
+@click.option("--reflectance_path", type = str,default = None, help = "Path of the csv file with extracted reflectance.", show_default=True)
+@click.option("--cloudiness_path", type = str,default = None, help = "Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/).", show_default=True)
+@click.option("--args_to_test", type = str,default = None, help = "Path to a text file where each line begins parameter name, then each value is separated with a space. All combinations will be tested. See an example [here](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_args.txt)", show_default=True)
+@click.option("--update_masked_vi",  is_flag=True, help = "If True, updates the csv at masked_vi_path with the columns 'period_id', 'state', 'predicted_vi', 'diff_vi' and 'anomaly'", show_default=True)
+@click.option("--overwrite",  is_flag=True, help = "If False, complete results for each parameter combination are kept in a directory named after the ID of the iteration test.", show_default=True)
+@click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
+def cli_sensitivity_analysis(testing_directory, reflectance_path, cloudiness_path, args_to_test, update_masked_vi, overwrite, name_column):
     """
+    Allows the testing of many parameter combinations, running three detection steps mask_vi_from_dataframe, train_model_from_dataframe and dieback_detection_from_dataframe using default parameters as well as user defined parameter combinations.
+    The synthetic results are saved in a csv with data on successive detected periods for each pixel, along with a 'test_id' column.
+    A 'test_info.csv' is written in 'testing_directory', where each test_id is associated with the value of all parameters used in the iteration.
     
-    \f
+    See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/08_sensitivity_analysis/)
 
     """
     
-    sensitivity_analysis()
+    sensitivity_analysis(**locals())
 
 
 
@@ -55,7 +61,7 @@ def sensitivity_analysis(testing_directory, reflectance_path, cloudiness_path, a
         Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/).
     args_to_test : dict or str
         Either a dict where each key is any argument to functions mask_vi_from_dataframe, train_model_from_dataframe or dieback_detection_from_dataframe, and the values are list of values to test. All combinations will be tested.
-        If a str is given, it is interpreted as the path to a text file where each line begins parameter name, then each value is separated with a space. See an example [here](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_vi.txt)
+        If a str is given, it is interpreted as the path to a text file where each line begins parameter name, then each value is separated with a space. See an example [here](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_args.txt)
     update_masked_vi : bool, optional
         If True, updates the csv containing the vegetation for each acquisition with the columns 'period_id', 'state', 'predicted_vi', 'diff_vi' and 'anomaly'. Doesn't apply if 'overwrite = True'. The default is False.
     overwrite : bool, optional

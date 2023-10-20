@@ -90,6 +90,7 @@ def export_results(
     tile.add_path("stress_periods", tile.data_directory / "Results" / "stress_periods.shp")
 
     exporting = (tile.dates[-1] != tile.last_date_export) if hasattr(tile, "last_date_export") else True
+    # exporting = True
     if exporting:
         print("Exporting results")
         bins_as_date, bins_as_datenumber = get_bins(start_date,end_date,frequency,tile.dates)
@@ -166,7 +167,9 @@ def export_results(
                     write_tif(confidence_index.where(confidence_area,0), forest_mask.attrs,nodata = 0, path = tile.paths["confidence_index"])
                    
                     confidence_class = vectorizing_confidence_class(confidence_index, nb_dates, confidence_area.compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
+
                     periodic_results = union_confidence_class(periodic_results, confidence_class)
+                    
             if not(periodic_results.empty):
                 periodic_results.to_file(tile.paths["periodic_results_dieback"],index = None)
             del periodic_results
