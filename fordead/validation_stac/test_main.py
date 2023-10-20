@@ -3,6 +3,7 @@
 #
 import time
 from stac_module import get_vectorBbox, getItemCollection
+from pystac.item_collection import ItemCollection
 from obs_to_s2_grid import obs_to_s2_grid
 from extract_reflectance import extract_reflectance
 
@@ -11,11 +12,11 @@ if __name__ == '__main__':
     # input and output files
 
     # input vector file path
-    obs_path = "D:/PROJETS/PRJ_FORDEAD/TEST_STAC/data/observations_tuto.shp"
+    obs_path = "D:/fordead/05_SUBPROJECTS/03_stac/01_DATA/observations_tuto.shp"
     # output vector file path
-    export_shp = "D:/PROJETS/PRJ_FORDEAD/TEST_STAC/data/export05.shp"
+    export_shp = "D:/fordead/05_SUBPROJECTS/03_stac/03_RESULTS/pp_obs.shp"
     # output csv file path
-    export_csv = "D:/PROJETS/PRJ_FORDEAD/TEST_STAC/data/export05.csv"
+    export_csv = "D:/fordead/05_SUBPROJECTS/03_stac/03_RESULTS/reflectance.csv"
 
     # get bounding box of vector layer
     obs_bbox = get_vectorBbox(obs_path)
@@ -24,7 +25,8 @@ if __name__ == '__main__':
     endDate = "2021-12-01"
     # cloud percentage (lt)
     cloudPct = 20
-
+    
+    # isinstance(coll, ItemCollection)
     # get pystac S2 item collection
     coll = getItemCollection(startDate, endDate, obs_bbox, cloudPct)
 
