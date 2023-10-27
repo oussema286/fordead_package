@@ -503,6 +503,13 @@ def get_sen_intersection_points(points, sen_polygons, name_column):
     
 
 def get_already_extracted(export_path, obs, obs_path, name_column):
+    """
+    
+    Returns already extracted acquisition dates for each observation and each tile.
+    Detects if the number of observations changed since last extraction and warns the user.
+
+    """
+    
     if export_path.exists():
         reflectance = pd.read_csv(export_path)
         if name_column not in reflectance.columns:

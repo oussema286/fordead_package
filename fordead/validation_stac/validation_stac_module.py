@@ -11,7 +11,7 @@ from pathlib import Path
 from scipy.linalg import lstsq
 import numpy as np
 from rasterio.crs import CRS
-import stac_module as st
+import fordead.validation_stac.stac_module as st
 
 #from fordead.masking_vi import get_dict_vi
 #from fordead.masking_vi import compute_vegetation_index
@@ -288,7 +288,7 @@ def get_bounds(obs):
 # =============================================================================
 
 
-def get_reflectance_at_points(grid_points, item_collection, extracted_reflectance, name_column):
+def get_reflectance_at_points(grid_points, item_collection, extracted_reflectance, name_column, bands_to_extract, tile_selection):
     """
     Create table with raster values sampled for each XY points
 
@@ -314,7 +314,8 @@ def get_reflectance_at_points(grid_points, item_collection, extracted_reflectanc
                 extracted_reflectance_area = extracted_reflectance[extracted_reflectance["area_name"] == area_name]
             else:
                 extracted_reflectance_area = None
-            
+                
+
             tile_coll = st.tile_filter(item_collection, area_name) 
             raster_values = extract_raster_values(points_area, tile_coll, extracted_reflectance_area, name_column)
             
@@ -360,8 +361,12 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column)
         #list_dates de unique dates
     
     for item in tile_coll:
+        
         date = item.properties["datetime"].split('T')[0]
-        #print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
+        # print(date)
+        print('\r', date , sep='', end='', flush=True)
+
+        # print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
         extraction = points.copy()
         if extracted_reflectance is not None:
             #Filter les points selon la date

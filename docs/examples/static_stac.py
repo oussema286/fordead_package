@@ -29,6 +29,34 @@ coll_path = tmpdir / "catalog.json"
 coll = build_theia_collection(input_dir)
 coll
 
+# %% Tests
+tile_coll
+coll
+
+for item in coll:
+    print(item.properties)
+    item.properties["perc_cloud"] = 0.5
+for item in tile_coll:
+    item.properties["cloud_cover"] = item.properties['eo:cloud_cover']/100
+    item.properties["tilename"] = "T" + item.properties['s2:mgrs_tile']
+    print(item.properties)
+    
+    # 'eo:cloud_cover': 99.972445
+    # datetime
+    # 's2:mgrs_tile': '31UGP'
+    
+filt_item = []
+for item in item_collection:
+    if item.properties["s2:mgrs_tile"] == tile_name[1:]:
+        filt_item.append(item)
+new_coll = pystac.item_collection.ItemCollection(filt_item)
+
+item.assets.keys()
+
+item.assets[band].href
+item.properties["datetime"]
+
+# tile_coll.save_object("D:/fordead/05_SUBPROJECTS/03_stac/01_DATA/theia_coll.json")
 # %%
 # save collection
 coll.save_object(coll_path)

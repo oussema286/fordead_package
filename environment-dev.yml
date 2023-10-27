@@ -27,6 +27,8 @@ dependencies:
   - xpystac
   - jsonschema
   - referencing
+  - spyder
+  - spyder-kernels
   # - pip:
   #   - git+https://forgemia.inra.fr/fordeadv2/fordeadv2.git
   - pip:

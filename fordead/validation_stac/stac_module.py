@@ -6,6 +6,9 @@ from pyproj import Proj, transform
 import pystac_client
 import pystac
 import planetary_computer
+from pathlib import Path
+from fordead.stac.theia_collection import build_theia_collection
+import pandas as pd
 
 def get_vectorBbox(vector_path):
     """
@@ -49,7 +52,8 @@ def getItemCollection(startdate, enddate, bbox, cloud_nb = 0):
         sortby="datetime"
     )
 
-    itemsColl = search.get_item_collections()
+    # itemsColl = search.pages()
+    itemsColl = search.item_collection()
     return itemsColl
 
 # Conversion de tous les items découverts par la recherche, 
@@ -108,10 +112,12 @@ def tile_filter(item_collection, tile_name):
     """
     filt_item = []
     for item in item_collection:
-        if item.properties["s2:mgrs_tile"] == tile_name:
+        if item.properties["s2:mgrs_tile"] == tile_name[1:]:
             filt_item.append(item)
     new_coll = pystac.item_collection.ItemCollection(filt_item)
     return new_coll
+
+
 
 def get_items_tiles(item_collection):
     """
@@ -130,6 +136,55 @@ def get_items_tiles(item_collection):
             out_list.append(info)
     return out_list
 
+
+# def add_cloud_cover(collection, cloudiness_path):
+    
+def cloud_filter(collection, cloudiness_path):
+    cloudiness = pd.read_csv(cloudiness_path)
+    filt_item = []
+    for item in collection:
+        print(item.properties)
+        # if item.properties["s2:mgrs_tile"] == tile_name[1:]:
+        #     filt_item.append(item)
+    # new_coll = pystac.item_collection.ItemCollection(filt_item)
+    # return new_coll
+    
+def get_harmonized_collection(sentinel_source, cloudiness_path, start_date, end_date, obs_bbox, lim_perc_cloud):
+    
+    lim_cloud_cover = int(lim_perc_cloud*100)
+    
+    if sentinel_source == "Planetary":
+        print("Sentinel-2 data collected from Microsoft Planetary Computer")
+        collection = getItemCollection(start_date, end_date, obs_bbox, int(lim_perc_cloud*100))
+        for item in collection:
+            item.properties["cloud_cover"] = item.properties['eo:cloud_cover']/100
+            item.properties["tilename"] = "T" + item.properties['s2:mgrs_tile']
+
+    else:
+        sentinel_source = Path(sentinel_source)
+        if sentinel_source.is_dir():
+            print("Sentinel-2 data extracted locally")
+            collection = build_theia_collection(sentinel_source)
+            collection = collection.filter(datetime=f"{start_date}/{end_date}")
+            collection = cloud_filter(collection, cloudiness_path)
+            
+            
+        else:
+            raise Exception("Unrecognized sentinel_source")
+            
+    #Harmonize tilename
+    #Harmonize band names
+    #Harmonize cloud cover
+    
+    # Time period filter
+    # bbox filter
+    # Cloud cover filter
+    
+    
+    print(collection)
+    
+
+
 if __name__ == '__main__':
     obs_path = "D:/PROJETS/PRJ_FORDEAD/TEST_STAC/data/observations_tuto.shp"
     obs_bbox = get_vectorBbox(obs_path)
@@ -137,3 +192,4 @@ if __name__ == '__main__':
 
     coll = getItemCollection("2021-07-01", "2021-12-01", obs_bbox, 20)
     print(coll.items)
+    
