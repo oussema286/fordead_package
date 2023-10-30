@@ -336,7 +336,7 @@ def model_vi_dataframe(data_frame, name_column):
     data_frame['Date'] = pd.to_datetime(data_frame['Date'])
     data_frame["date_as_number"] = (data_frame['Date'] - pd.to_datetime("2015-01-01")).dt.days
   
-    coeff_vi = data_frame.groupby(["area_name",name_column,"id_pixel"]).apply(lambda x: model(x.date_as_number, x.vi, x.id_pixel)).reset_index()
+    coeff_vi = data_frame.groupby(["area_name",name_column,"id_pixel"], group_keys=False).apply(lambda x: model(x.date_as_number, x.vi, x.id_pixel)).reset_index()
     
     coeff_vi.columns = ["area_name",name_column,"id_pixel", "coeff"]
     coeff_vi[["coeff1","coeff2","coeff3", "coeff4","coeff5"]] = pd.DataFrame(coeff_vi.coeff.tolist(), index= coeff_vi.index)
