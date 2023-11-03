@@ -12,11 +12,10 @@ from pathlib import Path
 from itertools import product
 
 
-from fordead.validation_module import get_args, filter_args, combine_validation_results, get_test_id, get_args_dataframe
+from fordead.validation_process import get_args, filter_args, combine_validation_results, get_test_id, get_args_dataframe
 from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
 from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
 from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
-
 
 
 @click.command(name='sensitivity_analysis')
@@ -41,8 +40,6 @@ def cli_sensitivity_analysis(testing_directory, reflectance_path, cloudiness_pat
 
 
 
-                                   
-                                   
 def sensitivity_analysis(testing_directory, reflectance_path, cloudiness_path, args_to_test, update_masked_vi = False, overwrite = True, name_column = "id"):
     """
     Allows the testing of many parameter combinations, running three detection steps mask_vi_from_dataframe, train_model_from_dataframe and dieback_detection_from_dataframe using default parameters as well as user defined parameter combinations.

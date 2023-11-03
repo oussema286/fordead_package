@@ -1,18 +1,18 @@
-import pandas as pd
 # from shapely.geometry import Polygon
 # import json
 # import rasterio
 # import xarray as xr
 # import geopandas as gp
 # import pandas as pd
-import ast
 from pathlib import Path
-from scipy.linalg import lstsq
-from fordead.masking_vi import get_dict_vi
+import pandas as pd
 import numpy as np
 
-from fordead.masking_vi import compute_vegetation_index
-from fordead.import_data import TileInfo
+import ast
+from scipy.linalg import lstsq
+import inspect
+
+from fordead.masking_vi import compute_vegetation_index, get_dict_vi
 from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
 from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
 from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
@@ -50,106 +50,47 @@ def get_test_id(test_info_path, tile_parameters_dataframe):
         
     return test_id
         
-def combine_validation_results(data_directory, target_directory):
+
+def get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
+
+
+def get_args_dataframe(comb_dict):
+    args_dict = get_default_args(mask_vi_from_dataframe)
+    d2 = get_default_args(train_model_from_dataframe)
+    d3 = get_default_args(dieback_detection_from_dataframe)
+    args_dict.update(d2)
+    args_dict.update(d3)
+    args_dict.update(comb_dict)
+    for key in args_dict:
+        args_dict[key] = str(args_dict[key])
+    args_dataframe = pd.DataFrame(data=args_dict, index=[0])
+    
+    return args_dataframe
+
+    
+def combine_validation_results(csv_path_list, merged_csv_path_list, test_info_path,
+                                args_dataframe, test_id):
     
     #Di déjà un fichier, comparer les paramètres, si pas de différence : même test, si on retrouve des IdZone, erreur.
     #rajouter csv avec numéros des tests et paramètres
-    
-    tile = TileInfo(data_directory)
-    tile = tile.import_info()
+    for i in range(len(csv_path_list)):
+        csv_path = csv_path_list[i]
+        merged_path = merged_csv_path_list[i]
+        data = pd.read_csv(csv_path)
+        data["test_id"] = test_id
+        data.to_csv(merged_path, mode='a', index=False,header=not(merged_path.exists()))
 
-    state_obs_path = target_directory / 'state_obs.csv'
-    pixel_obs_path = target_directory / 'pixel_obs_info.csv'
-    test_info_path = target_directory / 'test_info.csv'
+    args_dataframe["test_id"] = test_id
+    args_dataframe.to_csv(test_info_path, mode='a', index=False,header=not(test_info_path.exists()))
     
-    tile.add_dirpath("compared_validation", target_directory)
+    
 
-    state_dataframe = pd.read_csv(tile.paths["validation"] / 'state_obs.csv')
-    pixel_info_dataframe = pd.read_csv(tile.paths["validation"] / 'pixel_obs_info.csv')
-        
-    tile_parameters = tile.parameters
-    for key in tile_parameters:
-        tile_parameters[key] = str(tile_parameters[key])
-    del tile.parameters["Overwrite"] #Overwrite ne devrait pas être dans les paramètres
-    tile_parameters_dataframe = pd.DataFrame(data=tile_parameters, index=[0])
-    
-    test_id = get_test_id(test_info_path, tile_parameters_dataframe)
-    
-    if test_id is not None:
-        tile_parameters_dataframe["test_id"] = test_id
-        state_dataframe["test_id"] = test_id
-        pixel_info_dataframe["test_id"] = test_id
-
-        tile_parameters_dataframe.to_csv(test_info_path, mode='a', index=False,header=not(test_info_path.exists()))
-    
-            
-        state_dataframe.to_csv(state_obs_path, mode='a', index=False,header=not(state_obs_path.exists()))
-        pixel_info_dataframe.to_csv(pixel_obs_path, mode='a', index=False,header=not(pixel_obs_path.exists()))
-    
-# def rasterize_obs(obs_shape, name_column, raster_metadata):
-#     obs_shape_json_str = obs_shape.to_json()
-#     obs_shape_json_dict = json.loads(obs_shape_json_str)
-#     obs_shape_jsonMask = [(feature["geometry"],feature["properties"][name_column]) for feature in obs_shape_json_dict["features"]]
-    
-#     rasterized_validation_data = rasterio.features.rasterize(obs_shape_jsonMask,out_shape = (raster_metadata["sizes"]["y"],raster_metadata["sizes"]["x"]) ,dtype="int16",transform=raster_metadata['transform'])  
-
-#     return xr.DataArray(rasterized_validation_data,coords={"y" : raster_metadata["coords"]["y"],"x" : raster_metadata["coords"]["x"]}, dims=["y","x"])
-
-
-# def attribute_area_to_obs(obs_shape, areas, name_column):
-
-#     obs_area_tot = obs_shape[[name_column]]
-#     obs_area_tot.insert(1, "area_tot", obs_shape.area)
-    
-#     obs_shape = obs_shape.merge(obs_area_tot, on= name_column, how='left')
-#     obs_intersection = gp.overlay(obs_shape, areas)
-    
-#     obs_intersection.insert(1, "area_intersect", obs_intersection.area)
-#     obs_intersection = obs_intersection[obs_intersection["area_tot"].round(3) == obs_intersection['area_intersect'].round(3)]
-    
-#     unvalid_obs = obs_shape[~obs_shape[name_column].isin(obs_intersection[name_column])]
-#     if len(unvalid_obs) != 0:
-#         print("Observations not fitting entirely on one tile found.\nThey are removed from the dataset. \nIds are the following : \n" + ', '.join(map(str, unvalid_obs[name_column])) + " ")
-    
-#     #Get observations with only one associated tile
-#     count_data = pd.DataFrame(obs_intersection[name_column].value_counts().reset_index())
-#     count_data.columns = [name_column, 'count']
-#     merged = pd.merge(obs_intersection, count_data, on= name_column)
-#     one_tile_obs = merged[merged["count"] == 1]
-#     one_tile_obs = one_tile_obs[[name_column,"area_name"]]
-    
-    
-#     processed_dataset =  obs_shape[obs_shape[name_column].isin(one_tile_obs[name_column])]
-#     processed_dataset = processed_dataset.merge(one_tile_obs, on= name_column, how='left')
-    
-#     #Get observations with choice in the tile, attributing the most frequent tile
-#     count_data2 = pd.DataFrame(processed_dataset["area_name"].value_counts().reset_index())
-#     count_data2.columns = ["area_name", 'count']
-
-#     unattributed_obs = obs_intersection[~obs_intersection[name_column].isin(processed_dataset[name_column])]
-#     unattributed_obs = unattributed_obs.merge(count_data2, on= "area_name", how='left')
-#     unattributed_obs = unattributed_obs[~pd.isnull(unattributed_obs["count"])]
-    
-#     choice = unattributed_obs.sort_values([name_column,'count'], ascending = False).groupby(name_column, as_index=False).first()[[name_column,"area_name"]]
-#     obs_choice =  obs_shape[obs_shape[name_column].isin(choice[name_column])]
-#     obs_choice = obs_choice.merge(choice, on= name_column, how='left')
-    
-#     processed_dataset = pd.concat([processed_dataset,obs_choice])
-    
-    
-#     #Retrieve those with no associated tiles.
-#     unattributed_obs = obs_intersection[~obs_intersection[name_column].isin(processed_dataset[name_column])]
-#     while len(unattributed_obs)!=0:
-#         count_data3 = pd.DataFrame(unattributed_obs["area_name"].value_counts().reset_index())
-#         count_data3.columns = ["area_name", 'count']
-#         choice = obs_intersection[obs_intersection["area_name"]==count_data3.sort_values(['count'], ascending = False).area_name[0]][[name_column,"area_name"]]
-#         obs_choice =  obs_shape[obs_shape[name_column].isin(choice[name_column])]
-#         obs_choice = obs_choice.merge(choice, on= name_column, how='left')
-#         processed_dataset = pd.concat([processed_dataset,obs_choice])
-#         unattributed_obs = obs_intersection[~obs_intersection[name_column].isin(processed_dataset[name_column])]
-#     #######
-#     processed_dataset = processed_dataset.drop(columns=["area_tot"])
-#     return processed_dataset
 
 
 #tested_parameters / tested_parameters_source?
@@ -300,30 +241,7 @@ def get_last_training_date_dataframe(data_frame, min_last_date_training, max_las
     last_training_date = last_training_date[["epsg","area_name",name_column,"id_pixel","Date"]].rename(columns = {"Date" : "last_training_date"})
 
     return last_training_date
-    # last_training_date = data_frame[["epsg","area_name",name_column,"id_pixel","Date"]].groupby(["area_name",name_column,"id_pixel"]).last().reset_index()
-    
-    
-    
-    
-    
-    # last_training_date = data_frame[(data_frame["Date"] < min_last_date_training) & (data_frame.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1 >= nb_min_date)].groupby(["area_name",name_column,"id_pixel"]).last().reset_index() #Keeping date just before min_last_date_training if enough acquisitions
-    
-    
-    # retrieve_dataframe = data_frame.merge(last_training_date[["area_name",name_column,"id_pixel"]], how = "left", on = ["area_name",name_column,"id_pixel"], indicator = True)
-    # retrieve_dataframe = retrieve_dataframe[retrieve_dataframe["_merge"] != "both"].drop(columns = "_merge")
-    # last_training_date = pd.concat([last_training_date, retrieve_dataframe[(retrieve_dataframe["Date"] <= max_last_date_training) & (retrieve_dataframe.groupby(["area_name",name_column,"id_pixel"]).cumcount()+1 == nb_min_date)]]) # Adding pixels with nb_min_date reach before max_last_training_date
-    
-    # abandonned_dataframe = retrieve_dataframe.merge(last_training_date[["area_name",name_column,"id_pixel"]], how = "left", on = ["area_name",name_column,"id_pixel"], indicator = True)
-    # abandonned_dataframe = abandonned_dataframe[abandonned_dataframe["_merge"] != "both"].drop(columns = "_merge")
-    # last_training_date = pd.concat([last_training_date, abandonned_dataframe[["epsg","area_name",name_column,"id_pixel"]].drop_duplicates()]) # Adding pixels with nb_min_date reach before max_last_training_date
-    
-    
-    # last_training_date = last_training_date.rename(columns = {"Date" : "last_date_training"})
-    
-    # # print("test")
-    
-    
-    # return last_training_date
+
 
 def compute_HarmonicTerms(DateAsNumber):
     return np.array([1,np.sin(2*np.pi*DateAsNumber/365.25), np.cos(2*np.pi*DateAsNumber/365.25),np.sin(2*2*np.pi*DateAsNumber/365.25),np.cos(2*2*np.pi*DateAsNumber/365.25)])
@@ -379,20 +297,7 @@ def detection_anomalies_dataframe(data_frame, threshold_anomaly, vi, path_dict_v
     return anomalies, diff_vi
 
 
-# def get_conf_index(data_frame, dieback):
-#     periods = dieback[dieback.id_pixel == data_frame["id_pixel"].iloc[0]]
 
-    
-#     stress_index_list = []
-#     for index, period in periods.iterrows():      
-#         data_period = data_frame[(data_frame["Date"] >= period['first_date']) & (data_frame["Date"] < period['last_date'])]
-#         stress_index_list += [(data_period.diff_vi*range(1,len(data_period)+1)).sum()/(len(data_period)*(len(data_period)+1)/2)]
-
-#     # id_pixel stress_period_id first_date last_date stress_index
-#     periods["stress_index"] = stress_index_list
-    
-    
-#     return periods.drop(columns=['id_pixel'])
     
     
     
@@ -468,44 +373,7 @@ def detect_state_changes(data_frame, name_column):
 
     return dated_changes
 
-# def compute_stress_index(data_frame, periods, name_column):
-    
-#     period_id = 1
-#     period_exists = True
-#     period_data_list = []
-#     period_data_list += [periods[periods["period_id"] == 0]]
-#     while period_exists:
-#         print(period_id)
-#         # stress_period = periods.groupby(["area_name", name_column,'id_pixel']).nth(period_id)
-#         period = periods[periods["period_id"] == period_id]
-#         # period = period[periods["state"].isin(["Stress","Dieback"])]
-        
-#         # if period_id == 12:
-#         #     print("test")
-#         if len(period) != 0 :
-#             # data_frame = data_frame.reset_index()
-#             # period = period.reset_index()
-#             filtered_period_dataframe = data_frame.merge(period, on=["area_name", name_column,"id_pixel"], how='left') 
-#             # filtered_period_dataframe = filtered_period_dataframe[(filtered_period_dataframe["Date"] >= filtered_period_dataframe["first_date"]) & (pd.isnull(filtered_period_dataframe["last_date"]) | (filtered_period_dataframe["Date"] < filtered_period_dataframe["last_date"]))]
-#             filtered_period_dataframe = filtered_period_dataframe[(filtered_period_dataframe["Date"] >= filtered_period_dataframe["first_date"]) & (filtered_period_dataframe["Date"] <= filtered_period_dataframe["last_date"])]
-#             period = period.set_index(["area_name", name_column,"id_pixel", "first_date"])
-#             period["anomaly_intensity"] = filtered_period_dataframe.groupby(by = ["area_name", name_column,"id_pixel","first_date"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2))
-#             # test = filtered_period_dataframe.groupby(by = ["area_name", name_column,"id_pixel","first_date"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2))
 
-
-#             # stress_period["period_id"] = i+1
-            
-#             period_data_list += [period.reset_index()]
-#         else:
-#             period_exists = False
-
-#         period_id+=1
-        
-#     period_data = pd.concat(period_data_list)
-    
-#     period_data = period_data[["area_name", name_column,"id_pixel","state","first_date","last_date", "anomaly_intensity"]].sort_values(["area_name",name_column,"id_pixel","first_date"], ascending = True)
-
-#     return period_data
 
 def compute_stress_index(detection_dates, periods, name_column):
     
@@ -650,70 +518,160 @@ def get_args(params_to_test):    # params_to_test = {}
         raise Exception("Unrecognized params_to_test parameter")
         
 
-
-def already_existing_test(df1,df2):
-    common_columns = df2.columns.intersection(df1.columns)
-
-    all_df = pd.merge(df1[common_columns], df2[common_columns], 
-                      on=list(common_columns), how='left', indicator='exists')
-        
-    already_existing_test_ids = df1[all_df["exists"] == "both"]["test_id"]
-    if len(already_existing_test_ids) != 0:
-        return already_existing_test_ids.values[0]
-    else:
-        return None
-
-def get_test_id(test_info_path, tile_parameters_dataframe):
-    if test_info_path.exists():
-        test_info_dataframe = pd.read_csv(test_info_path, dtype = str)
-        existing_test_id = already_existing_test(test_info_dataframe, tile_parameters_dataframe)
-        if existing_test_id is not None:
-            print("Already existing test with the same parameters (test_id : " + str(existing_test_id) + ")\nResults were not copied\n")
-            test_id =  None
-        else:
-            test_id = test_info_dataframe["test_id"].astype(int).max()+1
-    else:
-        test_id = 1
-        
-    return test_id
-
-
-import inspect
-
-def get_default_args(func):
-    signature = inspect.signature(func)
-    return {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
-
-
-def get_args_dataframe(comb_dict):
-    args_dict = get_default_args(mask_vi_from_dataframe)
-    d2 = get_default_args(train_model_from_dataframe)
-    d3 = get_default_args(dieback_detection_from_dataframe)
-    args_dict.update(d2)
-    args_dict.update(d3)
-    args_dict.update(comb_dict)
-    for key in args_dict:
-        args_dict[key] = str(args_dict[key])
-    args_dataframe = pd.DataFrame(data=args_dict, index=[0])
+# def combine_validation_results(data_directory, target_directory):
     
-    return args_dataframe
-
-
-def combine_validation_results(csv_path_list, merged_csv_path_list, test_info_path,
-                               args_dataframe, test_id):
+#     #Di déjà un fichier, comparer les paramètres, si pas de différence : même test, si on retrouve des IdZone, erreur.
+#     #rajouter csv avec numéros des tests et paramètres
     
-    #Di déjà un fichier, comparer les paramètres, si pas de différence : même test, si on retrouve des IdZone, erreur.
-    #rajouter csv avec numéros des tests et paramètres
-    for i in range(len(csv_path_list)):
-        csv_path = csv_path_list[i]
-        merged_path = merged_csv_path_list[i]
-        data = pd.read_csv(csv_path)
-        data["test_id"] = test_id
-        data.to_csv(merged_path, mode='a', index=False,header=not(merged_path.exists()))
+#     tile = TileInfo(data_directory)
+#     tile = tile.import_info()
 
-    args_dataframe["test_id"] = test_id
-    args_dataframe.to_csv(test_info_path, mode='a', index=False,header=not(test_info_path.exists()))
+#     state_obs_path = target_directory / 'state_obs.csv'
+#     pixel_obs_path = target_directory / 'pixel_obs_info.csv'
+#     test_info_path = target_directory / 'test_info.csv'
+    
+#     tile.add_dirpath("compared_validation", target_directory)
+
+#     state_dataframe = pd.read_csv(tile.paths["validation"] / 'state_obs.csv')
+#     pixel_info_dataframe = pd.read_csv(tile.paths["validation"] / 'pixel_obs_info.csv')
+        
+#     tile_parameters = tile.parameters
+#     for key in tile_parameters:
+#         tile_parameters[key] = str(tile_parameters[key])
+#     del tile.parameters["Overwrite"] #Overwrite ne devrait pas être dans les paramètres
+#     tile_parameters_dataframe = pd.DataFrame(data=tile_parameters, index=[0])
+    
+#     test_id = get_test_id(test_info_path, tile_parameters_dataframe)
+    
+#     if test_id is not None:
+#         tile_parameters_dataframe["test_id"] = test_id
+#         state_dataframe["test_id"] = test_id
+#         pixel_info_dataframe["test_id"] = test_id
+
+#         tile_parameters_dataframe.to_csv(test_info_path, mode='a', index=False,header=not(test_info_path.exists()))
+    
+            
+#         state_dataframe.to_csv(state_obs_path, mode='a', index=False,header=not(state_obs_path.exists()))
+#         pixel_info_dataframe.to_csv(pixel_obs_path, mode='a', index=False,header=not(pixel_obs_path.exists()))
+
+# def rasterize_obs(obs_shape, name_column, raster_metadata):
+#     obs_shape_json_str = obs_shape.to_json()
+#     obs_shape_json_dict = json.loads(obs_shape_json_str)
+#     obs_shape_jsonMask = [(feature["geometry"],feature["properties"][name_column]) for feature in obs_shape_json_dict["features"]]
+    
+#     rasterized_validation_data = rasterio.features.rasterize(obs_shape_jsonMask,out_shape = (raster_metadata["sizes"]["y"],raster_metadata["sizes"]["x"]) ,dtype="int16",transform=raster_metadata['transform'])  
+
+#     return xr.DataArray(rasterized_validation_data,coords={"y" : raster_metadata["coords"]["y"],"x" : raster_metadata["coords"]["x"]}, dims=["y","x"])
+
+
+# def attribute_area_to_obs(obs_shape, areas, name_column):
+
+#     obs_area_tot = obs_shape[[name_column]]
+#     obs_area_tot.insert(1, "area_tot", obs_shape.area)
+    
+#     obs_shape = obs_shape.merge(obs_area_tot, on= name_column, how='left')
+#     obs_intersection = gp.overlay(obs_shape, areas)
+    
+#     obs_intersection.insert(1, "area_intersect", obs_intersection.area)
+#     obs_intersection = obs_intersection[obs_intersection["area_tot"].round(3) == obs_intersection['area_intersect'].round(3)]
+    
+#     unvalid_obs = obs_shape[~obs_shape[name_column].isin(obs_intersection[name_column])]
+#     if len(unvalid_obs) != 0:
+#         print("Observations not fitting entirely on one tile found.\nThey are removed from the dataset. \nIds are the following : \n" + ', '.join(map(str, unvalid_obs[name_column])) + " ")
+    
+#     #Get observations with only one associated tile
+#     count_data = pd.DataFrame(obs_intersection[name_column].value_counts().reset_index())
+#     count_data.columns = [name_column, 'count']
+#     merged = pd.merge(obs_intersection, count_data, on= name_column)
+#     one_tile_obs = merged[merged["count"] == 1]
+#     one_tile_obs = one_tile_obs[[name_column,"area_name"]]
+    
+    
+#     processed_dataset =  obs_shape[obs_shape[name_column].isin(one_tile_obs[name_column])]
+#     processed_dataset = processed_dataset.merge(one_tile_obs, on= name_column, how='left')
+    
+#     #Get observations with choice in the tile, attributing the most frequent tile
+#     count_data2 = pd.DataFrame(processed_dataset["area_name"].value_counts().reset_index())
+#     count_data2.columns = ["area_name", 'count']
+
+#     unattributed_obs = obs_intersection[~obs_intersection[name_column].isin(processed_dataset[name_column])]
+#     unattributed_obs = unattributed_obs.merge(count_data2, on= "area_name", how='left')
+#     unattributed_obs = unattributed_obs[~pd.isnull(unattributed_obs["count"])]
+    
+#     choice = unattributed_obs.sort_values([name_column,'count'], ascending = False).groupby(name_column, as_index=False).first()[[name_column,"area_name"]]
+#     obs_choice =  obs_shape[obs_shape[name_column].isin(choice[name_column])]
+#     obs_choice = obs_choice.merge(choice, on= name_column, how='left')
+    
+#     processed_dataset = pd.concat([processed_dataset,obs_choice])
+    
+    
+#     #Retrieve those with no associated tiles.
+#     unattributed_obs = obs_intersection[~obs_intersection[name_column].isin(processed_dataset[name_column])]
+#     while len(unattributed_obs)!=0:
+#         count_data3 = pd.DataFrame(unattributed_obs["area_name"].value_counts().reset_index())
+#         count_data3.columns = ["area_name", 'count']
+#         choice = obs_intersection[obs_intersection["area_name"]==count_data3.sort_values(['count'], ascending = False).area_name[0]][[name_column,"area_name"]]
+#         obs_choice =  obs_shape[obs_shape[name_column].isin(choice[name_column])]
+#         obs_choice = obs_choice.merge(choice, on= name_column, how='left')
+#         processed_dataset = pd.concat([processed_dataset,obs_choice])
+#         unattributed_obs = obs_intersection[~obs_intersection[name_column].isin(processed_dataset[name_column])]
+#     #######
+#     processed_dataset = processed_dataset.drop(columns=["area_tot"])
+#     return processed_dataset
+
+# def compute_stress_index(data_frame, periods, name_column):
+    
+#     period_id = 1
+#     period_exists = True
+#     period_data_list = []
+#     period_data_list += [periods[periods["period_id"] == 0]]
+#     while period_exists:
+#         print(period_id)
+#         # stress_period = periods.groupby(["area_name", name_column,'id_pixel']).nth(period_id)
+#         period = periods[periods["period_id"] == period_id]
+#         # period = period[periods["state"].isin(["Stress","Dieback"])]
+        
+#         # if period_id == 12:
+#         #     print("test")
+#         if len(period) != 0 :
+#             # data_frame = data_frame.reset_index()
+#             # period = period.reset_index()
+#             filtered_period_dataframe = data_frame.merge(period, on=["area_name", name_column,"id_pixel"], how='left') 
+#             # filtered_period_dataframe = filtered_period_dataframe[(filtered_period_dataframe["Date"] >= filtered_period_dataframe["first_date"]) & (pd.isnull(filtered_period_dataframe["last_date"]) | (filtered_period_dataframe["Date"] < filtered_period_dataframe["last_date"]))]
+#             filtered_period_dataframe = filtered_period_dataframe[(filtered_period_dataframe["Date"] >= filtered_period_dataframe["first_date"]) & (filtered_period_dataframe["Date"] <= filtered_period_dataframe["last_date"])]
+#             period = period.set_index(["area_name", name_column,"id_pixel", "first_date"])
+#             period["anomaly_intensity"] = filtered_period_dataframe.groupby(by = ["area_name", name_column,"id_pixel","first_date"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2))
+#             # test = filtered_period_dataframe.groupby(by = ["area_name", name_column,"id_pixel","first_date"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2))
+
+
+#             # stress_period["period_id"] = i+1
+            
+#             period_data_list += [period.reset_index()]
+#         else:
+#             period_exists = False
+
+#         period_id+=1
+        
+#     period_data = pd.concat(period_data_list)
+    
+#     period_data = period_data[["area_name", name_column,"id_pixel","state","first_date","last_date", "anomaly_intensity"]].sort_values(["area_name",name_column,"id_pixel","first_date"], ascending = True)
+
+#     return period_data
+
+
+# def get_conf_index(data_frame, dieback):
+#     periods = dieback[dieback.id_pixel == data_frame["id_pixel"].iloc[0]]
+
+    
+#     stress_index_list = []
+#     for index, period in periods.iterrows():      
+#         data_period = data_frame[(data_frame["Date"] >= period['first_date']) & (data_frame["Date"] < period['last_date'])]
+#         stress_index_list += [(data_period.diff_vi*range(1,len(data_period)+1)).sum()/(len(data_period)*(len(data_period)+1)/2)]
+
+#     # id_pixel stress_period_id first_date last_date stress_index
+#     periods["stress_index"] = stress_index_list
+    
+    
+#     return periods.drop(columns=['id_pixel'])
+
+

@@ -11,7 +11,6 @@ import click
 from pathlib import Path
 import pandas as pd
 
-# from fordead.validation_module import get_reflectance_at_points, get_already_extracted
 from fordead.import_data import TileInfo, get_band_paths, get_cloudiness
 
 @click.command(name='extract_cloudiness')

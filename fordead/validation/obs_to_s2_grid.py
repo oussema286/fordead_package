@@ -9,7 +9,7 @@ import click
 import geopandas as gp
 import pandas as pd
 from pathlib import Path
-from fordead.validation_module import get_grid_points, process_points
+from fordead.reflectance_extraction import get_grid_points, process_points
 
 @click.command(name='obs_to_s2_grid')
 @click.option("--obs_path", type = str,default = None, help = "Path to a vector file containing observation points or polygons, must have an ID column corresponding to name_column parameter", show_default=True)

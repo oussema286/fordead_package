@@ -56,26 +56,26 @@ The vector file at **obs_path** is imported using the geopandas package.
 - The extent of each listed Sentinel-2 tiles is extracted and converted to a GeoDataFrame 
 - Each GeoDataFrame is given the attributes *area_name* and *epsg*, corresponding to the name of the directory containing the tile data, and the epsg of the tile.
 - All GeoDataFrames are concatenated
- > **_Function used:_** [get_polygons_from_sentinel_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#get_polygons_from_sentinel_dirs)
+ > **_Function used:_** [get_polygons_from_sentinel_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/reflectance_extraction/#get_polygons_from_sentinel_dirs)
 
 ### If vector file at **obs_path** contains points :
  - Observation points are intersected with the Sentinel-2 tiles extent vector, transferring the attributes *area_name* and *epsg*
  - An *id_pixel* column is added and filled with 0 so the resulting vector can be used in the [export_reflectance](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/03_extract_reflectance/) function.
  - Points outside of available Sentinel-2 tiles are detected and their IDs are printed.
- > **_Function used:_** [get_sen_intersection_points()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#get_sen_intersection_points)
+ > **_Function used:_** [get_sen_intersection_points()](https://fordead.gitlab.io/fordead_package/reference/fordead/reflectance_extraction/#get_sen_intersection_points)
 
 ### If vector file at **obs_path** contains polygons :
 
 #### Matching observation polygons with Sentinel-2 tiles
 - Observation polygons are overlaid with the Sentinel-2 tiles extent vector, transferring the 'area_name' and 'epsg' columns corresponding to the name of the tile, and the projection system respectively
 - Observation polygons which are not contained in a Sentinel-2 tile are removed, their IDs are printed to the console.
-> **_Function used:_** [get_sen_intersection()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#get_sen_intersection)
+> **_Function used:_** [get_sen_intersection()](https://fordead.gitlab.io/fordead_package/reference/fordead/reflectance_extraction/#get_sen_intersection)
 
 #### Generating points for pixels inside the polygons
 - For each polygon, points are generated in a grid corresponding to the centroids of Sentinel-2 pixels inside the polygon.
 - They are given the attributes
 - Polygons with no pixels centroids inside of them have their IDs printed to the console.
- > **_Function used:_** [polygons_to_grid_points()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#polygons_to_grid_points)
+ > **_Function used:_** [polygons_to_grid_points()](https://fordead.gitlab.io/fordead_package/reference/fordead/reflectance_extraction/#polygons_to_grid_points)
  
 ###  Exporting the resulting the vector file
 The resulting points are exported to **export_path**.

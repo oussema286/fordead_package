@@ -359,25 +359,21 @@ def get_reflectance_at_points(grid_points,sentinel_dir, extracted_reflectance, n
         
     return reflectance
 
+def extract_raster_values(points, tile_coll, extracted_reflectance, name_column, bands_to_extract):
+    """
+    Sample raster values for each XY points
 
-def extract_raster_values(points,sentinel_dir, extracted_reflectance, name_column, bands_to_extract):
-    """Must have the same crs"""
-    tile = TileInfo(sentinel_dir)
-    tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
-    tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
-    
-    
-    # for date_index, date in enumerate(tile.paths["Sentinel"]):
-    #     exists = True
-    #     for band in bands_to_extract:
-    #         if not(band in tile.paths["Sentinel"][date]):
-    #             exists = False
-    #     if not(exists):
-    #         file = open("/mnt/fordead/Out/missing_bands.txt", "a") 
-    #         print(sentinel_dir.stem + " " + date + "\n")
-    #         file.write(sentinel_dir.stem + " " + date + "\n")
-    #         file.close()
-    
+    - points: <geodataframe> observation points
+    - tile_coll: <pystac object> item_collection filtered according to S2 Tile
+    - extracted_reflectance: <dataframe> table of sampled raster value
+    - name_column: <string> column name
+
+    return: <dataframe> table of sampled raster value
+    """
+    #"""Must have the same crs"""
+    # tile = TileInfo(sentinel_dir)
+    # tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+    # tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
     
     coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
     points = points.drop(columns='geometry')
@@ -388,15 +384,18 @@ def extract_raster_values(points,sentinel_dir, extracted_reflectance, name_colum
         to_extract_reflectance = points[["area_name", name_column]].drop_duplicates()
         #Supprimer duplicates id_pixel
         
-        
         #inner_join extracted_reflectance avec marqueur
         extracted_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
         # to_extract_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
         #list_dates de unique dates
     
-    
-    for date_index, date in enumerate(tile.paths["Sentinel"]):
-        print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
+    for item in tile_coll:
+        
+        date = item.properties["datetime"].split('T')[0]
+        # print(date)
+        
+
+        # print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
         extraction = points.copy()
         if extracted_reflectance is not None:
             #Filter les points selon la date
@@ -406,20 +405,24 @@ def extract_raster_values(points,sentinel_dir, extracted_reflectance, name_colum
             extraction = extraction[~extraction[name_column].isin(extracted_reflectance_date[name_column])]
             
         if len(extraction) != 0:
+            print('\r', date , sep='', end='', flush=True)
             extraction.insert(4,"Date",date)
-            
+            # len(extraction.columns)-1
             for band in bands_to_extract:
-                with rasterio.open(tile.paths["Sentinel"][date][band],dtype = "uint8") as raster:
-                    # rasterio.sample.sort_xy(coord_list)
+                image = item.assets[band].href
+            
+                with rasterio.open(image) as raster:
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
-                    
+                
             date_band_value_list += [extraction]
+    print('\r', "               \n" , sep='', end='', flush=True)
     # reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
     if len(date_band_value_list) != 0:
         reflectance = pd.concat(date_band_value_list, ignore_index=True)
         return reflectance
     else:
         return None
+
     
 
 # ==========================================================================================================================================================

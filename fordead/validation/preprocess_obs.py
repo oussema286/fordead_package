@@ -9,7 +9,7 @@ import click
 import geopandas as gp
 import pandas as pd
 from pathlib import Path
-from fordead.validation_module import attribute_id_to_obs, buffer_obs
+from fordead.reflectance_extraction import attribute_id_to_obs, buffer_obs
 
 @click.command(name='preprocess_obs')
 @click.option("--obs_path", type = str,default = None, help = "Path of vector file containing observation points or polygons to preprocess", show_default=True)
