@@ -7,12 +7,14 @@ Created on Tue Dec 13 10:52:12 2022
 import time
 import click
 import geopandas as gp
+import pandas as pd
 from pathlib import Path
 # from fordead.validation_module import get_reflectance_at_points
-from fordead.validation_module import get_already_extracted
-from fordead.validation_stac.stac_module import get_vectorBbox, getItemCollection, get_harmonized_collection
-from fordead.validation_stac.validation_stac_module import get_reflectance_at_points
+from fordead.reflectance_extraction import get_already_extracted
+from fordead.stac.stac_module import get_bbox, get_harmonized_planetary_collection, get_harmonized_theia_collection
+from fordead.validation_stac.validation_stac_module import extract_raster_values
 
+import numpy as np
 
 @click.command(name='extract_reflectance')
 @click.option("--obs_path", type = str,default = None, help = "Path to a vector file containing observation points, must have an ID column corresponding to name_column parameter, an 'area_name' column with the name of the Sentinel-2 tile from which to extract reflectance, and a 'espg' column containing the espg integer corresponding to the CRS of the Sentinel-2 tile.", show_default=True)
@@ -75,44 +77,65 @@ def extract_reflectance(obs_path, sentinel_source, export_path, cloudiness_path 
     
     # if sentinel_source == 'Planetary':
         
-        
     
     export_path = Path(export_path)
     obs = gp.read_file(obs_path)
     
-    extracted_reflectance = get_already_extracted(export_path, obs, obs_path, name_column)
-    
-    obs_bbox = get_vectorBbox(obs_path)
+    if (sentinel_source != "Planetary") and (cloudiness_path is not None):
+        cloudiness = pd.read_csv(cloudiness_path)
 
-    collection = get_harmonized_collection(sentinel_source, cloudiness_path, start_date, end_date, obs_bbox, int(lim_perc_cloud*100))
+    extracted_reflectance = get_already_extracted(export_path, obs, obs_path, name_column)
+                
+    # obs_bbox = get_vectorBbox(obs_path)
+
+    if tile_selection is None:
+        tile_selection = np.unique(obs.area_name)
+    for tile in tile_selection:
+
+        tile_obs = obs[obs["area_name"] == tile]
+        tile_obs = tile_obs.to_crs(epsg = tile_obs.epsg.values[0])
+
+        
+        if extracted_reflectance is not None:
+            tile_already_extracted = extracted_reflectance[extracted_reflectance["area_name"] == tile]
+        else:
+            tile_already_extracted = None
+        
+        if sentinel_source == "Planetary":
+            collection = get_harmonized_planetary_collection(sentinel_source, start_date, end_date, get_bbox(tile_obs), lim_perc_cloud, tile)
+        else:
+            
+            tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
+            collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, get_bbox(tile_obs), lim_perc_cloud, tile)
+   
+        raster_tile_values = extract_raster_values(tile_obs, collection, tile_already_extracted, name_column, bands_to_extract)
     
-    reflectance = get_reflectance_at_points(obs, collection, extracted_reflectance, name_column, bands_to_extract, tile_selection)
-    # reflectance = get_reflectance_at_points(obs, sentinel_source, lim_perc_cloud, extracted_reflectance, name_column, bands_to_extract, tile_selection)
-    
-    if reflectance is None:
-        print("No new data to extract")
-    else:
-        print("Data extracted")
-        reflectance.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
+        if raster_tile_values is None:
+            print("No new data to extract")
+        else:
+            print("Data extracted")
+            raster_tile_values.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
 
 if __name__ == '__main__':
-
-        # extract_reflectance(
-        #     obs_path = "D:/fordead/fordead_data/output/pp_observations_tuto.shp",
-        #     sentinel_source = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
-        #     export_path = "D:/fordead/fordead_data/output/reflectance_tuto.csv",
-        #     name_column = "id")
         
         #Locally
         # extract_reflectance(
         #     obs_path = "D:/fordead/fordead_data/calval_output/preprocessed_obs_tuto.shp",
         #     sentinel_source = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
-        #     export_path = "D:/fordead/fordead_data/calval_output/extracted_reflectance_stac.csv",
-        #     name_column = "id")
+        #     cloudiness_path = "D:/fordead/fordead_data/calval_output/extracted_cloudiness.csv",
+        #     lim_perc_cloud = 0.4,
+        #     export_path = "D:/fordead/fordead_data/calval_output/extracted_reflectance_test1.csv",
+        #     name_column = "id",
+        #     start_date = "2018-01-01",
+        #     end_date = "2018-03-01")
+        
         
         # #Planetary
         extract_reflectance(
             obs_path = "D:/fordead/fordead_data/calval_output/preprocessed_obs_tuto.shp",
             sentinel_source = "Planetary", 
-            export_path = "D:/fordead/fordead_data/calval_output/extracted_reflectance_stac.csv",
-            name_column = "id")
+            export_path = "D:/fordead/fordead_data/calval_output/extracted_reflectance_planetary2.csv",
+            name_column = "id",
+            lim_perc_cloud = 0.4,
+            start_date = "2018-01-01",
+            end_date = "2018-03-01")

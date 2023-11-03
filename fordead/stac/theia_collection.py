@@ -298,6 +298,7 @@ class ExtendPystacClasses:
 
     def to_geodataframe(self, **kwargs):
        return to_geodataframe(self)
+   
 class ItemCollection(pystac.ItemCollection, ExtendPystacClasses):
     pass
 

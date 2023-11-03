@@ -288,49 +288,60 @@ def get_bounds(obs):
 # =============================================================================
 
 
-def get_reflectance_at_points(grid_points, item_collection, extracted_reflectance, name_column, bands_to_extract, tile_selection):
-    """
-    Create table with raster values sampled for each XY points
+# def get_reflectance_at_points(grid_points, item_collection, extracted_reflectance, name_column, bands_to_extract):
+#     """
+#     Create table with raster values sampled for each XY points
 
-    - grid_points: <geodataframe> of observation points
-    - item_collection: <pystac object> item_collection
-    - extracted_reflectance: <dataframe> output table 
-    - name_column: <string> column name (ID)
+#     - grid_points: <geodataframe> of observation points
+#     - item_collection: <pystac object> item_collection
+#     - extracted_reflectance: <dataframe> output table 
+#     - name_column: <string> column name (ID)
 
-    return: <dataframe> update output table 
-    """
-
-    reflectance_list = []
-    for epsg in np.unique(grid_points.epsg):
-        print("epsg : " + str(epsg))
-        points_epsg = grid_points[grid_points.epsg == epsg]
-        points_epsg = points_epsg.to_crs(epsg = epsg)
+#     return: <dataframe> update output table 
+#     """
+    
+#     grid_points = grid_points.to_crs(epsg = grid_points.epsg.values[0])
+    
+#     raster_values = extract_raster_values(grid_points, item_collection, extracted_reflectance, name_column, bands_to_extract)
+    
+    # if raster_values is not None:
+    #     reflectance_list += [raster_values]
         
-        for area_name in np.unique(points_epsg.area_name):
-            print("area_name : " + area_name)
-            points_area = points_epsg[points_epsg.area_name == area_name]
-            
-            if extracted_reflectance is not None:
-                extracted_reflectance_area = extracted_reflectance[extracted_reflectance["area_name"] == area_name]
-            else:
-                extracted_reflectance_area = None
-                
-
-            tile_coll = st.tile_filter(item_collection, area_name) 
-            raster_values = extract_raster_values(points_area, tile_coll, extracted_reflectance_area, name_column)
-            
-            if raster_values is not None:
-                reflectance_list += [raster_values]
     # reflectance = gp.GeoDataFrame(pd.concat(reflectance_list, ignore_index=True), crs=reflectance_list[0].crs)
-    if len(reflectance_list) != 0:
-        reflectance = pd.concat(reflectance_list, ignore_index=True)
-    else:
-        reflectance = None
+    # if len(reflectance_list) != 0:
+    #     reflectance = pd.concat(reflectance_list, ignore_index=True)
+    # else:
+    #     reflectance = None
         
-    return reflectance
+    # reflectance_list = []
+    # for epsg in np.unique(grid_points.epsg):
+    #     print("epsg : " + str(epsg))
+    #     points_epsg = grid_points[grid_points.epsg == epsg]
+    #     points_epsg = points_epsg.to_crs(epsg = epsg)
+        
+    #     for area_name in np.unique(points_epsg.area_name):
+    #         print("area_name : " + area_name)
+    #         points_area = points_epsg[points_epsg.area_name == area_name]
+            
+    #         if extracted_reflectance is not None:
+    #             extracted_reflectance_area = extracted_reflectance[extracted_reflectance["area_name"] == area_name]
+    #         else:
+    #             extracted_reflectance_area = None
+
+    #         raster_values = extract_raster_values(points_area, tile_coll, extracted_reflectance_area, name_column)
+            
+    #         if raster_values is not None:
+    #             reflectance_list += [raster_values]
+    # # reflectance = gp.GeoDataFrame(pd.concat(reflectance_list, ignore_index=True), crs=reflectance_list[0].crs)
+    # if len(reflectance_list) != 0:
+    #     reflectance = pd.concat(reflectance_list, ignore_index=True)
+    # else:
+    #     reflectance = None
+        
+    # return reflectance
 
 
-def extract_raster_values(points, tile_coll, extracted_reflectance, name_column):
+def extract_raster_values(points, tile_coll, extracted_reflectance, name_column, bands_to_extract):
     """
     Sample raster values for each XY points
 
@@ -364,7 +375,7 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column)
         
         date = item.properties["datetime"].split('T')[0]
         # print(date)
-        print('\r', date , sep='', end='', flush=True)
+        
 
         # print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
         extraction = points.copy()
@@ -376,15 +387,17 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column)
             extraction = extraction[~extraction[name_column].isin(extracted_reflectance_date[name_column])]
             
         if len(extraction) != 0:
+            print('\r', date , sep='', end='', flush=True)
             extraction.insert(4,"Date",date)
             # len(extraction.columns)-1
-            for band in ['B01', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B11', 'B12', 'B8A', 'SCL']:
+            for band in bands_to_extract:
                 image = item.assets[band].href
             
                 with rasterio.open(image) as raster:
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
                 
             date_band_value_list += [extraction]
+    print('\r', "               \n" , sep='', end='', flush=True)
     # reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
     if len(date_band_value_list) != 0:
         reflectance = pd.concat(date_band_value_list, ignore_index=True)

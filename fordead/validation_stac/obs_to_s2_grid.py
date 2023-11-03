@@ -64,6 +64,8 @@ def obs_to_s2_grid(obs_path, item_collection, export_path, name_column = "id"):
     points = obs[(geom_type == 'Point') | (geom_type == 'MultiPoint')]
     polygons = obs[(geom_type == 'Polygon') | (geom_type == 'MultiPolygon')]
     
+    
+    
     points_from_poly = get_grid_points(polygons, item_collection, name_column) if len(polygons) != 0 else None
 
     total_points = pd.concat([points_from_poly])#,points_from_points])

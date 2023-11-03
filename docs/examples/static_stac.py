@@ -34,6 +34,7 @@ tile_coll
 coll
 
 for item in coll:
+    print(item)
     print(item.properties)
     item.properties["perc_cloud"] = 0.5
 for item in tile_coll:
@@ -71,6 +72,10 @@ assert set([item.id for item in coll2.items])==set([item.id for item in coll.ite
 # filter items
 start = to_datetime("2016-01-01")
 end = to_datetime("2017-01-01")
+
+# for item in subcoll:
+#     print(item)
+subcoll = coll.filter(datetime="2016-01-01/2017-01-01")
 subcoll = coll.filter(datetime="2016-01-01/2017-01-01", filter="tilename = 'T31UFQ'")
 assert set([item.datetime.timestamp() for item in subcoll])== \
     set([item.datetime.timestamp() for item in coll if \
