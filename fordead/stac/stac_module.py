@@ -265,7 +265,7 @@ def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date
     
     return collection
     
-def get_polygons_from_sentinel_planetComp(item_collection, epsg, tile_selection = None, outputfile = None):
+def get_polygons_from_sentinel_planetComp(item_collection, tile_selection = None, outputfile = None):
     """
     get image footprint with specified tile crs
     
