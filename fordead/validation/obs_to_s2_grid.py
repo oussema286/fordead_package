@@ -73,7 +73,6 @@ def obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column = "id", t
     points = obs[(geom_type == 'Point') | (geom_type == 'MultiPoint')]
     polygons = obs[(geom_type == 'Polygon') | (geom_type == 'MultiPolygon')]
     
-    
     if sentinel_source == "Planetary":
         collection = get_harmonized_planetary_collection("2015-01-01", "2024-01-01", get_bbox(obs), 0.01)
         sen_polygons = get_polygons_from_sentinel_planetComp(collection, tile_selection)
@@ -84,7 +83,6 @@ def obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column = "id", t
     points_from_points = process_points(points, sen_polygons, name_column) if len(points) != 0 else None
     points_from_poly = get_grid_points(polygons, sen_polygons, name_column) if len(polygons) != 0 else None
 
-    # print("test")
     total_points = pd.concat([points_from_poly,points_from_points])
     total_points.to_file(export_path)
 
