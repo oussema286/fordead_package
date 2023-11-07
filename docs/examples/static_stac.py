@@ -30,8 +30,6 @@ coll = build_theia_collection(input_dir)
 coll
 
 # %% Tests
-tile_coll
-coll
 
 for item in coll:
     print(item)

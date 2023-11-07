@@ -9,7 +9,8 @@ import click
 import geopandas as gp
 import pandas as pd
 from pathlib import Path
-from fordead.reflectance_extraction import get_grid_points, process_points
+from fordead.reflectance_extraction import get_grid_points, process_points, get_polygons_from_sentinel_dirs
+from fordead.stac.stac_module import getItemCollection, get_bbox, get_harmonized_planetary_collection, get_polygons_from_sentinel_planetComp
 
 @click.command(name='obs_to_s2_grid')
 @click.option("--obs_path", type = str,default = None, help = "Path to a vector file containing observation points or polygons, must have an ID column corresponding to name_column parameter", show_default=True)
@@ -30,7 +31,7 @@ def cli_obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column, tile
     
     obs_to_s2_grid(**locals())
 
-def obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column = "id", tile_selection = None, overwrite = False):
+def obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column = "id", tile_selection = None, epsg = 32631, overwrite = False):
     """
     Attributes intersecting Sentinel-2 tiles to observation points or polygons, adding their epsg and name. If polygons are used, they are converted to grid points located at the centroid of Sentinel-2 pixels.
     If points or polygons intersect several Sentinel-2 tiles, they are duplicated for each of them.
@@ -48,6 +49,8 @@ def obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column = "id", t
         Name of the ID column. The default is "id".
     tile_selection : list
         A list of names of Sentinel-2 directories. If this parameter is used, extraction is limited to those directories.
+    epsg : int
+        Chosen epsg
     overwrite : bool
         If True, allows overwriting of file at obs_path
 
@@ -73,19 +76,36 @@ def obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column = "id", t
     polygons = obs[(geom_type == 'Polygon') | (geom_type == 'MultiPolygon')]
     
     
+    if sentinel_source == "Planetary":
+        collection = get_harmonized_planetary_collection("2015-01-01", "2024-01-01", get_bbox(obs), 0.01)
+        sen_polygons = get_polygons_from_sentinel_planetComp(collection, epsg, tile_selection)
+    else:
+        sen_polygons = get_polygons_from_sentinel_dirs(sentinel_source, tile_selection)
     
-    points_from_points = process_points(points, sentinel_dir, name_column, tile_selection) if len(points) != 0 else None
-    points_from_poly = get_grid_points(polygons, sentinel_dir, name_column, tile_selection) if len(polygons) != 0 else None
+    # sen_polygons.to_file("D:/fordead/05_SUBPROJECTS/03_stac/03_RESULTS/sen_polygons.shp")
+    points_from_points = process_points(points, sen_polygons, name_column) if len(points) != 0 else None
+    points_from_poly = get_grid_points(polygons, sen_polygons, name_column) if len(polygons) != 0 else None
 
+    # print("test")
     total_points = pd.concat([points_from_poly,points_from_points])
     total_points.to_file(export_path)
 
     
 if __name__ == '__main__':
-
-        obs_to_s2_grid(
-            obs_path = "D:/fordead/fordead_data/vector/observations_tuto.shp",
-            sentinel_dir = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
-            export_path = "D:/fordead/fordead_data/output/pp_observations_tuto.shp",
-            name_column = "id",
-            overwrite = True)
+        
+    #Planetary
+    # obs_to_s2_grid(
+    #     obs_path = "D:/fordead/fordead_data/vector/observations_tuto.shp",
+    #     sentinel_source = "Planetary", 
+    #     export_path = "D:/fordead/05_SUBPROJECTS/03_stac/03_RESULTS/pp_observations_tuto_plan.shp",
+    #     name_column = "id",
+    #     # tile_selection = ["T32ULU"],
+    #     overwrite = True)
+    
+    #Theia locally
+    obs_to_s2_grid(
+        obs_path = "D:/fordead/fordead_data/vector/observations_tuto.shp",
+        sentinel_source = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
+        export_path = "D:/fordead/05_SUBPROJECTS/03_stac/03_RESULTS/pp_observations_tuto_theia.shp",
+        name_column = "id",
+        overwrite = True)

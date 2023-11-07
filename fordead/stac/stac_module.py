@@ -1,6 +1,8 @@
 # author(s) : Kenji Ose / Raphael Dutrieux
 
 import geopandas as gp
+import pandas as pd
+import numpy as np
 # from shapely.geometry import Polygon, Point
 from pyproj import Proj, transform
 import pystac_client
@@ -9,7 +11,9 @@ import planetary_computer
 from pathlib import Path
 from fordead.stac.theia_collection import build_theia_collection, ItemCollection
 from datetime import datetime
-
+import fordead.stac.stac_module as st
+from shapely.geometry import Polygon
+from pyproj import Transformer
 
 def get_vectorBbox(vector_path):
     """
@@ -73,48 +77,70 @@ def getItemCollection(startdate, enddate, bbox, cloud_nb = 100):
 
 # Conversion de tous les items découverts par la recherche, 
 # on crée un objet ItemcCollection pour avoir la liste des items. 
-
+# from sys import sys.exit
 def get_s2_epsgXY(item_collection):
     """
-    get S2 tile name, epsg and geometry (in lat/long)
-    
-    - item_collection: pystac item_collection object
-
-    return: list with the following elements : 
-            tile_name <string>, epsg_code <string>, geometry <list>
+    Using an item collection, returns a list with all tilenames, the epsg of the corresponding sentinel-2 data, as well as the list of longitude and latitude coordinates of the tile in epsg 4326.
     """
-    out_list = []
-    for item in item_collection:
-        tile = item.properties['s2:mgrs_tile']
-        epsg = item.properties["proj:epsg"]
-        if not any(tile in i for i in out_list):
-            tileinfo = [tile, epsg, item.geometry['coordinates'][0]]
-            out_list.append(tileinfo)
+    
         
-        return out_list
-
-def coord2epsg(tilesinfo, in_epsg = '4326'):
-    """
-    convert S2 tile geometry from input csr (default epsg:4326) to output crs
+    corner_names = []
+    x_coordinates = []
+    y_coordinates = []
+    s2_mgrs_tiles = []
+    epsg_list = []
+    for item in item_collection:
+        # print(item.properties["eo:cloud_cover"])
+        # Get properties from the item
+        s2_mgrs_tile = "T" + item.properties.get('s2:mgrs_tile')
+        epsg = item.properties["proj:epsg"]
+        # print(epsg)
+        # Extract the coordinates
+        coordinates = item.geometry['coordinates'][0]
+        
+        for i, (x, y) in enumerate(coordinates):
+            if len(coordinates) == 5:
+                corner_name = f'Corner{i+1}'  # Create corner names (Corner1, Corner2, etc.)
+                corner_names.append(corner_name)
+                x_coordinates.append(x)
+                y_coordinates.append(y)
+                s2_mgrs_tiles.append(s2_mgrs_tile)
+                epsg_list.append(epsg)
     
-    - tilesinfo : <list> output of get_s2_epsgXY () function
-    - in_epsg : <string> epsg code [default : 4326]
+    # Create a Pandas DataFrame
+    data = {
+        'tilename': s2_mgrs_tiles,
+        'epsg' : epsg_list,
+        'Corner': corner_names,
+        'x': x_coordinates,
+        'y': y_coordinates
+    }
+    df = pd.DataFrame(data)
+    
+    # Calculate the min and max for each corner of each tile
+    grouped = df.groupby(['tilename', 'Corner',"epsg"])
+    min_max = grouped.agg({'x': ['min', 'max'], 'y': ['min', 'max']})
+    min_max = grouped.agg({'x': ['min', 'max'], 'y': ['min', 'max']})
 
-    return: list with the following elements : 
-            tile_name <string>, epsg_code <string>, geometry <list>
-    """
+    min_max.reset_index(inplace=True)
+    min_max.columns = ['tilename', 'Corner', "epsg",'xmin', 'xmax', 'ymin', 'ymax']
+    
     out_list = []
-    inProj = Proj(init=f'epsg:{in_epsg}')
-    for tile in tilesinfo:
-        outProj = Proj(init=f'epsg:{tile[1]}')
-        in_coord = tile[2]
-        out_coord = []
-        for coord in in_coord:
-            outX, outY = transform(inProj, outProj, coord[0], coord[1])
-            out_coord.append([round(outX), round(outY)])
-        tileinfo = [tile[0], tile[1], out_coord]
+    for tile in np.unique(min_max.tilename):
+        # print(tile)
+        # for corner in ["Corner1","Corner2","Corner3","Corner4","Corner5"]:
+        corner1 = min_max[(min_max["tilename"] == tile) & (min_max["Corner"] == "Corner1")]
+        corner2 = min_max[(min_max["tilename"] == tile) & (min_max["Corner"] == "Corner2")]
+        corner3 = min_max[(min_max["tilename"] == tile) & (min_max["Corner"] == "Corner3")]
+        corner4 = min_max[(min_max["tilename"] == tile) & (min_max["Corner"] == "Corner4")]
+        # corner5 = min_max[(min_max["tilename"] == tile) & (min_max["Corner"] == "Corner5")]
+        
+        lon_point_list = [corner1.xmin.iloc[0],corner2.xmin.iloc[0],corner3.xmax.iloc[0],corner4.xmax.iloc[0]]
+        lat_point_list = [corner1.ymax.iloc[0],corner2.ymin.iloc[0],corner3.ymin.iloc[0],corner4.ymax.iloc[0]]
+        tileinfo = [tile, corner1.epsg.iloc[0], lon_point_list, lat_point_list]
         out_list.append(tileinfo)
     return out_list
+
 
 def tile_filter(item_collection, tile_name):
     """
@@ -155,9 +181,25 @@ def get_items_tiles(item_collection):
 
     
     
-def get_harmonized_planetary_collection(sentinel_source, start_date, end_date, obs_bbox, lim_perc_cloud, tile):
+def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc_cloud, tile = None):
+    """
     
-    print("Extracting Sentinel-2 data from "+ tile + " collected from Microsoft Planetary Computer")
+
+    Parameters
+    ----------
+    start_date : str
+        Start of the period.
+    end_date : str
+        End of the period.
+    obs_bbox : list
+        bounding box [lon_min, lat_min, lon_max, lat_max]
+    lim_perc_cloud : float
+        Max cloud cover between 0 et 1.
+    tile : str, optional
+        The name of a single tile used to filter the collection. If None, all tiles are kept in the collection. The default is None.
+
+
+    """
     
     corresp_keys = {'B01' : 'B1', 'B02' : 'B2', 'B03' : "B3", 'B04' : "B4", 'B05' : "B5", 
                     'B06' : "B6", 'B07' : "B7", 'B08' : "B8", 'B09' : "B9", 'SCL' : "Mask"}
@@ -174,14 +216,15 @@ def get_harmonized_planetary_collection(sentinel_source, start_date, end_date, o
             
     # for item in collection:
     #     print(item.properties["cloud_cover"])
-    
-    collection = collection.filter(filter=f"tilename = '{tile}'")
+    if tile is not None:
+        print("Extracting Sentinel-2 data from "+ tile + " collected from Microsoft Planetary Computer")
+        collection = collection.filter(filter=f"tilename = '{tile}'")
     
 
     return collection
 
 
-def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, obs_bbox, lim_perc_cloud, tile):
+def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile):
     # lim_cloud_cover = int(lim_perc_cloud*100)
     corresp_keys = {'CLM' : "Mask"}
     
@@ -222,6 +265,51 @@ def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date
     
     return collection
     
+def get_polygons_from_sentinel_planetComp(item_collection, epsg, tile_selection = None, outputfile = None):
+    """
+    get image footprint with specified tile crs
+    
+    - item_collection: pystac item_collection object
+
+    return: geopandas dataframe
+    """    
+    
+    # for item in item_collection:
+    #     print(item.properties)
+    
+    tilesinfo = st.get_s2_epsgXY(item_collection)
+    # tilesinfo = st.coord2epsg(tile_extents_4326, in_epsg = "4326", out_epsg = str(epsg))   
+    
+    if tile_selection is not None:
+        tilesinfo = [tile for tile in tilesinfo if tile[0] in tile_selection]
+        
+    # i=0
+    for i in range(len(tilesinfo)):
+        # print(i)
+        # tile.xmin
+        
+        # lon_point_list = [tile[2][0][0],tile[2][1][0],tile[2][1][0],tile[2][0][0]]
+        # lon_point_list = [tile.xmin,tile.xmax,tile.xmax,tile.xmin]
+        # lat_point_list = [tile.ymin,tile.ymin,tile.ymax,tile.ymax]
+        #polygon_geom = gp.points_from_xy(lon_point_list, lat_point_list)
+        polygon_geom = Polygon(zip(tilesinfo[i][2], tilesinfo[i][3]))
+        polygon = gp.GeoDataFrame(index=[0], crs='epsg:4326', geometry=[polygon_geom])
+        polygon.insert(1, "area_name", tilesinfo[i][0])
+        polygon.insert(2, "epsg", f'{tilesinfo[i][1]}')
+        
+        if i == 0:
+            concat_areas = polygon
+        else:
+            # if concat_areas.crs != polygon.crs:
+            #         polygon = polygon.to_crs(concat_areas.crs)
+            concat_areas = pd.concat([concat_areas,polygon])
+        i +=1
+        
+    
+    if outputfile != None:
+        concat_areas.to_file(outputfile) # a sécuriser
+    
+    return concat_areas
 
 
 if __name__ == '__main__':
