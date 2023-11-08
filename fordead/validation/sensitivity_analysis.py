@@ -10,13 +10,25 @@ import click
 import shutil
 from pathlib import Path
 from itertools import product
+import pandas as pd
 
-
-from fordead.validation_process import get_args, filter_args, combine_validation_results, get_test_id, get_args_dataframe
+from fordead.validation_process import get_args, filter_args, combine_validation_results, get_test_id, get_default_args
 from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
 from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
 from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
 
+def get_args_dataframe(comb_dict):
+    args_dict = get_default_args(mask_vi_from_dataframe)
+    d2 = get_default_args(train_model_from_dataframe)
+    d3 = get_default_args(dieback_detection_from_dataframe)
+    args_dict.update(d2)
+    args_dict.update(d3)
+    args_dict.update(comb_dict)
+    for key in args_dict:
+        args_dict[key] = str(args_dict[key])
+    args_dataframe = pd.DataFrame(data=args_dict, index=[0])
+    
+    return args_dataframe
 
 @click.command(name='sensitivity_analysis')
 @click.option("--testing_directory", type = str,default = None, help = "Directory where the results will be exported", show_default=True)

@@ -13,9 +13,6 @@ from scipy.linalg import lstsq
 import inspect
 
 from fordead.masking_vi import compute_vegetation_index, get_dict_vi
-from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
-from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
-from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
 
 
 def filter_args(func,param_dict,combs):
@@ -60,18 +57,7 @@ def get_default_args(func):
     }
 
 
-def get_args_dataframe(comb_dict):
-    args_dict = get_default_args(mask_vi_from_dataframe)
-    d2 = get_default_args(train_model_from_dataframe)
-    d3 = get_default_args(dieback_detection_from_dataframe)
-    args_dict.update(d2)
-    args_dict.update(d3)
-    args_dict.update(comb_dict)
-    for key in args_dict:
-        args_dict[key] = str(args_dict[key])
-    args_dataframe = pd.DataFrame(data=args_dict, index=[0])
-    
-    return args_dataframe
+
 
     
 def combine_validation_results(csv_path_list, merged_csv_path_list, test_info_path,
