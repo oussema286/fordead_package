@@ -342,7 +342,7 @@ def get_reflectance_at_points(grid_points,sentinel_dir, extracted_reflectance, n
         
     return reflectance
 
-def extract_raster_values(points, tile_coll, extracted_reflectance, name_column, bands_to_extract):
+def extract_raster_values(points, tile_coll, extracted_reflectance, name_column, bands_to_extract, export_path):
     """
     Sample raster values for each XY points
 
@@ -360,7 +360,7 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column,
     
     coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
     points = points.drop(columns='geometry')
-    date_band_value_list = []
+    # date_band_value_list = []
     
     if extracted_reflectance is not None:
         #Determiner les dates qui restent.
@@ -396,15 +396,18 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column,
             
                 with rasterio.open(image, 'r', driver='GTiff', sharing=True, tiled=True, blockxsize=256, blockysize=256) as raster:
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
-                
-            date_band_value_list += [extraction]
+            
+            # date_band_value_list += [extraction]
+            
+        extraction.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
+        
     print('\r', "               \n" , sep='', end='', flush=True)
     # reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
-    if len(date_band_value_list) != 0:
-        reflectance = pd.concat(date_band_value_list, ignore_index=True)
-        return reflectance
-    else:
-        return None
+    # if len(date_band_value_list) != 0:
+    #     reflectance = pd.concat(date_band_value_list, ignore_index=True)
+    #     return reflectance
+    # else:
+    #     return None
 
     
 
