@@ -394,7 +394,7 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column,
             for band in bands_to_extract:
                 image = item.assets[band].href
             
-                with rasterio.open(image) as raster:
+                with rasterio.open(image, 'r', driver='GTiff', sharing=True, tiled=True, blockxsize=256, blockysize=256) as raster:
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
                 
             date_band_value_list += [extraction]
@@ -462,7 +462,6 @@ def get_already_extracted(export_path, obs, obs_path, name_column):
     """
     
     Returns already extracted acquisition dates for each observation and each tile.
-    Detects if the number of observations changed since last extraction and warns the user.
 
     """
     
@@ -474,24 +473,24 @@ def get_already_extracted(export_path, obs, obs_path, name_column):
 
         extracted_reflectance = reflectance[["area_name", name_column,"Date"]].drop_duplicates()
         
-        obs_extracted = np.unique(extracted_reflectance[name_column])
-        obs_to_extract = np.unique(obs[name_column])
+        # obs_extracted = np.unique(extracted_reflectance[name_column])
+        # obs_to_extract = np.unique(obs[name_column])
         
-        diff_nb_obs = len(obs_extracted) != len(obs_to_extract)
-        missing_obs = not(all(item in obs_to_extract for item in obs_extracted))
-        added_obs = not(all(item in obs_extracted for item in obs_to_extract))
+        # diff_nb_obs = len(obs_extracted) != len(obs_to_extract)
+        # missing_obs = not(all(item in obs_to_extract for item in obs_extracted))
+        # added_obs = not(all(item in obs_extracted for item in obs_to_extract))
         
-        if diff_nb_obs or missing_obs or added_obs:
-            print("Changes to "+ str(obs_path) + " have been detected since last extracting reflectances to " + str(export_path))
-            if diff_nb_obs:
-                print("Different number of observations detected")
-            if missing_obs:
-                print("Some observations are missing, already extracted reflectance will stay untouched")
-            if added_obs:
-                print("Some observations were added, their reflectance will be extracted")
-            answer = input("Do you want to continue ? (yes/no)")
-            if answer != "yes":
-                raise Exception("Extraction of reflectance stopped")
+        # if diff_nb_obs or missing_obs or added_obs:
+        #     print("Changes to "+ str(obs_path) + " have been detected since last extracting reflectances to " + str(export_path))
+        #     if diff_nb_obs:
+        #         print("Different number of observations detected")
+        #     if missing_obs:
+        #         print("Some observations are missing, already extracted reflectance will stay untouched")
+        #     if added_obs:
+        #         print("Some observations were added, their reflectance will be extracted")
+        #     answer = input("Do you want to continue ? (yes/no)")
+        #     if answer != "yes":
+        #         raise Exception("Extraction of reflectance stopped")
 
         return extracted_reflectance
     else:
