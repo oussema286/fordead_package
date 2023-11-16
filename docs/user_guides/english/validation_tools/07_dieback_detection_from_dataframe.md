@@ -12,6 +12,7 @@ Results at the acquisition level can also be saved for further analysis.
  - name_column : *str* : Name of the ID column. The default is 'id'.
  - update_masked_vi : *bool*, optional : If True, updates the csv at masked_vi_path with the columns 'period_id', 'state', 'predicted_vi', 'diff_vi' and 'anomaly'. The default is False.
  - threshold_anomaly : *float*, optional : Threshold at which the difference between the actual and predicted vegetation index is considered as an anomaly. The default is 0.16.
+ - stress_index_mode : *str*, optional : Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, no stress period index is computed. The default is None.
  - vi : str, optional : Chosen vegetation index. The default is "CRSWIR".
  - path_dict_vi : *str*, optional : Path to a text file used to add potential vegetation indices. If not filled in, only the indices provided in the package can be used (CRSWIR, NDVI, NDWI). The file [ex_dict_vi.txt](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_vi.txt) gives an example for how to format this file. One must fill the index's name, formula, and "+" or "-" according to whether the index increases or decreases when anomalies occur. The default is None.
 
@@ -25,7 +26,7 @@ The 'state' column can now hold the following values :
 - **Stress** : Period beginning with 3 successive anomalies, ending with the last anomaly before three successive non-anomalies of the beginning of a 'Healthy' period.
 - **Dieback** : Period beginning with 3 successive anomalies, ending with the last available acquisition, or the beggining of a Bare ground period.
 - **Invalid** : The pixel is invalid, there were not enough valid acquisitions to compute a harmonic model
-A new column 'anomaly_intensity' is also added, it is a weighted mean of the difference between the calculated vegetation indices and their predicted value for the period. The weight is the number of the date within that period (1+2+3+...+ nb_dates). It is only calculated for 'Healthy', 'Stress' and 'Dieback' periods
+A new column 'anomaly_intensity' is also added. Depending on *stress_index_mode*, it is either a mean, or a weighted mean of the difference between the calculated vegetation indices and their predicted value for the period. The weight is the number of the date within that period (1+2+3+...+ nb_dates). It is only calculated for 'Healthy', 'Stress' and 'Dieback' periods
 
 if `update_masked_vi = True`, this function also updates the csv at 'masked_vi_path' with the following columns:
 - **period_id** : id of the period the acquisition is associated with

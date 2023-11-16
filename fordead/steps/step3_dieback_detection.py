@@ -19,7 +19,7 @@ from fordead.model_vegetation_index import prediction_vegetation_index, correct_
 @click.option("--max_nb_stress_periods",  type=int, default=5,
                     help="Maximum number of stress periods", show_default=True)
 @click.option("--stress_index_mode",  type=str, default=None,
-                    help="Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no informations are saved.", show_default=True)
+                    help="Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no informations on stress periods are saved.", show_default=True)
 @click.option("--vi",  type=str, default=None,
                     help="Chosen vegetation index, only useful if step1 was skipped", show_default=True)
 @click.option("--path_dict_vi",  type=str, default=None,
@@ -71,7 +71,7 @@ def dieback_detection(
     stress_index_mode : str
         Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed.
         If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly.
-        If None, the stress periods are not detected, and no informations are saved.
+        If None, the stress periods are not detected, and no informations on stress periods are saved.
     vi : str
         Chosen vegetation index, only useful if step1 was skipped
     path_dict_vi : str

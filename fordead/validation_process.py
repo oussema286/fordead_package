@@ -359,11 +359,17 @@ def detect_state_changes(data_frame, name_column):
 
     return dated_changes
 
-def compute_stress_index(detection_dates, periods, name_column):
+def compute_stress_index(detection_dates, periods, name_column, stress_index_mode):
     
     detection_dates = detection_dates.merge(periods.rename(columns = {"first_date" : "Date"}).drop(columns=["last_date"]), on=["area_name", name_column,"id_pixel","Date"], how='left') 
     detection_dates = detection_dates.ffill()
-    period_stress_index = detection_dates.groupby(by = ["area_name", name_column,"id_pixel","period_id"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).reset_index(name = "anomaly_intensity")
+    
+    if stress_index_mode == "mean":
+        period_stress_index = detection_dates.groupby(by = ["area_name", name_column,"id_pixel","period_id"]).apply(lambda x : (x.diff_vi.mean())).reset_index(name = "anomaly_intensity")
+    elif stress_index_mode == "weighted_mean":
+        period_stress_index = detection_dates.groupby(by = ["area_name", name_column,"id_pixel","period_id"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).reset_index(name = "anomaly_intensity")
+    else:
+        raise Exception("stress_index_mode '" + stress_index_mode + "' not recognised")
     periods = periods.merge(period_stress_index, on=["area_name", name_column,"id_pixel","period_id"], how='left') 
   
     return periods

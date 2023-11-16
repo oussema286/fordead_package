@@ -103,8 +103,6 @@ def mask_vi_from_dataframe(reflectance_path,
 
     reflect = pd.read_csv(reflectance_path)
     
-
-    
     if cloudiness_path is not None:
         reflect = filter_cloudy_acquisitions(reflect, cloudiness_path, lim_perc_cloud)
         
