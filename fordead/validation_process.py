@@ -56,7 +56,7 @@ def get_test_id(test_info_path, tile_parameters_dataframe):
     if test_info_path.exists():
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            test_info_dataframe = pd.read_csv(test_info_path, dtype = str, converters = {'path_dict_vi': custom_converter})
+            test_info_dataframe = pd.read_csv(test_info_path, dtype = str, converters = {'path_dict_vi': custom_converter, 'cloudiness_path': custom_converter})
         # test_info_dataframe = pd.read_csv(test_info_path, converters = {'path_dict_vi': custom_converter})
 
         existing_test_id = already_existing_test(test_info_dataframe, tile_parameters_dataframe)
