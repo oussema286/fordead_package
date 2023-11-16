@@ -1,18 +1,11 @@
 import pandas as pd
 from shapely.geometry import Polygon, Point
-import json
 import rasterio
-import xarray as xr
 import geopandas as gp
-import pandas as pd
-import ast
 from pathlib import Path
-from scipy.linalg import lstsq
 import numpy as np
 from rasterio.crs import CRS
 
-from fordead.masking_vi import get_dict_vi
-from fordead.masking_vi import compute_vegetation_index
 from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 
 
@@ -500,3 +493,60 @@ def get_already_extracted(export_path, obs, obs_path, name_column):
         return None
     
     
+
+# def extract_raster_values_vrt(points,sentinel_dir):
+#     """Must have the same crs"""
+
+# from osgeo import gdal
+
+#     tile = TileInfo(sentinel_dir)
+#     tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+#     tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
+    
+#     coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
+#     dates = list(tile.paths["Sentinel"])
+#     bands = list(tile.paths["Sentinel"][list(tile.paths["Sentinel"])[0]])
+
+#     dict_data = {"id_obs" : [id_obs for id_obs in points.id_obs for date in dates],
+#                  "id_pixel" : [id_pixel for id_pixel in points.id_pixel for date in dates],
+#                  "Date" : [date for id_obs in points.id_obs for date in dates]}
+#     for band in bands:
+#         print(band)
+#         dict_data[band] = []
+#         path_list = [str(tile.paths["Sentinel"][date][band]) for date in dates]
+#         gdal.BuildVRT(str(sentinel_dir / "vrt.vrt"), path_list, separate=True)
+#         with rasterio.open(str(sentinel_dir / "vrt.vrt")) as raster:
+#             reflect_band = raster.sample(coord_list)
+#             # dict_data[band] = list(reflect_band)
+#             # list(reflect_band)
+#             for x in reflect_band:
+#                 dict_data[band] += list(x)
+
+#     reflectance = pd.DataFrame(data=dict_data)
+#     return reflectance
+    
+
+# def extract_raster_values_chunks(points,sentinel_dir):
+#     """Must have the same crs"""
+#     tile = TileInfo(sentinel_dir)
+#     tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+#     tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
+    
+#     coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
+
+    # dates = list(tile.paths["Sentinel"])
+#     bands = list(tile.paths["Sentinel"][list(tile.paths["Sentinel"])[0]])
+    
+    
+#     list_bands=[]
+#     for band in bands:
+#         print(band)
+#         list_bands += [xr.open_mfdataset(path_list,concat_dim = "Time", combine = "nested", chunks = 1280, parallel=True).assign_coords(Time=dates).band_data]
+#         # stack_bands=stack_bands.assign_coords(band=bands)
+#     stack_bands=xr.concat(list_bands,dim="band").assign_coords(band=bands)
+#     # stack_bands = stack_bands.chunk(1280)  
+    
+#     list_point = [stack_bands.sel(x=point[0], y=point[1], method="nearest") for point in coord_list]
+#     data=xr.concat(list_point,dim="id")
+#     data.to_dataframe()
+

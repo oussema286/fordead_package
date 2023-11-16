@@ -7,6 +7,7 @@
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import warnings
 
 import ast
 from scipy.linalg import lstsq
@@ -33,9 +34,31 @@ def already_existing_test(df1,df2):
     else:
         return None
 
+# def get_test_id(test_info_path, tile_parameters_dataframe):
+#     if test_info_path.exists():
+#         test_info_dataframe = pd.read_csv(test_info_path, dtype = str)
+#         existing_test_id = already_existing_test(test_info_dataframe, tile_parameters_dataframe)
+#         if existing_test_id is not None:
+#             print("Already existing test with the same parameters (test_id : " + str(existing_test_id) + ")\nResults were not copied\n")
+#             test_id =  None
+#         else:
+#             test_id = test_info_dataframe["test_id"].astype(int).max()+1
+#     else:
+#         test_id = 1
+        
+#     return test_id
+def custom_converter(value):
+    if value == 'None':
+        return 'None'
+    return value
+
 def get_test_id(test_info_path, tile_parameters_dataframe):
     if test_info_path.exists():
-        test_info_dataframe = pd.read_csv(test_info_path, dtype = str)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            test_info_dataframe = pd.read_csv(test_info_path, dtype = str, converters = {'path_dict_vi': custom_converter})
+        # test_info_dataframe = pd.read_csv(test_info_path, converters = {'path_dict_vi': custom_converter})
+
         existing_test_id = already_existing_test(test_info_dataframe, tile_parameters_dataframe)
         if existing_test_id is not None:
             print("Already existing test with the same parameters (test_id : " + str(existing_test_id) + ")\nResults were not copied\n")
@@ -45,8 +68,7 @@ def get_test_id(test_info_path, tile_parameters_dataframe):
     else:
         test_id = 1
         
-    return test_id
-        
+    return test_id    
 
 def get_default_args(func):
     signature = inspect.signature(func)
@@ -245,7 +267,7 @@ def model_vi_dataframe(data_frame, name_column):
     data_frame['Date'] = pd.to_datetime(data_frame['Date'])
     data_frame["date_as_number"] = (data_frame['Date'] - pd.to_datetime("2015-01-01")).dt.days
   
-    coeff_vi = data_frame.groupby(["area_name",name_column,"id_pixel"]).apply(lambda x: model(x.date_as_number, x.vi, x.id_pixel)).reset_index()
+    coeff_vi = data_frame.groupby(["area_name",name_column,"id_pixel"], group_keys=False).apply(lambda x: model(x.date_as_number, x.vi, x.id_pixel)).reset_index()
     
     coeff_vi.columns = ["area_name",name_column,"id_pixel", "coeff"]
     coeff_vi[["coeff1","coeff2","coeff3", "coeff4","coeff5"]] = pd.DataFrame(coeff_vi.coeff.tolist(), index= coeff_vi.index)
