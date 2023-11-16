@@ -398,7 +398,7 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column,
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
             
             # date_band_value_list += [extraction]
-            
+        
         extraction.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
         
     print('\r', "               \n" , sep='', end='', flush=True)

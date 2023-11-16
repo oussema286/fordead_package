@@ -21,7 +21,7 @@ import numpy as np
 @click.option("--masked_vi_path", type = str, help = "Path used to write the csv containing the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.")
 @click.option("--periods_path", type = str, help = "Path used to write the csv containing the first date of the training periods for each pixel and, if soil_detection is True, the first date of detected bare ground.")
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
-@click.option("--cloudiness_path", type = str, help = "Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/)")
+@click.option("--cloudiness_path", type = str, default = None, help = "Path of a csv with the columns 'area_name','Date' and 'cloudiness' used to filter acquisitions, can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/). Not used if not given.", show_default=True)
 @click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
 @click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
 @click.option("--soil_detection",  is_flag=True, help = "If True, bare ground is detected and used as mask, but the process has not been tested on other data than THEIA data in France (see https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/). If False, mask from formula_mask is applied.", show_default=True)
@@ -30,7 +30,8 @@ import numpy as np
 @click.option("-b","--list_bands", type = list, default = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"], help = "Bands to import and use ex : -b B2 -b  B3 -b B11", show_default=True)
 @click.option("--apply_source_mask",  is_flag=True, help = "If True, applies the mask from SENTINEL-data supplier", show_default=True)
 @click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
-def cli_mask_vi_from_dataframe(reflectance_path,masked_vi_path, periods_path,name_column,cloudiness_path, vi, lim_perc_cloud, soil_detection,formula_mask, path_dict_vi,list_bands, apply_source_mask,sentinel_source):
+@click.option("--ignored_period", multiple=True, type = str, default = None, help = "Period whose Sentinel dates to ignore (format 'MM-DD', ex : --ignored_period 11-01 --ignored_period 05-01", show_default=True)
+def cli_mask_vi_from_dataframe(reflectance_path,masked_vi_path, periods_path,name_column, cloudiness_path, vi, lim_perc_cloud, soil_detection,formula_mask, path_dict_vi,list_bands, apply_source_mask,sentinel_source, ignored_period):
     """
     Computes the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.
     Filters out data by applying the fordead mask (if soil_detection is True) or a user mask defined by the user. 
@@ -48,7 +49,7 @@ def mask_vi_from_dataframe(reflectance_path,
                            masked_vi_path,
                            periods_path,
                            name_column,
-                           cloudiness_path,
+                           cloudiness_path = None,
                            vi = "CRSWIR",
                            lim_perc_cloud = 0.4,
                            soil_detection = True,
@@ -56,7 +57,8 @@ def mask_vi_from_dataframe(reflectance_path,
                            path_dict_vi = None,
                            list_bands =  ["B2","B3","B4", "B8", "B8A", "B11","B12"],
                            apply_source_mask = False,
-                           sentinel_source = "THEIA"
+                           sentinel_source = "THEIA",
+                           ignored_period = None
                            ):
     """
     Computes the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.
@@ -77,7 +79,7 @@ def mask_vi_from_dataframe(reflectance_path,
     name_column : str
         Name of the ID column. The default is 'id'.
     cloudiness_path : str (optional)
-        Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/)
+        Path of a csv with the columns 'area_name','Date' and 'cloudiness' used to filter acquisitions, can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/). Not used if None.
     vi : str, optional
         Chosen vegetation index. If using a custom one or one unavailable in this package, it can be added using the path_dict_vi parameter. The default is "CRSWIR".
     lim_perc_cloud : float, optional
@@ -94,14 +96,22 @@ def mask_vi_from_dataframe(reflectance_path,
         If True, the mask of the provider is also used to mask the data. The default is False.
     sentinel_source : str, optional
         Provider of the data among 'THEIA' and 'Scihub' and 'PEPS'.. The default is "THEIA".
-
+    ignored_period : list of two strings
+        Period whose Sentinel acquisitions to ignore (format 'MM-DD', ex : ["11-01","05-01"])
     """
     
 
     reflect = pd.read_csv(reflectance_path)
+    
+
+    
     if cloudiness_path is not None:
         reflect = filter_cloudy_acquisitions(reflect, cloudiness_path, lim_perc_cloud)
         
+    if ignored_period is not None:
+        reflect['Date'] = reflect['Date'].astype(str)
+        reflect = reflect[(reflect["Date"].str[5:] > min(ignored_period)) & (reflect["Date"][5:].str[5:] < max(ignored_period))]        
+    
     reflect = reflect.sort_values(by=["area_name",name_column,'id_pixel', 'Date'])
     
     reflect, first_date_bare_ground = compute_and_apply_mask(reflect, soil_detection, formula_mask, list_bands, apply_source_mask, sentinel_source, name_column)

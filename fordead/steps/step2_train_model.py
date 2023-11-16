@@ -22,15 +22,7 @@ from fordead.writing_data import write_tif
 @click.option("--correct_vi",  is_flag=True, help = "If True, corrects vi using large scale median vi", show_default=True)
 @click.option("--path_vi", type = str,default = None, help = "Path of directory containing vegetation indices for each date. If None, the information has to be saved from a previous step", show_default=True)
 @click.option("--path_masks", type = str,default = None, help = "Path of directory containing masks for each date.  If None, the information has to be saved from a previous step", show_default=True)
-def cli_train_model(
-    data_directory,
-    nb_min_date = 10,
-    min_last_date_training="2018-01-01",
-    max_last_date_training="2018-06-01",
-    correct_vi = False,
-    path_vi=None,
-    path_masks = None,
-    ):
+def cli_train_model(data_directory,nb_min_date,min_last_date_training, max_last_date_training,correct_vi, path_vi,path_masks):
     """
     Uses first SENTINEL dates to train a periodic vegetation index model capable of predicting the vegetation index at any date.
     If there aren't nb_min_date at min_last_date_training, later dates between min_last_date_training and max_last_date_training can be used.
@@ -38,7 +30,7 @@ def cli_train_model(
     
     \f
     """
-    train_model(data_directory,nb_min_date,min_last_date_training,max_last_date_training, correct_vi, path_vi,path_masks)
+    train_model(**locals())
 
 
 def train_model(

@@ -359,8 +359,6 @@ def detect_state_changes(data_frame, name_column):
 
     return dated_changes
 
-
-
 def compute_stress_index(detection_dates, periods, name_column):
     
     detection_dates = detection_dates.merge(periods.rename(columns = {"first_date" : "Date"}).drop(columns=["last_date"]), on=["area_name", name_column,"id_pixel","Date"], how='left') 
