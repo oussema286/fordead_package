@@ -210,7 +210,11 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
         # item.properties["cloud_cover"] = item.properties['eo:cloud_cover']
         item.properties["tilename"] = "T" + item.properties['s2:mgrs_tile']
         #Changing B01 to B1, up to B9, and SCL to Mask in item asset names
-
+        
+        if item.properties["datetime"] >= "2022-01-25":
+            item.properties["offset"] = -1000
+        else:
+            item.properties["offset"] = 0
         for key_change in corresp_keys:
             item.assets[corresp_keys[key_change]] = item.assets.pop(key_change)
             
@@ -222,7 +226,6 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
     
 
     return collection
-
 
 def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile):
     # lim_cloud_cover = int(lim_perc_cloud*100)
@@ -249,7 +252,7 @@ def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date
                 #Changing 'CLM' to 'Mask' 
                 for key_change in corresp_keys:
                     item.assets[corresp_keys[key_change]] = item.assets.pop(key_change) #Might be changed in the future
-                    
+                item.properties["offset"] = 0
             collection = collection.filter(datetime=f"{start_date}/{end_date}")
             
             if tile_cloudiness is not None : collection = collection.filter(filter = f'cloud_cover < {lim_perc_cloud}') 

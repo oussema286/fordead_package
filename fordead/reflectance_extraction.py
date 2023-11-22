@@ -389,7 +389,11 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column,
             
                 with rasterio.open(image, 'r', driver='GTiff', sharing=True, tiled=True, blockxsize=256, blockysize=256) as raster:
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
-            
+                
+                if item.properties["offset"] != 0:
+                    print(extraction[band])
+                    extraction[band] = (extraction[band].astype('int')-1000).clip(lower=0).astype('uint16')
+                    print(extraction[band])
             # date_band_value_list += [extraction]
         
         extraction.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))

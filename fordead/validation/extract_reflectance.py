@@ -126,15 +126,15 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
 if __name__ == '__main__':
         
         #Locally
-        extract_reflectance(
-            obs_path = "D:/fordead/fordead_data/calval_output/preprocessed_obs_tuto.shp",
-            sentinel_source = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
-            cloudiness_path = "D:/fordead/fordead_data/calval_output/extracted_cloudiness.csv",
-            lim_perc_cloud = 0.4,
-            export_path = "D:/fordead/fordead_data/calval_output/test_extract_theia1.csv",
-            name_column = "id",
-            start_date = "2018-01-01",
-            end_date = "2018-03-01")
+        # extract_reflectance(
+        #     obs_path = "D:/fordead/fordead_data/calval_output/preprocessed_obs_tuto.shp",
+        #     sentinel_source = "D:/fordead/fordead_data/sentinel_data/validation_tutorial/sentinel_data", 
+        #     cloudiness_path = "D:/fordead/fordead_data/calval_output/extracted_cloudiness.csv",
+        #     lim_perc_cloud = 0.4,
+        #     export_path = "D:/fordead/fordead_data/calval_output/test_extract_theia1.csv",
+        #     name_column = "id",
+        #     start_date = "2018-01-01",
+        #     end_date = "2018-03-01")
         
         # extract_reflectance(
         #     obs_path = "D:/fordead/fordead_data/calval_output/preprocessed_obs_tuto.shp",
@@ -147,11 +147,11 @@ if __name__ == '__main__':
         #     end_date = "2018-03-01")
         
         # # #Planetary
-        # extract_reflectance(
-        #     obs_path = "D:/fordead/fordead_data/calval_output/preprocessed_obs_tuto.shp",
-        #     sentinel_source = "Planetary", 
-        #     export_path = "D:/fordead/fordead_data/calval_output/test_extract_planetary.csv",
-        #     name_column = "id",
-        #     lim_perc_cloud = 0.4,
-        #     start_date = "2018-01-01",
-        #     end_date = "2018-03-01")
+        extract_reflectance(
+            obs_path = "D:/fordead/fordead_data/calval_output/preprocessed_obs_tuto.shp",
+            sentinel_source = "Planetary", 
+            export_path = "D:/fordead/fordead_data/calval_output/test_extract_planetary.csv",
+            name_column = "id",
+            lim_perc_cloud = 0.4,
+            start_date = "2022-01-01",
+            end_date = "2022-04-01")
