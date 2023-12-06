@@ -5,19 +5,21 @@ Created on Tue Feb 16 13:53:50 2021
 @author: Raphael Dutrieux
 """
 from pathlib import Path
-import os
 from zipfile import ZipFile, BadZipfile
 import numpy as np
 import rasterio
 import shutil
-
-from fordead.import_data import retrieve_date_from_string, TileInfo
-
 import glob
 import json
 import time
+import os
 import os.path
 import sys
+from datetime import datetime, timedelta
+
+from fordead.import_data import retrieve_date_from_string, TileInfo
+
+
 # from datetime import date, datetime
 if sys.version_info[0] == 2:
     from urllib import urlencode
@@ -436,3 +438,31 @@ def merge_same_date(bands,out_dir):
             else:
                 shutil.rmtree(str(doublon)) #Supprime les inutiles
                 print("Suppresion doublons")
+                
+
+def decompose_interval(start_date, end_date):
+    # Convert input strings to datetime objects
+    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+    # Initialize the list to store decomposed intervals
+    intervals = []
+
+    # Check if the interval is longer than a year
+    while start_date < end_date:
+        next_year = start_date + timedelta(days=365)
+        
+        # Adjust for leap year
+        if next_year.year % 4 == 0 and (next_year.year % 100 != 0 or next_year.year % 400 == 0):
+            next_year += timedelta(days=1)
+
+        # Determine the end date for the current interval
+        interval_end = min(next_year, end_date)
+
+        # Append the current interval to the list
+        intervals.append((start_date, interval_end))
+
+        # Move the start date to the beginning of the next interval
+        start_date = interval_end
+
+    return intervals
