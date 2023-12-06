@@ -7,6 +7,7 @@ Created on Wed Jan 20 09:18:18 2021
 
 import click
 from pathlib import Path
+from datetime import date
 from fordead.theia_preprocess import unzip_theia, merge_same_date, delete_empty_zip, theia_download, missing_theia_acquisitions, decompose_interval
 
 
@@ -56,7 +57,7 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, p
     start_date : str, optional
         start date, fmt('2015-12-22'). The default is "2015-06-23".
     end_date : str, optional
-        end date, fmt('2015-12-22'). The default is "2023-06-23".
+        end date, fmt('2015-12-22'). The default is None.
     lim_perc_cloud : int, optional
         Maximum cloudiness in SENTINEL dates downloaded (%). The default is 50.
     bands : list of str
@@ -72,6 +73,10 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, p
     
     zipped_directory = Path(zipped_directory)
     unzipped_directory = Path(unzipped_directory)
+    print("test")
+    if end_date is None:
+        end_date = date.today().strftime('%Y-%m-%d')
+    
     for tuile in tiles:
         print("\n Downloading THEIA data for tile " + tuile + "\n")
         (zipped_directory / tuile).mkdir(exist_ok=True)   
