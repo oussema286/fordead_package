@@ -56,7 +56,21 @@ def bdforet_paths_in_zone(example_raster, dep_path, bdforet_dirpath):
     dep_in_zone=gp.overlay(tile_extent,departements)
 
     #Charge la BD FORET des départements concernés et filtre selon le peuplement
-    bdforet_paths = [shp_path for shp_path in Path(bdforet_dirpath).glob("**/*.shp") if str(shp_path).split("_")[-2][-2:] in list(dep_in_zone.code_insee)]   
+    # bdforet_paths = [shp_path for shp_path in Path(bdforet_dirpath).glob("**/*.shp") if str(shp_path).split("_")[-2][-2:] in list(dep_in_zone.code_insee)]
+    shp_paths = [shp_path for shp_path in Path(bdforet_dirpath).glob("**/*.shp")]
+    
+    bdforet_paths = []
+    for path in shp_paths:
+        if "FORMATION_VEGETALE" in str(path):
+            dep = str(path).split("_")[-1][:2]
+        elif "BD_Foret_V2_Dep" in str(path):
+            dep = str(path).split("_")[-2][-2:]
+        else:
+            dep = "Unrecognized BDFORET shapefile"
+            print(dep)
+        if dep in list(dep_in_zone.code_insee):
+            bdforet_paths += [path]
+   
     return bdforet_paths, tile_extent
 
 
