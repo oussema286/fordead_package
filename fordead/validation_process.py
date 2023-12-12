@@ -368,7 +368,7 @@ def detect_state_changes(data_frame, name_column):
     first_dates = data_frame.groupby(by = ["area_name", name_column,"id_pixel","group"]).first().reset_index()[["area_name", name_column, "id_pixel","group","Date"]]
     
     dated_changes = changes.merge(first_dates, on=["area_name", name_column, "id_pixel","group"], how='left') #Rajouter la première date du groupe, perdue pendant le goup_by
-    dated_changes["state"] = dated_changes.groupby(["area_name", name_column,"id_pixel"]).apply(get_state).reset_index(name="state").state
+    dated_changes["state"] = dated_changes.groupby(["area_name", name_column,"id_pixel"]).apply(get_state).reset_index().rename(columns = {0:"state"}).state
     dated_changes = dated_changes[['area_name', name_column, 'id_pixel','Date','state']].rename(columns = {"Date" : "first_date"})
     
     
