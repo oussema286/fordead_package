@@ -116,6 +116,7 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
                 unfinished = False
             except Exception as e:
                 traceback_str = traceback.format_exc()
+                # print(f"Error: {e}")
                 print(f"Error: {e}\nTraceback:\n{traceback_str}")
                 print("Retrying...")
 
