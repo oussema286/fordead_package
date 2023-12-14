@@ -245,7 +245,12 @@ def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date
                 
                 #Adding cloud_cover to theia_collection 
                 if tile_cloudiness is not None:
-                    date_datetime = datetime.strptime(item.properties["datetime"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    try:
+                        date_datetime = datetime.strptime(item.properties["datetime"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    except ValueError:
+                        date_datetime = datetime.strptime(item.properties["datetime"], "%Y-%m-%dT%H:%M:%SZ")
+
+                    
                     acqu_cloudiness = tile_cloudiness[tile_cloudiness.Date == date_datetime.strftime("%Y-%m-%d")]["cloudiness"].values[0]
                     item.properties["cloud_cover"] = acqu_cloudiness
                 
