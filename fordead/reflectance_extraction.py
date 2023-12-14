@@ -387,9 +387,7 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column,
             for band in bands_to_extract:
                 image = item.assets[band].href
             
-                print(coord_list)
                 with rasterio.open(image, 'r', driver='GTiff', sharing=True, tiled=True, blockxsize=256, blockysize=256) as raster:
-                    print(raster)
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
                 
                 if item.properties["offset"] != 0:
