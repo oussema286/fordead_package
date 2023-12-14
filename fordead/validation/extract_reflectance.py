@@ -12,7 +12,7 @@ from pathlib import Path
 # from fordead.reflectance_extraction import get_reflectance_at_points
 from fordead.reflectance_extraction import get_already_extracted, extract_raster_values
 from fordead.stac.stac_module import get_bbox, get_harmonized_planetary_collection, get_harmonized_theia_collection
-import traceback
+# import traceback
 
 import numpy as np
 
@@ -115,9 +115,9 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
                 extract_raster_values(tile_obs, collection, tile_already_extracted, name_column, bands_to_extract, export_path)
                 unfinished = False
             except Exception as e:
-                traceback_str = traceback.format_exc()
-                # print(f"Error: {e}")
-                print(f"Error: {e}\nTraceback:\n{traceback_str}")
+                # traceback_str = traceback.format_exc()
+                print(f"Error: {e}")
+                # print(f"Error: {e}\nTraceback:\n{traceback_str}")
                 print("Retrying...")
 
         # if raster_tile_values is None:

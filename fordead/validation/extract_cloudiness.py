@@ -28,7 +28,7 @@ def cli_extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_s
     extract_cloudiness(**locals())
 
 
-def extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_source = "THEIA"):
+def extract_cloudiness(sentinel_dir, export_path, tile_selection = None, sentinel_source = "THEIA"):
     """
     
     For each acquisition, extracts percentage of pixels in the mask provided by the Sentinel-2 data provider.
