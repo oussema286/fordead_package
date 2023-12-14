@@ -118,9 +118,8 @@ def export_results(
                 stress_data = import_stress_data(tile.paths)
                 stress_list = []
                 for period in range(tile.parameters["max_nb_stress_periods"]):
-                    print(period)
                     stress_period = stress_index.isel(period = period)
-                    print(stress_period)
+                    print(conf_threshold_list)
                     stress_class = vectorizing_confidence_class(stress_period, stress_data.nb_dates.isel(period = period), (relevant_area & (period < stress_data["nb_periods"])).compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
                     if stress_class.size != 0:
                         stress_start_date = stress_data["date"].isel(change = period*2)
