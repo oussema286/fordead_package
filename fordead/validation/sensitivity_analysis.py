@@ -130,9 +130,11 @@ def sensitivity_analysis(testing_directory, reflectance_path, args_to_test, clou
             
 
             combine_validation_results(csv_path_list = [pixel_info_path, 
-                                                        periods_path],
+                                                        periods_path,
+                                                        masked_vi_path],
                                        merged_csv_path_list = [testing_directory / "merged_pixel_info.csv", 
-                                                        testing_directory / "merged_periods.csv"],
+                                                        testing_directory / "merged_periods.csv",
+                                                        testing_directory / "merged_masked_vi.csv"],
                                        test_info_path = test_info_path,
                                        args_dataframe = args_dataframe, test_id = test_id)
     

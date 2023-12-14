@@ -16,7 +16,7 @@ from fordead.import_data import TileInfo, get_band_paths, get_cloudiness
 @click.command(name='extract_cloudiness')
 @click.option("--sentinel_dir", type = str,default = None, help = "Path of the directory containing Sentinel-2 data.", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted cloudiness", show_default=True)
-@click.option("-t","--tile_selection", multiple=True, type = str, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.", show_default=True)
+@click.option("-t","--tile_selection", multiple=True, type = str, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ).", show_default=True)
 @click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
 def cli_extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_source):
     """
