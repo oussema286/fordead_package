@@ -85,46 +85,41 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
     if (sentinel_source != "Planetary") and (cloudiness_path is not None):
         cloudiness = pd.read_csv(cloudiness_path)
 
-    
-                
-    # obs_bbox = get_vectorBbox(obs_path)
-
     if tile_selection is None:
         tile_selection = np.unique(obs.area_name)
     for tile in tile_selection:
 
         tile_obs = obs[obs["area_name"] == tile]
-        tile_obs = tile_obs.to_crs(epsg = tile_obs.epsg.values[0])
-        
-        unfinished = True
-        while unfinished:
-            try:
-                extracted_reflectance = get_already_extracted(export_path, obs, obs_path, name_column)
-                
-                if extracted_reflectance is not None:
-                    tile_already_extracted = extracted_reflectance[extracted_reflectance["area_name"] == tile]
-                else:
-                    tile_already_extracted = None
-                
-                if sentinel_source == "Planetary":
-                    collection = get_harmonized_planetary_collection(start_date, end_date, get_bbox(tile_obs), lim_perc_cloud, tile)
-                else:
-                    tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
-                    collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
-           
-                extract_raster_values(tile_obs, collection, tile_already_extracted, name_column, bands_to_extract, export_path)
-                unfinished = False
-            except Exception as e:
-                # traceback_str = traceback.format_exc()
-                print(f"Error: {e}")
-                # print(f"Error: {e}\nTraceback:\n{traceback_str}")
-                print("Retrying...")
+        if len(tile_obs)==0:
+            print("No observations in selected tile "+ tile)
+        else:
+            
+            tile_obs = tile_obs.to_crs(epsg = tile_obs.epsg.values[0])
+            
+            unfinished = True
+            while unfinished:
+                try:
+                    extracted_reflectance = get_already_extracted(export_path, obs, obs_path, name_column)
+                    
+                    if extracted_reflectance is not None:
+                        tile_already_extracted = extracted_reflectance[extracted_reflectance["area_name"] == tile]
+                    else:
+                        tile_already_extracted = None
+                    
+                    if sentinel_source == "Planetary":
+                        collection = get_harmonized_planetary_collection(start_date, end_date, get_bbox(tile_obs), lim_perc_cloud, tile)
+                    else:
+                        tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
+                        collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
+               
+                    extract_raster_values(tile_obs, collection, tile_already_extracted, name_column, bands_to_extract, export_path)
+                    unfinished = False
+                except Exception as e:
+                    # traceback_str = traceback.format_exc()
+                    print(f"Error: {e}")
+                    # print(f"Error: {e}\nTraceback:\n{traceback_str}")
+                    print("Retrying...")
 
-        # if raster_tile_values is None:
-        #     print("No new data to extract")
-        # else:
-        #     print("Data extracted")
-        #     raster_tile_values.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
 
 if __name__ == '__main__':
         
