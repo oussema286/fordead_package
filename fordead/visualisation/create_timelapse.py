@@ -39,7 +39,7 @@ def timelapse():
 @click.option("-y", "--y", type = int, help = "Coordinate y in the crs of the Sentinel-2 tile. Not used if timelapse is made using a shapefile")
 @click.option("--buffer", type = int, default = 100, help = "Buffer around polygons or points for the extent of the timelapse", show_default=True)
 @click.option("--vector_display_path", type = str, help = "Path of the shapefile with ground observations")
-@click.option("-h","--hover_column_list", multiple=True, type=str, default=None, help="List of columns to display when hovering mouse over vectors of vector_display_path", show_default=True)
+@click.option("-d","--hover_column_list", multiple=True, type=str, default=None, help="List of columns to display when hovering mouse over vectors of vector_display_path", show_default=True)
 @click.option("--max_date", type = str, default = None, help = "Last date used in the timelapse")
 @click.option("--show_confidence_class",  is_flag=True, help = "If True, detected dieback is shown with the confidence class at the last date used, as vectorized in the step [05_export_results](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_export_results/)", show_default=True)
 @click.option("--zip_results",  is_flag=True, help = "If True, puts timelapses in a zip file", show_default=True)
