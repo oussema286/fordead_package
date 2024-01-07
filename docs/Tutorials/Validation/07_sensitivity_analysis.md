@@ -5,6 +5,7 @@ In order to calibrate *fordead*, it is possible to test many parameter combinati
 
 For example, we might want to test several threshold_anomaly values, on several vegetation indices. 
 
+
 ##### Running this step in a script
 
 In the following script, we will test threshold_anomaly values from 0.01 to 0.2 with a 0.01 step, with three vegetation indices : CRSWIR, NDWI and NDVI. 
