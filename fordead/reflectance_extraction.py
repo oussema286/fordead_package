@@ -198,7 +198,7 @@ def get_polygons_from_sentinel_dirs(sentinel_dir, list_tiles):
     # concat_areas.to_file("E:/fordead/Data/Vecteurs/aa_concat_areas.shp")
     return concat_areas
 
-# def get_sen_intersection(obs_polygons, sen_polygons, name_column):
+
 
 
 

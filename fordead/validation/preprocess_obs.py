@@ -50,7 +50,7 @@ def preprocess_obs(obs_path, export_path, buffer = None, name_column = "id"):
         obs = buffer_obs(obs, buffer, name_column)
         
     if Path(export_path).exists():
-        raise Exception(export_path + " already exists.")
+        raise Exception(str(export_path) + " already exists.")
     obs.to_file(export_path)
     
 

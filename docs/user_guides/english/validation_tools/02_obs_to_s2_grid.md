@@ -54,8 +54,11 @@ The vector file at **obs_path** is imported using the geopandas package.
 
 ### Creating a Sentinel-2 tiles extent vector
 #### If sentinel_source is a directory containing Sentinel-2  data
-- Available Sentinel-2 tiles in the **sentinel_source** directory are listed
-- The extent of each listed Sentinel-2 tiles is extracted and converted to a GeoDataFrame 
+- If using local Sentinel-2 data :
+	- Available Sentinel-2 tiles in the **sentinel_source** directory are listed
+	- The extent of each listed Sentinel-2 tiles is extracted and converted to a GeoDataFrame 
+- If using Planetary :
+	- The extent of Sentinel-2 tiles are extracted from the full collection and converted to a GeoDataFrame 
 - Each GeoDataFrame is given the attributes *area_name* and *epsg*, corresponding to the name of the directory containing the tile data, and the epsg of the tile.
 - All GeoDataFrames are concatenated
  > **_Function used:_** [get_polygons_from_sentinel_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/reflectance_extraction/#get_polygons_from_sentinel_dirs)
