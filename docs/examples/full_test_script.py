@@ -10,7 +10,7 @@ from fordead.validation.extract_cloudiness import extract_cloudiness
 from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
 from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
 from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
-
+from fordead.validation.sensitivity_analysis import sensitivity_analysis
 
 
 # output_dir = Path("<MyOutputDirectory>")
@@ -86,6 +86,7 @@ dieback_detection_from_dataframe(
                 pixel_info_path = test_output_dir / "calibration_validation" / "pixel_info_theia.csv",
                 periods_path = output_dir / test_output_dir / "calibration_validation" / "periods_theia.csv",
                 name_column = "id",
+                stress_index_mode = "mean",
                 update_masked_vi = True)
 
 
@@ -105,8 +106,22 @@ reflectance_path = test_output_dir / "calibration_validation" / "extracted_refle
 extract_reflectance(
     obs_path = preprocessed_obs_path,
     sentinel_source = "Planetary", 
-    lim_perc_cloud = 0.5,
+    lim_perc_cloud = 0.3,
     export_path = reflectance_path,
     name_column = "id")
 
 print("Applying FORDEAD")
+
+#########################################################
+print("Sensitivity analysis")
+sensitivity_dir = (test_output_dir / "calibration_validation" / "sensitivity_analysis")
+sensitivity_dir.mkdir(parents=True, exist_ok=True)
+
+args_to_test = {"threshold_anomaly" : [0.08,0.09,0.1,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19], 
+                "vi" : ["CRSWIR","NDVI"]}
+
+sensitivity_analysis(testing_directory = sensitivity_dir,
+                    reflectance_path = reflectance_path,
+                    name_column = 'id',
+                    update_masked_vi = False,
+                    args_to_test = args_to_test)

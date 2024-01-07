@@ -45,7 +45,7 @@ reflectance_path = output_dir / "extracted_reflectance.csv"
 extract_reflectance(
     obs_path = preprocessed_obs_path,
     sentinel_source = "Planetary", 
-    lim_perc_cloud = 0.5,
+    lim_perc_cloud = 0.3,
     export_path = reflectance_path,
     name_column = "id")
 

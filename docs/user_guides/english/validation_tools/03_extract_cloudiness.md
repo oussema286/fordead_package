@@ -39,7 +39,7 @@ extract_cloudiness(
 	sentinel_source = <sentinel_source>)
 ```
 
-#### from the command invite
+#### From the command invite
 
 This step can also be ran from the command prompt. 
 ```bash

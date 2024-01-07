@@ -133,7 +133,7 @@ def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_pa
     
     if update_masked_vi:
         masked_vi = add_diff_vi_to_vi(masked_vi, pixel_info, threshold_anomaly, vi, path_dict_vi, name_column)
-        masked_vi = add_status_to_vi(masked_vi, periods, name_column)
+        masked_vi = add_status_to_vi(masked_vi, periods, name_column, stress_index_mode)
         masked_vi.to_csv(masked_vi_path, mode='w', index=False,header=True)
         
         

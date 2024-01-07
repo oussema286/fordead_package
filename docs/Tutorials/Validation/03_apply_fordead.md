@@ -39,6 +39,7 @@ dieback_detection_from_dataframe(
                 pixel_info_path = output_dir / "fordead_results/pixel_info_tuto.csv",
                 periods_path = output_dir / "fordead_results/periods_tuto.csv",
                 name_column = "id",
+                stress_index_mode = "mean",
                 update_masked_vi = True)
 ```
 
@@ -50,11 +51,28 @@ The complete user guides can be found here :
 -----
 ### OUTPUT
 -----
-The results are condensed in the csv at *periods_path* , giving information on all periods :
+There are three resulting files:
 
-![periods_final](Figures/periods_final.jpg "periods_final")
-
-A more detailed csv is updated at *masked_vi_path*, and now holds the following information : 
+- In the *masked_vi_path* csv, information at the acquisition level with the following columns :
+	- **epsg** : The CRS of the Sentinel-2 tile from which data was extracted
+	- **area_name** : The name of the Sentinel-2 tile from which data was extracted
+	- an ID column corresponding to the **name_column** parameter
+	- **id_pixel** : The ID of the pixel
+	- **Date** : The date of the Sentinel-2 acquisition
+	- **vi** : The value of the vegetation index
+	- **predicted_vi** : The prediction of the vegetation index using the harmonic model
+	- **diff_vi** : Difference between the vegetation and its prediction, in the expected direction of anomalies for the vegetation index
+	- **anomaly** : True if 'diff_vi' exceeds 'threshold_anomaly', else False
+	- **period_id** : id of the period the acquisition is associated with
+	- **state** : Status of of the associated period, can be 'Training', 'Healthy', 'Stress', 'Dieback' or 'Invalid'.
 
 ![masked_vi_updated](Figures/masked_vi_updated.jpg "masked_vi_updated")
 
+
+- In the *periods_path* csv, information at the period level for each pixel. See details [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/07_dieback_detection_from_dataframe).
+
+![periods_final](Figures/periods_final.jpg "periods_final")
+
+- In the *pixel_info_path* csv, information at the pixel level, with the last date used for training the harmonic model of vegetation index prediction, and the 5 coefficients of the adjusted model.
+
+![pixel_info](Figures/pixel_info.jpg "pixel_info")

@@ -134,6 +134,9 @@ def sensitivity_analysis(testing_directory, reflectance_path, args_to_test, clou
             #                                             testing_directory / "merged_masked_vi.csv"],
             #                             test_info_path = test_info_path,
             #                             args_dataframe = args_dataframe, test_id = test_id)
+            
+            args_dataframe["test_id"] = test_id
+            args_dataframe.to_csv(test_info_path, mode='a', index=False,header=not(test_info_path.exists()))
     
     # if (testing_directory / "temp_dir").exists():
     #     shutil.rmtree(testing_directory / "temp_dir")

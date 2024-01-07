@@ -486,9 +486,13 @@ def add_diff_vi_to_vi(masked_vi, pixel_info, threshold_anomaly, vi, path_dict_vi
 
     return masked_vi
 
-def add_status_to_vi(masked_vi, periods, name_column):
+def add_status_to_vi(masked_vi, periods, name_column, stress_index_mode):
         
-    masked_vi = masked_vi.merge(periods.rename(columns = {"first_date" : "Date"}).drop(columns=["last_date","anomaly_intensity"]), on=["area_name", name_column,"id_pixel","Date"], how='left') 
+    if stress_index_mode is not None:
+        masked_vi = masked_vi.merge(periods.rename(columns = {"first_date" : "Date"}).drop(columns=["last_date","anomaly_intensity"]), on=["area_name", name_column,"id_pixel","Date"], how='left') 
+    else:
+        masked_vi = masked_vi.merge(periods.rename(columns = {"first_date" : "Date"}).drop(columns=["last_date"]), on=["area_name", name_column,"id_pixel","Date"], how='left') 
+
     if "bare_ground" in masked_vi.columns:
         masked_vi = masked_vi.drop(columns=["bare_ground"])
     for col in ['period_id', 'state']:
