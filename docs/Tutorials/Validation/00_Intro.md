@@ -6,6 +6,9 @@ This CALVAL module can be used to explore and compare the results obtained from 
 - identify the combination of spectral index, anomaly treshold and other input variables, resulting in optimal detection for a given type of dieback/degradation.
 - validate the optimal combination with quantitative indicators
 
+Here is the CALVAL module workflow diagram :
+
+![workflow_calval](Figures/workflow_calval.png "workflow_calval")
 ## Requirements
 ### Package installation 
 Follow the [installation instruction guide](https://fordead.gitlab.io/fordead_package/docs/Installation/) if relevant. 

@@ -2,33 +2,58 @@
 
 The vector file created in the previous step is used to extract reflectance from Sentinel-2 data.
 
-##### Running this step using a script
+### Using local Sentinel-2 data
 
 Add the following instructions to your script to extract reflectance corresponding to datapoints saved in **preprocessed_obs_path** from Sentinel-2 time series.
-First make sure that the directory defined in the **export_path** variable exists.
+In this example, we choose to extract only data from acquisitions with a cloud cover under 30%, so we need to compute and extract cloud cover from the THEIA mask first, before extracting reflectance from relevant acquisitions.
+
+```python
+from fordead.validation.extract_reflectance import extract_reflectance
+from fordead.validation.extract_cloudiness import extract_cloudiness
+
+cloudiness_path = output_dir / "extracted_cloudiness.csv"
+reflectance_path = output_dir / "extracted_reflectance.csv"
+
+extract_cloudiness(
+	sentinel_dir = sentinel_dir, 
+	export_path = extracted_cloudiness_path,
+	sentinel_source = "THEIA")
+
+extract_reflectance(
+    obs_path = preprocessed_obs_path,
+    sentinel_source = sentinel_dir, 
+    cloudiness_path = cloudiness_path,
+    lim_perc_cloud = 0.3,
+    export_path = reflectance_path,
+    name_column = "id")
+
+```
+
+See complete user guides [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/03_extract_cloudiness) and [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/04_extract_reflectance)
+
+### Using Planetary Computer
+
+Add the following instructions to your script to extract reflectance corresponding to datapoints saved in **preprocessed_obs_path** from Sentinel-2 time series.
+In this example, we choose to extract only data from acquisitions with a cloud cover under 50%.
+
 
 ```python
 from fordead.validation.extract_reflectance import extract_reflectance
 
-extracted_reflectance_path = output_dir / "extracted_reflectance.csv"
+reflectance_path = output_dir / "extracted_reflectance.csv"
 
 extract_reflectance(
     obs_path = preprocessed_obs_path,
-    sentinel_dir = sentinel_dir, 
-    export_path = extracted_reflectance_path,
+    sentinel_source = "Planetary", 
+    lim_perc_cloud = 0.3,
+    export_path = reflectance_path,
     name_column = "id")
 
 
 ```
 
-##### Running this step from the command invite
-
-This step can also be ran from the command prompt. 
-```bash
-fordead extract_reflectance --obs_path <MyWorkingDirectory>/vector/preprocessed_obs_tuto.shp --sentinel_dir <MyWorkingDirectory>/sentinel_data/validation_tutorial/sentinel_data/ --export_path <MyWorkingDirectory>/extracted_reflectance.csv --name_column id
-```
-
-The command `fordead extract_reflectance -h` will print the help information of this step. For example, to use it with the same parameters, the following command can be used:
+See complete user guide [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/04_extract_reflectance)
+## Output
 
 The csv written in **export_path** includes the following attributes corresponding to the different pixels : 
 - epsg: 
@@ -37,7 +62,7 @@ The csv written in **export_path** includes the following attributes correspondi
 - id_pixel:
 - Date: date of acquisition
 - B2-B11: reflectance extracted from Sentinel-2 data for the corresponding pixel [sort by increasing wavelength: B2-B11, not B11-B8A]
-- Mask: 
+- Mask : SCL value for Planetary, CLM value for THEIA 
 
 ![extracted_reflectance](Figures/extracted_reflectance.png "extracted_reflectance")
 
@@ -46,6 +71,4 @@ New Sentinel-2 acquisitions or ground observations will be appended to the file 
 
 The update procedure can be tested with additional Sentinel-2 data located in <MyWorkingDirectory>/validation_tutorial/sentinel_data_update:
 copy and paste this additional data to the sentinel_data directory and run this step again.
-
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/01_preprocessing_observations)
 

@@ -17,6 +17,7 @@ import click
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
 @click.option("--update_masked_vi",  is_flag=True, help = "If True, updates the csv at masked_vi_path with the columns 'period_id', 'state', 'predicted_vi', 'diff_vi' and 'anomaly'", show_default=True)
 @click.option("-s", "--threshold_anomaly",  type=float, default=0.16, help="Minimum threshold for anomaly detection", show_default=True)
+@click.option("--stress_index_mode", type=str, default = None, help="Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, no stress period index is computed.", show_default=True)
 @click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
 @click.option("--path_dict_vi", type = str,default = None, help = "Path to a text file used to add potential vegetation indices. If not filled in, only the indices provided in the package can be used (CRSWIR, NDVI, NDWI). The file [ex_dict_vi.txt](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_vi.txt) gives an example for how to format this file. One must fill the index's name, formula, and '+' or '-' according to whether the index increases or decreases when anomalies occur.", show_default=True)
 def cli_dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_path, name_column, update_masked_vi, threshold_anomaly, vi, path_dict_vi):
@@ -43,7 +44,7 @@ def cli_dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, period
     
 
 def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_path, name_column = "id", update_masked_vi = False,
-                                     threshold_anomaly = 0.16, vi = "CRSWIR", path_dict_vi = None):
+                                     threshold_anomaly = 0.16, stress_index_mode = None, vi = "CRSWIR", path_dict_vi = None):
     """
     
     Updates of the csv file containing periods, so for each pixel, the whole time series is covered with the first and last unmasked Sentinel-2 acquisition date of each period, and its associated state.
@@ -78,6 +79,10 @@ def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_pa
         If True, updates the csv at masked_vi_path with the columns 'period_id', 'state', 'predicted_vi', 'diff_vi' and 'anomaly'. The default is False.
     threshold_anomaly : float, optional
         Threshold at which the difference between the actual and predicted vegetation index is considered as an anomaly. The default is 0.16.
+    stress_index_mode : str, optional
+        Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed.
+        If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly.
+        If None, no stress period index is computed.
     vi : str, optional
         Chosen vegetation index. The default is "CRSWIR".
     path_dict_vi : str, optional
@@ -124,11 +129,11 @@ def dieback_detection_from_dataframe(masked_vi_path, pixel_info_path, periods_pa
  
     periods = fill_periods(periods,dated_changes, masked_vi, name_column)
 
-    periods = compute_stress_index(detection_dates, periods, name_column)
+    if stress_index_mode is not None: periods = compute_stress_index(detection_dates, periods, name_column, stress_index_mode)
     
     if update_masked_vi:
         masked_vi = add_diff_vi_to_vi(masked_vi, pixel_info, threshold_anomaly, vi, path_dict_vi, name_column)
-        masked_vi = add_status_to_vi(masked_vi, periods, name_column)
+        masked_vi = add_status_to_vi(masked_vi, periods, name_column, stress_index_mode)
         masked_vi.to_csv(masked_vi_path, mode='w', index=False,header=True)
         
         

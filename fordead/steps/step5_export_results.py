@@ -11,6 +11,8 @@ from fordead.writing_data import vectorizing_confidence_class, get_bins, convert
 import numpy as np
 import geopandas as gp
 import pandas as pd
+import warnings
+warnings.filterwarnings("ignore", message="`unary_union` returned None due to all-None GeoSeries. In future, `unary_union` will return 'GEOMETRYCOLLECTION EMPTY' instead.")
 
 @click.command(name='export_results')
 @click.option("-o", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
@@ -119,6 +121,7 @@ def export_results(
                 stress_list = []
                 for period in range(tile.parameters["max_nb_stress_periods"]):
                     stress_period = stress_index.isel(period = period)
+                    conf_threshold_list = np.array(conf_threshold_list).astype(float)
                     stress_class = vectorizing_confidence_class(stress_period, stress_data.nb_dates.isel(period = period), (relevant_area & (period < stress_data["nb_periods"])).compute(), conf_threshold_list, np.array(conf_classes_list), tile.raster_meta["attrs"])
                     if stress_class.size != 0:
                         stress_start_date = stress_data["date"].isel(change = period*2)
@@ -127,7 +130,6 @@ def export_results(
                         # stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + str(period+1) + ".shp"))
                         # vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + str(period+1) + ".shp"))
                         stress_list += [gp.overlay(vector_stress_start, stress_class, how='intersection',keep_geom_type = True)]
-
                 # for period_date in pd.unique(vector_stress_start["period"]):
                 #     for class_stress in pd.unique(stress_class["class"]):
                 #         stress_list += [gp.overlay(vector_stress_start[vector_stress_start["period"]==period_date], stress_class[stress_class["class"] == class_stress], how='intersection',keep_geom_type = True)]

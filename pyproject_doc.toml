@@ -13,7 +13,7 @@
 #    docs_dir = "docs"
 # output_dir = "site"
 #    modules = ["fordead"]
-    modules = ["fordead.dieback_detection", "fordead.import_data", "fordead.masking_vi", "fordead.maja_fun", "fordead.model_vegetation_index", "fordead.writing_data", "fordead.validation_module"]
+    modules = ["fordead.dieback_detection", "fordead.import_data", "fordead.masking_vi", "fordead.model_vegetation_index", "fordead.writing_data", "fordead.reflectance_extraction"]
     extra_markdown_extensions = ['mdx_breakless_lists', 'mkdocs-click']
 
 [[tool.portray.extra_markdown_extensions]]
@@ -82,13 +82,7 @@ Installation = "docs/Installation.md"
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
 			"Extracting reflectance" = "docs/Tutorials/Validation/02_extract_reflectance.md"
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
-			"Extracting cloudiness (optional)" = "docs/Tutorials/Validation/03_extract_cloudiness.md"
-			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
-			"Vegetation index and masks computing" = "docs/Tutorials/Validation/04_computing_vegetation_index_and_masks.md"
-			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
-			"Training harmonic model for each pixel" = "docs/Tutorials/Validation/05_training_model_from_dataframe.md"
-			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
-			"Dieback and stress detection" = "docs/Tutorials/Validation/06_dieback_detection_from_dataframe.md"
+			"Applying the FORDEAD method" = "docs/Tutorials/Validation/03_apply_fordead.md"
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
 			"Sensitivity analysis" = "docs/Tutorials/Validation/07_sensitivity_analysis.md"
 
@@ -111,10 +105,10 @@ Installation = "docs/Installation.md"
 		"01_preprocess_obs" = "docs/user_guides/english/validation_tools/01_preprocess_obs.md"
 		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
 		"02_obs_to_s2_grid" = "docs/user_guides/english/validation_tools/02_obs_to_s2_grid.md"
+				[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
+		"03_extract_cloudiness" = "docs/user_guides/english/validation_tools/03_extract_cloudiness.md"
 		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
-		"03_extract_reflectance" = "docs/user_guides/english/validation_tools/03_extract_reflectance.md"
-		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
-		"04_extract_cloudiness" = "docs/user_guides/english/validation_tools/04_extract_cloudiness.md"
+		"04_extract_reflectance" = "docs/user_guides/english/validation_tools/04_extract_reflectance.md"
 		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]
 		"05_compute_masks_and_vegetation_index_from_dataframe" = "docs/user_guides/english/validation_tools/05_compute_masks_and_vegetation_index_from_dataframe.md"
 		[[tool.portray.mkdocs.nav."User guides".English."Validation tools"]]

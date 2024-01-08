@@ -16,6 +16,108 @@ import shutil
 from scipy import ndimage
 import geopandas as gp
 
+
+# class sat_reader():
+    
+#     def read(self, date, tuile)
+
+class Sat_catalog_theia(object):
+    
+    def __init__(self,input_directory):
+        self.input_directory = input_directory
+        self.build_catalog("Sentinel")
+        #Check unused acquisitions
+        
+    def build_catalog(self, key):
+        """
+        Parameters
+        ----------
+        path_dir : str
+            Directory containing files with filenames containing dates in the format YYYY-MM-DD, YYYY_MM_DD, YYYYMMDD, DD-MM-YYYY, DD_MM_YYYY or DDMMYYYY
+    
+        Returns
+        -------
+        dict_datepaths : dict
+            Dictionnary linking formatted dates with the paths of the files from which the dates where extracted
+    
+        """
+        path_dir=Path(self.input_directory)
+        dict_datepaths={}
+        for path in path_dir.glob("*"):
+            if not(".xml" in str(path)): #To ignore temporary files
+                formatted_date=retrieve_date_from_string(path.stem)
+                if formatted_date != None: #To ignore files or directories with no dates which might be in the same directory
+                    dict_datepaths[formatted_date] = path
+            
+        sorted_dict_datepaths = dict(sorted(dict_datepaths.items(), key=lambda key_value: key_value[0]))
+        self.paths[key] = sorted_dict_datepaths
+    
+    def read(self, list_bands, interpolation_order = 0, extent = None):
+        """
+        Imports and resamples the bands as an xarray
+    
+        Parameters
+        ----------
+        band_paths : dict
+            Dictionnary where keys are bands and values are their paths
+        list_bands : list
+            List of bands to be imported
+        interpolation_order : int, optional
+            Order of interpolation as used in scipy's ndimage.zoom (0 = nearest neighbour, 1 = linear, 2 = bi-linear, 3 = cubic). The default is 0.
+        extent : list or 1D array, optional
+            Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
+    
+        Returns
+        -------
+        concatenated_stack_bands : xarray
+            3D xarray with dimensions x,y and band
+    
+        """
+        #Importing data from files
+        
+        band_paths = self.paths["Sentinel"]
+        
+        if extent is None:
+            stack_bands = [rioxarray.open_rasterio(band_paths[band]) for band in list_bands]
+        else:
+            stack_bands = [rioxarray.open_rasterio(band_paths[band],chunks = 1280).loc[dict(x=slice(extent[0]-20, extent[2]+20),y = slice(extent[3]+20,extent[1]-20))].compute() for band in list_bands]
+        crs = stack_bands[0].rio.crs
+        #Resampling at 10m resolution
+        for band_index in range(len(stack_bands)):
+            if stack_bands[band_index].rio.resolution()==(20.0,-20.0):            
+                # stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=interpolation_order), 
+                #                                        coords=stack_bands[0].coords)
+                stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=interpolation_order), 
+                                                       coords={"band" : [1], 
+                                                               "y" : np.linspace(stack_bands[band_index].isel(x=0,y=0).y+5, stack_bands[band_index].isel(x=0,y=stack_bands[band_index].sizes["y"]-1).y-5, num=stack_bands[band_index].sizes["y"]*2),
+                                                               "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x+5, num=stack_bands[band_index].sizes["x"]*2)},
+                                                       dims=["band","y","x"]).rio.write_crs(crs)
+            if extent is not None:
+                stack_bands[band_index] = clip_xarray(stack_bands[band_index], extent)
+    
+        # concatenated_stack_bands.rio.crs
+        concatenated_stack_bands= xr.concat(stack_bands,dim="band")
+        concatenated_stack_bands.coords["band"] = list_bands
+        concatenated_stack_bands.attrs["nodata"] = 0
+    
+        return concatenated_stack_bands
+        
+# class sat_catalog_planetary():
+#     def __init__(input_directory):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def get_band_paths(dict_sen_paths):
     """
     Retrieves paths to each SENTINEL band for each date from the paths of the directories containing these bands for each date.
@@ -120,7 +222,7 @@ class TileInfo:
 
         """
         self.data_directory = Path(data_directory)
-        self.data_directory.mkdir(parents=True, exist_ok=True)   
+        self.data_directory.mkdir(parents=True, exist_ok=True)
         self.paths={}
         
         # print(globals())

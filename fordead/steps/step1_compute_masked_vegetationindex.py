@@ -220,5 +220,3 @@ if __name__ == '__main__':
     # start_time_debut = time.time()
     cli_compute_masked_vegetationindex()
     # print("Calcul des masques et du CRSWIR : %s secondes ---" % (time.time() - start_time_debut))
-
-

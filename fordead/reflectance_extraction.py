@@ -1,26 +1,18 @@
-import os
 import pandas as pd
 from shapely.geometry import Polygon, Point
-import json
 import rasterio
-import xarray as xr
 import geopandas as gp
-import pandas as pd
-import ast
 from pathlib import Path
-from scipy.linalg import lstsq
 import numpy as np
 from rasterio.crs import CRS
-import stac_module as st
 
-#from fordead.masking_vi import get_dict_vi
-#from fordead.masking_vi import compute_vegetation_index
-#from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
+from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
+
+
 # import rasterio.sample
 # =============================================================================
 # PREPROCESS POLYGONS
 # =============================================================================
-
 
 def attribute_id_to_obs(obs, name_column):
     """
@@ -68,7 +60,7 @@ def buffer_obs(obs, buffer, name_column):
     obs['geometry']=obs.geometry.buffer(buffer)
     empty_obs = obs[obs.is_empty]
     if len(empty_obs) != 0:
-        print(str(len(empty_obs)) + " observations were too small for the chosen buffer. \nIds are the following : \n" + ', '.join(map(str, empty_obs[name_column])) + " ")
+        print(str(len(empty_obs)) + " observations were too small for the chosen buffer. \nIds are the following : \n" + ', '.join(map(str, empty_obs[name_column])) + " \n")
     obs=obs[~(obs.is_empty)]
     return obs
 
@@ -77,7 +69,7 @@ def buffer_obs(obs, buffer, name_column):
 #   MAKE GRID POINTS
 # =============================================================================
 
-def get_grid_points(obs_polygons, item_collection, name_column):
+def get_grid_points(obs_polygons, sen_polygons, name_column):
     """
     Generates points in a grid corresponding to the centroids of Sentinel-2 pixels inside the polygons.
     
@@ -90,6 +82,8 @@ def get_grid_points(obs_polygons, item_collection, name_column):
         Path of directory containing Sentinel-2 data.
     name_column : str
         Name of the column used to identify observations.
+    list_tiles : list
+        A list of names of Sentinel-2 directories. If this parameter is used, extraction is  limited to those directories.
 
     Returns
     -------
@@ -98,70 +92,14 @@ def get_grid_points(obs_polygons, item_collection, name_column):
 
     """
     
-    sen_obs_intersection = get_sen_obs_intersection(obs_polygons, item_collection, name_column)
+    sen_obs_intersection = get_sen_obs_intersection(obs_polygons, sen_polygons, name_column)
     
     grid_points = polygons_to_grid_points(sen_obs_intersection, name_column)
     
-    return grid_points  
-
-def get_sen_obs_intersection(obs_polygons, item_collection, name_column):
-    """
-    Creates a Sentinel-2 tiles extent vector from existing Sentinel-2 data, then intersects it with observations polygons, adding their epsg and name.
-    Polygons which do not fit enterely in at least one existing Sentinel-2 tile are removed.
+    return grid_points
     
-    Parameters
-    ----------
-    obs_polygons : geopandas GeoDataFrame
-        Observation polygons with ID column named after name_column parameter.
-    item_collection : pystac item_collection object
-        Path of directory containing Sentinel-2 data.
-    name_column : str
-        Name of the column used to identify observations.
 
-    Returns
-    -------
-    sen_intersection : geopandas GeoDataFrame
-        Intersection of obs_polygons and Sentinel-2 tiles, adding 'area_name' and 'epsg' columns corresponding to the name of the tile, and the projection system respectively. 
-
-    """
-    
-    sen_polygons = get_polygons_from_sentinel_planetComp(item_collection)
-    sen_obs_intersection = get_sen_intersection(obs_polygons, sen_polygons, name_column)
-    return sen_obs_intersection
-
-def get_polygons_from_sentinel_planetComp(item_collection, outputfile = None):
-    """
-    get image footprint with specified tile crs
-    
-    - item_collection: pystac item_collection object
-
-    return: geopandas dataframe
-    """    
-    test1 = st.get_s2_epsgXY(item_collection)
-    tilesinfo = st.coord2epsg(test1)    
-
-    i = 0
-    for tile in tilesinfo:
-        lon_point_list = [tile[2][0][0],tile[2][1][0],tile[2][1][0],tile[2][0][0]]
-        lat_point_list = [tile[2][2][1],tile[2][2][1],tile[2][0][1],tile[2][0][1]]
-        #polygon_geom = gp.points_from_xy(lon_point_list, lat_point_list)
-        polygon_geom = Polygon(zip(lon_point_list, lat_point_list))
-        polygon = gp.GeoDataFrame(index=[0], crs=f'epsg:{tile[1]}', geometry=[polygon_geom])
-        polygon.insert(1, "area_name", tile[0])
-        polygon.insert(2, "epsg", f'{tile[1]}')
-    if i == 0:
-        concat_areas = polygon
-    else:
-        if concat_areas.crs != polygon.crs:
-                polygon = polygon.to_crs(concat_areas.crs)
-        concat_areas = gp.concat([concat_areas,polygon])
-    
-    if outputfile != None:
-        concat_areas.to_file(outputfile) # a sécuriser
-    
-    return concat_areas
-
-def get_sen_intersection(obs_polygons, sen_polygons, name_column):
+def get_sen_obs_intersection(obs_polygons, sen_polygons, name_column):
     """
     Observations polygons are intesected with Sentinel-2 tiles extent vector. Intersections where the observation polygon did not entirely fit in the sentinel-2 tile are removed.
     Observation polygons which intersect no Sentinel-2 tiles are removed and their IDs are printed.
@@ -182,11 +120,15 @@ def get_sen_intersection(obs_polygons, sen_polygons, name_column):
         Intersection of obs_polygons and sen_polygons, with incomplete intersections removed.
 
     """
-    
-    obs_polygons = obs_polygons.to_crs(sen_polygons.crs)
+    # obs_polygons = obs_polygons.to_crs("2154")
+    # obs_polygons = obs_polygons.to_crs("2154")
+    # obs_polygons.crs
+    sen_polygons = sen_polygons.to_crs(obs_polygons.crs)
+    # obs_polygons = obs_polygons.to_crs(sen_polygons.crs)
     obs_area_tot = obs_polygons[[name_column]]
+    # obs_area_tot = obs_polygons[name_column]
     obs_area_tot.insert(1, "area_tot", obs_polygons.area)
-    
+
     obs_polygons = obs_polygons.merge(obs_area_tot, on= name_column, how='left')
     obs_intersection = gp.overlay(obs_polygons, sen_polygons)
     
@@ -195,10 +137,69 @@ def get_sen_intersection(obs_polygons, sen_polygons, name_column):
     
     unvalid_obs = obs_polygons[~obs_polygons[name_column].isin(obs_intersection[name_column])]
     if len(unvalid_obs) != 0:
-        print("Observations not fitting entirely on one tile found.\nThey are removed from the dataset. \nIds are the following : \n" + ', '.join(map(str, unvalid_obs[name_column])) + " ")
+        print("Observations not fitting entirely on one tile found.\nThey are removed from the dataset. \nIds are the following : \n" + ', '.join(map(str, unvalid_obs[name_column])) + " \n")
     
     # return obs_intersection[[name_column,"area_name","epsg"]]
     return obs_intersection.drop(columns = ["area_intersect","area_tot"])
+    
+    # return sen_obs_intersection
+
+def get_polygons_from_sentinel_dirs(sentinel_dir, list_tiles):
+    """
+    Creates a Sentinel-2 tiles extent vector from existing Sentinel-2 data
+
+    Parameters
+    ----------
+    sentinel_dir : str
+        Path of directory containing Sentinel-2 data.
+    list_tiles : list
+        A list of names of Sentinel-2 directories. If this parameter is used, extraction is  limited to those directories.
+
+    Returns
+    -------
+    concat_areas : geopandas GeoDataFrame
+        Vector containing the extent of Sentinel-2 tiles contained in sentinel_dir directory, with 'epsg' and 'area_name' columns corresponding to the projection system and the name of the tile derived from the name of the directory containing its data.
+
+    """
+    
+    sentinel_dir = Path(sentinel_dir)
+    
+    list_dir = [x for x in sentinel_dir.iterdir() if x.is_dir()]
+    dict_example_raster = {}
+    for directory in list_dir :
+        if list_tiles is None or directory.stem in list_tiles:
+        # for directory in list_dir :
+            tile = TileInfo(directory)
+            tile.getdict_datepaths("Sentinel",directory) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+            tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
+            if len(tile.paths["Sentinel"]) >= 1:
+                dict_example_raster[directory.stem] = list(list(tile.paths["Sentinel"].values())[0].values())[0]
+    if len(dict_example_raster) == 0 :
+        raise Exception("No Sentinel-2 data to extract")
+        
+    for area_index,area in enumerate(dict_example_raster):
+        raster_metadata = get_raster_metadata(dict_example_raster[area])
+        
+        lon_point_list = [raster_metadata["extent"][0],raster_metadata["extent"][2],raster_metadata["extent"][2],raster_metadata["extent"][0]]
+        lat_point_list = [raster_metadata["extent"][1],raster_metadata["extent"][1],raster_metadata["extent"][3],raster_metadata["extent"][3]]
+        # lon_point_list = [raster_metadata["transform"][2], raster_metadata["transform"][2]+raster_metadata["sizes"]["x"]*10, raster_metadata["transform"][2]+raster_metadata["sizes"]["x"]*10, raster_metadata["transform"][2], raster_metadata["transform"][2]]
+        # lat_point_list = [raster_metadata["transform"][5], raster_metadata["transform"][5], raster_metadata["transform"][5]-10*raster_metadata["sizes"]["y"], raster_metadata["transform"][5]-10*raster_metadata["sizes"]["y"],raster_metadata["transform"][5]]
+        polygon_geom = Polygon(zip(lon_point_list, lat_point_list))
+        polygon = gp.GeoDataFrame(index=[0], crs=raster_metadata["crs"], geometry=[polygon_geom])
+        polygon.insert(1, "area_name", area)
+        polygon.insert(2, "epsg", raster_metadata["crs"].to_epsg())
+        
+        if area_index == 0:
+            concat_areas = polygon
+        else:
+            if concat_areas.crs != polygon.crs:
+                polygon = polygon.to_crs(concat_areas.crs)
+            concat_areas = pd.concat([concat_areas,polygon])
+    # concat_areas.to_file("E:/fordead/Data/Vecteurs/aa_concat_areas.shp")
+    return concat_areas
+
+
+
 
 
 # =============================================================================
@@ -207,7 +208,8 @@ def get_sen_intersection(obs_polygons, sen_polygons, name_column):
 def polygons_to_grid_points(polygons, name_column):
     """
     Converts polygons to points corresponding to the centroids of the Sentinel-2 pixels of each Sentinel-2 tile intersecting with the polygons.
-
+    Prints polygons with no pixels centroids inside of them.  
+    
     Parameters
     ----------
     polygons : geopandas GeoDataFrame
@@ -251,13 +253,22 @@ def polygons_to_grid_points(polygons, name_column):
                 obs_grid = gp.clip(obs_grid, polygon)
                 
                 obs_grid.insert(0,name_column,polygon[name_column].iloc[0])
-                obs_grid.insert(1,"id_pixel",range(len(obs_grid)))
+                obs_grid.insert(1,"id_pixel",range(1,len(obs_grid)+1))
                 obs_grid.insert(0,"area_name",area_name)
                 obs_grid.insert(0,"epsg",epsg)
                 obs_grid = obs_grid.to_crs(polygons.crs)
+                
+                if len(obs_grid) == 0:
+                    print("Polygon " + str(polygon.iloc[0][name_column]) + " contains no pixel centroid")
+                
                 grid_list += [obs_grid]
-            
-    grid_points = gp.GeoDataFrame( pd.concat(grid_list, ignore_index=True), crs=grid_list[0].crs)
+                
+        
+    try:
+        grid_points = gp.GeoDataFrame( pd.concat(grid_list, ignore_index=True), crs=grid_list[0].crs)
+    except ValueError:
+        raise Exception("It is probable that none of the observations intersect with the Sentinel-2 data available")
+        
     return grid_points
 
 def get_bounds(obs):
@@ -288,19 +299,14 @@ def get_bounds(obs):
 # =============================================================================
 
 
-def get_reflectance_at_points(grid_points, item_collection, extracted_reflectance, name_column):
-    """
-    Create table with raster values sampled for each XY points
-
-    - grid_points: <geodataframe> of observation points
-    - item_collection: <pystac object> item_collection
-    - extracted_reflectance: <dataframe> output table 
-    - name_column: <string> column name (ID)
-
-    return: <dataframe> update output table 
-    """
-
+def get_reflectance_at_points(grid_points,sentinel_dir, extracted_reflectance, name_column, bands_to_extract, tile_selection):
     reflectance_list = []
+    
+    if tile_selection is not None:
+        grid_points = grid_points[grid_points["area_name"].isin(tile_selection)]
+        if len(grid_points) == 0:
+            raise Exception("No observations in selected tiles")
+    
     for epsg in np.unique(grid_points.epsg):
         print("epsg : " + str(epsg))
         points_epsg = grid_points[grid_points.epsg == epsg]
@@ -315,21 +321,21 @@ def get_reflectance_at_points(grid_points, item_collection, extracted_reflectanc
             else:
                 extracted_reflectance_area = None
             
-            tile_coll = st.tile_filter(item_collection, area_name) 
-            raster_values = extract_raster_values(points_area, tile_coll, extracted_reflectance_area, name_column)
+            raster_values = extract_raster_values(points_area, sentinel_dir / area_name, extracted_reflectance_area, name_column, bands_to_extract)
             
             if raster_values is not None:
                 reflectance_list += [raster_values]
     # reflectance = gp.GeoDataFrame(pd.concat(reflectance_list, ignore_index=True), crs=reflectance_list[0].crs)
     if len(reflectance_list) != 0:
         reflectance = pd.concat(reflectance_list, ignore_index=True)
+        if "Mask" in bands_to_extract:
+            reflectance["Mask"] = reflectance["Mask"].astype(np.uint8)
     else:
         reflectance = None
         
     return reflectance
 
-
-def extract_raster_values(points, tile_coll, extracted_reflectance, name_column):
+def extract_raster_values(points, tile_coll, extracted_reflectance, name_column, bands_to_extract, export_path):
     """
     Sample raster values for each XY points
 
@@ -347,7 +353,7 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column)
     
     coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
     points = points.drop(columns='geometry')
-    date_band_value_list = []
+    # date_band_value_list = []
     
     if extracted_reflectance is not None:
         #Determiner les dates qui restent.
@@ -360,8 +366,12 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column)
         #list_dates de unique dates
     
     for item in tile_coll:
+        
         date = item.properties["datetime"].split('T')[0]
-        #print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
+        # print(date)
+        
+
+        # print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
         extraction = points.copy()
         if extracted_reflectance is not None:
             #Filter les points selon la date
@@ -371,21 +381,29 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column)
             extraction = extraction[~extraction[name_column].isin(extracted_reflectance_date[name_column])]
             
         if len(extraction) != 0:
+            print('\r', date , sep='', end='', flush=True)
             extraction.insert(4,"Date",date)
             # len(extraction.columns)-1
-            for band in ['B01', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B11', 'B12', 'B8A', 'SCL']:
+            for band in bands_to_extract:
                 image = item.assets[band].href
             
-                with rasterio.open(image) as raster:
+                with rasterio.open(image, 'r', driver='GTiff', sharing=True, tiled=True, blockxsize=256, blockysize=256) as raster:
                     extraction[band] = [x[0] for x in raster.sample(coord_list)]
                 
-            date_band_value_list += [extraction]
+                if item.properties["offset"] != 0:
+                    extraction[band] = (extraction[band].astype('int')-1000).clip(lower=0).astype('uint16')
+            # date_band_value_list += [extraction]
+        
+        extraction.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
+        
+    print('\r', "               \n" , sep='', end='', flush=True)
     # reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
-    if len(date_band_value_list) != 0:
-        reflectance = pd.concat(date_band_value_list, ignore_index=True)
-        return reflectance
-    else:
-        return None
+    # if len(date_band_value_list) != 0:
+    #     reflectance = pd.concat(date_band_value_list, ignore_index=True)
+    #     return reflectance
+    # else:
+    #     return None
+
     
 
 # ==========================================================================================================================================================
@@ -394,41 +412,12 @@ def extract_raster_values(points, tile_coll, extracted_reflectance, name_column)
 #   process_points
 # =============================================================================
 
-# def process_points(points, sentinel_dir, name_column):
-#     """
-#     Creates a Sentinel-2 tiles extent vector from existing Sentinel-2 data, then intersects it with observations points, adding their epsg and name.
-
-#     Parameters
-#     ----------
-#     points : geopandas GeoDataFrame
-#         Points used to intersect with Sentinel-2 tiles.
-#     sentinel_dir : str
-#         Path of directory containing Sentinel-2 data.
-#     name_column : str
-#         Name of the ID column in points.
-
-#     Returns
-#     -------
-#     geopandas GeoDataFrame
-#         Points with added 'epsg', 'area_name' and 'id_pixel' columns.
-
-#     """
-    
-#     #Check if already has name_area
-#     # sen_polygons = get_points_area_crs(points, sentinel_dir, name_column)
-    
-#     sen_polygons = get_polygons_from_sentinel_dirs(sentinel_dir)
-    
-#     sen_intersection_points = get_sen_intersection_points(points, sen_polygons, name_column)
-
-#     return sen_intersection_points[["epsg","area_name",name_column,"id_pixel","geometry"]]
-    
-    
-def get_sen_intersection_points(points, sen_polygons, name_column):
+def process_points(points, sen_polygons, name_column):
     """
     Intersects observation points with Sentinel-2 tiles extent vector.
     Adds an 'id_pixel' column filled with 0 so the resulting vector can be used in export_reflectance function.
-
+    Points outside of available Sentinel-2 tiles are detected and their IDs are printed.
+    
     Parameters
     ----------
     points : geopandas GeoDataFrame
@@ -448,12 +437,33 @@ def get_sen_intersection_points(points, sen_polygons, name_column):
     sen_polygons = sen_polygons.to_crs(points.crs)
     obs_intersection = gp.overlay(points, sen_polygons)
     # obs_intersection["id_pixel"] = 0
-    obs_intersection.insert(1,"id_pixel",0) #Insert column
-    return obs_intersection
+    obs_intersection.insert(1,"id_pixel",1) #Insert column
+    
+    outside_points = points[~points[name_column].isin(obs_intersection[name_column])]
+    
+    if len(outside_points) != 0:
+        print(str(len(outside_points)) + " point observations were outside available Sentinel-2 tiles.\nThey are removed from the dataset. \nIds are the following : \n" + ', '.join(map(str, outside_points[name_column])) + " \n")
+
+    if len(obs_intersection) == 0 :
+        raise Exception("No available Sentinel-2 tiles at point locations")
+    
+    return obs_intersection[["epsg","area_name",name_column,"id_pixel","geometry"]]
+    
+    # return sen_intersection_points
+    
+
+# def get_sen_intersection_points(points, sen_polygons, name_column):
+
     
 
 def get_already_extracted(export_path, obs, obs_path, name_column):
-    if os.path.exists(export_path):
+    """
+    
+    Returns already extracted acquisition dates for each observation and each tile.
+
+    """
+    
+    if export_path.exists():
         reflectance = pd.read_csv(export_path)
         if name_column not in reflectance.columns:
             # raise Exception("name_column '"+ name_column + "' not in reflectance.csv found in " + str(export_dir))
@@ -461,28 +471,31 @@ def get_already_extracted(export_path, obs, obs_path, name_column):
 
         extracted_reflectance = reflectance[["area_name", name_column,"Date"]].drop_duplicates()
         
-        obs_extracted = np.unique(extracted_reflectance[name_column])
-        obs_to_extract = np.unique(obs[name_column])
+        # obs_extracted = np.unique(extracted_reflectance[name_column])
+        # obs_to_extract = np.unique(obs[name_column])
         
-        diff_nb_obs = len(obs_extracted) != len(obs_to_extract)
-        missing_obs = not(all(item in obs_to_extract for item in obs_extracted))
-        added_obs = not(all(item in obs_extracted for item in obs_to_extract))
+        # diff_nb_obs = len(obs_extracted) != len(obs_to_extract)
+        # missing_obs = not(all(item in obs_to_extract for item in obs_extracted))
+        # added_obs = not(all(item in obs_extracted for item in obs_to_extract))
         
-        if diff_nb_obs or missing_obs or added_obs:
-            print("Changes to "+ str(obs_path) + " have been detected since last extracting reflectances to " + str(export_path))
-            if diff_nb_obs:
-                print("Different number of observations detected")
-            if missing_obs:
-                print("Some observations are missing, already extracted reflectance will stay untouched")
-            if added_obs:
-                print("Some observations were added, their reflectance will be extracted")
-            answer = input("Do you want to continue ? (yes/no)")
-            if answer != "yes":
-                raise Exception("Extraction of reflectance stopped")
+        # if diff_nb_obs or missing_obs or added_obs:
+        #     print("Changes to "+ str(obs_path) + " have been detected since last extracting reflectances to " + str(export_path))
+        #     if diff_nb_obs:
+        #         print("Different number of observations detected")
+        #     if missing_obs:
+        #         print("Some observations are missing, already extracted reflectance will stay untouched")
+        #     if added_obs:
+        #         print("Some observations were added, their reflectance will be extracted")
+        #     answer = input("Do you want to continue ? (yes/no)")
+        #     if answer != "yes":
+        #         raise Exception("Extraction of reflectance stopped")
 
         return extracted_reflectance
     else:
         return None
+    
+    
+
 # def extract_raster_values_vrt(points,sentinel_dir):
 #     """Must have the same crs"""
 
@@ -538,3 +551,4 @@ def get_already_extracted(export_path, obs, obs_path, name_column):
 #     list_point = [stack_bands.sel(x=point[0], y=point[1], method="nearest") for point in coord_list]
 #     data=xr.concat(list_point,dim="id")
 #     data.to_dataframe()
+

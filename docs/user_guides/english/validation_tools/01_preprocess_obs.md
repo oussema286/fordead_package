@@ -44,11 +44,11 @@ The vector file at **obs_path** is imported using the geopandas package.
 
 ### Adding an ID column to the vector
 If **name_column** does not exist in the vector file, each observation is attributed an ID from 1 to the length of the GeoDataFrame object.
-> **_Functions used:_** [attribute_id_to_obs()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#attribute_id_to_obs)
+> **_Functions used:_** [attribute_id_to_obs()](https://fordead.gitlab.io/fordead_package/reference/fordead/reflectance_extraction/#attribute_id_to_obs)
 
 ### Applying a buffer
 If the **buffer** parameter is used, a buffer is applied on the observations to erode if buffer is negative, or to dilate if it is positive.
-> **_Functions used:_** [buffer_obs()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#buffer_obs)
+> **_Functions used:_** [buffer_obs()](https://fordead.gitlab.io/fordead_package/reference/fordead/reflectance_extraction/#buffer_obs)
 
 ### Exporting the resulting the vector file
 The modified GeoDataFrame object is exported to **export_path**.

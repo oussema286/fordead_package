@@ -10,8 +10,7 @@ import click
 # import geopandas as gp
 from pathlib import Path
 import pandas as pd
-
-# from fordead.validation_module import get_reflectance_at_points, get_already_extracted
+import numpy as np
 from fordead.import_data import TileInfo, get_band_paths, get_cloudiness
 
 @click.command(name='extract_cloudiness')
@@ -29,7 +28,7 @@ def cli_extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_s
     extract_cloudiness(**locals())
 
 
-def extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_source = "THEIA"):
+def extract_cloudiness(sentinel_dir, export_path, tile_selection = None, sentinel_source = "THEIA"):
     """
     
     For each acquisition, extracts percentage of pixels in the mask provided by the Sentinel-2 data provider.
@@ -54,22 +53,26 @@ def extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_sourc
     # if export_path.exists():
     #     extracted_cloudiness = pd.read_csv(export_path)
     
-    
+    list_dir = [x for x in sentinel_dir.iterdir() if x.is_dir()]
     cloudiness_list = []
-    for area_name in tile_selection:
-        print(area_name)
-        tile = TileInfo(sentinel_dir / area_name)
-        tile.getdict_datepaths("Sentinel",sentinel_dir / area_name) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
-        tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
+    for directory in list_dir :
+        if tile_selection is None or directory.stem in tile_selection:
+        # for directory in list_dir :
+            tile = TileInfo(directory)
+            tile.getdict_datepaths("Sentinel",directory) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+            tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
+            if len(tile.paths["Sentinel"]) >= 1:
+                area_name = directory.stem
+                # dict_example_raster[directory.stem] = list(list(tile.paths["Sentinel"].values())[0].values())[0]
+                cloudiness = get_cloudiness(sentinel_dir / area_name / "cloudiness", tile.paths["Sentinel"], sentinel_source) #Returns dictionnary with cloud percentage for each date, except if lim_perc_cloud is set as 1, in which case cloud percentage is -1 for every date so source mask is not used and every date is used 
         
-        cloudiness = get_cloudiness(sentinel_dir / area_name / "cloudiness", tile.paths["Sentinel"], sentinel_source) #Returns dictionnary with cloud percentage for each date, except if lim_perc_cloud is set as 1, in which case cloud percentage is -1 for every date so source mask is not used and every date is used 
-
-        area_cloudiness = pd.DataFrame.from_dict({"area_name" : len(cloudiness)*[area_name], "Date" : cloudiness.keys(), "cloudiness" : cloudiness.values()})
-        cloudiness_list += [area_cloudiness]
+                area_cloudiness = pd.DataFrame.from_dict({"area_name" : len(cloudiness)*[area_name], "Date" : cloudiness.keys(), "cloudiness" : cloudiness.values()})
+                cloudiness_list += [area_cloudiness]
     
     total_cloudiness = pd.concat(cloudiness_list, ignore_index=True)
     total_cloudiness.to_csv(export_path, mode='w', index=False, header=True)
-
+    
+    print("Cloudiness extracted from " + ', '.join(list(np.unique(total_cloudiness.area_name))))
     
 if __name__ == '__main__':
 

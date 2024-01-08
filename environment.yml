@@ -17,4 +17,7 @@ dependencies:
   - netcdf4 <= 4.8.1
   - matplotlib
   - pip:
+    - pystac
+    - pystac_client
+    - planetary_computer
     - git+https://gitlab.com/fordead/fordead_package.git

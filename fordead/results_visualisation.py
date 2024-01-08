@@ -80,8 +80,9 @@ def polygon_from_coordinate_and_radius(coordinates, radius, crs):
 def intersects_area(shape, extent, crs):
     polygon_geom = Polygon(zip([extent[0],extent[2],extent[2],extent[0],extent[0]], 
                                [extent[1],extent[1],extent[3],extent[3],extent[1]]))
-    polygon = gp.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom])       
-    return polygon.intersects(shape)[0]
+    polygon = gp.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom]).reset_index(drop=True)   
+    intersects_bool = polygon.intersects(shape.reset_index(drop=True))[0]
+    return intersects_bool
     
 
 def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date, show_confidence_class):
@@ -106,7 +107,7 @@ def CreateTimelapse(shape,tile,vector_display_path, hover_column_list, max_date,
             
             confidence_index = confidence_index.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
             nb_dates = nb_dates.loc[dict(x=slice(extent[0], extent[2]),y = slice(extent[3],extent[1]))]
-            digitized_confidence = np.digitize(confidence_index,tile.parameters["conf_threshold_list"])
+            digitized_confidence = np.digitize(confidence_index,np.array(tile.parameters["conf_threshold_list"]).astype(float))
             digitized_confidence[nb_dates==3]=0
             
         dieback_data = import_dieback_data(tile.paths)

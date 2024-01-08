@@ -8,10 +8,15 @@ If new acquisitions are added to the Sentinel-2 directory, new data is extracted
 The input parameters are :
 
 - **obs_path** : The path to a vector file containing observation points, must have an ID column corresponding to name_column parameter, an 'area_name' column with the name of the Sentinel-2 tile from which to extract reflectance, and a 'espg' column containing the espg integer corresponding to the CRS of the Sentinel-2 tile.
-- **sentinel_dir** :  The path of the directory containing Sentinel-2 data.
+- **sentinel_source** :  Can be either 'Planetary', in which case data is downloaded from Microsoft Planetary Computer stac catalogs, or the path of the directory containing Sentinel-2 data.
 - **export_path** : The path to write csv file with extracted reflectance.
 - **name_column** *(optional)* : The name of the ID column. The default is "id".
-- **bands_to_extract** *(optional)* : List of bands to extract.
+- **cloudiness_path** *(optional)* : Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/). Can be ignored if sentinel_source is 'Planetary'
+- **lim_perc_cloud**  *(optional)* : Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Between 0 and 1.
+- **bands_to_extract** *(optional)* : List of bands to extract (ex : ["B1","B8A","Mask"]) The "Mask" band corresponds to "CLM" for THEIA data, and "SCL" for Planetary.
+- **tile_selection** *(optional)* : List of tiles from which to extract reflectance (ex : ["T31UFQ", "T31UGQ"]). If None, all tiles are extracted.
+- **start_date** *(optional)* : First date of the period from which to extract reflectance
+- **end_date** *(optional)* : Last date of the period from which to extract reflectance
 
 #### OUTPUT
 
@@ -50,13 +55,14 @@ The vector file at **obs_path** is imported using the geopandas package.
 ### Importing already extracted data if it exists
 - If a file already exists at **export_path**, it is imported.
 - If changes in last extraction's number of observations are detected, a message is printed to the console and the user is asked if they want to continue. This can prevent issues in case the user uses the wrong **obs_path** or **export_path** by mistake.
-> **_Function used:_** [get_already_extracted()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#get_already_extracted)
+> **_Function used:_** [get_already_extracted()](https://fordead.gitlab.io/fordead_package/reference/fordead/reflectance_extraction/#get_already_extracted)
 
 ### Extracting reflectance from Sentinel-2 data
-- For each CRS (*epsg*) and for each Sentinel-2 tile (*area_name*) in observation points
+- For each Sentinel-2 tile (*area_name*) in observation points
+	- An item collection is created either from Microsoft Planetary Computer, or from local THEIA data depending on **sentinel_source**.
 	-  For each Sentinel-2 acquisition and for each band in **bands_to_extract** list
 		 Reflectance is extracted if it was not already done
-> **_Function used:_** [get_reflectance_at_points()](https://fordead.gitlab.io/fordead_package/reference/fordead/validation_module/#get_reflectance_at_points)
+> **_Function used:_** [extract_raster_values()](https://fordead.gitlab.io/fordead_package/reference/fordead/reflectance_extraction/#extract_raster_values), [get_harmonized_planetary_collection()](https://fordead.gitlab.io/fordead_package/reference/fordead/stac/stac_module/#get_harmonized_planetary_collection), [get_harmonized_theia_collection()](https://fordead.gitlab.io/fordead_package/reference/fordead/stac/stac_module/#get_harmonized_theia_collection)
 
 ### Exporting extracted reflectance
 Extracted reflectance is written at **export_path**. 

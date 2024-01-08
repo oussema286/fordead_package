@@ -1,7 +1,7 @@
 # Extracting cloudiness from Sentinel-2 data
 
 # <div align="center"> Extraction of cloudiness from Sentinel-2 data </div>
-
+This step is optionnal if you are extracting data using Planetary, or don't wish to filter acquisitions on cloudiness.
 In this step, the percentage of pixels in the mask provided by the Sentinel-2 data provider is extracted for each acquisition.
 The results are exported in a csv file
 For THEIA, all pixels different to 0 in the CLM mask are considered cloudy
@@ -39,7 +39,7 @@ extract_cloudiness(
 	sentinel_source = <sentinel_source>)
 ```
 
-#### from the command invite
+#### From the command invite
 
 This step can also be ran from the command prompt. 
 ```bash

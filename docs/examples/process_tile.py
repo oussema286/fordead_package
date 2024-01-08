@@ -41,7 +41,7 @@ def parse_command_line():
     parser.add_argument("--dep_path", dest = "dep_path",type = str,default = "/mnt/Data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--bdforet_dirpath", dest = "bdforet_dirpath",type = str,default = "/mnt/Data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
     parser.add_argument("--list_forest_type", dest = "list_forest_type", nargs='+',default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
-    parser.add_argument("--path_oso", dest = "path_oso",type = str,default = "/mnt/Data/OCS_2017_CESBIO.tif", help = "Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
+    parser.add_argument("--path_oso", dest = "path_oso",type = str,default = "/mnt/fordead/Data/Classif_Seed_0_2021.tif", help = "Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
     parser.add_argument("--list_code_oso", dest = "list_code_oso",type = str,default = [17], help = "List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'")
     parser.add_argument("--sentinel_source", dest = "sentinel_source",type = str,default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
     parser.add_argument("--apply_source_mask", dest = "apply_source_mask", action="store_true",default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
@@ -56,9 +56,10 @@ def parse_command_line():
 
     parser.add_argument("--correct_vi", dest = "correct_vi", action="store_true",default = False, help = "If True, corrects vi using large scale median vi")
     parser.add_argument("--stress_index_mode", dest = "stress_index_mode",type = str,default = "weighted_mean", help = "Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no informations are saved")
-    
-    # parser.add_argument('--threshold_list', nargs='+',default = [0.2, 0.265], help="Liste des seuils utilisés pour classer les stades de dépérissement par discrétisation de l'indice de confiance")
-    # parser.add_argument('--classes_list', nargs='+',default = ["Faible anomalie","Forte anomalie"], help="Liste des noms des classes pour la discrétisation de l'indice de confiance. Si threshold_list a une longueur n, classes_list doit avoir une longueur n+1")
+    parser.add_argument("--path_dict_vi", dest = "path_dict_vi",type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used")
+
+    parser.add_argument('--threshold_list', nargs='+',default = [0.2, 0.265], help="Liste des seuils utilisés pour classer les stades de dépérissement par discrétisation de l'indice de confiance")
+    parser.add_argument('--classes_list', nargs='+',default = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"], help="Liste des noms des classes pour la discrétisation de l'indice de confiance. Si threshold_list a une longueur n, classes_list doit avoir une longueur n+1")
 
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
@@ -71,7 +72,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                   min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
                   threshold_anomaly,
                   start_date_results, end_date_results, results_frequency, multiple_files,
-                  correct_vi, stress_index_mode):
+                  correct_vi, stress_index_mode,path_dict_vi, threshold_list, classes_list):
 
     
     sentinel_directory = Path(sentinel_directory)
@@ -95,7 +96,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
                                        extent_shape_path = extent_shape_path,
                                        soil_detection = soil_detection,
                                        ignored_period = ignored_period,
-                                       compress_vi = compress_vi)
+                                       compress_vi = compress_vi,
+                                       path_dict_vi = path_dict_vi)
         file = open(logpath, "a") 
         file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
@@ -127,7 +129,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================    
 
         dieback_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
-                                          threshold_anomaly = threshold_anomaly, stress_index_mode = stress_index_mode)
+                                          threshold_anomaly = threshold_anomaly, stress_index_mode = stress_index_mode, path_dict_vi = path_dict_vi)
         file = open(logpath, "a")
         file.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         file.close()
@@ -141,8 +143,8 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
             end_date = end_date_results,
             frequency= results_frequency,
             multiple_files = multiple_files, 
-            conf_threshold_list = [0.2,0.265],
-            conf_classes_list = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"]
+            conf_threshold_list = threshold_list,
+            conf_classes_list = classes_list
             )
         file = open(logpath, "a")
         file.write("Exporting results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
