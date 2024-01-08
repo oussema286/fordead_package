@@ -1,23 +1,35 @@
-name: fordead_env
+name: fordeadv2
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
-  - python = 3.9.0
-  - numpy <= 1.23
-  - fiona <= 1.8.21
-  - geopandas <= 0.11.0
-  - rasterio <= 1.3.0
-  - xarray <= 2022.3.0
-  - scipy <= 1.8.1
-  - dask <= 2022.6.1
-  - pathlib
-  - rioxarray <= 0.11.1
-  - path
-  - plotly = 5.9.0
-  - netcdf4 <= 4.8.1
+  - dask
+  - eodag
+  - eoreader
+  - fiona
+  - geopandas
   - matplotlib
+  - netcdf4
+  - numpy
+  - path
+  - pathlib
+  - pip
+  - planetary-computer
+  - plotly
+  - python
+  - pystac
+  - pystac-client
+  - rasterio
+  - rioxarray
+  - scipy
+  - stackstac
+  - xarray
+  - xpystac
+  - jsonschema
+  - referencing
+  # - pip:
+  #   - git+https://forgemia.inra.fr/fordeadv2/fordeadv2.git
   - pip:
-    - pystac
-    - pystac_client
-    - planetary_computer
-    - git+https://gitlab.com/fordead/fordead_package.git
+    # conda version of stac-geoparquet is old, v0.3.2+ needed for datetime correct conversion
+    - stac-geoparquet
+    - git+https://github.com/floriandeboissieu/stac-static@patch-1
