@@ -14,11 +14,11 @@ dependencies:
   - path
   - pathlib
   - pip
-  - planetary-computer
+  - planetary_computer
   - plotly
   - python
   - pystac
-  - pystac-client
+  - pystac_client
   - rasterio
   - rioxarray
   - scipy
@@ -33,3 +33,4 @@ dependencies:
     # conda version of stac-geoparquet is old, v0.3.2+ needed for datetime correct conversion
     - stac-geoparquet
     - git+https://github.com/floriandeboissieu/stac-static@patch-1
+    - git+https://gitlab.com/fordead/fordead_package.git
