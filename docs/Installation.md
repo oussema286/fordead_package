@@ -14,6 +14,8 @@ If you do not have conda installed, we recommend installing [mambaforge](https:/
 
 ### Install
 
+From the anaconda prompt or the miniconda prompt command invite, use the following commands to create a working environment :
+
 ```bash
 mamba env create -n fordead -f https://gitlab.com/fordead/fordead_package/-/raw/master/environment.yml
 conda activate fordead
@@ -22,22 +24,6 @@ conda activate fordead
 The conda environment can be deleted using the following command :
 ```bash
 conda env remove -n fordead
-```
-
-## Pypi install
-
-Virtualenv is recommended in order to avoid side effects on other installed packages: see [Creation of a virtualenv](https://docs.python.org/3/library/venv.html).
-
-### Requirements
-
-Fordead depends on Rasterio for raster manipulations: see requirements for [Rasterio](https://rasterio.readthedocs.io/en/stable/installation.html).
-
-Git may also be needed [git](https://git-scm.com/).
-
-### Install
-
-```bash
-pip install -r https://gitlab.com/fordead/fordead_package/-/raw/master/requirements.txt
 ```
 
 ## Using Docker
@@ -58,8 +44,6 @@ The contents of this working directory will be available in the "/mnt" directory
 Then activate the virtual environment containing all dependencies, and install the fordead package.
 ```bash
 conda activate fordead
-cd <your_fordead_package_directory>
-pip install .
 ```
 
 You can now use all of fordead's [command line functions](https://fordead.gitlab.io/fordead_package/docs/cli/) or run python scripts using fordead functions from there.
