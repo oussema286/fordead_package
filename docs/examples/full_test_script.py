@@ -4,6 +4,15 @@
 from pathlib import Path
 import shutil
 
+from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
+from fordead.steps.step2_train_model import train_model
+from fordead.steps.step3_dieback_detection import dieback_detection
+from fordead.steps.step4_compute_forest_mask import compute_forest_mask
+from fordead.steps.step5_export_results import export_results
+
+from fordead.visualisation.create_timelapse import create_timelapse
+from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
+
 from fordead.validation.obs_to_s2_grid import obs_to_s2_grid
 from fordead.validation.extract_reflectance import extract_reflectance
 from fordead.validation.extract_cloudiness import extract_cloudiness
@@ -20,8 +29,6 @@ input_dir = Path("D:/fordead/05_SUBPROJECTS/13_test_tuto/fordead_data")
 
 
 #########################################################
-obs_path = input_dir / "vector/observations_tuto.shp"
-sentinel_dir = input_dir / "sentinel_data/validation_tutorial/sentinel_data/"
 test_output_dir = output_dir / "test_output_dir"
 #########################################################
 # Creating directories
@@ -32,12 +39,64 @@ test_output_dir.mkdir(parents=True, exist_ok=True)
 (test_output_dir / "calibration_validation").mkdir(parents=True, exist_ok=True)
 # (test_output_dir / "dieback_detection").mkdir(parents=True, exist_ok=True)
 
+#########################################################
+print("Testing dieback detection")
+
+data_directory = test_output_dir / "dieback_detection"
+
+compute_masked_vegetationindex(input_directory = input_dir / "sentinel_data" / "dieback_detection_tutorial" / "study_area", 
+                               data_directory = data_directory, 
+                               lim_perc_cloud = 0.4, 
+                               interpolation_order = 0, 
+                               sentinel_source  = "THEIA", 
+                               soil_detection = False, 
+                               formula_mask = "B2 > 600", 
+                               vi = "CRSWIR", 
+                               apply_source_mask = True)
+
+train_model(data_directory = data_directory, 
+            nb_min_date = 10, 
+            min_last_date_training="2018-01-01", 
+            max_last_date_training="2018-06-01")
+
+dieback_detection(data_directory = data_directory, 
+                  threshold_anomaly = 0.16,
+                  stress_index_mode = "weighted_mean")
+
+compute_forest_mask(data_directory, 
+                    forest_mask_source = "vector", 
+                    vector_path = input_dir / "vector/area_interest.shp")
+
+export_results(data_directory = data_directory, 
+               frequency= "M", 
+               multiple_files = False, 
+               conf_threshold_list = [0.265],
+               conf_classes_list = ["Low anomaly","Severe anomaly"])
+
+create_timelapse(data_directory = data_directory, 
+                 x = 643069, 
+                 y = 5452565, 
+                 buffer = 1500)
+
+vi_series_visualisation(data_directory = data_directory, 
+                        shape_path = input_dir / "vector/points_for_graphs.shp", 
+                        name_column = "id", 
+                        ymin = 0, 
+                        ymax = 2, 
+                        chunks = 100)
+
+
+
+
 
 #########################################################
 print("Testing calibration validation module")
+
+obs_path = input_dir / "vector/observations_tuto.shp"
+sentinel_dir = input_dir / "sentinel_data/validation_tutorial/sentinel_data/"
+
 #########################################################
 print("Using local THEIA data")
-
 
 preprocessed_obs_path = test_output_dir / "calibration_validation" / "preprocessed_obs_theia.gpkg"
 

@@ -82,13 +82,7 @@ Installation = "docs/Installation.md"
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
 			"Extracting reflectance" = "docs/Tutorials/Validation/02_extract_reflectance.md"
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
-			"Extracting cloudiness (optional)" = "docs/Tutorials/Validation/03_extract_cloudiness.md"
-			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
-			"Vegetation index and masks computing" = "docs/Tutorials/Validation/04_computing_vegetation_index_and_masks.md"
-			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
-			"Training harmonic model for each pixel" = "docs/Tutorials/Validation/05_training_model_from_dataframe.md"
-			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
-			"Dieback and stress detection" = "docs/Tutorials/Validation/06_dieback_detection_from_dataframe.md"
+			"Applying the FORDEAD method" = "docs/Tutorials/Validation/03_apply_fordead.md"
 			[[tool.portray.mkdocs.nav.Tutorials.Validation]]
 			"Sensitivity analysis" = "docs/Tutorials/Validation/07_sensitivity_analysis.md"
 

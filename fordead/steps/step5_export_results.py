@@ -11,6 +11,8 @@ from fordead.writing_data import vectorizing_confidence_class, get_bins, convert
 import numpy as np
 import geopandas as gp
 import pandas as pd
+import warnings
+warnings.filterwarnings("ignore", message="`unary_union` returned None due to all-None GeoSeries. In future, `unary_union` will return 'GEOMETRYCOLLECTION EMPTY' instead.")
 
 @click.command(name='export_results')
 @click.option("-o", "--data_directory",  type=str, help="Path of the output directory", show_default=True)
@@ -128,7 +130,6 @@ def export_results(
                         # stress_class.to_file(tile.paths["stress_periods"] / ("stress_class" + str(period+1) + ".shp"))
                         # vector_stress_start.to_file(tile.paths["stress_periods"] / ("stress_period" + str(period+1) + ".shp"))
                         stress_list += [gp.overlay(vector_stress_start, stress_class, how='intersection',keep_geom_type = True)]
-
                 # for period_date in pd.unique(vector_stress_start["period"]):
                 #     for class_stress in pd.unique(stress_class["class"]):
                 #         stress_list += [gp.overlay(vector_stress_start[vector_stress_start["period"]==period_date], stress_class[stress_class["class"] == class_stress], how='intersection',keep_geom_type = True)]
