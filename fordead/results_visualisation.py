@@ -360,6 +360,7 @@ def plot_mask(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_da
     Creates figure from all data
 
     """
+    pixel_series.mask = pixel_series.mask.compute()
     fig=plt.figure(figsize=(10,7))
     ax = plt.gca()
     formatter = mdates.DateFormatter("%b %Y")
@@ -391,6 +392,7 @@ def plot_model(pixel_series, xy_soil_data, xy_dieback_data, xy_first_detection_d
     Creates figure from all data
 
     """
+    pixel_series["mask"] = pixel_series.mask.compute()
     fig=plt.figure(figsize=(10,7))
     ax = plt.gca()
     formatter = mdates.DateFormatter("%b %Y")
@@ -426,6 +428,7 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_d
     Creates figure from all data
 
     """
+    pixel_series["mask"] = pixel_series.mask.compute()
     fig=plt.figure(figsize=(10,7))
     ax = plt.gca()
     formatter = mdates.DateFormatter("%b %Y")
@@ -435,7 +438,7 @@ def plot_temporal_series(pixel_series, xy_soil_data, xy_dieback_data, xy_first_d
     if pixel_series.Soil.any() : pixel_series.where(pixel_series.Soil,drop=True).plot.line('k^', label='Coupe') 
     
     if xy_first_detection_date_index !=0:
-        pixel_series.where(pixel_series.training_date & ~pixel_series.mask,drop=True).plot.line("bo", label='Training dates')
+        pixel_series.where(pixel_series.training_date & ~pixel_series.mask.compute(),drop=True).plot.line("bo", label='Training dates')
         if (~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & ~pixel_series.Anomaly & ~pixel_series.mask,drop=True).plot.line("o",color = '#1fca3b', label='Normal dates') 
         if (~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask).any() : pixel_series.where(~pixel_series.training_date & pixel_series.Anomaly & ~pixel_series.mask & ~pixel_series.Soil,drop=True).plot.line("r*", markersize=9, label='Anomalies') 
   
@@ -498,9 +501,9 @@ def select_pixel_from_coordinates(X,Y, harmonic_terms, coeff_model, first_detect
     xy_stack_masks = stack_masks.sel(x = X, y = Y,method = "nearest")
     pixel_series = stack_vi.sel(x = X, y = Y,method = "nearest")
     if xy_first_detection_date_index!=0:
-        xy_anomalies = anomalies.sel(x = X, y = Y,method = "nearest")
+        xy_anomalies = anomalies.sel(x = X, y = Y,method = "nearest").compute()
         xy_dieback_data = dieback_data.sel(x = X, y = Y,method = "nearest")
-        anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
+        anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64[D]").data
         pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
         pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
         yy = (harmonic_terms * coeff_model.sel(x = X, y = Y,method = "nearest").compute()).sum(dim="coeff")
@@ -527,7 +530,7 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
         xy_stress_data = None
         
     if xy_first_detection_date_index!=0:
-        xy_anomalies = anomalies.isel(x = X, y = Y)
+        xy_anomalies = anomalies.isel(x = X, y = Y).compute()
         xy_dieback_data = dieback_data.isel(x = X, y = Y)
     else:
         xy_dieback_data=None
@@ -535,7 +538,7 @@ def select_pixel_from_indices(X,Y, harmonic_terms, coeff_model, first_detection_
     pixel_series = pixel_series.assign_coords(Soil = ("Time", [index >= int(xy_soil_data["first_date"]) if xy_soil_data["state"] else False for index in range(pixel_series.sizes["Time"])]))
     pixel_series = pixel_series.assign_coords(mask = ("Time", xy_stack_masks.data))
     if xy_first_detection_date_index!=0:
-        anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64").data.compute()
+        anomalies_time = xy_anomalies.Time.where(xy_anomalies,drop=True).astype("datetime64[D]").data
         pixel_series = pixel_series.assign_coords(Anomaly = ("Time", [time in anomalies_time for time in stack_vi.Time.data]))
         pixel_series = pixel_series.assign_coords(training_date=("Time", [index < xy_first_detection_date_index for index in range(pixel_series.sizes["Time"])]))
         
