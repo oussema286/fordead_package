@@ -723,11 +723,11 @@ def import_stackedmaskedVI(tuile,min_date = None, max_date=None,chunks = None):
         
         
 # =============================================================================
-    list_vi=[xr.open_dataset(tuile.paths["VegetationIndex"][date],chunks =chunks, engine = "rasterio") for date in dates]
+    list_vi=[xr.open_dataset(tuile.paths["VegetationIndex"][date], chunks = chunks, engine = "rasterio") for date in dates]
     stack_vi=xr.concat(list_vi,dim="Time")
     stack_vi=stack_vi.assign_coords(Time=dates)
     stack_vi=stack_vi.squeeze("band")
-    stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})    
+    stack_vi=stack_vi.chunk({"Time": -1,"x" : chunks,"y" : chunks})
     
     # list_mask=[xr.open_dataset(tuile.paths["Masks"][date],chunks =chunks, engine = "rasterio") for date in dates]
     # stack_masks=xr.concat(list_mask,dim="Time")
