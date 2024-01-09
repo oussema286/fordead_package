@@ -36,13 +36,13 @@ vi_series_visualisation(data_directory = data_directory,
                         name_column = "id", 
                         ymin = 0, 
                         ymax = 2, 
-                        chunks = 100)
+                        chunks = 1280)
 ```
 ##### Running this step from the command prompt
 
 This processing step can also be performed from a terminal:
 ```bash
-fordead graph_series  -o <output directory> --shape_path <MyWorkingDirectory>/vector/points_for_graphs.shp --name_column id --ymin 0 --ymax 2 --chunks 100
+fordead graph_series  -o <output directory> --shape_path <MyWorkingDirectory>/vector/points_for_graphs.shp --name_column id --ymin 0 --ymax 2 --chunks 1280
 ```
 
 ##### Outputs
