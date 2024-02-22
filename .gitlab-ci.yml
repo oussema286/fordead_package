@@ -3,7 +3,6 @@
   - shared-windows
   - windows
   - windows-1809
-
 stages:
   - build
   - deploy
@@ -30,10 +29,9 @@ intall-win:
   extends:
     - .shared_windows_runners
   script:
-    - Invoke-Expression ((Invoke-WebRequest -Uri https://micro.mamba.pm/install.ps1).Content)
-    - micromamba init powershell
-    - micromamba install -y -n base -f environment.yml
-    - python -c "import fordead"
+    - gitlab-ci\conda-build.ps1
+    - mamba env create -y -n fordead -f environment.yml
+    - conda run -n fordead python -c "import fordead"
   only:
     - schedules
   
