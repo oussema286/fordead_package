@@ -1,5 +1,11 @@
+.shared_windows_runners:
+  tags:
+  - shared-windows
+  - windows
+  - windows-1809
+
 stages:
-  - test
+  - build
   - deploy
 ## docker build does not end within the 1h limit
 ## thus it was build locally and transfered manually
@@ -19,8 +25,21 @@ stages:
 #  only:
 #    - docker_ci
 
-install:
-  stage: test
+intall-win:
+  stage: build
+  extends:
+    - .shared_windows_runners
+  script:
+    - Invoke-Expression ((Invoke-WebRequest -Uri https://micro.mamba.pm/install.ps1).Content)
+    - micromamba init powershell
+    - micromamba install -y -n base -f environment.yml
+    - python -c "import fordead"
+  only:
+    - schedules
+  
+
+install-linux:
+  stage: build
   image: mambaorg/micromamba
   variables:
     MAMBA_DOCKERFILE_ACTIVATE: 1
@@ -28,7 +47,7 @@ install:
     - micromamba install -y -n base -f environment.yml
     - python -c "import fordead"
   only:
-    - schedules
+    - master
 
 #[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
 badges:
