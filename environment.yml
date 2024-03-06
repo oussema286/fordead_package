@@ -1,4 +1,4 @@
-name: fordeadv2
+name: fordead
 channels:
   - conda-forge
   - nodefaults
@@ -8,12 +8,14 @@ dependencies:
   - eoreader
   - fiona
   - geopandas
+  - git
   - matplotlib
   - netcdf4
   - numpy
   - path
   - pathlib
   - pip
+  - planetary-computer
   - plotly
   - python
   - pystac
@@ -25,12 +27,12 @@ dependencies:
   - xpystac
   - jsonschema
   - referencing
-  # - pip:
-  #   - git+https://forgemia.inra.fr/fordeadv2/fordeadv2.git
+
+  # additionnal dependencies for stac-static
+  - pygeofilter
+  - pyarrow
   - pip:
-    # conda version of stac-geoparquet is old, v0.3.2+ needed for datetime correct conversion
-    - stac-geoparquet
-    - git+https://github.com/floriandeboissieu/stac-static@patch-1
-    - pystac_client
-    - planetary_computer
-    - git+https://gitlab.com/fordead/fordead_package.git
+    # stac-static should install stac-geoparquet v0.3.2+ (conda version is too old)
+    - git+https://github.com/jsignell/stac-static
+    - git+https://gitlab.com/fordead/fordead_package
+
