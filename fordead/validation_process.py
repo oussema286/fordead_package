@@ -496,7 +496,7 @@ def add_status_to_vi(masked_vi, periods, name_column, stress_index_mode):
     if "bare_ground" in masked_vi.columns:
         masked_vi = masked_vi.drop(columns=["bare_ground"])
     for col in ['period_id', 'state']:
-        masked_vi[col].ffill(inplace=True)
+        masked_vi[col] = masked_vi[col].ffill()
 
     return masked_vi
     # period_stress_index = masked_vi.groupby(by = ["area_name", name_column,"id_pixel","period_id"]).apply(lambda x : (x.diff_vi * range(1,len(x)+1)).sum()/(len(x)*(len(x)+1)/2)).reset_index(name = "anomaly_intensity")

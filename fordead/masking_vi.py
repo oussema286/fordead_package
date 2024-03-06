@@ -465,7 +465,7 @@ def get_bands_and_formula(vi = "CRSWIR", formula = None, path_dict_vi = None,for
     """
     if formula is None:
         formula = get_dict_vi(path_dict_vi)[vi]["formula"]
-    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})"
+    match_string = r"B(\d{1}[A-Z]|\d{2}|\d{1})"
     formula = re.sub(match_string, remove_0_from_match, formula)
     bands = list(set([forced_band.replace("0","") for forced_band in forced_bands] + ["B"+band for band in re.findall(match_string, formula)]))
     return bands, formula
@@ -567,7 +567,7 @@ def compute_vegetation_index(reflectance, vi = "CRSWIR", formula = None, path_di
         dict_vegetation_index = get_dict_vi(path_dict_vi)
         formula = dict_vegetation_index[vi]["formula"]
 
-    match_string = "B(\d{1}[A-Z]|\d{2}|\d{1})" # B + un chiffre + une lettre OU B + deux chiffres OU B + un chiffre
+    match_string = r"B(\d{1}[A-Z]|\d{2}|\d{1})" # B + un chiffre + une lettre OU B + deux chiffres OU B + un chiffre
     formula = re.sub(match_string, remove_0_from_match, formula) #Removes 0 from band name (B03 -> B3)
     p = re.compile(match_string)
     
