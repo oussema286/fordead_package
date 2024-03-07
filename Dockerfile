@@ -20,3 +20,5 @@ shell ["/bin/bash", "--login", "-c"]
 run conda init bash
 # activates fordead by default, avoids starting line by `run conda activate fordead && ...`
 run echo "conda activate fordead" >> ~/.bashrc
+ENTRYPOINT ["conda", "run", "-n", "fordead", "--live-stream"]
+
