@@ -3,18 +3,14 @@
 Conda install is recommended as it will include all necessary dependencies (especially GDAL).
 
 ### Requirements
-It is recommened with [mamba](https://github.com/mamba-org/mamba), that is much faster than conda to solve environment constraints.
+We recommend to use a [mamba](https://github.com/mamba-org/mamba) environment,
+that is much faster than conda to solve environment dependencies.
 
-If you already have a conda installed, [install mamba in base environment](https://mamba.readthedocs.io/en/latest/installation.html#existing-conda-install):
-```bash
-conda install mamba -n base -c conda-forge
-```
-
-If you do not have conda installed, we recommend installing [mambaforge](https://github.com/conda-forge/miniforge#mambaforge).
 
 ### Install
 
-From the anaconda prompt or the miniconda prompt command invite, use the following commands to create a working environment :
+From the terminal (bash, cmd, powershell, ... dependending where conda/mamba was initialized),
+use the following commands to create a working environment :
 
 ```bash
 mamba env create -n fordead -f https://gitlab.com/fordead/fordead_package/-/raw/master/environment.yml
