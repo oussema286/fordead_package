@@ -1,12 +1,22 @@
-from continuumio/miniconda3:latest
-add environment.yml /environment.yml
-run ls /
-run apt-get update \
-    && apt-get install -y gcc g++ git unzip libgtk2.0-0 libsm6 libxft2 curl \
-    && conda env create -n fordead -f /environment.yml \
+###############
+# How to build
+###############
+# docker build -t fordead:$(date +%y.%m.%d) .
+### When all is good
+# docker tag fordead:$(date +%y.%m.%d) registry.gitlab.com/fordead/fordead_package:$(date +%y.%m.%d)
+# fordead_version=`grep __version__ fordead/_version.py| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'` && \
+# docker tag fordead:$(date +%y.%m.%d) registry.gitlab.com/fordead/fordead_package:${fordead_version}
+# docker tag fordead:$(date +%y.%m.%d) registry.gitlab.com/fordead/fordead_package:latest
+# docker push registry.gitlab.com/fordead/fordead_package:$(date +%y.%m.%d)
+# fordead_version=`grep __version__ fordead/_version.py| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'` && \
+# docker push registry.gitlab.com/fordead/fordead_package:${fordead_version}
+# docker push registry.gitlab.com/fordead/fordead_package:latest
+
+from condaforge/miniforge3
+add environment.yml /tmp/environment.yml
+run mamba env create -n fordead -f /tmp/environment.yml \
     && conda env list
 shell ["/bin/bash", "--login", "-c"]
 run conda init bash
-# run echo "conda activate fordead" >> ~/.bashrc # activates fordead by default, avoids starting line by `run conda activate fordead && ...`
-run conda env list
-run conda activate fordead && conda env list && pip install portray python-markdown-math mdx-breakless-lists mkdocs-click
+# activates fordead by default, avoids starting line by `run conda activate fordead && ...`
+run echo "conda activate fordead" >> ~/.bashrc
