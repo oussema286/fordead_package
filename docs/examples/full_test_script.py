@@ -23,8 +23,8 @@ from fordead.validation.sensitivity_analysis import sensitivity_analysis
 
 
 # output_dir = Path("<MyOutputDirectory>")
-output_dir = Path("D:/fordead/05_SUBPROJECTS/13_test_tuto/")
-input_dir = Path("D:/fordead/05_SUBPROJECTS/13_test_tuto/fordead_data")
+output_dir = Path(__file__).parent
+input_dir = Path(__file__).parent / "fordead_data"
 
 
 
@@ -68,7 +68,7 @@ compute_forest_mask(data_directory,
                     vector_path = input_dir / "vector/area_interest.shp")
 
 export_results(data_directory = data_directory, 
-               frequency= "M", 
+               frequency= "ME", 
                multiple_files = False, 
                conf_threshold_list = [0.265],
                conf_classes_list = ["Low anomaly","Severe anomaly"])
@@ -162,6 +162,7 @@ obs_to_s2_grid(
 
 reflectance_path = test_output_dir / "calibration_validation" / "extracted_reflectance_planetary.csv"
 
+# extracting may take time as it downloads the data from the net
 extract_reflectance(
     obs_path = preprocessed_obs_path,
     sentinel_source = "Planetary", 
