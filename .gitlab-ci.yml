@@ -65,11 +65,10 @@ pages:
   stage: deploy
   image: $CI_REGISTRY/fordead/fordead_package:latest
   script:
-    - conda init bash
-    - source ~/.bashrc
-    - conda activate fordead
+    - conda env list
+    - pip install portray python-markdown-math mdx-breakless-lists mkdocs-click
     - python -V  # Print out python version for debugging
-    - pip install .
+    - pip install -e .
     - portray as_html -c pyproject_doc.toml
     - mv site public
   artifacts:
