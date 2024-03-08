@@ -378,29 +378,56 @@ def extract_points(x, df, **kwargs):
     points = x.sel(coords, **kwargs)
     return points
 
-def extract_raster_values_fast(points, tile_coll, extracted_reflectance, name_column, bands_to_extract, export_path):
+def extract_raster_values(points, tile_coll, bands_to_extract, export_path, rescale=True):
     """
     Sample raster values for each XY points
 
-    - points: <geodataframe> observation points
-    - tile_coll: <pystac object> item_collection filtered according to S2 Tile
-    - extracted_reflectance: <dataframe> table of sampled raster value
-    - name_column: <string> column name
+    Parameters
+    ----------
+    points : geodataframe
+        Observation points
+    tile_coll : pystac.ItemCollection
+        Item_collection of a unique MGRS Tile
+    bands_to_extract : list of strings
+        List of bands to extract
+    export_path : str
+        Path to export the result
+    rescale : bool
+        argument transfered to stackstac.stack.
+        If True, rescale bands values using the scale and offset
+        in tile_coll items metadata. 
+        Here, it applies only to bands starting with "B".
+        
+    Returns
+    -------
+    dataframe
+        Table of sampled raster value
+    """    
+    # """
+    # Sample raster values for each XY points
 
-    return: <dataframe> table of sampled raster value
-    """
-    #"""Must have the same crs"""
-    # tile = TileInfo(sentinel_dir)
-    # tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
-    # tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
-    import time
-    start = time.time()
-    coords = points.get_coordinates()
-    # frozenset(["image/tiff; application=geotiff", "data"])
+    # - points: <geodataframe> observation points
+    # - tile_coll: <pystac object> item_collection filtered according to S2 Tile
+    # - extracted_reflectance: <dataframe> table of sampled raster value
+    # - name_column: <string> column name
 
+    # return: <dataframe> table of sampled raster value
+    # """
+    # from fordead.stac.theia_collection import ItemCollection
+    # tile_coll1 = ItemCollection(tile_coll[200:])
     arr = stackstac.stack(tile_coll, xy_coords="center", assets=bands_to_extract).rename("value")
-    
+    band_with_offset = [f"B{i+1}" for i in range(12)]+["B8A"]
+    if not points.crs.equals(arr.rio.crs):
+        points = points.to_crs(arr.rio.crs)
+
+    coords = points.get_coordinates()
+
+    import time
+    start = time.time()    
     p = extract_points(arr, coords.to_xarray(), method="nearest", tolerance=arr.rio.resolution()[0]/2).to_dataframe()
+    end = time.time()
+    print("Extraction procecessing time: ")
+    print(end-start)
 
     # it may have a problem if two images at the same time,
     # in that case `id` should be added to the index arg,
@@ -418,7 +445,7 @@ def extract_raster_values_fast(points, tile_coll, extracted_reflectance, name_co
         if (p["offset"]!=0).any():
             # bands have been rescaled by stackstac, Mask as well...
             for b in bands_to_extract:
-                if not b.startswith("B"):
+                if b in band_with_offset:
                     p[b] = p.loc[:,b]+p.loc[:,"offset"]
         p.drop(columns="offset", inplace=True)
     
@@ -439,85 +466,11 @@ def extract_raster_values_fast(points, tile_coll, extracted_reflectance, name_co
     # TODO: case taking into account already extracted values
     # drop_k = extracted_reflectance.keys()
     # final = pd.concat(extracted_reflectance, res[drop_k], ignore_index=True).drop_duplicates()
-    end = time.time()
-    print("Extraction procecessing time: ")
-    print(end-start)
 
     res.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
     # epsg,area_name,id,id_pixel,Date,B2,B3,B4,B5,B6,B7,B8,B8A,B11,B12,Mask
     # 32631,T31UGP,0,1,2019-02-17,118,172,129,267,797,986,1224,1265,427,203,0
 
-    
-def extract_raster_values(points, tile_coll, extracted_reflectance, name_column, bands_to_extract, export_path):
-    """
-    Sample raster values for each XY points
-
-    - points: <geodataframe> observation points
-    - tile_coll: <pystac object> item_collection filtered according to S2 Tile
-    - extracted_reflectance: <dataframe> table of sampled raster value
-    - name_column: <string> column name
-
-    return: <dataframe> table of sampled raster value
-    """
-    #"""Must have the same crs"""
-    # tile = TileInfo(sentinel_dir)
-    # tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
-    # tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
-    
-    coord_list = [(x,y) for x,y in zip(points['geometry'].x , points['geometry'].y)]
-    points = points.drop(columns='geometry')
-    # date_band_value_list = []
-    
-    if extracted_reflectance is not None:
-        #Determiner les dates qui restent.
-        to_extract_reflectance = points[["area_name", name_column]].drop_duplicates()
-        #Supprimer duplicates id_pixel
-        
-        #inner_join extracted_reflectance avec marqueur
-        extracted_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
-        # to_extract_reflectance = to_extract_reflectance.merge(extracted_reflectance, on= ["area_name", name_column], how='left', indicator = True) 
-        #list_dates de unique dates
-    
-    for item in tile_coll:
-        
-        date = item.properties["datetime"].split('T')[0]
-        # print(date)
-        
-
-        # print('\r', date, " | ", len(tile.paths["Sentinel"])-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.paths["Sentinel"]) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
-        extraction = points.copy()
-        if extracted_reflectance is not None:
-            #Filter les points selon la date
-            extracted_reflectance_date = extracted_reflectance[extracted_reflectance["Date"] == date]
-            
-            #Filter extracted_reflectance avec les date
-            extraction = extraction[~extraction[name_column].isin(extracted_reflectance_date[name_column])]
-            
-        if len(extraction) != 0:
-            print('\r', date , sep='', end='', flush=True)
-            extraction.insert(4,"Date",date)
-            # len(extraction.columns)-1
-            for band in bands_to_extract:
-                image = item.assets[band].href
-            
-                with rasterio.open(image, 'r', driver='GTiff', sharing=True, tiled=True, blockxsize=256, blockysize=256) as raster:
-                    extraction[band] = [x[0] for x in raster.sample(coord_list)]
-                
-                if item.properties["offset"] != 0:
-                    extraction[band] = (extraction[band].astype('int')-1000).clip(lower=0).astype('uint16')
-            # date_band_value_list += [extraction]
-        
-        extraction.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
-        
-    print('\r', "               \n" , sep='', end='', flush=True)
-    # reflectance = gp.GeoDataFrame(pd.concat(date_band_value_list, ignore_index=True), crs=date_band_value_list[0].crs)
-    # if len(date_band_value_list) != 0:
-    #     reflectance = pd.concat(date_band_value_list, ignore_index=True)
-    #     return reflectance
-    # else:
-    #     return None
-
-    
 
 # ==========================================================================================================================================================
 

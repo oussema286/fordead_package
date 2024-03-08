@@ -10,7 +10,7 @@ import geopandas as gp
 import pandas as pd
 from pathlib import Path
 # from fordead.reflectance_extraction import get_reflectance_at_points
-from fordead.reflectance_extraction import get_already_extracted, extract_raster_values, extract_raster_values_fast
+from fordead.reflectance_extraction import get_already_extracted, extract_raster_values
 from fordead.stac.stac_module import get_bbox, get_harmonized_planetary_collection, get_harmonized_theia_collection
 # import traceback
 
@@ -120,7 +120,7 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
                     else:
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
-                    extract_raster_values_fast(tile_obs, collection, tile_already_extracted, name_column, bands_to_extract, export_path)
+                    extract_raster_values(tile_obs, collection, bands_to_extract, export_path)
                     unfinished = False
                 except Exception as e:
                     # traceback_str = traceback.format_exc()
