@@ -10,7 +10,7 @@ import geopandas as gp
 import pandas as pd
 from pathlib import Path
 # from fordead.reflectance_extraction import get_reflectance_at_points
-from fordead.reflectance_extraction import get_already_extracted, extract_raster_values
+from fordead.reflectance_extraction import get_already_extracted, extract_raster_values, extract_raster_values_fast
 from fordead.stac.stac_module import get_bbox, get_harmonized_planetary_collection, get_harmonized_theia_collection
 # import traceback
 
@@ -46,7 +46,8 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
                         bands_to_extract = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"],
                         tile_selection = None,
                         start_date = "2015-01-01",
-                        end_date = "2030-01-01"):
+                        end_date = "2030-01-01",
+                        overwrite = False):
     """
     Extracts reflectance from Sentinel-2 data using a vector file containing points, exports the data to a csv file.
     If new acquisitions are added to the Sentinel-2 directory, new data is extracted and added to the existing csv file.
@@ -73,6 +74,8 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
         First date of the period from which to extract reflectance
     end_date : str
         Last date of the period from which to extract reflectance
+    overwrite : bool
+        If True, overwrites the csv file if it already exists. The default is False.
     
     """
     
@@ -80,6 +83,12 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
         
     
     export_path = Path(export_path)
+    if export_path.exists():
+        if not overwrite:
+            raise FileExistsError("File already exists:"+ str(export_path))
+        else:
+            print("Removing " + str(export_path))
+            export_path.unlink()
     obs = gp.read_file(obs_path)
     
     if (sentinel_source != "Planetary") and (cloudiness_path is not None):
@@ -111,8 +120,7 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
                     else:
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
-               
-                    extract_raster_values(tile_obs, collection, tile_already_extracted, name_column, bands_to_extract, export_path)
+                    extract_raster_values_fast(tile_obs, collection, tile_already_extracted, name_column, bands_to_extract, export_path)
                     unfinished = False
                 except Exception as e:
                     # traceback_str = traceback.format_exc()

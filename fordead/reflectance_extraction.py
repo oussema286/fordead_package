@@ -5,6 +5,7 @@ import geopandas as gp
 from pathlib import Path
 import numpy as np
 from rasterio.crs import CRS
+import stackstac
 
 from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 
@@ -335,6 +336,118 @@ def get_reflectance_at_points(grid_points,sentinel_dir, extracted_reflectance, n
         
     return reflectance
 
+
+def extract_points(x, df, **kwargs):
+    """_summary_
+
+    Parameters
+    ----------
+    x : xarray.DataArray or xarray.Dataset
+    df : pandas.DataFrame
+        Coordinates of the points
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The points values.
+
+    Examples
+    --------
+    >>> import xarray as xr
+    >>> import pandas as pd
+    >>> import dask
+    >>> da = xr.DataArray(
+    ... # np.random.random((100,200)),
+    ... dask.array.random.random((100,200), chunks=10),
+    ... coords = [('x', range(100)), ('y', range(200))]
+    ... )
+    >>> df = pd.DataFrame(
+    ...    dict(
+    ...        x=np.random.permutation(range(100))[:100]+np.random.random(100),
+    ...        y=np.random.permutation(range(100))[:100]+np.random.random(100),
+    ...        z=range(100),
+    ...    )
+    ... )
+    >>> extract_points(da, df, method="nearest", tolerance=.5)
+
+    """
+    # x = da
+    xk = x.dims
+    coords_cols = [c for c in df.keys() if c in xk]
+    coords = df[coords_cols]
+    points = x.sel(coords, **kwargs)
+    return points
+
+def extract_raster_values_fast(points, tile_coll, extracted_reflectance, name_column, bands_to_extract, export_path):
+    """
+    Sample raster values for each XY points
+
+    - points: <geodataframe> observation points
+    - tile_coll: <pystac object> item_collection filtered according to S2 Tile
+    - extracted_reflectance: <dataframe> table of sampled raster value
+    - name_column: <string> column name
+
+    return: <dataframe> table of sampled raster value
+    """
+    #"""Must have the same crs"""
+    # tile = TileInfo(sentinel_dir)
+    # tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
+    # tile.paths["Sentinel"] = get_band_paths(tile.paths["Sentinel"]) #Replaces the paths to the directories for each date with a dictionnary where keys are the bands, and values are their paths
+    import time
+    start = time.time()
+    coords = points.get_coordinates()
+    # frozenset(["image/tiff; application=geotiff", "data"])
+
+    arr = stackstac.stack(tile_coll, xy_coords="center", assets=bands_to_extract).rename("value")
+    
+    p = extract_points(arr, coords.to_xarray(), method="nearest", tolerance=arr.rio.resolution()[0]/2).to_dataframe()
+
+    # it may have a problem if two images at the same time,
+    # in that case `id` should be added to the index arg,
+    # and a solution should be found to choose between these values
+    index = ["index", "time"]
+    if "offset" in p:
+        offset = True
+        index.append("offset")
+    p = p.reset_index(drop=False).pivot(columns="band", values="value", index=index)
+
+    # remove offset
+    # never got the case of offset!=0, so far
+    if offset:
+        p = p.reset_index("offset", drop=False)
+        if (p["offset"]!=0).any():
+            # bands have been rescaled by stackstac, Mask as well...
+            for b in bands_to_extract:
+                if not b.startswith("B"):
+                    p[b] = p.loc[:,b]+p.loc[:,"offset"]
+        p.drop(columns="offset", inplace=True)
+    
+    if p.isna().any().any():
+        from warnings import warn
+        warn("Found NA values, dropping them...")
+        # p[p.isna().any(axis=1)]
+        p.dropna(inplace=True)
+    # change type to int
+    extractions = p.astype("int").reset_index(drop=False)
+    # join extractions with points
+    points = points.drop(columns='geometry').reset_index(drop=False)
+    # reformat result
+    res = points.merge(extractions, on=["index"])
+    res.time = res.time.dt.strftime("%Y-%m-%d")
+    res = res.rename(columns={"time": "Date"}).drop(columns="index")
+
+    # TODO: case taking into account already extracted values
+    # drop_k = extracted_reflectance.keys()
+    # final = pd.concat(extracted_reflectance, res[drop_k], ignore_index=True).drop_duplicates()
+    end = time.time()
+    print("Extraction procecessing time: ")
+    print(end-start)
+
+    res.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
+    # epsg,area_name,id,id_pixel,Date,B2,B3,B4,B5,B6,B7,B8,B8A,B11,B12,Mask
+    # 32631,T31UGP,0,1,2019-02-17,118,172,129,267,797,986,1224,1265,427,203,0
+
+    
 def extract_raster_values(points, tile_coll, extracted_reflectance, name_column, bands_to_extract, export_path):
     """
     Sample raster values for each XY points
