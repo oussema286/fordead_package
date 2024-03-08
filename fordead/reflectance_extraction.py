@@ -5,7 +5,6 @@ import geopandas as gp
 from pathlib import Path
 import numpy as np
 from rasterio.crs import CRS
-import stackstac
 
 from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 
@@ -322,7 +321,7 @@ def get_reflectance_at_points(grid_points,sentinel_dir, extracted_reflectance, n
             else:
                 extracted_reflectance_area = None
             
-            raster_values = extract_raster_values(points_area, sentinel_dir / area_name, extracted_reflectance_area, name_column, bands_to_extract)
+            raster_values = (points_area, sentinel_dir / area_name, extracted_reflectance_area, name_column, bands_to_extract)
             
             if raster_values is not None:
                 reflectance_list += [raster_values]
@@ -395,28 +394,15 @@ def extract_raster_values(points, tile_coll, bands_to_extract, export_path, resc
     rescale : bool
         argument transfered to stackstac.stack.
         If True, rescale bands values using the scale and offset
-        in tile_coll items metadata. 
-        Here, it applies only to bands starting with "B".
+        in tile_coll items metadata, typically Sen2Cor colleciton harmonized with
+        `harmonize_sen2cor_offset`.
         
     Returns
     -------
     dataframe
         Table of sampled raster value
     """    
-    # """
-    # Sample raster values for each XY points
-
-    # - points: <geodataframe> observation points
-    # - tile_coll: <pystac object> item_collection filtered according to S2 Tile
-    # - extracted_reflectance: <dataframe> table of sampled raster value
-    # - name_column: <string> column name
-
-    # return: <dataframe> table of sampled raster value
-    # """
-    # from fordead.stac.theia_collection import ItemCollection
-    # tile_coll1 = ItemCollection(tile_coll[200:])
-    arr = stackstac.stack(tile_coll, xy_coords="center", assets=bands_to_extract).rename("value")
-    band_with_offset = [f"B{i+1}" for i in range(12)]+["B8A"]
+    arr = tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract).rename("value")
     if not points.crs.equals(arr.rio.crs):
         points = points.to_crs(arr.rio.crs)
 
@@ -433,27 +419,14 @@ def extract_raster_values(points, tile_coll, bands_to_extract, export_path, resc
     # in that case `id` should be added to the index arg,
     # and a solution should be found to choose between these values
     index = ["index", "time"]
-    if "offset" in p:
-        offset = True
-        index.append("offset")
     p = p.reset_index(drop=False).pivot(columns="band", values="value", index=index)
 
-    # remove offset
-    # never got the case of offset!=0, so far
-    if offset:
-        p = p.reset_index("offset", drop=False)
-        if (p["offset"]!=0).any():
-            # bands have been rescaled by stackstac, Mask as well...
-            for b in bands_to_extract:
-                if b in band_with_offset:
-                    p[b] = p.loc[:,b]+p.loc[:,"offset"]
-        p.drop(columns="offset", inplace=True)
-    
+    # drop rows with NA values
     if p.isna().any().any():
         from warnings import warn
         warn("Found NA values, dropping them...")
-        # p[p.isna().any(axis=1)]
         p.dropna(inplace=True)
+
     # change type to int
     extractions = p.astype("int").reset_index(drop=False)
     # join extractions with points
@@ -562,7 +535,7 @@ def get_already_extracted(export_path, obs, obs_path, name_column):
     
     
 
-# def extract_raster_values_vrt(points,sentinel_dir):
+# def _vrt(points,sentinel_dir):
 #     """Must have the same crs"""
 
 # from osgeo import gdal
@@ -594,7 +567,7 @@ def get_already_extracted(export_path, obs, obs_path, name_column):
 #     return reflectance
     
 
-# def extract_raster_values_chunks(points,sentinel_dir):
+# def _chunks(points,sentinel_dir):
 #     """Must have the same crs"""
 #     tile = TileInfo(sentinel_dir)
 #     tile.getdict_datepaths("Sentinel",sentinel_dir) #adds a dictionnary to tile.paths with key "Sentinel" and with value another dictionnary where keys are ordered and formatted dates and values are the paths to the directories containing the different bands
