@@ -7,7 +7,7 @@ import numpy as np
 from rasterio.crs import CRS
 
 from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
-
+from dask.diagnostics import ProgressBar
 
 # import rasterio.sample
 # =============================================================================
@@ -374,10 +374,10 @@ def extract_points(x, df, **kwargs):
     xk = x.dims
     coords_cols = [c for c in df.keys() if c in xk]
     coords = df[coords_cols]
-    points = x.sel(coords, **kwargs)
+    points = x.sel(coords.to_xarray(), **kwargs)
     return points
 
-def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflectance, name_column, export_path, rescale=True):
+def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflectance, export_path=None):
     """
     Sample raster values for each XY points
 
@@ -391,78 +391,54 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         List of bands to extract
     extracted_reflectance: pandas.DataFrame
         Table of already sampled raster values, not to extract again.
-        Expected columns are "area_name", name_column and "Date".
-        It can be very slow if there are many dates, see notes.
-    name_column: str
-        Name of the ID column in extracted_reflectance.
-    export_path : str
+        Expected columns are "area_name", "Date" and an ID columns to merge with points dataframe.
+    export_path : str, optional
         Path to export the result
-    rescale : bool
-        argument transfered to stackstac.stack.
-        If True, rescale bands values using the scale and offset
-        in tile_coll items metadata, typically Sen2Cor colleciton harmonized with
-        `harmonize_sen2cor_offset`.
         
     Returns
     -------
-    dataframe
-        Table of sampled raster value
-    
-    Notes
-    -----
-    In order to avoid extracting the same points/regions twice,
-    already extracted areas can be given in the extracted_reflectance argument.
-    In that case, instead of extracting from the whole cube at once, 
-    the extraction will iterate over date
-    to extract for each date only the points/regions not already extracted.
-    
-    This operation is here to keep retro-compatibility with previous versions. 
-    It is quite costly and should be avoided if possible. As an example:
-    - the extraction of the example validation points over one S2 tile from planetary
-      takes ~40s
-    - the same operation iterating over dates takes ~160s, i.e. 4x more.
+    pandas DataFrame or None
+        The result is written in file `export_path`.
     """
+    if extracted_reflectance is not None:
+        er_keys = extracted_reflectance.keys()
+        if "area_name" not in er_keys:
+            raise ValueError("area_name not in extracted_reflectance")
+        if "Date" not in er_keys:
+            raise ValueError("Date not in extracted_reflectance")
+
+
     arr = tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract).rename("value")
     if not points.crs.equals(arr.rio.crs):
         points = points.to_crs(arr.rio.crs)
+    points.index.rename("id_point", inplace=True)
+    coords = points.get_coordinates().join(points.drop(columns='geometry'))
 
-    coords = pd.concat([
-        points.get_coordinates(), 
-        points.drop(columns='geometry')], axis=1)
-    # coords = points.get_coordinates()
-    
-    import time
-    start = time.time()
     # To respect original implementation: extract only the points not already extracted
     # not sure it is faster than extracting directly the all the points...
-    if extracted_reflectance is None:
-        p = extract_points(arr, coords[["x", "y"]].to_xarray(), method="nearest", tolerance=arr.rio.resolution()[0]/2).to_dataframe()
-        p.reset_index(drop=False, inplace=True)
+    if extracted_reflectance is None or extracted_reflectance.empty:
+        p = extract_points(arr, coords, method="nearest", tolerance=arr.rio.resolution()[0]/2)
     else:
-        p = None
-        plist = []
-        for t in arr.time.values:
-            st = str(t.astype("datetime64[D]"))
-            er = extracted_reflectance.loc[extracted_reflectance.Date==st, :]
-            to_extract = coords.merge(er.drop(columns=["Date"]), on=["area_name", name_column], how="outer", indicator=True)
-            to_extract = to_extract.query("_merge == 'left_only'").drop("_merge", axis=1)
-            if not to_extract.empty:
-                arr1 = arr.sel(time=t)
-                p1 = extract_points(arr1, coords[["x", "y"]].to_xarray(), method="nearest", tolerance=arr.rio.resolution()[0]/2).to_dataframe()
-                plist.append(p1.reset_index(drop=False))
-        if len(plist)>0:
-            p = pd.concat(plist, axis=0, ignore_index=True)
+        p_temp = extract_points(arr, coords, method="nearest", tolerance=arr.rio.resolution()[0]/2)
+        # copy coords for each dates
+        coords2 = coords.reset_index(drop=False).merge(pd.Series(arr.time.values, name="time"), how="cross")
+        coords2["Date"] = coords2.time.dt.date.astype(str)
+        # keep only the points and dates not in extracted_reflectance
+        to_extract = coords2.merge(extracted_reflectance, on=extracted_reflectance.keys(), how="outer", indicator=True)
+        to_extract = to_extract.query("_merge == 'left_only'").drop("_merge", axis=1)
+        if to_extract.empty:
+            # nothing to extract
+            return
+        # subset only the points to extract
+        p = extract_points(p_temp, to_extract)
+    with ProgressBar():
+        p = p.to_dataframe()
+    p.reset_index(drop=False, inplace=True)
 
-    end = time.time()
-    print("Extraction procecessing time: ")
-    print(end-start)
-
-    if p is None:
-        return
     # it may have a problem if two images at the same time,
     # in that case `id` should be added to the index arg,
     # and a solution should be found to choose between these values
-    index = ["index", "time"]
+    index = ["id_point", "time"]
     p = p.pivot(columns="band", values="value", index=index)
 
     # drop rows with NA values
@@ -476,14 +452,12 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
     # join extractions with points
     points = points.drop(columns='geometry').reset_index(drop=False)
     # reformat result
-    res = points.merge(extractions, on=["index"])
+    res = points.merge(extractions, on=["id_point"])
     res.time = res.time.dt.strftime("%Y-%m-%d")
-    res = res.rename(columns={"time": "Date"}).drop(columns="index")
+    res = res.rename(columns={"time": "Date"}).drop(columns="id_point")
 
-    # TODO: case taking into account already extracted values
-    # drop_k = extracted_reflectance.keys()
-    # final = pd.concat(extracted_reflectance, res[drop_k], ignore_index=True).drop_duplicates()
-
+    if export_path is None:
+        return res
     res.to_csv(export_path, mode='a', index=False, header=not(export_path.exists()))
     # epsg,area_name,id,id_pixel,Date,B2,B3,B4,B5,B6,B7,B8,B8A,B11,B12,Mask
     # 32631,T31UGP,0,1,2019-02-17,118,172,129,267,797,986,1224,1265,427,203,0
@@ -539,10 +513,25 @@ def process_points(points, sen_polygons, name_column):
 
     
 
-def get_already_extracted(export_path, obs, obs_path, name_column, bands_to_extract):
+def get_already_extracted(export_path, name_column, bands_to_extract):
     """
     
     Returns already extracted acquisition dates for each observation and each tile.
+
+    Parameters
+    ----------
+    export_path : str
+        Path to reflectance.csv
+    name_column : str
+        Name of the ID column in obs
+    bands_to_extract : list
+        List of bands to extract
+
+    Returns
+    -------
+    pandas DataFrame
+        Already extracted acquisition dates for each observation and each tile
+        Columns are "area_name", name_column, "Date".
 
     """
     

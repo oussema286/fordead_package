@@ -98,7 +98,7 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
     if tile_selection is None:
         tile_selection = np.unique(obs.area_name)
 
-    extracted_reflectance = get_already_extracted(export_path, obs, obs_path, name_column, bands_to_extract)
+    extracted_reflectance = get_already_extracted(export_path, name_column, bands_to_extract)
 
     for tile in tile_selection:
 
@@ -121,7 +121,7 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
                     else:
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
-                    extract_raster_values(tile_obs, collection, bands_to_extract, tile_already_extracted, name_column, export_path)
+                    extract_raster_values(tile_obs, collection, bands_to_extract, tile_already_extracted, export_path)
                     unfinished = False
                 except Exception as e:
                     # traceback_str = traceback.format_exc()
