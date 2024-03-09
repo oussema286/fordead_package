@@ -301,7 +301,36 @@ class ExtendPystacClasses:
 
     def to_geodataframe(self, **kwargs):
        return to_geodataframe(self)
-   
+
+    def drop_duplicates(self, inplace=False):
+        """
+        A function to drop duplicates from the collection.
+
+        Parameters
+        ----------
+        inplace : bool, optional
+            If True, the collection is modified in place.
+
+        Returns
+        -------
+        ItemCollection
+            The collection with duplicates dropped, if inplace is False.
+        
+        Notes
+        -----
+        Duplicates seem to be occuring at search depending on the paging.
+        See https://github.com/microsoft/PlanetaryComputer/issues/163
+        """
+        x=self
+        if not inplace:
+            x=self.clone()
+
+        index = pd.Series([i.id for i in self]).duplicated()
+        if index.any():
+            x.items = [i for i, v in zip(x.items, ~index) if v]
+        if not inplace:
+            return x
+
 class ItemCollection(pystac.ItemCollection, ExtendPystacClasses):
     pass
 

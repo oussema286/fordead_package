@@ -67,8 +67,11 @@ def getItemCollection(startdate, enddate, bbox, cloud_nb = 100):
         collections=["sentinel-2-l2a"],
         bbox=bbox,
         datetime=time_range,
-        query={"eo:cloud_cover": {"lt": cloud_nb}},
-        sortby="datetime"
+        query={"eo:cloud_cover": {"lt": float(cloud_nb)}},
+        sortby="datetime",
+        # seems to solve the duplicates issue if less than 1000 items
+        # see https://github.com/microsoft/PlanetaryComputer/issues/163
+        limit=1000
     )
 
     # itemsColl = search.pages()
@@ -230,6 +233,7 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
         collection = collection.filter(filter=f"tilename = '{tile}'")
     
     harmonize_sen2cor_offet(collection, bands=S2_THEIA_BANDS, inplace=True)
+    collection.drop_duplicates(inplace=True)
 
     return collection
 
