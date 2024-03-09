@@ -377,7 +377,7 @@ def extract_points(x, df, **kwargs):
     points = x.sel(coords, **kwargs)
     return points
 
-def extract_raster_values(points, tile_coll, bands_to_extract, export_path, rescale=True):
+def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflectance, name_column, export_path, rescale=True):
     """
     Sample raster values for each XY points
 
@@ -389,6 +389,12 @@ def extract_raster_values(points, tile_coll, bands_to_extract, export_path, resc
         Item_collection of a unique MGRS Tile
     bands_to_extract : list of strings
         List of bands to extract
+    extracted_reflectance: pandas.DataFrame
+        Table of already sampled raster values, not to extract again.
+        Expected columns are "area_name", name_column and "Date".
+        It can be very slow if there are many dates, see notes.
+    name_column: str
+        Name of the ID column in extracted_reflectance.
     export_path : str
         Path to export the result
     rescale : bool
@@ -401,25 +407,63 @@ def extract_raster_values(points, tile_coll, bands_to_extract, export_path, resc
     -------
     dataframe
         Table of sampled raster value
-    """    
+    
+    Notes
+    -----
+    In order to avoid extracting the same points/regions twice,
+    already extracted areas can be given in the extracted_reflectance argument.
+    In that case, instead of extracting from the whole cube at once, 
+    the extraction will iterate over date
+    to extract for each date only the points/regions not already extracted.
+    
+    This operation is here to keep retro-compatibility with previous versions. 
+    It is quite costly and should be avoided if possible. As an example:
+    - the extraction of the example validation points over one S2 tile from planetary
+      takes ~40s
+    - the same operation iterating over dates takes ~160s, i.e. 4x more.
+    """
     arr = tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract).rename("value")
     if not points.crs.equals(arr.rio.crs):
         points = points.to_crs(arr.rio.crs)
 
-    coords = points.get_coordinates()
-
+    coords = pd.concat([
+        points.get_coordinates(), 
+        points.drop(columns='geometry')], axis=1)
+    # coords = points.get_coordinates()
+    
     import time
-    start = time.time()    
-    p = extract_points(arr, coords.to_xarray(), method="nearest", tolerance=arr.rio.resolution()[0]/2).to_dataframe()
+    start = time.time()
+    # To respect original implementation: extract only the points not already extracted
+    # not sure it is faster than extracting directly the all the points...
+    if extracted_reflectance is None:
+        p = extract_points(arr, coords[["x", "y"]].to_xarray(), method="nearest", tolerance=arr.rio.resolution()[0]/2).to_dataframe()
+        p.reset_index(drop=False, inplace=True)
+    else:
+        p = None
+        plist = []
+        for t in arr.time.values:
+            st = str(t.astype("datetime64[D]"))
+            er = extracted_reflectance.loc[extracted_reflectance.Date==st, :]
+            to_extract = coords.merge(er.drop(columns=["Date"]), on=["area_name", name_column], how="outer", indicator=True)
+            to_extract = to_extract.query("_merge == 'left_only'").drop("_merge", axis=1)
+            if not to_extract.empty:
+                arr1 = arr.sel(time=t)
+                p1 = extract_points(arr1, coords[["x", "y"]].to_xarray(), method="nearest", tolerance=arr.rio.resolution()[0]/2).to_dataframe()
+                plist.append(p1.reset_index(drop=False))
+        if len(plist)>0:
+            p = pd.concat(plist, axis=0, ignore_index=True)
+
     end = time.time()
     print("Extraction procecessing time: ")
     print(end-start)
 
+    if p is None:
+        return
     # it may have a problem if two images at the same time,
     # in that case `id` should be added to the index arg,
     # and a solution should be found to choose between these values
     index = ["index", "time"]
-    p = p.reset_index(drop=False).pivot(columns="band", values="value", index=index)
+    p = p.pivot(columns="band", values="value", index=index)
 
     # drop rows with NA values
     if p.isna().any().any():
@@ -495,44 +539,44 @@ def process_points(points, sen_polygons, name_column):
 
     
 
-def get_already_extracted(export_path, obs, obs_path, name_column):
+def get_already_extracted(export_path, obs, obs_path, name_column, bands_to_extract):
     """
     
     Returns already extracted acquisition dates for each observation and each tile.
 
     """
     
-    if export_path.exists():
-        reflectance = pd.read_csv(export_path)
-        if name_column not in reflectance.columns:
-            # raise Exception("name_column '"+ name_column + "' not in reflectance.csv found in " + str(export_dir))
-            raise Exception("name_column '"+ name_column + "' not in " + str(export_path))
+    if not export_path.exists():
+        return
+    reflectance = pd.read_csv(export_path)
+    if name_column not in reflectance.columns:
+        # raise Exception("name_column '"+ name_column + "' not in reflectance.csv found in " + str(export_dir))
+        raise Exception("name_column '"+ name_column + "' not in " + str(export_path))
+    if not all([b in reflectance.keys() for b in bands_to_extract]):
+        raise ValueError("Some bands to extract are not in reflectance.csv found in " + str(export_path))
 
-        extracted_reflectance = reflectance[["area_name", name_column,"Date"]].drop_duplicates()
-        
-        # obs_extracted = np.unique(extracted_reflectance[name_column])
-        # obs_to_extract = np.unique(obs[name_column])
-        
-        # diff_nb_obs = len(obs_extracted) != len(obs_to_extract)
-        # missing_obs = not(all(item in obs_to_extract for item in obs_extracted))
-        # added_obs = not(all(item in obs_extracted for item in obs_to_extract))
-        
-        # if diff_nb_obs or missing_obs or added_obs:
-        #     print("Changes to "+ str(obs_path) + " have been detected since last extracting reflectances to " + str(export_path))
-        #     if diff_nb_obs:
-        #         print("Different number of observations detected")
-        #     if missing_obs:
-        #         print("Some observations are missing, already extracted reflectance will stay untouched")
-        #     if added_obs:
-        #         print("Some observations were added, their reflectance will be extracted")
-        #     answer = input("Do you want to continue ? (yes/no)")
-        #     if answer != "yes":
-        #         raise Exception("Extraction of reflectance stopped")
-
-        return extracted_reflectance
-    else:
-        return None
+    extracted_reflectance = reflectance[["area_name", name_column,"Date"]].drop_duplicates()
     
+    # obs_extracted = np.unique(extracted_reflectance[name_column])
+    # obs_to_extract = np.unique(obs[name_column])
+    
+    # diff_nb_obs = len(obs_extracted) != len(obs_to_extract)
+    # missing_obs = not(all(item in obs_to_extract for item in obs_extracted))
+    # added_obs = not(all(item in obs_extracted for item in obs_to_extract))
+    
+    # if diff_nb_obs or missing_obs or added_obs:
+    #     print("Changes to "+ str(obs_path) + " have been detected since last extracting reflectances to " + str(export_path))
+    #     if diff_nb_obs:
+    #         print("Different number of observations detected")
+    #     if missing_obs:
+    #         print("Some observations are missing, already extracted reflectance will stay untouched")
+    #     if added_obs:
+    #         print("Some observations were added, their reflectance will be extracted")
+    #     answer = input("Do you want to continue ? (yes/no)")
+    #     if answer != "yes":
+    #         raise Exception("Extraction of reflectance stopped")
+
+    return extracted_reflectance    
     
 
 # def _vrt(points,sentinel_dir):
