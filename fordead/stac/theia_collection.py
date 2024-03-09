@@ -304,7 +304,8 @@ class ExtendPystacClasses:
 
     def drop_duplicates(self, inplace=False):
         """
-        A function to drop duplicates from the collection.
+        A function to drop duplicates from the collection
+        based on the item ids.
 
         Parameters
         ----------
