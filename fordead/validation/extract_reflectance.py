@@ -98,7 +98,7 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
     if tile_selection is None:
         tile_selection = np.unique(obs.area_name)
 
-    extracted_reflectance = get_already_extracted(export_path, obs, obs_path, name_column)
+    extracted_reflectance = get_already_extracted(export_path, obs, obs_path, name_column, bands_to_extract)
 
     for tile in tile_selection:
 
