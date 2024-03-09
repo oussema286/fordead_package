@@ -216,7 +216,10 @@ class ExtendPystacClasses:
 
         For details, see [stackstac.stac](https://stackstac.readthedocs.io/en/latest/api/main/stackstac.stack.html)
         """
-        return stackstac.stack(self, **kwargs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning)
+            arr = stackstac.stack(self, **kwargs)
+        return arr
     
     def filter(self, asset_names=None, **kwargs):
         """Filter items with stac-static search.
