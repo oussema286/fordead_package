@@ -437,7 +437,7 @@ def merge_same_date(bands,out_dir):
                             dst.write(MergedBand,indexes=1)
             else:
                 shutil.rmtree(str(doublon)) #Supprime les inutiles
-                print("Suppresion doublons")
+                print("Suppression doublons")
                 
 
 def decompose_interval(start_date, end_date):

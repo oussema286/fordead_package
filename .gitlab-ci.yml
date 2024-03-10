@@ -43,8 +43,13 @@ install-linux:
     MAMBA_DOCKERFILE_ACTIVATE: 1
   script:
     - micromamba install -y -n base -f environment.yml
+    - pip install -e .
     - python -c "import fordead"
+    - cd docs/examples
+    - python download_data.py
+    - python full_test_script.py
   only:
+    - dev
     - master
 
 #[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)

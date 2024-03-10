@@ -67,8 +67,11 @@ def getItemCollection(startdate, enddate, bbox, cloud_nb = 100):
         collections=["sentinel-2-l2a"],
         bbox=bbox,
         datetime=time_range,
-        query={"eo:cloud_cover": {"lt": cloud_nb}},
-        sortby="datetime"
+        query={"eo:cloud_cover": {"lt": float(cloud_nb)}},
+        sortby="datetime",
+        # seems to solve the duplicates issue if less than 1000 items
+        # see https://github.com/microsoft/PlanetaryComputer/issues/163
+        limit=1000
     )
 
     # itemsColl = search.pages()
@@ -180,10 +183,12 @@ def get_items_tiles(item_collection):
 
 
     
-    
+S2_THEIA_BANDS = [f"B{i+1}" for i in range(12)]+["B8A"]
+S2_SEN2COR_BANDS = [f"B{i+1:02}" for i in range(12)]+["B8A"]
 def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc_cloud, tile = None):
     """
-    
+    Get the planetary item collection with band names
+    and offset harmonized with THEIA format.
 
     Parameters
     ----------
@@ -198,7 +203,14 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
     tile : str, optional
         The name of a single tile used to filter the collection. If None, all tiles are kept in the collection. The default is None.
 
-
+    Returns
+    -------
+    fordead.stac.stac_module.ItemCollection
+        The item collection.
+    
+    Notes
+    -----
+    The offset is harmonized with `harmonize_sen2cor_offet`.
     """
     
     corresp_keys = {'B01' : 'B1', 'B02' : 'B2', 'B03' : "B3", 'B04' : "B4", 'B05' : "B5", 
@@ -210,11 +222,7 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
         # item.properties["cloud_cover"] = item.properties['eo:cloud_cover']
         item.properties["tilename"] = "T" + item.properties['s2:mgrs_tile']
         #Changing B01 to B1, up to B9, and SCL to Mask in item asset names
-        
-        if item.properties["datetime"] >= "2022-01-25":
-            item.properties["offset"] = -1000
-        else:
-            item.properties["offset"] = 0
+
         for key_change in corresp_keys:
             item.assets[corresp_keys[key_change]] = item.assets.pop(key_change)
             
@@ -224,8 +232,23 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
         print("Extracting Sentinel-2 data from "+ tile + " collected from Microsoft Planetary Computer")
         collection = collection.filter(filter=f"tilename = '{tile}'")
     
+    harmonize_sen2cor_offet(collection, bands=S2_THEIA_BANDS, inplace=True)
+    collection.drop_duplicates(inplace=True)
 
     return collection
+
+def harmonize_sen2cor_offet(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_BANDS), inplace=False):
+    if not inplace:
+        collection = collection.copy()
+    for item in collection:
+        for asset in bands:
+            if asset in item.assets:
+                if item.properties["datetime"] >= "2022-01-25":
+                    item.assets[asset].extra_fields["raster:bands"] = [dict(offset=-1000)]
+                else:
+                    item.assets[asset].extra_fields["raster:bands"] = [dict(offset=0)]
+    if inplace:
+        return collection
 
 def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile):
     # lim_cloud_cover = int(lim_perc_cloud*100)
@@ -259,7 +282,7 @@ def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date
                 #Changing 'CLM' to 'Mask' 
                 for key_change in corresp_keys:
                     item.assets[corresp_keys[key_change]] = item.assets.pop(key_change) #Might be changed in the future
-                item.properties["offset"] = 0
+
             collection = collection.filter(datetime=f"{start_date}/{end_date}")
             
             if tile_cloudiness is not None : collection = collection.filter(filter = f'cloud_cover < {lim_perc_cloud}') 

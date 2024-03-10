@@ -47,7 +47,7 @@ fordead extract_reflectance [OPTIONS]
 
 See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-extract_reflectance)
 
-## How it works
+## How does it work ?
 
 ### Importing the vector file containing points used as extraction locations
 The vector file at **obs_path** is imported using the geopandas package.

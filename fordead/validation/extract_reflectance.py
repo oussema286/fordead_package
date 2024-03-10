@@ -46,7 +46,8 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
                         bands_to_extract = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"],
                         tile_selection = None,
                         start_date = "2015-01-01",
-                        end_date = "2030-01-01"):
+                        end_date = "2030-01-01",
+                        overwrite = False):
     """
     Extracts reflectance from Sentinel-2 data using a vector file containing points, exports the data to a csv file.
     If new acquisitions are added to the Sentinel-2 directory, new data is extracted and added to the existing csv file.
@@ -73,6 +74,8 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
         First date of the period from which to extract reflectance
     end_date : str
         Last date of the period from which to extract reflectance
+    overwrite : bool
+        If True, overwrites the csv file if it already exists. The default is False.
     
     """
     
@@ -80,6 +83,13 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
         
     
     export_path = Path(export_path)
+    if export_path.exists():
+        if not overwrite:
+            print("File already exists:"+ str(export_path))
+            print("It will be completed with new observations.")
+        else:
+            print("Removing " + str(export_path))
+            export_path.unlink()
     obs = gp.read_file(obs_path)
     
     if (sentinel_source != "Planetary") and (cloudiness_path is not None):
@@ -87,6 +97,9 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
 
     if tile_selection is None:
         tile_selection = np.unique(obs.area_name)
+
+    extracted_reflectance = get_already_extracted(export_path, name_column, bands_to_extract)
+
     for tile in tile_selection:
 
         tile_obs = obs[obs["area_name"] == tile]
@@ -98,21 +111,17 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
             
             unfinished = True
             while unfinished:
-                try:
-                    extracted_reflectance = get_already_extracted(export_path, obs, obs_path, name_column)
-                    
+                try:                    
+                    tile_already_extracted = None
                     if extracted_reflectance is not None:
                         tile_already_extracted = extracted_reflectance[extracted_reflectance["area_name"] == tile]
-                    else:
-                        tile_already_extracted = None
                     
                     if sentinel_source == "Planetary":
                         collection = get_harmonized_planetary_collection(start_date, end_date, get_bbox(tile_obs), lim_perc_cloud, tile)
                     else:
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
-               
-                    extract_raster_values(tile_obs, collection, tile_already_extracted, name_column, bands_to_extract, export_path)
+                    extract_raster_values(tile_obs, collection, bands_to_extract, tile_already_extracted, export_path)
                     unfinished = False
                 except Exception as e:
                     # traceback_str = traceback.format_exc()

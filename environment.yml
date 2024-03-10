@@ -24,7 +24,6 @@ dependencies:
   - scipy
   - stackstac
   - xarray
-  - xpystac
   - jsonschema
   - referencing
 
