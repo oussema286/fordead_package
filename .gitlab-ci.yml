@@ -45,6 +45,7 @@ install-linux:
     - micromamba install -y -n base -f environment.yml
     - python -c "import fordead"
   only:
+    - dev
     - master
 
 #[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
