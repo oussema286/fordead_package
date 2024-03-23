@@ -4,6 +4,40 @@ Though this package is meant to be used with Sentinel-2 data from any provider (
 This tool can be used either from a script or from the command line, and automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold. Then this data is unzipped, keeping only chosen bands from Flat REflectance data, and zip files can be emptied as a way to save storage space.
 Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
 
+The following details the arguments of the python API and CLI. It is possible
+to specify your login and passwords as arguments, although not recommended.
+
+Instead of writing your login and password in a script or a command line,
+it is recommended to set theia credentials in the config file `eodag.yaml`
+in the subsection credentials of section theia.
+
+In order to find the path of the file `eodag.yml`, run the following
+in a python session, it should create the file if it does not exist:
+```python
+from path import Path
+from eodag import EODataAccessGateway
+EODataAccessGateway()
+print(Path("~").expand() / ".config" / "eodag" / "eodag.yml"))
+```
+
+In the case there are special characters in your
+login or password, make sure to add double quotes around them,
+example:
+```yaml
+theia:
+    priority: # Lower value means lower priority (Default: 0)
+    search:   # Search parameters configuration
+    download:
+        extract:
+        outputs_prefix:
+        dl_url_params:
+    auth:
+        credentials:
+            ident: "myemail@inrae.fr"
+            pass: "k5dFE9§~lkjqs"
+```
+
+
 #### INPUTS
 The input parameters are:
 
@@ -23,38 +57,6 @@ The input parameters are:
 #### OUTPUTS
 In the **unzipped_directory**, a directory is created for each tile, containing a directory for each Sentinel-2 acquisition corresponding to the chosen parameters, containing a file for each chosen band in Flat REflectance.
 In the **zipped_directory**, a zip file for each Sentinel-2 acquisition, empty or not depending on the **empty_zip** parameter.
-
-#### Notes
-It is not recommended to write login and password
-in a script, thus it is recommended to set 
-theia credentials in $HOME/.config/eodag/eodag.yaml
-in the subsection credentials of section theia.
-
-In case $HOME/.config/eodag/eodag.yaml, run the following
-in a python session, it should create the file:
-```python
-from path import Path
-from eodag import EODataAccessGateway
-EODataAccessGateway()
-print(Path("~").expand() / ".config" / "eodag" / "eodag.yml"))
-```
-
-In the case there are special characters in your
-login or password, make sure to add double quotes,
-example:
-```yaml
-theia:
-    priority: # Lower value means lower priority (Default: 0)
-    search:   # Search parameters configuration
-    download:
-        extract:
-        outputs_prefix:
-        dl_url_params:
-    auth:
-        credentials:
-            ident: "myemail@inrae.fr"
-            pass: "k5dFE9§~lkjqs"
-```
 
 ## Examples
 ### From a script
