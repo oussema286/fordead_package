@@ -272,11 +272,10 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
     In case $HOME/.config/eodag/eodag.yaml, run the following
     in a python session, it should create the file:
     ```python
-    import os
+    from path import Path
     from eodag import EODataAccessGateway
     EODataAccessGateway()
-    print(os.path.join(os.path.expanduser("~"),
-            ".config", "eodag", "eodag.yml"))
+    print(Path("~").expand() / ".config" / "eodag" / "eodag.yml"))
     ```
 
     In the case there are special characters in your
