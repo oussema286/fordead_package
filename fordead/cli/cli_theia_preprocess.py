@@ -35,7 +35,7 @@ def cli_theia_preprocess(zipped_directory, unzipped_directory, tiles, login_thei
     
     theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia, level, start_date, end_date, lim_perc_cloud, bands, correction_type, empty_zip)
 
-def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia, level = "LEVEL2A", start_date = "2015-06-23", end_date = None, lim_perc_cloud = 50, bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], correction_type = "FRE", empty_zip = False):
+def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=None, password_theia=None, level = "LEVEL2A", start_date = "2015-06-23", end_date = None, lim_perc_cloud = 50, bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], correction_type = "FRE", empty_zip = False):
     """
     Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold. Then this data is unzipped, keeping only chosen bands from Flat REflectance data, and zip files can be emptied as a way to save storage space.
     Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
@@ -71,9 +71,8 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, p
     
     if level == "LEVEL3A" : correction_type = "FRC"
     
-    zipped_directory = Path(zipped_directory)
-    unzipped_directory = Path(unzipped_directory)
-    print("test")
+    zipped_directory = Path(zipped_directory).expanduser()
+    unzipped_directory = Path(unzipped_directory).expanduser()
     if end_date is None:
         end_date = date.today().strftime('%Y-%m-%d')
     
@@ -98,7 +97,10 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, p
                     tmp_files = (zipped_directory / tuile).glob("*.tmp")
                     for file in tmp_files:
                         file.unlink()
-                except Exception: 
+                except Exception as e: 
+                    print("Download got an error:\n" + e +"\n")
+                    print("Trying again...")
+
                     tmp_files = (zipped_directory / tuile).glob("*.tmp")
                     for file in tmp_files:
                         file.unlink()
