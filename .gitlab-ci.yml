@@ -33,8 +33,9 @@ intall-win:
     ErrorActionPreference: stop 
   script:
     - git config --system core.longpaths true
-    - which conda
-    # - gitlab-ci\conda-build.ps1 # Miniforge already installed in runner
+    # install Miniforge if $env:userprofile\miniforge3 is not found
+    # other just load profile
+    - gitlab-ci\conda-build.ps1
     - mamba env create -y -n fordead-gitlab-ci -f environment.yml
     - cd docs\examples
     - conda run -n fordead-gitlab-ci --live-stream python download_data.py
