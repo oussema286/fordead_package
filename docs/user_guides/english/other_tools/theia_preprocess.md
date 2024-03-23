@@ -7,24 +7,56 @@ Finally, if two Sentinel-2 directories come from the same acquisition date, they
 #### INPUTS
 The input parameters are:
 
-- **zipped_directory**: Path of the directory with zipped theia data
-- **unzipped_directory**: Path of the output directory
+- **zipped_directory**: Path of the directory where theia zip files will be downloaded
+- **unzipped_directory**: Path of the directory where the unzipped files will be stored
 - **tiles** : Name of the tiles to be downloaded (format : T31UFQ)
-- **login_theia** : Login of your theia account
-- **password_theia** : Password of your theia account
 - **level** : Product level for reflectance products, can be 'LEVEL1C', 'LEVEL2A' or 'LEVEL3A'
 - **start_date** : start date, fmt('2015-12-22')
 - **end_date** : end date, fmt('2015-12-22')
 - **lim_perc_cloud** : Maximum cloudiness in SENTINEL dates downloaded (%)
 - **bands** : List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, as well as CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2 for LEVEL2A data, and DTS1, DTS2, FLG1, FLG2, WGT1, WGT2 for LEVEL3A)
 - **correction_type** : Chosen correction type ('SRE' or 'FRE' for LEVEL2A data, 'FRC' for LEVEL3A)
-- **empty_zip** : If True, the zip files are emptied as a way to save space
+- **empty_zip** : If True, the zip files are removed after unzipping
+- **login_theia** : Login of your theia account, optional (see notes below)
+- **password_theia** : Password of your theia account, optional (see notes below)
 
 #### OUTPUTS
 In the **unzipped_directory**, a directory is created for each tile, containing a directory for each Sentinel-2 acquisition corresponding to the chosen parameters, containing a file for each chosen band in Flat REflectance.
 In the **zipped_directory**, a zip file for each Sentinel-2 acquisition, empty or not depending on the **empty_zip** parameter.
 
-## Examples of use
+#### Notes
+It is not recommended to write login and password
+in a script, thus it is recommended to set 
+theia credentials in $HOME/.config/eodag/eodag.yaml
+in the subsection credentials of section theia.
+
+In case $HOME/.config/eodag/eodag.yaml, run the following
+in a python session, it should create the file:
+```python
+from path import Path
+from eodag import EODataAccessGateway
+EODataAccessGateway()
+print(Path("~").expand() / ".config" / "eodag" / "eodag.yml"))
+```
+
+In the case there are special characters in your
+login or password, make sure to add double quotes,
+example:
+```yaml
+theia:
+    priority: # Lower value means lower priority (Default: 0)
+    search:   # Search parameters configuration
+    download:
+        extract:
+        outputs_prefix:
+        dl_url_params:
+    auth:
+        credentials:
+            ident: "myemail@inrae.fr"
+            pass: "k5dFE9§~lkjqs"
+```
+
+## Examples
 ### From a script
 
 ```bash
