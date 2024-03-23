@@ -21,9 +21,18 @@ if not data_dir.exists():
 
         data_tmp_dir = dl_dir / "fordead_data-main"
         zip_path, _ = urlretrieve(data_url, dl_dir / data_url.name)
-        with zipfile.ZipFile(zip_path, "r") as f:
-            f.extractall(dl_dir)
-        
-        data_tmp_dir.rename(data_dir)
+        try:
+            with zipfile.ZipFile(zip_path, "r") as f:
+                f.extractall(dl_dir)
+            data_tmp_dir.rename(data_dir)
+        except FileNotFoundError as e:
+            print("Extraction failed, path may be too long for Windows...")
+            print("Trying again extraction in a shorter temporary directory: " + Path(TemporaryDirectory().name))
+            with TemporaryDirectory() as tmpdir2:
+                dl_dir2 = Path(tmpdir2)
+                with zipfile.ZipFile(zip_path, "r") as f:
+                    f.extractall(dl_dir2)
+                data_tmp_dir = dl_dir2 / "fordead_data-main"
+                data_tmp_dir.rename(dl_dir2/data_dir.name).move(data_dir.parent)
 
-print(f"Data downloaded in: {data_dir}")
+print(f"Downloaded data is in: {data_dir}")

@@ -152,7 +152,7 @@ dieback_detection_from_dataframe(
 #########################################################
 print("Using Planetary Computer")
 
-preprocessed_obs_path = output_dir / "preprocessed_obs_planetary.gpkg"
+preprocessed_obs_path = test_output_dir / "calibration_validation" / "preprocessed_obs_planetary.gpkg"
 
 obs_to_s2_grid(
 	obs_path = obs_path,

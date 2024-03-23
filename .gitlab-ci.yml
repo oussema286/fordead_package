@@ -1,8 +1,9 @@
 .shared_windows_runners:
   tags:
-  - shared-windows
-  - windows
-  - windows-1809
+  - win10-mop8243
+  # - shared-windows
+  # - windows
+  # - windows-1809
 stages:
   - build
   - deploy
@@ -28,11 +29,24 @@ intall-win:
   stage: build
   extends:
     - .shared_windows_runners
+  variables: 
+    ErrorActionPreference: stop 
   script:
+    - git config --system core.longpaths true
+    # install Miniforge if $env:userprofile\miniforge3 is not found
+    # other just load profile
     - gitlab-ci\conda-build.ps1
-    - mamba env create -y -n fordead -f environment.yml
-    - conda run -n fordead python -c "import fordead"
+    - mamba env create -y -n fordead-gitlab-ci -f environment.yml
+    - cd docs\examples
+    - conda run -n fordead-gitlab-ci --live-stream python download_data.py
+    - conda run -n fordead-gitlab-ci --live-stream python full_test_script.py
+    # cleaning
+    - Remove-Item2 -Recurse fordead_data
+    - Remove-Item2 -Recurse test_output_dir
+    - mamba remove -n fordead-gitlab-ci --all -y
+    - mamba clean --all -y
   only:
+    - merge_requests
     - schedules
   
 
