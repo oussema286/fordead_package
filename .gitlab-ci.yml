@@ -1,10 +1,16 @@
-.shared_windows_runners:
-  tags:
-  - win10-mop8243
+# .shared_windows_runners:
+#   tags:
+#   - win10-mop8243
   # - shared-windows
   # - windows
   # - windows-1809
+
+.win10_runner:
+  tags:
+  - win10
+
 stages:
+  - test
   - build
   - deploy
 ## docker build does not end within the 1h limit
@@ -25,30 +31,24 @@ stages:
 #  only:
 #    - docker_ci
 
-intall-win:
-  stage: build
+test-win10:
+  stage: test
   extends:
-    - .shared_windows_runners
-  variables: 
-    ErrorActionPreference: stop 
+    - .win10_runner
   script:
     - git config --system core.longpaths true
     # install Miniforge if $env:userprofile\miniforge3 is not found
     # other just load profile
     - gitlab-ci\conda-build.ps1
     - mamba env create -y -n fordead-gitlab-ci -f environment.yml
+    - conda run -n fordead-gitlab-ci --live-stream pip install -e .
     - cd docs\examples
     - conda run -n fordead-gitlab-ci --live-stream python download_data.py
     - conda run -n fordead-gitlab-ci --live-stream python full_test_script.py
-    # cleaning
-    - Remove-Item2 -Recurse fordead_data
-    - Remove-Item2 -Recurse test_output_dir
-    - mamba remove -n fordead-gitlab-ci --all -y
-    - mamba clean --all -y
   only:
     - merge_requests
     - schedules
-  
+
 
 install-linux:
   stage: build
