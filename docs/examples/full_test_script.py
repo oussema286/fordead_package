@@ -1,7 +1,7 @@
 # This is a script designed to run all main fordead function, from dieback detection, visualisation tools and the calibration and validation module.
 # It uses data from a small dataset available here : https://gitlab.com/fordead/fordead_data
 
-from pathlib import Path
+from path import Path
 import shutil
 
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
@@ -33,11 +33,30 @@ test_output_dir = output_dir / "test_output_dir"
 #########################################################
 # Creating directories
 if test_output_dir.exists():
-    shutil.rmtree(test_output_dir)
-test_output_dir.mkdir(parents=True, exist_ok=True)
-(test_output_dir / "dieback_detection").mkdir(parents=True, exist_ok=True)
-(test_output_dir / "calibration_validation").mkdir(parents=True, exist_ok=True)
-# (test_output_dir / "dieback_detection").mkdir(parents=True, exist_ok=True)
+    test_output_dir.rmtree()
+test_output_dir.mkdir()
+(test_output_dir / "dieback_detection").mkdir()
+(test_output_dir / "calibration_validation").mkdir()
+
+# #########################################################
+# print("Test theia_preprocess")
+
+# from fordead.cli.cli_theia_preprocess import theia_preprocess
+# download_dir = (test_output_dir / "download").mkdir()
+# zipped_directory = download_dir / "zip"
+# unzipped_directory = download_dir / "unzip"
+# theia_preprocess(zipped_directory=zipped_directory,
+#                  unzipped_directory=unzipped_directory,
+#                  tiles = ["T31UFR"],
+#                  start_date='2018-01-18',
+#                  end_date='2018-01-19',
+#                 #  login_theia = <login_theia>,
+#                 #  password_theia = <password_theia>,
+#                  level = "LEVEL2A", 
+#                  lim_perc_cloud = 100,
+#                  empty_zip = True)
+
+
 
 #########################################################
 print("Testing dieback detection")

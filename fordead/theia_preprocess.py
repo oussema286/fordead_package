@@ -4,8 +4,10 @@ Created on Tue Feb 16 13:53:50 2021
 
 @author: Raphael Dutrieux
 """
-from pathlib import Path
+from path import Path
 from zipfile import ZipFile, BadZipfile
+import zipfile
+import tempfile
 import numpy as np
 import rasterio
 import shutil
@@ -14,8 +16,11 @@ import json
 import time
 import os
 import os.path
+import re
 import sys
 from datetime import datetime, timedelta
+from eodag import EODataAccessGateway
+
 
 from fordead.import_data import retrieve_date_from_string, TileInfo
 
@@ -239,7 +244,8 @@ def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_c
 #     except KeyError:
 #         print(">>>no product corresponds to selection criteria")
 
-def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_theia, password_theia, level):
+def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
+                   login_theia=None, password_theia=None, level='LEVEL2A', unzip_dir = None):
     """
     Downloads Sentinel-2 acquisitions of the specified tile from THEIA from start_date to end_date under a cloudiness threshold
 
@@ -261,6 +267,11 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
         Password of your theia account
     level : str, optional (see notes)
         Product level for reflectance products, can be 'LEVEL1C', 'LEVEL2A' or 'LEVEL3A'
+    
+    Returns
+    -------
+    List
+        Files to unzip
 
     Notes
     -------
@@ -295,8 +306,6 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
                 pass: "k5dFE9§~lkjqs"
     ```
     """
-    from eodag import EODataAccessGateway
-    import re
 
     if level == 'LEVEL1C':
         product_type = 'S2_MSI_L1C'
@@ -326,16 +335,67 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_
                 "pass": password_theia
             }
         )
-    outfiles = [Path(write_dir) / (r.properties['title']+"zip") for r in search_results]
 
-    downloaded = [f for f in outfiles if f.exists()]
-    to_download = [r for f, r in zip(outfiles, search_results) if not f.exists()]
-    print(f'{len(downloaded)} files already downloaded, {len(to_download)} files left to download.')
+    unzipped = []
+    to_unzip = []
+    to_download = [] 
+    for r in search_results:
+        zip_file = Path(write_dir) / (r.properties['id']+".zip")
+        unzip_file = []
+        if unzip_dir is not None:
+            id = re.sub(r'(.*)_[A-Z]', r'\1',r.properties['id'])
+            unzip_file = Path(unzip_dir).glob(f'{id}_[A-D]_V*')
+        if len(unzip_file)>0:
+            unzipped.append(unzip_file[0])
+        elif zip_file.exists():
+            # products downloaded but not unzipped
+            to_unzip.append(zip_file)
+        else:
+            to_download.append(r)
+    
+    print(f"Products already unzipped:\n{'\n'.join(unzipped)}\n")
+    print(f"Products already downloaded but not unzipped:\n{'\n'.join(to_unzip)}\n")
+    print(f'{len(search_results)-len(to_download)} files already downloaded or unzipped, {len(to_download)} files left to download.')
     print(f"Downloading products: {to_download}")
+
+    downloaded = []
     if len(to_download) > 0:
-        dag.download_all(to_download,
+        downloaded = dag.download_all(to_download,
                      outputs_prefix=write_dir,
                      extract=False)
+        for f in downloaded:
+            if not (Path(f).exists() and f.endswith(".zip")):
+                raise Exception("Something went wrong with the download")
+
+    return to_unzip + downloaded
+
+BAND_NAMES = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12',
+              'CLMR1', 'CLMR2', 'EDGR1', 'EDGR2', 'SATR1', 'SATR2',
+              "DTS1","DTS2","FLG1","FLG2","WGT1","WGT2"]
+
+BAND_FILE_PATTERNS = dict(zip(BAND_NAMES,
+    ['B2.tif', 'B3.tif', 'B4.tif', 'B5.tif', 'B6.tif', 'B7.tif',
+     'B8.tif', 'B8A.tif', 'B11.tif', 'B12.tif', '_CLM_R1.tif', 
+     '_CLM_R2.tif', '_EDG_R1.tif', '_EDG_R2.tif', '_SAT_R1.tif',
+     '_SAT_R2.tif',"_DTS_R1.tif","_DTS_R2.tif","_FLG_R1.tif",
+     "_FLG_R2.tif","_WGT_R1.tif","_WGT_R2.tif"]))
+
+def theia_bands(correction_type):
+    """
+    Returns dict of expected theia bands for the specified correction type
+
+    Parameters
+    ----------
+    correction_type : str
+        Chosen correction type (SRE or FRE for LEVEL2A data, FRC for LEVEL3A)
+
+    Returns
+    -------
+    dict
+        Theia band patterns for the specified correction type
+    """
+    bands = {k:re.sub(r'^(B[0-9]+[A]*.tif)$', "_"+correction_type+'_\\1', v) for k, v in BAND_FILE_PATTERNS.items()}
+    return bands
 
 
 def s2_unzip(s2zipfile, out_dir, bands, correction_type):
@@ -358,40 +418,32 @@ def s2_unzip(s2zipfile, out_dir, bands, correction_type):
     None.
 
     """
+    s2zipfile = Path(s2zipfile).expand()
+    out_dir = Path(out_dir).expand()
+    corrBand = theia_bands(correction_type)
+  
     
-    corrBand = dict(zip(['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12'] + ['CLMR1', 'CLMR2', 'EDGR1', 'EDGR2', 'SATR1', 'SATR2',"DTS1","DTS2","FLG1","FLG2","WGT1","WGT2"],
-         ["_"+correction_type+"_"+band for band in ['B2.tif', 'B3.tif', 'B4.tif', 'B5.tif', 'B6.tif', 'B7.tif', 'B8.tif', 'B8A.tif', 'B11.tif', 'B12.tif']] + ['_CLM_R1.tif', '_CLM_R2.tif', '_EDG_R1.tif', '_EDG_R2.tif', '_SAT_R1.tif', '_SAT_R2.tif',"_DTS_R1.tif","_DTS_R2.tif","_FLG_R1.tif","_FLG_R2.tif","_WGT_R1.tif","_WGT_R2.tif"]))
-    
-
-    
-    # corrBand = {'B2':'_FRE_B2.tif', 'B3':'_FRE_B3.tif', 'B4':'_FRE_B4.tif', 'B5':'_FRE_B5.tif',
-    #             'B6':'_FRE_B6.tif', 'B7':'_FRE_B7.tif', 'B8':'_FRE_B8.tif',
-    #             'B8A':'_FRE_B8A.tif', 'B11':'_FRE_B11.tif', 'B12':'_FRE_B12.tif',
-    #             'CLMR1': '_CLM_R1.tif', 'CLMR2':'_CLM_R2.tif',
-    #             'EDGR1': '_EDG_R1.tif', 'EDGR2':'_EDG_R2.tif',
-    #             'SATR1': '_SAT_R1.tif', 'SATR2':'_SAT_R2.tif'}
-
-    try:
-        os.mkdir(out_dir) #Create directory
-    except FileExistsError:
-        #directory already exists
-        pass
     try:
         with ZipFile(s2zipfile, 'r') as zipObj:
-            listOfFileNames = zipObj.namelist()
-            for fileName in listOfFileNames:
-                    for i in bands:
-                        if fileName.endswith(corrBand[i]): #Si le nom de fichier finit par ce qui correspond à la bande
-                            if not os.path.exists(os.path.join(out_dir,fileName)):
-                                print('Extraction of {}'.format(fileName))
-                                zipObj.extract(fileName, out_dir)
-                            else:
-                                print('File already extracted: {}'.format(os.path.basename(fileName)))
+            root_dir, = zipfile.Path(zipObj).iterdir()
+            if (out_dir / root_dir.name).exists():
+                print(f'Files already extracted: {out_dir / root_dir.name}')
+            else:
+                print(f'Extracting files from {s2zipfile} to {out_dir / root_dir.name}')
+                with tempfile.TemporaryDirectory(dir=out_dir) as tempdir:
+                    tmpdir = Path(tempdir)
+                    listOfFileNames = zipObj.namelist()
+                    for fileName in listOfFileNames:
+                            for i in bands:
+                                if fileName.endswith(corrBand[i]): #Si le nom de fichier finit par ce qui correspond à la bande
+                                    zipObj.extract(fileName, tmpdir)
+                    (tmpdir / root_dir.name).move(out_dir)
+            
     except BadZipfile:
-        print(str(s2zipfile) + " : \nBad zip file, removing file")
-        os.remove(s2zipfile)
+        print(f"Bad zip file, removing file: {s2zipfile}")
+        s2zipfile.remove()
 
-def unzip_theia(bands, zip_dir,out_dir, empty_zip, correction_type):
+def unzip_theia(bands, zip_dir, out_dir, empty_zip, correction_type):
     """
     Unzips zipped theia data, then empties the zip file
 
@@ -399,8 +451,9 @@ def unzip_theia(bands, zip_dir,out_dir, empty_zip, correction_type):
     ----------
     bands : list of str
         List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, as well as CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2 for LEVEL2A data, and DTS1, DTS2, FLG1, FLG2, WGT1, WGT2 for LEVEL3A)
-    zip_dir : str
+    zip_dir : str or list
         Directory where zip files containing theia data are stored
+        or list of zip files
     out_dir : str
         Directory where data is extracted
     empty_zip : bool
@@ -415,16 +468,21 @@ def unzip_theia(bands, zip_dir,out_dir, empty_zip, correction_type):
     
 
     """
-    zip_dir = Path(zip_dir)
-    out_dir = Path(out_dir)
-    zipList=zip_dir.glob("*.zip")
-    if not(out_dir.exists()):
-        os.mkdir(out_dir)
+    
+    out_dir = Path(out_dir).expand()
+    if isinstance(zip_dir, list):
+        zipList = [Path(f).expand() for f in zip_dir]
+    else:
+        zip_dir = Path(zip_dir).expand()
+        zipList=zip_dir.glob("*.zip")
+    
+    out_dir.mkdir_p()
+    
     for zipfile in zipList:
-        s2_unzip(zipfile,out_dir,bands, correction_type)
+        s2_unzip(zipfile, out_dir, bands, correction_type)
         if zipfile.exists() and (len(ZipFile(zipfile).namelist()) != 0) and empty_zip:
-            print("Removal of " + str(zipfile))
-            os.remove(zipfile)
+            print("Replaces by empty zip: " + zipfile)
+            zipfile.remove()
             zipObj = ZipFile(zipfile, 'w')
             zipObj.close()
 
@@ -453,11 +511,11 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
             if date not in tile.paths["unzipped"]:
                 try:
                     if (len(ZipFile(tile.paths["zipped"][date]).namelist()) == 0):
-                        print("Empty zip with no unzipped directory detected : removal of " + str(tile.paths["zipped"][date]))
-                        os.remove(tile.paths["zipped"][date])
+                        print("Zip file is empty and unzipped directory not found : zip file removed " + str(tile.paths["zipped"][date]))
+                        Path(tile.paths["zipped"][date]).remove()
                 except BadZipfile:
                     print("Bad zip file, removing file")
-                    os.remove(tile.paths["zipped"][date])
+                    Path(tile.paths["zipped"][date]).remove()
 
 def merge_same_date(bands,out_dir):
     """
@@ -476,14 +534,14 @@ def merge_same_date(bands,out_dir):
 
     """
 
-    
+    out_dir = Path(out_dir).expand()
     SenPathGen = out_dir.glob("SEN*")
     # SenPathList=glob(out_dir+"/SEN*")
     SenDateList = [] #Création dictionnaire avec date : chemin du fichier
     SenPathList = []
     for SenPath in SenPathGen:
         # SenDate = SenPath.split('_')[1].split('-')[0]
-        SenDate = retrieve_date_from_string(str(SenPath))
+        SenDate = retrieve_date_from_string(SenPath)
         SenDateList+=[SenDate]
         SenPathList += [SenPath]
     # tile = TileInfo(out_dir)
@@ -533,9 +591,9 @@ def merge_same_date(bands,out_dir):
                 if doublon==Doublons[0]:
                     with rasterio.open(doublon /  "MASKS" / (doublon.name +"_CLM_R2.tif"), 'w', **ProfileSave) as dst:
                             dst.write(MergedBand,indexes=1)
-            else:
-                shutil.rmtree(str(doublon)) #Supprime les inutiles
-                print("Suppression doublons")
+                else:
+                    shutil.rmtree(str(doublon)) #Supprime les inutiles
+                    print("Suppression doublons")
                 
 
 def decompose_interval(start_date, end_date):
