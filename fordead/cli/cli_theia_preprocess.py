@@ -24,7 +24,11 @@ from fordead.theia_preprocess import unzip_theia, merge_same_date, delete_empty_
 @click.option("-b", "--bands", multiple=True, default=["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"],help = "List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, as well as CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2 for LEVEL2A data, and DTS1, DTS2, FLG1, FLG2, WGT1, WGT2 for LEVEL3A)", show_default=True)
 @click.option("-c", '--correction_type', type = click.Choice(['SRE', 'FRE', 'FRC'], case_sensitive=False),  help='Chosen correction type (SRE or FRE for LEVEL2A data, FRC for LEVEL3A)', default='FRE', show_default=True)
 @click.option("--empty_zip",  is_flag=True, help = "If True, the zip files are emptied as a way to save space.", show_default=True)
-def cli_theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia, level, start_date = "2015-06-23", end_date = "2023-06-23", lim_perc_cloud = 50, bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], correction_type = "FRE", empty_zip = False):
+@click.option("-r", "--retry", type=int, default=3, help = "Number of retries when downloading data", show_default=True)
+def cli_theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia,
+                         level, start_date = "2015-06-23", end_date = "2023-06-23", lim_perc_cloud = 50,
+                         bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"],
+                         correction_type = "FRE", empty_zip = False, retry = 3):
     """
     Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold. Then this data is unzipped, keeping only chosen bands from Flat REflectance data, and zip files can be emptied as a way to save storage space.
     Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
@@ -33,12 +37,13 @@ def cli_theia_preprocess(zipped_directory, unzipped_directory, tiles, login_thei
 
     """
     
-    theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia, level, start_date, end_date, lim_perc_cloud, bands, correction_type, empty_zip)
+    theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia,
+                     level, start_date, end_date, lim_perc_cloud, bands, correction_type, empty_zip, retry)
 
 def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=None, password_theia=None,
                      level = "LEVEL2A", start_date = "2015-06-23", end_date = None, lim_perc_cloud = 50,
                      bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], 
-                     correction_type = "FRE", empty_zip = False):
+                     correction_type = "FRE", empty_zip = False, retry = 3):
     """
     Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold. Then this data is unzipped, keeping only chosen bands from Flat REflectance data, and zip files can be emptied as a way to save storage space.
     Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
@@ -69,6 +74,12 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=No
         Chosen correction type (SRE or FRE for LEVEL2A data, FRC for LEVEL3A)
     empty_zip : bool, optional
         If True, the zip files are emptied as a way to save space. The default is False.
+    retry : int, optional
+        Number of times the download can be retried. The default is 3.
+
+    Returns
+    -------
+    None.
 
     """
     
@@ -84,13 +95,25 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=No
         tile_zip_dir = (zipped_directory / tuile).mkdir_p()   
         tile_unzip_dir = (unzipped_directory / tuile).mkdir_p()
         
-        delete_empty_zip(tile_zip_dir, tile_unzip_dir) #Deletes empty zip files if the unzipped directory is missing
-        
-        to_unzip = theia_download(tuile, start_date, end_date, tile_zip_dir,
-                       lim_perc_cloud, login_theia, password_theia, level, 
-                       tile_unzip_dir)
-                    
-        print("\nDownload done!\n")
+        trials = 0
+        done = False
+        while not done:
+            try:
+                delete_empty_zip(tile_zip_dir, tile_unzip_dir) #Deletes empty zip files if the unzipped directory is missing
+                
+                to_unzip = theia_download(tuile, start_date, end_date, tile_zip_dir,
+                            lim_perc_cloud, login_theia, password_theia, level, 
+                            tile_unzip_dir)
+                print("\nDownload done!\n")
+                done = True
+            except Exception as e:
+                print("Something went wrong while downloading data...")
+                if trials == retry:
+                    raise e
+                trials += 1
+                print(f"Making another trial ({trials}/{retry})...")
+                
+
 
         unzip_theia(bands, to_unzip, tile_unzip_dir, empty_zip, correction_type)
         merge_same_date(bands, tile_unzip_dir)
