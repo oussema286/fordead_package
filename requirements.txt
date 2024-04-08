@@ -1,14 +1,10 @@
- numpy
- fiona
- geopandas
- rasterio
- xarray
- scipy
- dask
- pathlib
- rioxarray
- path
- plotly == 5.9.0
- netcdf4
- matplotlib
-git+https://gitlab.com/fordead/fordead_package.git
+# stac-static is not available on pypi
+# this the reason it is specified here
+# the rest of the dependencies are in pyproject.toml
+git+https://github.com/jsignell/stac-static
+
+# thus, installing local repo with pip:
+# -requires: python>=3.7, git and pip
+# -can be done with:
+# pip install -r requirements.txt
+# pip install .
