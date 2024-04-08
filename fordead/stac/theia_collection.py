@@ -87,6 +87,10 @@ import warnings
 import stackstac
 from stac_static.search import to_geodataframe
 
+DEFAULT_GDAL_ENV = stackstac.rio_reader.DEFAULT_GDAL_ENV
+DEFAULT_GDAL_ENV.always["GDAL_HTTP_MAX_RETRY"] = "5"
+DEFAULT_GDAL_ENV.always["GDAL_HTTP_RETRY_DELAY"] = "1"
+
 #### Generic functions and classes ####
 def valid_name(x, pattern, directory=False):
    x = Path(x)
@@ -199,7 +203,7 @@ def bbox_to_wgs(bbox, epsg):
 class ExtendPystacClasses:
     """Add capacities to_xarray and filter to pystac Catalog, Collection, ItemCollection"""
 
-    def to_xarray(self, **kwargs):
+    def to_xarray(self, xy_coords='center', gdal_env=DEFAULT_GDAL_ENV, **kwargs):
         """Returns a DASK xarray()
         
         This is a proxy to stackstac.stac

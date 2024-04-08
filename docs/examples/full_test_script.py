@@ -3,9 +3,6 @@
 
 from path import Path
 import shutil
-import os
-os.environ["GDAL_HTTP_MAX_RETRY"] = "5"
-os.environ["GDAL_HTTP_RETRY_DELAY"] = "1"
 
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
@@ -25,8 +22,8 @@ from fordead.validation.dieback_detection_from_dataframe import dieback_detectio
 from fordead.validation.sensitivity_analysis import sensitivity_analysis
 
 
-test_calibration_theia_local=False
 test_dieback_detection=False
+test_calibration_theia_local=False
 test_calibration_pc_remote=True
 
 # output_dir = Path("<MyOutputDirectory>")
