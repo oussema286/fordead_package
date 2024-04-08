@@ -109,7 +109,9 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=No
             except Exception as e:
                 print("Something went wrong while downloading data...")
                 if trials == retry:
+                    print("Too many trials, exiting...")
                     raise e
+                print(f"The error was:\n{e}\n")
                 trials += 1
                 print(f"Making another trial ({trials}/{retry})...")
                 
