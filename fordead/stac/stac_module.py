@@ -236,7 +236,7 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
     collection.drop_duplicates(inplace=True)
 
     if sign:
-        planetary_computer.sign_item_collection(collection, copy=False)
+        collection = planetary_computer.sign_item_collection(collection)
     return collection
 
 def harmonize_sen2cor_offet(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_BANDS), inplace=False):
