@@ -22,8 +22,8 @@ from fordead.validation.dieback_detection_from_dataframe import dieback_detectio
 from fordead.validation.sensitivity_analysis import sensitivity_analysis
 
 
-test_dieback_detection=False
-test_calibration_theia_local=False
+test_dieback_detection=True
+test_calibration_theia_local=True
 test_calibration_pc_remote=True
 
 # output_dir = Path("<MyOutputDirectory>")

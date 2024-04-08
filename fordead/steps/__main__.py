@@ -33,6 +33,7 @@ class OrderedGroup(click.Group):
         return self.commands
 
 @click.group(cls=OrderedGroup, context_settings={'help_option_names': ['-h', '--help']})
+@click.version_option()
 def fordead():
     """
     fordead - Remote sensing time series processing to detect forest anomalies

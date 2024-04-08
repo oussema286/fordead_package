@@ -5,12 +5,10 @@ channels:
 dependencies:
   - dask
   - eodag
-  - eoreader
   - fiona
   - geopandas
   - git
   - matplotlib
-  - netcdf4
   - numpy
   - path
   - pathlib
