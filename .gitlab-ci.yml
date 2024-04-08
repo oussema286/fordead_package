@@ -62,7 +62,7 @@ install-linux:
     - cd docs/examples
     - python download_data.py
     - python full_test_script.py
-  rules:
+  only:
     - merge_requests
     - dev
     - master
