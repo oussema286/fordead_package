@@ -194,7 +194,7 @@ print("Applying FORDEAD")
 #########################################################
 print("Sensitivity analysis")
 sensitivity_dir = (test_output_dir / "calibration_validation" / "sensitivity_analysis")
-sensitivity_dir.mkdir(parents=True, exist_ok=True)
+sensitivity_dir.mkdir_p()
 
 args_to_test = {"threshold_anomaly" : [0.08,0.09,0.1,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19], 
                 "vi" : ["CRSWIR","NDVI"]}
