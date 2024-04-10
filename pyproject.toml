@@ -29,7 +29,7 @@ classifiers = [
     # License
     'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
 ]
-keywords=['Remote Sensing', 'Sentinel-2', 'S2', 'Forest', 'bark bettle',]
+keywords=['Remote Sensing', 'Sentinel-2', 'S2', 'Forest', 'bark beetle',]
 dependencies = [
   "dask",
   "eodag",
