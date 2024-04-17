@@ -20,6 +20,8 @@ from pathlib import Path
 import time
 import datetime
 import gc
+import geopandas as gpd
+
 
 
 import click
@@ -29,13 +31,13 @@ import click
 @click.option("-o", "--output_directory", required=True, type = click.Path(), help = "Output directory")
 @click.option('-t', '--tiles', multiple=True, required=True, default = ["study_area"], help="List of tiles to process : -t T31UGP -t T31UGQ -t study_area")
 @click.option("--extent_shape_path", type = click.Path(), default = None, help = "Path of shapefile used as extent of detection")
-@click.option(" -f", "--forest_mask_source", type = str, default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a binary raster with the extent and resolution of the computed area, or None in which case all pixels will be considered valid")
 @click.option("-c", "--lim_perc_cloud", type = float, default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
 @click.option("--vi", type = str, default = "CRSWIR", help = "Chosen vegetation index")
 @click.option("--compress_vi", is_flag=True, default = False, help = "If activated, stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file. Uses less disk space but can lead to very small difference in results as the vegetation is rounded to three decimal places")
 @click.option("-s", "--threshold_anomaly", type = float, default = 0.16, help = "Minimum threshold for anomaly detection")
 @click.option("--nb_min_date", type = int, default = 10, help = "Minimum number of valid dates reqquired for modelling the vegetation index")
 @click.option('--ignored_period', multiple=True, default = None, help="Period whose date to ignore (format 'MM-DD', ex : --ignored_period 11-01 05-01")
+@click.option(" -f", "--forest_mask_source", type = str, default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a vector file or a binary raster with the extent and resolution of the computed area, or None in which case all pixels will be considered valid")
 @click.option("--dep_path", type = click.Path(), default = "/mnt/Data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
 @click.option("--bdforet_dirpath", type = click.Path(), default = "/mnt/Data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
 @click.option("--list_forest_type", multiple = True, default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
@@ -71,7 +73,7 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
                   threshold_anomaly=0.16,
                   start_date_results="2015-06-23", end_date_results="2022-01-01",
                   results_frequency="M", multiple_files=False,
-                  correct_vi=False, stress_index_mode="weigthed_mean", path_dict_vi=None,
+                  correct_vi=False, stress_index_mode="weighted_mean", path_dict_vi=None,
                   threshold_list=[0.2, 0.265], classes_list=["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"]):
     """
     Apply full fordead processing to several tiles: compute_masked_vegetationindex > compute_forest_mask > train_model > dieback_detection > export_results
@@ -160,6 +162,16 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
     file = open(logpath, "w") 
     file.close()
     
+    # check if vector
+    vector_path = None
+    if forest_mask_source not in ["BDFORET", "OSO", None]:
+        try:
+            gpd.read_file(forest_mask_source)
+            vector_path = forest_mask_source
+            forest_mask_source = 'vector'
+        except:
+            pass
+
     for tile in tiles:
         data_directory = output_directory / tile
         print(tile)
@@ -171,8 +183,10 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
         
         compute_masked_vegetationindex(input_directory = sentinel_directory / tile,
                                        data_directory = data_directory,
-                                       lim_perc_cloud = lim_perc_cloud, vi = vi,
-                                       sentinel_source = sentinel_source, apply_source_mask = apply_source_mask,
+                                       lim_perc_cloud = lim_perc_cloud,
+                                       vi = vi,
+                                       sentinel_source = sentinel_source,
+                                       apply_source_mask = apply_source_mask,
                                        extent_shape_path = extent_shape_path,
                                        soil_detection = soil_detection,
                                        ignored_period = ignored_period,
@@ -191,7 +205,8 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
                             bdforet_dirpath = bdforet_dirpath,
                             list_forest_type = list_forest_type,
                             path_oso = path_oso,
-                            list_code_oso = list_code_oso)
+                            list_code_oso = list_code_oso,
+                            vector_path=vector_path)
         
         file = open(logpath, "a") 
         file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
