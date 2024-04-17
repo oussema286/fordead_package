@@ -57,11 +57,10 @@ install-linux:
     MAMBA_DOCKERFILE_ACTIVATE: 1
   script:
     - micromamba install -y -n base -f environment.yml
+    - micromamba install -y -n base pytest
     - pip install -e .
     - python -c "import fordead"
-    - cd docs/examples
-    - python download_data.py
-    - python full_test_script.py
+    - pytest -s tests
   only:
     - merge_requests
     - dev
