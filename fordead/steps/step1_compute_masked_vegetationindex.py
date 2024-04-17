@@ -113,7 +113,7 @@ def compute_masked_vegetationindex(
     compress_vi : bool
         If True, stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file. Uses less disk space but can lead to very small difference in results as the vegetation index is rounded to three decimal places
     ignored_period : list of two strings
-        Period whose Sentinel dates to ignore (format 'MM-DD', ex : ["11-01","05-01"]
+        Period whose Sentinel dates to ignore (format 'MM-DD', ex : ["11-01","05-01"])
     extent_shape_path : str
         Path of shapefile used as extent of detection, if None, the whole tile is used
     path_dict_vi : str
