@@ -116,13 +116,14 @@ if test_dieback_detection:
 print("Testing calibration validation module")
 
 obs_path = input_dir / "vector/observations_tuto.shp"
-sentinel_dir = input_dir / "sentinel_data/validation_tutorial/sentinel_data/"
+sentinel_dir = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
+calval_dir = test_output_dir / "calibration_validation"
 
 if test_calibration_theia_local:
     #########################################################
     print("Using local THEIA data")
 
-    preprocessed_obs_path = test_output_dir / "calibration_validation" / "preprocessed_obs_theia.gpkg"
+    preprocessed_obs_path = calval_dir / "preprocessed_obs_theia.gpkg"
 
     obs_to_s2_grid(
         obs_path = obs_path,
@@ -130,8 +131,8 @@ if test_calibration_theia_local:
         export_path = preprocessed_obs_path,
         name_column = "id")
 
-    cloudiness_path = test_output_dir / "calibration_validation" / "extracted_cloudiness.csv"
-    reflectance_path = test_output_dir / "calibration_validation" / "extracted_reflectance_theia.csv"
+    cloudiness_path = calval_dir / "extracted_cloudiness.csv"
+    reflectance_path = calval_dir / "extracted_reflectance_theia.csv"
 
     extract_cloudiness(
         sentinel_dir = sentinel_dir, 
@@ -149,25 +150,25 @@ if test_calibration_theia_local:
     print("Applying FORDEAD")
 
     mask_vi_from_dataframe(reflectance_path = reflectance_path,
-                        masked_vi_path = test_output_dir / "calibration_validation" / "mask_vi_theia.csv",
-                        periods_path = test_output_dir / "calibration_validation" / "periods_theia.csv",
+                        masked_vi_path = calval_dir / "mask_vi_theia.csv",
+                        periods_path = calval_dir / "periods_theia.csv",
                         vi = "CRSWIR",
                         soil_detection = True,
                         name_column = "id")
 
 
-    train_model_from_dataframe(masked_vi_path = test_output_dir / "calibration_validation" / "mask_vi_theia.csv",
-                                pixel_info_path = test_output_dir / "calibration_validation" / "pixel_info_theia.csv",
-                                periods_path = test_output_dir / "calibration_validation" / "periods_theia.csv",
+    train_model_from_dataframe(masked_vi_path = calval_dir / "mask_vi_theia.csv",
+                                pixel_info_path = calval_dir / "pixel_info_theia.csv",
+                                periods_path = calval_dir / "periods_theia.csv",
                             name_column = 'id',
                             min_last_date_training = "2018-01-01",
                             max_last_date_training = "2018-06-01",
                             nb_min_date = 10)
 
     dieback_detection_from_dataframe(
-                    masked_vi_path = test_output_dir / "calibration_validation" / "mask_vi_theia.csv",
-                    pixel_info_path = test_output_dir / "calibration_validation" / "pixel_info_theia.csv",
-                    periods_path = output_dir / test_output_dir / "calibration_validation" / "periods_theia.csv",
+                    masked_vi_path = calval_dir / "mask_vi_theia.csv",
+                    pixel_info_path = calval_dir / "pixel_info_theia.csv",
+                    periods_path = calval_dir / "periods_theia.csv",
                     name_column = "id",
                     stress_index_mode = "mean",
                     update_masked_vi = True)
@@ -177,7 +178,7 @@ if test_calibration_pc_remote:
     #########################################################
     print("Using Planetary Computer")
 
-    preprocessed_obs_path = test_output_dir / "calibration_validation" / "preprocessed_obs_planetary.gpkg"
+    preprocessed_obs_path = calval_dir / "preprocessed_obs_planetary.gpkg"
 
     obs_to_s2_grid(
         obs_path = obs_path,
@@ -185,7 +186,7 @@ if test_calibration_pc_remote:
         export_path = preprocessed_obs_path,
         name_column = "id")
 
-    reflectance_path = test_output_dir / "calibration_validation" / "extracted_reflectance_planetary.csv"
+    reflectance_path = calval_dir / "extracted_reflectance_planetary.csv"
 
     # extracting may take time as it downloads the data from the net
     extract_reflectance(
@@ -199,7 +200,7 @@ if test_calibration_pc_remote:
 
     #########################################################
     print("Sensitivity analysis")
-    sensitivity_dir = (test_output_dir / "calibration_validation" / "sensitivity_analysis")
+    sensitivity_dir = (calval_dir / "sensitivity_analysis")
     sensitivity_dir.mkdir_p()
 
     args_to_test = {"threshold_anomaly" : [0.08,0.09,0.1,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19], 
