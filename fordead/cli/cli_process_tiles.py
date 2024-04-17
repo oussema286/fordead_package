@@ -17,7 +17,6 @@ from fordead.visualisation.vi_series_visualisation import vi_series_visualisatio
 from fordead.import_data import TileInfo
 
 from pathlib import Path
-import argparse
 import time
 import datetime
 import gc
@@ -26,16 +25,16 @@ import gc
 import click
 
 @click.command(name='process_tiles')
-@click.option("-d", "--main_directory", required=True, type = click.Path(), help = "Dossier contenant les dossiers des tuiles")
-@click.option('-t', '--tuiles', multiple=True, required=True, default = ["study_area"], help="Liste des tuiles à analyser ex : -t T31UGP T31UGQ")
+@click.option("-d", "--main_directory", required=True, type = click.Path(), help = "Output directory")
+@click.option('-t', '--tiles', multiple=True, required=True, default = ["study_area"], help="List of tiles to analyse : -t T31UGP -t T31UGQ")
 @click.option("-i", "--sentinel_directory", required=True, type = click.Path(), help = "Path of the directory with a directory containing Sentinel data for each tile ")
-@click.option("--extent_shapeape_path", type = str, default = None, help = "Path of shapefile used as extent of detection")
+@click.option("--extent_shape_path", type = click.Path(), default = None, help = "Path of shapefile used as extent of detection")
 @click.option(" -f", "--forest_mask_source", type = str, default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a binary raster with the extent and resolution of the computed area, or None in which case all pixels will be considered valid")
 @click.option("-c", "--lim_perc_cloud", type = float, default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
 @click.option("--vi", type = str, default = "CRSWIR", help = "Chosen vegetation index")
 @click.option("--compress_vi", is_flag=True, default = False, help = "If activated, stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file. Uses less disk space but can lead to very small difference in results as the vegetation is rounded to three decimal places")
-@click.option("-s", "--threshold_anomaly", type = float, default = 0.16, help = "Seuil minimum pour détection d'anomalies")
-@click.option("--nb_min_date", type = int, default = 10, help = "Nombre minimum de dates valides pour modéliser l'indice de végétation")
+@click.option("-s", "--threshold_anomaly", type = float, default = 0.16, help = "Minimum threshold for anomaly detection")
+@click.option("--nb_min_date", type = int, default = 10, help = "Minimum number of valid dates reqquired for modelling the vegetation index")
 @click.option('--ignored_period', multiple=True, default = None, help="Period whose date to ignore (format 'MM-DD', ex : --ignored_period 11-01 05-01")
 @click.option("--dep_path", type = click.Path(), default = "/mnt/Data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
 @click.option("--bdforet_dirpath", type = click.Path(), default = "/mnt/Data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
@@ -45,10 +44,10 @@ import click
 @click.option("--sentinel_source", type = str, default = "THEIA", help = "Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'")
 @click.option("--apply_source_mask", is_flag=True, default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
 @click.option("--soil_detection", is_flag=True, default = False, help = "If activated, detects bare ground")
-@click.option("--min_last_date_training", type = str, default = "2018-01-01", help = "Première date de la détection")
-@click.option("--max_last_date_training", type = str, default = "2018-06-01", help = "Dernière date pouvant servir pour l'apprentissage")
-@click.option("--start_date_results", type = str, default = '2015-06-23', help = "Date de début pour l'export des résultats")
-@click.option("--end_date_results", type = str, default = "2022-01-01", help = "Date de fin pour l'export des résultats")
+@click.option("--min_last_date_training", type = str, default = "2018-01-01", help = "First date that can be used for detection")
+@click.option("--max_last_date_training", type = str, default = "2018-06-01", help = "Last date that can be used for training")
+@click.option("--start_date_results", type = str, default = '2015-06-23', help = "Start date for results export")
+@click.option("--end_date_results", type = str, default = "2022-01-01", help = "End date for results export")
 @click.option("--results_frequency", type = str, default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
 @click.option("--multiple_files", is_flag=True, default = False, help = "If activated, one shapefile is exported for each period containing the areas suffering from dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback")
 @click.option("--correct_vi", is_flag=True, default = False, help = "If True, corrects vi using large scale median vi")
@@ -62,7 +61,7 @@ def cli_process_tiles(**kwargs):
     # execute only if run as a script
     process_tiles(**kwargs)
 
-def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source, extent_shape_path,ignored_period,
+def process_tiles(main_directory, sentinel_directory, tiles, forest_mask_source, extent_shape_path,ignored_period,
                   dep_path, bdforet_dirpath, list_forest_type, path_oso, list_code_oso, #compute_forest_mask arguments
                   lim_perc_cloud, vi, compress_vi, sentinel_source, apply_source_mask, soil_detection, #compute_masked_vegetationindex arguments
                   min_last_date_training, max_last_date_training, nb_min_date,#Train_model arguments
@@ -77,16 +76,17 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
     file = open(logpath, "w") 
     file.close()
     
-    for tuile in tuiles:
-        print(tuile)
+    for tile in tiles:
+        data_directory = main_directory / tile
+        print(tile)
         file = open(logpath, "a") 
-        file.write("Tuile : " + tuile + "\n") ; start_time = time.time()
+        file.write("Tile : " + tile + "\n") ; start_time = time.time()
         file.close()
         
         start_time = time.time()
         
-        compute_masked_vegetationindex(input_directory = sentinel_directory / tuile,
-                                       data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+        compute_masked_vegetationindex(input_directory = sentinel_directory / tile,
+                                       data_directory = data_directory,
                                        lim_perc_cloud = lim_perc_cloud, vi = vi,
                                        sentinel_source = sentinel_source, apply_source_mask = apply_source_mask,
                                        extent_shape_path = extent_shape_path,
@@ -101,7 +101,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         
 # =====================================================================================================================
 
-        compute_forest_mask(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+        compute_forest_mask(data_directory = data_directory,
                             forest_mask_source = forest_mask_source,
                             dep_path = dep_path,
                             bdforet_dirpath = bdforet_dirpath,
@@ -115,7 +115,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         gc.collect()
 # =====================================================================================================================
             
-        train_model(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+        train_model(data_directory = data_directory,
                     min_last_date_training = min_last_date_training,
                     max_last_date_training = max_last_date_training,
                     nb_min_date = nb_min_date, correct_vi = correct_vi)
@@ -125,7 +125,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         gc.collect()
 # =====================================================================================================================    
 
-        dieback_detection(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, 
+        dieback_detection(data_directory=data_directory, 
                                           threshold_anomaly = threshold_anomaly, stress_index_mode = stress_index_mode, path_dict_vi = path_dict_vi)
         file = open(logpath, "a")
         file.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
@@ -135,7 +135,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # # =====================================================================================================================
 
         export_results(
-            data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+            data_directory = data_directory,
             start_date = start_date_results,
             end_date = end_date_results,
             frequency= results_frequency,
@@ -148,14 +148,14 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
         file.close()
         gc.collect()
 
-        # create_timelapse(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
-        #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tuile + ".shp", 
+        # create_timelapse(data_directory = data_directory,
+        #                   shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/" + tile + ".shp", 
         #                   obs_terrain_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/ObservationsTerrain/ValidatedScolytes.shp",
         #                   name_column = "id", max_date = None, zip_results = True)
-        # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2)
-        # vi_series_visualisation(data_directory = main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile, ymin = 0, ymax = 2, shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/points_visualisation.shp")
+        # vi_series_visualisation(data_directory = data_directory, ymin = 0, ymax = 2)
+        # vi_series_visualisation(data_directory = data_directory, ymin = 0, ymax = 2, shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/points_visualisation.shp")
 
-    tile = TileInfo(main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile)
+    tile = TileInfo(data_directory)
     tile = tile.import_info()
     file = open(logpath, "a")
     for parameter in tile.parameters:
