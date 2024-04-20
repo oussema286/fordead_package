@@ -72,7 +72,7 @@ def test_pc_calibration(input_dir):
     obs_path = input_dir / "vector/observations_tuto.shp"
     sentinel_dir = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
 
-    with TemporaryDirectory(prefix="test-fordead_") as tempdir:
+    with TemporaryDirectory(prefix="fordead-tests_") as tempdir:
         calval_dir = Path(tempdir)
 
         #########################################################

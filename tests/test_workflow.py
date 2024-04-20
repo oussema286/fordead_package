@@ -8,7 +8,7 @@ from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step5_export_results import export_results
 from fordead.cli.cli_process_tiles import process_tiles
 def test_fordead_steps(input_dir):
-    with TemporaryDirectory(prefix="test-fordead_") as tempdir:
+    with TemporaryDirectory(prefix="fordead-tests_") as tempdir:
         test_output_dir = Path(tempdir)
         data_directory = test_output_dir / "dieback_detection"
 
@@ -42,10 +42,16 @@ def test_fordead_steps(input_dir):
                     conf_classes_list = ["Low anomaly","Severe anomaly"])
 
 def test_process_tiles(input_dir):
-    with TemporaryDirectory(prefix="test-fordead_") as tempdir:
+    with TemporaryDirectory(prefix="fordead-tests_") as tempdir:
         output_dir = Path(tempdir)
         sentinel_dir = input_dir / "sentinel_data" / "dieback_detection_tutorial"
         forest_mask_source = input_dir / "vector" / "area_interest.shp"
         process_tiles(output_dir, sentinel_dir, tiles=["study_area"], forest_mask_source=forest_mask_source)
+
+        # check result files exist
+        res_dir = output_dir / "study_area" / "Results"
+        expected_files = ["stress_periods.shp", "periodic_results_dieback.shp"]
+        for f in expected_files:
+            assert (res_dir / f).exists()
 
 
