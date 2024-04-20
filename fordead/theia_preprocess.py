@@ -514,7 +514,7 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
                         print("Zip file is empty and unzipped directory not found : zip file removed " + str(tile.paths["zipped"][date]))
                         Path(tile.paths["zipped"][date]).remove()
                 except BadZipfile:
-                    print("Bad zip file, removing file")
+                    print(f"Bad zip file, removing file: {tile.paths["zipped"][date]}")
                     Path(tile.paths["zipped"][date]).remove()
 
 def merge_same_date(bands,out_dir):
