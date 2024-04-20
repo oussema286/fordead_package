@@ -7,6 +7,7 @@ Created on Mon Nov  2 09:25:23 2020
 
 
 import click
+from tqdm import tqdm
 from fordead.import_data import import_coeff_model, import_dieback_data, import_stress_data, initialize_dieback_data, initialize_stress_data, import_masked_vi, import_first_detection_date_index, TileInfo, import_binary_raster
 from fordead.writing_data import write_tif
 from fordead.dieback_detection import detection_anomalies, detection_dieback, save_stress
@@ -50,7 +51,8 @@ def dieback_detection(
     max_nb_stress_periods = 5,
     stress_index_mode = None,
     vi = None,
-    path_dict_vi = None
+    path_dict_vi = None,
+    progress=True
     ):
     """
     Detects anomalies by comparing the vegetation index and its prediction from the model. 
@@ -76,7 +78,8 @@ def dieback_detection(
         Chosen vegetation index, only useful if step1 was skipped
     path_dict_vi : str
         Path of text file to add vegetation index formula, only useful if step1 was skipped
-
+    progress : bool, optional
+        Whether to show a progress bar. Defaults to True.
     Returns
     -------
 
@@ -133,7 +136,7 @@ def dieback_detection(
             forest_mask = import_binary_raster(tile.paths["forest_mask"])
             
         #dieback DETECTION
-        for date_index, date in enumerate(tile.dates):
+        for date_index, date in tqdm(enumerate(tile.dates), total=len(tile.dates), disable=not progress):
             if date in new_dates:
                 vegetation_index, mask = import_masked_vi(tile.paths,date)
                 if tile.parameters["correct_vi"]:
@@ -151,7 +154,7 @@ def dieback_detection(
                 if stress_index_mode is not None: stress_data = save_stress(stress_data, dieback_data, changing_pixels, diff_vi, mask, stress_index_mode) 
 
                 write_tif(anomalies, first_detection_date_index.attrs, tile.paths["AnomaliesDir"] / str("Anomalies_" + date + ".tif"),nodata=0)
-                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining         ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
+                # print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining         ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', "                                              ", sep='', end='\r', flush=True) 
                 del vegetation_index, mask, predicted_vi, anomalies, changing_pixels, diff_vi
 
         tile.last_computed_anomaly = new_dates[-1]
