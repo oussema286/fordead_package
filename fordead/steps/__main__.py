@@ -33,7 +33,7 @@ class OrderedGroup(click.Group):
     def list_commands(self, ctx):
         return self.commands
 
-@click.group(cls=OrderedGroup, context_settings={'help_option_names': ['-h', '--help']})
+@click.group(cls=OrderedGroup, context_settings={'help_option_names': ['-h', '--help'], 'show_default': True})
 @click.version_option()
 def fordead():
     """
