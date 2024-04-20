@@ -4,7 +4,7 @@ Created on Tue Nov 17 12:02:24 2020
 
 @author: Raphael Dutrieux
 """
-
+import fordead
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
 from fordead.steps.step3_dieback_detection import dieback_detection
@@ -159,8 +159,8 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
     sentinel_directory = Path(sentinel_directory)
     output_directory = Path(output_directory)
     logpath = output_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")
-    file = open(logpath, "w") 
-    file.close()
+    with open(logpath, "w") as f:
+        f.write(f"fordead version: {fordead.__version__}")
     
     # check if vector
     vector_path = None
@@ -257,6 +257,7 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     file = open(logpath, "a")
+    file.write(f"fordead version: {fordead.__version__}")
     for parameter in tile.parameters:
         file.write(parameter + " : " +  str(tile.parameters[parameter]) + "\n")
     file.close()
