@@ -337,6 +337,7 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
         )
 
     unzipped = []
+    merged = []
     to_unzip = []
     to_download = [] 
     for r in search_results:
@@ -348,12 +349,16 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
         if len(unzip_file)>0:
             unzipped.append(unzip_file[0])
         elif zip_file.exists():
-            # products downloaded but not unzipped
-            to_unzip.append(zip_file)
+            if len(ZipFile(zip_file).namelist())==0:
+                merged.append(zip_file)
+            else:
+                # products downloaded but not unzipped
+                to_unzip.append(zip_file)
         else:
             to_download.append(r)
     
     print(f"Products already unzipped:\n{'\n'.join(unzipped)}\n")
+    print(f"Products considered as merged:\n{'\n'.join(merged)}\n")
     print(f"Products already downloaded but not unzipped:\n{'\n'.join(to_unzip)}\n")
     print(f'{len(search_results)-len(to_download)} files already downloaded or unzipped, {len(to_download)} files left to download.')
     print(f"Downloading products: {to_download}")
@@ -508,7 +513,7 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
         tile.getdict_datepaths("zipped",zipped_dir)
         tile.getdict_datepaths("unzipped",unzipped_dir)
         for date in tile.paths["zipped"]:
-            if date not in tile.paths["unzipped"]:
+            if date not in tile.paths["unzipped"]: # this excludes duplicates of the same date but different scene ID, it is wanted...
                 try:
                     if (len(ZipFile(tile.paths["zipped"][date]).namelist()) == 0):
                         print("Zip file is empty and unzipped directory not found : zip file removed " + str(tile.paths["zipped"][date]))
