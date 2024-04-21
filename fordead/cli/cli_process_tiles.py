@@ -52,6 +52,7 @@ import click
 @click.option("--results_frequency", type = str, default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
 @click.option("--multiple_files", is_flag=True, default = False, help = "If activated, one shapefile is exported for each period containing the areas suffering from dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback")
 @click.option("--correct_vi", is_flag=True, default = False, help = "If True, corrects vi using large scale median vi")
+@click.option("--max_nb_stress_periods", type=int, default=5, help="Maximum number of stress periods. If this number is reached, the pixel is masked in the too_many_stress_periods, thus removed from future exports. Only used if stress_index_mode is not None.")
 @click.option("--stress_index_mode", type = click.Choice(['mean', 'weighted_mean']), default = "weighted_mean", help = "Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no information is saved")
 @click.option("--path_dict_vi", type = click.Path(), default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used")
 @click.option('--threshold_list', multiple=True, default = [0.2, 0.265], help="List of thresholds used to classify the levels of dieback by discretising the confidence index")
@@ -62,20 +63,52 @@ def cli_process_tiles(**kwargs):
     # execute only if run as a script
     process_tiles(**kwargs)
 
-def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], forest_mask_source="BDFORET", 
-                  extent_shape_path=None, ignored_period=None,
-                  dep_path=None, bdforet_dirpath=None, list_forest_type=["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"],
-                  path_oso=None, list_code_oso=[17], #compute_forest_mask arguments
-                  lim_perc_cloud=0.3, vi="CRSWIR", compress_vi=False, sentinel_source="THEIA",
-                  apply_source_mask=False, soil_detection=False, #compute_masked_vegetationindex arguments
-                  min_last_date_training="2018-01-01", max_last_date_training="2018-06-01", nb_min_date=10,#Train_model arguments
-                  threshold_anomaly=0.16,
-                  start_date_results="2015-06-23", end_date_results="2022-01-01",
-                  results_frequency="M", multiple_files=False,
-                  correct_vi=False, stress_index_mode="weighted_mean", path_dict_vi=None,
-                  threshold_list=[0.2, 0.265], classes_list=["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"]):
+def process_tiles(
+        output_directory, 
+        sentinel_directory, 
+        tiles=["study_area"], 
+
+        # compute_masked_vegetationindex arguments
+        lim_perc_cloud=0.3,
+        vi="CRSWIR",
+        sentinel_source="THEIA",
+        apply_source_mask=False,
+        extent_shape_path=None,
+        soil_detection=False,
+        ignored_period=None,
+        compress_vi=False,
+        path_dict_vi=None,
+
+        # compute_forest_mask arguments
+        forest_mask_source="BDFORET", 
+        dep_path=None, 
+        bdforet_dirpath=None, 
+        list_forest_type=["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"],
+        path_oso=None, 
+        list_code_oso=[17], 
+
+        # train_model arguments
+        min_last_date_training="2018-01-01", 
+        max_last_date_training="2018-06-01", 
+        nb_min_date=10,
+        correct_vi=False, 
+
+        # dieback_detection arguments
+        threshold_anomaly=0.16,
+        max_nb_stress_periods = 5,
+        stress_index_mode="weighted_mean", 
+
+        # export_results arguments
+        start_date_results="2015-06-23", 
+        end_date_results="2022-01-01",
+        results_frequency="ME", 
+        multiple_files=False,
+        threshold_list=[0.2, 0.265], 
+        classes_list=["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"]
+        ):
     """
-    Apply full fordead processing to several tiles: compute_masked_vegetationindex > compute_forest_mask > train_model > dieback_detection > export_results
+    Apply full fordead processing to several tiles: 
+    compute_masked_vegetationindex > compute_forest_mask > train_model > dieback_detection > export_results
 
     Parameters
     ----------
@@ -146,6 +179,10 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
         If 'weighted_mean', the index is a weighted mean, where for each date used,
         the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly.
         If None, the stress periods are not detected, and no information is saved
+    max_nb_stress_periods : int
+        Maximum number of stress periods. If this number is reached,
+        the pixel is masked in the too_many_stress_periods,
+        thus removed from future exports. Only used if stress_index_mode is not None.
     path_dict_vi : str
         Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used
     threshold_list : list
@@ -230,14 +267,18 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
         train_model(data_directory = data_directory,
                     min_last_date_training = min_last_date_training,
                     max_last_date_training = max_last_date_training,
-                    nb_min_date = nb_min_date, correct_vi = correct_vi)
+                    nb_min_date = nb_min_date, 
+                    correct_vi = correct_vi)
         with open(logpath, "a") as f:
             f.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         gc.collect()
 # =====================================================================================================================    
 
         dieback_detection(data_directory=data_directory, 
-                                          threshold_anomaly = threshold_anomaly, stress_index_mode = stress_index_mode, path_dict_vi = path_dict_vi)
+                          threshold_anomaly = threshold_anomaly, 
+                          max_nb_stress_periods = max_nb_stress_periods,
+                          stress_index_mode = stress_index_mode, 
+                          path_dict_vi = path_dict_vi)
         with open(logpath, "a") as f:
             f.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         gc.collect()
