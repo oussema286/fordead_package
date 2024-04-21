@@ -156,7 +156,8 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
     """
     # save the input arguments of process_tiles
     process_args = locals().copy()
-    
+    start = datetime.datetime.now()
+
     sentinel_directory = Path(sentinel_directory)
     output_directory = Path(output_directory)
 
@@ -167,10 +168,14 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
     with open(json_file, "w") as f:
         json.dump(process_args, f, indent=4)
 
+    # write some log
     logpath = output_directory / process_name + ".txt"
     with open(logpath, "w") as f:
-        f.write(f"fordead version: {fordead.__version__}")
-    
+        f.write(f"fordead version: {fordead.__version__}\n")
+        f.write("process_tiles arguments:")
+        f.write(json.dumps(process_args, indent=4))
+        f.write("\n")
+        f.write(f"Starting processing: {start}\n")
     # check if vector
     vector_path = None
     if forest_mask_source not in ["BDFORET", "OSO", None]:
@@ -184,9 +189,8 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
     for tile in tiles:
         data_directory = output_directory / tile
         print(tile)
-        file = open(logpath, "a") 
-        file.write("Tile : " + tile + "\n") ; start_time = time.time()
-        file.close()
+        with open(logpath, "a") as f:
+            f.write("Tile : " + tile + "\n") ; start_time = time.time()
         
         start_time = time.time()
         
@@ -201,9 +205,8 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
                                        ignored_period = ignored_period,
                                        compress_vi = compress_vi,
                                        path_dict_vi = path_dict_vi)
-        file = open(logpath, "a") 
-        file.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
+        with open(logpath, "a") as f:
+            f.write("compute_masked_vegetationindex : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         gc.collect()
         
 # =====================================================================================================================
@@ -217,9 +220,8 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
                             list_code_oso = list_code_oso,
                             vector_path=vector_path)
         
-        file = open(logpath, "a") 
-        file.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
+        with open(logpath, "a") as f:
+            f.write("compute_forest_mask : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         gc.collect()
 # =====================================================================================================================
             
@@ -227,17 +229,15 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
                     min_last_date_training = min_last_date_training,
                     max_last_date_training = max_last_date_training,
                     nb_min_date = nb_min_date, correct_vi = correct_vi)
-        file = open(logpath, "a")
-        file.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
+        with open(logpath, "a") as f:
+            f.write("train_model : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         gc.collect()
 # =====================================================================================================================    
 
         dieback_detection(data_directory=data_directory, 
                                           threshold_anomaly = threshold_anomaly, stress_index_mode = stress_index_mode, path_dict_vi = path_dict_vi)
-        file = open(logpath, "a")
-        file.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
-        file.close()
+        with open(logpath, "a") as f:
+            f.write("dieback_detection : " + str(time.time() - start_time) + "\n") ; start_time = time.time()
         gc.collect()
         
 # # =====================================================================================================================
@@ -251,9 +251,8 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
             conf_threshold_list = threshold_list,
             conf_classes_list = classes_list
             )
-        file = open(logpath, "a")
-        file.write("Exporting results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
-        file.close()
+        with open(logpath, "a") as f:
+            f.write("Exporting results : " + str(time.time() - start_time) + "\n\n") ; start_time = time.time()
         gc.collect()
 
         # create_timelapse(data_directory = data_directory,
@@ -262,15 +261,22 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
         #                   name_column = "id", max_date = None, zip_results = True)
         # vi_series_visualisation(data_directory = data_directory, ymin = 0, ymax = 2)
         # vi_series_visualisation(data_directory = data_directory, ymin = 0, ymax = 2, shape_path = "C:/Users/admin/Documents/Deperissement/fordead_data/Vecteurs/points_visualisation.shp")
-
+    
     tile = TileInfo(data_directory)
     tile = tile.import_info()
-    file = open(logpath, "a")
-    file.write(f"fordead version: {fordead.__version__}")
-    for parameter in tile.parameters:
-        file.write(parameter + " : " +  str(tile.parameters[parameter]) + "\n")
-    file.close()
+    with open(logpath, "a") as f:
+        end = datetime.datetime.now()
+        f.write(f"\nProcessing ended: {end}")
+        f.write(f"Processing time: {end-start}")
+        f.write(f"fordead version: {fordead.__version__}")
+        f.write("TileInfo parameters:")
+        for parameter in tile.parameters:
+            f.write(parameter + " : " +  str(tile.parameters[parameter]) + "\n")
+        
 
+
+
+    
 if __name__ == '__main__':
     cli_process_tiles()
 
