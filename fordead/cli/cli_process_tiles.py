@@ -165,11 +165,13 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
     
     # write the input arguments in a json file
     json_file = output_directory / process_name + ".json"
+    print(f"Saving input arguments in: {json_file}")
     with open(json_file, "w") as f:
         json.dump(process_args, f, indent=4)
 
     # write some log
-    logpath = output_directory / process_name + ".txt"
+    logpath = output_directory / process_name + ".log"
+    print(f"Saving logs in: {logpath}")
     with open(logpath, "w") as f:
         f.write(f"fordead version: {fordead.__version__}\n")
         f.write("process_tiles arguments:")
