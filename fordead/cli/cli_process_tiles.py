@@ -16,13 +16,12 @@ from fordead.visualisation.vi_series_visualisation import vi_series_visualisatio
 
 from fordead.import_data import TileInfo
 
-from pathlib import Path
+from path import Path
 import time
 import datetime
 import gc
 import geopandas as gpd
-
-
+import json
 
 import click
 
@@ -155,10 +154,20 @@ def process_tiles(output_directory, sentinel_directory, tiles=["study_area"], fo
         List of class names for discretising the confidence index.
         If threshold_list has length n, classes_list must have length n+1.
     """
+    # save the input arguments of process_tiles
+    process_args = locals().copy()
     
     sentinel_directory = Path(sentinel_directory)
     output_directory = Path(output_directory)
-    logpath = output_directory / (datetime.datetime.now().strftime("%Y-%m-%d-%HH%Mm%Ss") + ".txt")
+
+    process_name = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")+f"_fordead_{fordead.__version__}"
+    
+    # write the input arguments in a json file
+    json_file = output_directory / process_name + ".json"
+    with open(json_file, "w") as f:
+        json.dump(process_args, f, indent=4)
+
+    logpath = output_directory / process_name + ".txt"
     with open(logpath, "w") as f:
         f.write(f"fordead version: {fordead.__version__}")
     
