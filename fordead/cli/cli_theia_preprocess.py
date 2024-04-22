@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 20 09:18:18 2021
-
-@author: Raphael Dutrieux
+Module with the theia preprocess function and a corresponding command line.
 """
 
 import click
@@ -45,8 +43,14 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=No
                      bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], 
                      correction_type = "FRE", empty_zip = False, retry = 3):
     """
-    Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold. Then this data is unzipped, keeping only chosen bands from Flat REflectance data, and zip files can be emptied as a way to save storage space.
-    Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
+    Download Sentinel-2 zip files from THEIA portal, 
+    extract band files and eventually merge tile+date duplicates.
+    
+    Scenes can be filtered on cloud coverage, and zip files
+    can be emptied as a way to save storage space while avoiding
+    downloading the same data twice.
+    Finally, if two Sentinel-2 directories come from the same acquisition date,
+    they are merged by replacing sequentially the valid pixels of each duplicate.
 
     Parameters
     ----------

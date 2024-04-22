@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Nov 27 18:20:18 2020
 
-@author: Raphael Dutrieux
-"""
 import click
 from fordead.import_data import TileInfo, import_binary_raster, get_raster_metadata, clip_xarray
 from fordead.masking_vi import rasterize_bdforet, clip_oso, raster_full, rasterize_vector

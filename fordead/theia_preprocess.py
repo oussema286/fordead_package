@@ -357,9 +357,12 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
         else:
             to_download.append(r)
     
-    print(f"Products already unzipped:\n{'\n'.join(unzipped)}\n")
-    print(f"Products considered as merged:\n{'\n'.join(merged)}\n")
-    print(f"Products already downloaded but not unzipped:\n{'\n'.join(to_unzip)}\n")
+    unzipped_str = '\n'.join(unzipped)
+    merged_str = '\n'.join(merged)
+    to_unzip_str = '\n'.join(to_unzip)
+    print(f"Products already unzipped:\n{unzipped_str}\n")
+    print(f"Products considered as merged:\n{merged_str}\n")
+    print(f"Products already downloaded but not unzipped:\n{to_unzip_str}\n")
     print(f'{len(search_results)-len(to_download)} files already downloaded or unzipped, {len(to_download)} files left to download.')
     print(f"Downloading products: {to_download}")
 
@@ -519,7 +522,7 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
                         print("Zip file is empty and unzipped directory not found : zip file removed " + str(tile.paths["zipped"][date]))
                         Path(tile.paths["zipped"][date]).remove()
                 except BadZipfile:
-                    print(f"Bad zip file, removing file: {tile.paths["zipped"][date]}")
+                    print("Bad zip file, removing file: {}".format(tile.paths["zipped"][date]))
                     Path(tile.paths["zipped"][date]).remove()
 
 def merge_same_date(bands,out_dir):

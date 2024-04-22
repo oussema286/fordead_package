@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Nov  2 09:25:23 2020
-
-@author: Raphaël Dutrieux
-"""
-
 
 import click
 from tqdm import tqdm

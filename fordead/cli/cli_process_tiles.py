@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov 17 12:02:24 2020
-
-@author: Raphael Dutrieux
+Module grouping the full fordead process in one function and a corresponding command line.
 """
 import fordead
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
