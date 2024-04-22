@@ -42,9 +42,7 @@ test-win10:
     - gitlab-ci\conda-build.ps1
     - mamba env create -y -n fordead-gitlab-ci -f environment.yml
     - conda run -n fordead-gitlab-ci --live-stream pip install -e .
-    - cd docs\examples
-    - conda run -n fordead-gitlab-ci --live-stream python download_data.py
-    - conda run -n fordead-gitlab-ci --live-stream python full_test_script.py
+    - conda run -n fordead-gitlab-ci --live-stream pytest -s tests
   rules:
     - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
     - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^win/ && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"
