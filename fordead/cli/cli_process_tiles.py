@@ -22,39 +22,45 @@ import geopandas as gpd
 import json
 
 import click
+from click_option_group import optgroup
 
 @click.command(name='process_tiles')
 @click.option("-i", "--sentinel_directory", required=True, type = click.Path(), help = "Path of the directory with a directory containing Sentinel data for each tile")
 @click.option("-o", "--output_directory", required=True, type = click.Path(), help = "Output directory")
 @click.option('-t', '--tiles', multiple=True, required=True, default = ["study_area"], help="List of tiles to process : -t T31UGP -t T31UGQ -t study_area")
-@click.option("--extent_shape_path", type = click.Path(), default = None, help = "Path of shapefile used as extent of detection")
-@click.option("-c", "--lim_perc_cloud", type = float, default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
-@click.option("--vi", type = str, default = "CRSWIR", help = "Chosen vegetation index")
-@click.option("--compress_vi", is_flag=True, default = False, help = "If activated, stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file. Uses less disk space but can lead to very small difference in results as the vegetation is rounded to three decimal places")
-@click.option("-s", "--threshold_anomaly", type = float, default = 0.16, help = "Minimum threshold for anomaly detection")
-@click.option("--nb_min_date", type = int, default = 10, help = "Minimum number of valid dates reqquired for modelling the vegetation index")
-@click.option('--ignored_period', multiple=True, default = None, help="Period whose date to ignore (format 'MM-DD', ex : --ignored_period 11-01 05-01")
-@click.option(" -f", "--forest_mask_source", type = str, default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a vector file or a binary raster with the extent and resolution of the computed area, or None in which case all pixels will be considered valid")
-@click.option("--dep_path", type = click.Path(), default = "/mnt/Data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
-@click.option("--bdforet_dirpath", type = click.Path(), default = "/mnt/Data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
-@click.option("--list_forest_type", multiple = True, default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
-@click.option("--path_oso", type = click.Path(), default = "/mnt/fordead/Data/Classif_Seed_0_2021.tif", help = "Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
-@click.option("--list_code_oso", type = str, default = [17], help = "List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'")
-@click.option("--sentinel_source", type = click.Choice(["THEIA", "Scihub", "PEPS"]), default = "THEIA", help = "Source of Sentinel data: 'THEIA', 'Scihub' or 'PEPS'")
-@click.option("--apply_source_mask", is_flag=True, default = False, help = "If activated, applies the mask from SENTINEL-data supplier")
-@click.option("--soil_detection", is_flag=True, default = False, help = "If activated, detects bare ground")
-@click.option("--min_last_date_training", type = str, default = "2018-01-01", help = "First date that can be used for detection")
-@click.option("--max_last_date_training", type = str, default = "2018-06-01", help = "Last date that can be used for training")
-@click.option("--start_date_results", type = str, default = '2015-06-23', help = "Start date for results export")
-@click.option("--end_date_results", type = str, default = "2022-01-01", help = "End date for results export")
-@click.option("--results_frequency", type = str, default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
-@click.option("--multiple_files", is_flag=True, default = False, help = "If activated, one shapefile is exported for each period containing the areas suffering from dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback")
-@click.option("--correct_vi", is_flag=True, default = False, help = "If True, corrects vi using large scale median vi")
-@click.option("--max_nb_stress_periods", type=int, default=5, help="Maximum number of stress periods. If this number is reached, the pixel is masked in the too_many_stress_periods, thus removed from future exports. Only used if stress_index_mode is not None.")
-@click.option("--stress_index_mode", type = click.Choice(['mean', 'weighted_mean']), default = "weighted_mean", help = "Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no information is saved")
-@click.option("--path_dict_vi", type = click.Path(), default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used")
-@click.option('--threshold_list', multiple=True, default = [0.2, 0.265], help="List of thresholds used to classify the levels of dieback by discretising the confidence index")
-@click.option('--classes_list', multiple=True, default = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"], help="List of class names for discretising the confidence index. If threshold_list has length n, classes_list must have length n+1.")
+@optgroup.group("compute_masked_vegetationindex arguments")
+@optgroup.option("-c", "--lim_perc_cloud", type = float, default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
+@optgroup.option("--vi", type = str, default = "CRSWIR", help = "Chosen vegetation index")
+@optgroup.option("--sentinel_source", type = click.Choice(["THEIA", "Scihub", "PEPS"]), default = "THEIA", help = "Source of Sentinel data: 'THEIA', 'Scihub' or 'PEPS'")
+@optgroup.option("--apply_source_mask", is_flag=True, default = False, help = "If activated, applies the mask from SENTINEL-data provider")
+@optgroup.option("--extent_shape_path", type = click.Path(), default = None, help = "Path of shapefile used as extent of detection")
+@optgroup.option("--soil_detection", is_flag=True, default = False, help = "If activated, detects bare ground")
+@optgroup.option('--ignored_period', multiple=True, default = None, help="Period whose date to ignore (format 'MM-DD', ex : --ignored_period 11-01 05-01")
+@optgroup.option("--compress_vi", is_flag=True, default = False, help = "If activated, stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file. Uses less disk space but can lead to very small difference in results as the vegetation is rounded to three decimal places")
+@optgroup.group("compute_forest_mask arguments")
+@optgroup.option(" -f", "--forest_mask_source", type = str, default = "BDFORET", help = "Source of the forest mask, accepts 'BDFORET', 'OSO', the path to a vector file or a binary raster with the extent and resolution of the computed area, or None in which case all pixels will be considered valid")
+@optgroup.option("--dep_path", type = click.Path(), default = "/mnt/Data/Vecteurs/Departements/departements-20140306-100m.shp", help = "Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+@optgroup.option("--bdforet_dirpath", type = click.Path(), default = "/mnt/Data/Vecteurs/BDFORET", help = "Path to directory containing BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+@optgroup.option("--list_forest_type", multiple = True, default = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"], help = "List of forest types to be kept in the forest mask, corresponds to the CODE_TFV of the BD FORET. Optionnal, only used if forest_mask_source equals 'BDFORET'")
+@optgroup.option("--path_oso", type = click.Path(), default = "/mnt/fordead/Data/Classif_Seed_0_2021.tif", help = "Path to soil occupation raster, only used if forest_mask_source = 'OSO' ")
+@optgroup.option("--list_code_oso", type = str, default = [17], help = "List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'")
+@optgroup.group("train_model arguments")
+@optgroup.option("--min_last_date_training", type = str, default = "2018-01-01", help = "First date that can be used for detection")
+@optgroup.option("--max_last_date_training", type = str, default = "2018-06-01", help = "Last date that can be used for training")
+@optgroup.option("--nb_min_date", type = int, default = 10, help = "Minimum number of valid dates reqquired for modelling the vegetation index")
+@optgroup.option("--correct_vi", is_flag=True, default = False, help = "If True, corrects vi using large scale median vi")
+@optgroup.group("dieback_detection arguments")
+@optgroup.option("-s", "--threshold_anomaly", type = float, default = 0.16, help = "Minimum threshold for anomaly detection")
+@optgroup.option("--max_nb_stress_periods", type=int, default=5, help="Maximum number of stress periods. If this number is reached, the pixel is masked in the too_many_stress_periods, thus removed from future exports. Only used if stress_index_mode is not None.")
+@optgroup.option("--stress_index_mode", type = click.Choice(['mean', 'weighted_mean']), default = "weighted_mean", help = "Chosen stress index, if 'mean', the index is the mean of the difference between the vegetation index and the predicted vegetation index for all unmasked dates after the first anomaly subsequently confirmed. If 'weighted_mean', the index is a weighted mean, where for each date used, the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly. If None, the stress periods are not detected, and no information is saved")
+@optgroup.group("results_export arguments")
+@optgroup.option("--start_date_results", type = str, default = '2015-06-23', help = "Start date for results export")
+@optgroup.option("--end_date_results", type = str, default = "2022-01-01", help = "End date for results export")
+@optgroup.option("--results_frequency", type = str, default = 'M', help = "Frequency used to aggregate results, if value is 'sentinel', then periods correspond to the period between sentinel dates used in the detection, or it can be the frequency as used in pandas.date_range. e.g. 'M' (monthly), '3M' (three months), '15D' (fifteen days)")
+@optgroup.option("--multiple_files", is_flag=True, default = False, help = "If activated, one shapefile is exported for each period containing the areas suffering from dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback")
+@optgroup.option("--path_dict_vi", type = click.Path(), default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used")
+@optgroup.option('--threshold_list', multiple=True, default = [0.2, 0.265], help="List of thresholds used to classify the levels of dieback by discretising the confidence index")
+@optgroup.option('--classes_list', multiple=True, default = ["1-Faible anomalie","2-Moyenne anomalie","3-Forte anomalie"], help="List of class names for discretising the confidence index. If threshold_list has length n, classes_list must have length n+1.")
 def cli_process_tiles(**kwargs):
     """Apply full fordead processing to several tiles: compute_masked_vegetationindex > compute_forest_mask > train_model > dieback_detection > export_results
     """
@@ -116,14 +122,33 @@ def process_tiles(
         Path of the directory with a directory containing Sentinel data for each tile
     tiles : list
         List of tiles to process
+
+    ### compute_masked_vegetationindex arguments ###
+    lim_perc_cloud : float
+        Maximum cloudiness at the tile or zone scale, used to filter SENTINEL scenes
+    vi : str
+        Chosen vegetation index
+    sentinel_source : str
+        Source of Sentinel data: 'THEIA', 'Scihub' or 'PEPS'
+    apply_source_mask : bool
+        If True, applies the mask from SENTINEL-data provider
+    extent_shape_path : str
+        Path of shapefile used as extent of detection
+    soil_detection : bool
+        If True, performs soil detection (bare ground)
+    ignored_period : list
+        Period whose Sentinel dates to ignore (format 'MM-DD', ex : ["11-01","05-01"])
+    compress_vi : bool
+        If True, stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file.
+        Uses less disk space but can lead to very small difference in results as the vegetation is rounded to three decimal places
+    path_dict_vi : str
+        Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used
+    
+    ### compute_forest_mask arguments ###
     forest_mask_source : str
         Source of the forest mask, accepts 'BDFORET', 'OSO', 
         the path to a binary raster with the extent and resolution of the computed area,
         or None in which case all pixels will be considered valid
-    extent_shape_path : str
-        Path of shapefile used as extent of detection
-    ignored_period : list
-        Period whose Sentinel dates to ignore (format 'MM-DD', ex : ["11-01","05-01"])
     dep_path : str
         Path to shapefile containg departements with code insee. Optionnal, only used if forest_mask_source equals 'BDFORET'
     bdforet_dirpath : str
@@ -134,27 +159,33 @@ def process_tiles(
         Path to soil occupation raster, only used if forest_mask_source = 'OSO'
     list_code_oso : list
         List of values used to filter the soil occupation raster. Only used if forest_mask_source = 'OSO'
-    lim_perc_cloud : float
-        Maximum cloudiness at the tile or zone scale, used to filter SENTINEL scenes
-    vi : str
-        Chosen vegetation index
-    compress_vi : bool
-        If True, stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file.
-        Uses less disk space but can lead to very small difference in results as the vegetation is rounded to three decimal places
-    sentinel_source : str
-        Source of Sentinel data: 'THEIA', 'Scihub' or 'PEPS'
-    apply_source_mask : bool
-        If True, applies the mask from SENTINEL-data provider
-    soil_detection : bool
-        If True, performs soil detection (bare ground)
+
+    ### train_model arguments ###
     min_last_date_training : str
         First date that can be used for detection
     max_last_date_training : str
         Last date that can be used for training
     nb_min_date : int
         Minimum number of valid dates to compute a vegetation index model for the pixel
+    correct_vi : bool
+        If True, corrects vi using large scale median vi.
+    
+    ### dieback_detection arguments ###
     threshold_anomaly : float
         Threshold for anomaly detection
+    max_nb_stress_periods : int
+        Maximum number of stress periods. If this number is reached,
+        the pixel is masked in the too_many_stress_periods,
+        thus removed from future exports. Only used if stress_index_mode is not None.
+    stress_index_mode : str
+        If 'mean', the index is the mean of the difference
+        between the vegetation index and the predicted vegetation index
+        for all unmasked dates after the first anomaly subsequently confirmed.
+        If 'weighted_mean', the index is a weighted mean, where for each date used,
+        the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly.
+        If None, the stress periods are not detected, and no information is saved
+
+    ### export_results arguments ###    
     start_date_results : str
         Start date for results export
     end_date_results : str
@@ -163,26 +194,11 @@ def process_tiles(
         Frequency used to aggregate results, if value is 'sentinel',
         then periods correspond to the period between sentinel dates used in the detection,
         or it can be the frequency as used in pandas.date_range. 
-        Examples 'M' (monthly), '3M' (three months), '15D' (fifteen days)
+        Examples 'ME' (monthly), '3ME' (three months), '15D' (fifteen days)
     multiple_files : bool
         If True, one shapefile is exported for each period containing
         the areas suffering from dieback at the end of the period.
         Else, a single shapefile is exported containing diebackd areas associated with the period of dieback
-    correct_vi : bool
-        If True, corrects the vegetation index for the forest mask
-    stress_index_mode : str
-        If 'mean', the index is the mean of the difference
-        between the vegetation index and the predicted vegetation index
-        for all unmasked dates after the first anomaly subsequently confirmed.
-        If 'weighted_mean', the index is a weighted mean, where for each date used,
-        the weight corresponds to the number of the date (1, 2, 3, etc...) from the first anomaly.
-        If None, the stress periods are not detected, and no information is saved
-    max_nb_stress_periods : int
-        Maximum number of stress periods. If this number is reached,
-        the pixel is masked in the too_many_stress_periods,
-        thus removed from future exports. Only used if stress_index_mode is not None.
-    path_dict_vi : str
-        Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used
     threshold_list : list
         List of thresholds used to classify the levels of dieback by discretising the confidence index
     classes_list : list

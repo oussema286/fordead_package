@@ -10,13 +10,6 @@ def cli():
 def cli_read_tileinfo(data_directory):
     """
     Prints parameters, all dates used and last anomaly date computed to the console
-    \f
-    Parameters
-    ----------
-    data_directory : str
-        Path of the output directory containing the saved TileInfo object
-    Returns
-    -------
     """
     tile = TileInfo(data_directory)
     tile = tile.import_info()

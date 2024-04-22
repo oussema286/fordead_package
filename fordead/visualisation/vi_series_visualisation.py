@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Oct  1 14:56:23 2020
-
-@author: raphael.dutrieux
-
-"""
-
 
 import numpy as np
 import datetime
@@ -31,8 +24,8 @@ def graph_series():
     
 @graph_series.command(name='graph_series')
 @click.option("-o", "--data_directory", type = str, help = "Path of the directory containing results from the region of interest")
-@click.option("-x","--x", type = float, default = None, help = "x coordinate in the Sentinel-2 data CRS of the pixel of interest. Not used if shape_path parameter is used.")
-@click.option("-y","--y", type = float, default = None, help = "y coordinate in the Sentinel-2 data CRS of the pixel of interest. Not used if shape_path parameter is used.")
+@click.option("-x", type = float, default = None, help = "x coordinate in the Sentinel-2 data CRS of the pixel of interest. Not used if shape_path parameter is used.")
+@click.option("-y", type = float, default = None, help = "y coordinate in the Sentinel-2 data CRS of the pixel of interest. Not used if shape_path parameter is used.")
 @click.option("--shape_path", type = str, help = "Path to shapefile containing points whose data will be plotted. If None, indexes or coordinates for x and y can be given")
 @click.option("--name_column", type = str, default = "id", help = "Name of the column containing the name of the point, used to name the exported image. Not used if pixel is selected from indexes or coordinates")
 @click.option("--ymin", type = float, default = 0, help = "ymin limit of graph")
@@ -40,28 +33,27 @@ def graph_series():
 @click.option("--chunks", type = int, default = None, help = "Chunk length to import data as dask arrays and save RAM, advised if computed area in data_directory is large")
 def cli_vi_series_visualisation(data_directory, x = None, y = None, shape_path = None, name_column = "id", ymin = 0, ymax = 2, chunks = None):
     """
-    From previously computed results, graphs the results for specific pixels showing the vegetation index for each dates, the model and the detection.
-    By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing points with a column containing a unique ID used to name the exported image.
+    Export graphs of the time series of the vegetation index for each dates, 
+    the model and the detection, for a specific pixel, or a region of interest.
+    
+    By specifying 'shape_path' and 'name_column' parameters, it can be used 
+    with a shapefile containing points with a column containing a unique ID 
+    used to name the exported image.
+    
     By specifying 'x' and 'y' parameters, it can be used with coordinates in the Sentinel-2 data CRS.
-    If neither shape_path or x and y parameters are specified, the user will be prompted to give coordinates in the system of projection of the tile. Graphs can also be plotted for random pixels inside the forest mask.
-    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area (If only a small region of interest was computed (for example by using extent_shape_path parameter in the step 01_compute_masked_vegetationindex (https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)), then create a timelapse on this whole region of interest (https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/#creer-des-timelapses), then these indices correspond to the indices in the timelapse) 
+    If neither shape_path or x and y parameters are specified, the user will be prompted 
+    to give coordinates in the system of projection of the tile. 
+    
+    Graphs can also be plotted for random pixels inside the forest mask.
+    The user can also choose to specify pixels by their indices from the top left hand corner of the computed area.
+
+    If only a small region of interest was computed (for example by using extent_shape_path parameter in the 
+    [step 01_compute_masked_vegetationindex](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex)),
+    then it creates a timelapse on this region of interest. 
+
     The graphs are exported in the data_directory/TimeSeries directory as png files.
-    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
-    \f
-    Parameters
-    ----------
-    data_directory
-    x
-    y
-    shape_path
-    name_column
-    ymin
-    ymax
-    chunks
 
-    Returns
-    -------
-
+    See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/Results_visualization
     """
     vi_series_visualisation(data_directory, x, y, shape_path, name_column, ymin, ymax, chunks)
 
