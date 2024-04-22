@@ -3,6 +3,8 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  - click
+  - click-option-group
   - dask
   - eodag
   - fiona

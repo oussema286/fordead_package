@@ -31,6 +31,8 @@ classifiers = [
 ]
 keywords=['Remote Sensing', 'Sentinel-2', 'S2', 'Forest', 'bark beetle',]
 dependencies = [
+  "click",
+  "click-option-group",
   "dask",
   "eodag",
   "geopandas",
