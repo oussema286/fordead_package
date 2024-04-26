@@ -9,6 +9,7 @@ from fordead.steps.step4_compute_forest_mask import cli_compute_forest_mask
 from fordead.steps.step5_export_results import cli_export_results
 from fordead.cli.cli_read_tileinfo import cli_read_tileinfo
 from fordead.cli.cli_theia_preprocess import cli_theia_preprocess
+from fordead.cli.cli_process_tiles import cli_process_tiles
 from fordead.visualisation.vi_series_visualisation import cli_vi_series_visualisation
 from fordead.visualisation.create_timelapse import cli_create_timelapse
 from fordead.validation.preprocess_obs import cli_preprocess_obs
@@ -32,7 +33,8 @@ class OrderedGroup(click.Group):
     def list_commands(self, ctx):
         return self.commands
 
-@click.group(cls=OrderedGroup, context_settings={'help_option_names': ['-h', '--help']})
+@click.group(cls=OrderedGroup, context_settings={'help_option_names': ['-h', '--help'], 'show_default': True})
+@click.version_option()
 def fordead():
     """
     fordead - Remote sensing time series processing to detect forest anomalies
@@ -40,6 +42,8 @@ def fordead():
     The usual workflow is :
         masked_vi --> train_model --> dieback_detection --> forest_mask --> export_results
     """
+fordead.add_command(cli_process_tiles)
+
 fordead.add_command(cli_compute_masked_vegetationindex)
 fordead.add_command(cli_train_model)
 fordead.add_command(cli_dieback_detection)

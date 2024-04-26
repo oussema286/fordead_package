@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun 22 10:30:53 2020
-
-@author: Raphael Dutrieux
-
-
-Crée un timelapse à partir des résultats calculés
-
-
+Create a timelapse from the computed results
 """
 
 #%% =============================================================================
@@ -49,23 +42,8 @@ def cli_create_timelapse(data_directory, shape_path = None, name_column = "id", 
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons or points with a column containing a unique ID used to name the export. 
     By specifying 'x' and 'y' parameters, it can be used by specifying coordinates in the system of projection of the tile. 
     The timelapse is exported in the data_directory/Timelapses directory as an html file.
-    See details https://fordead.gitlab.io/fordead_package/docs/user_guides/Results_visualization/
-    \f
-    Parameters
-    ----------
-    data_directory
-    shape_path
-    name_column
-    x
-    y
-    buffer
-    vector_display_path
-    hover_column_list
-    max_date
-    show_confidence_class
-    zip_results
 
-
+    See details https://fordead.gitlab.io/fordead_package/docs/user_guides/english/Results_visualization
     """
     create_timelapse(data_directory, shape_path, name_column, x, y, buffer, vector_display_path, hover_column_list, max_date, show_confidence_class, zip_results)
 

@@ -20,6 +20,8 @@
 		"fordead.model_vegetation_index",
 		"fordead.writing_data",
 		"fordead.reflectance_extraction",
+		"fordead.cli",
+		"fordead.steps"
 		]
     extra_markdown_extensions = ['mdx_breakless_lists', 'mkdocs-click']
 

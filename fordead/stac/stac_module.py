@@ -56,7 +56,6 @@ def getItemCollection(startdate, enddate, bbox, cloud_nb = 100):
     """
     catalog = pystac_client.Client.open(
     "https://planetarycomputer.microsoft.com/api/stac/v1",
-    modifier=planetary_computer.sign_inplace,
     )
     time_range = f"{startdate}/{enddate}" #"2021-07-01/2021-12-01"
     bbox = bbox
@@ -185,7 +184,7 @@ def get_items_tiles(item_collection):
     
 S2_THEIA_BANDS = [f"B{i+1}" for i in range(12)]+["B8A"]
 S2_SEN2COR_BANDS = [f"B{i+1:02}" for i in range(12)]+["B8A"]
-def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc_cloud, tile = None):
+def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc_cloud, tile=None, sign=False):
     """
     Get the planetary item collection with band names
     and offset harmonized with THEIA format.
@@ -202,7 +201,8 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
         Max cloud cover between 0 et 1.
     tile : str, optional
         The name of a single tile used to filter the collection. If None, all tiles are kept in the collection. The default is None.
-
+    sign : bool
+        Should the collection be signed.
     Returns
     -------
     fordead.stac.stac_module.ItemCollection
@@ -235,6 +235,8 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
     harmonize_sen2cor_offet(collection, bands=S2_THEIA_BANDS, inplace=True)
     collection.drop_duplicates(inplace=True)
 
+    if sign:
+        collection = planetary_computer.sign_item_collection(collection)
     return collection
 
 def harmonize_sen2cor_offet(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_BANDS), inplace=False):

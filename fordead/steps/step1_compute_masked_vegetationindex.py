@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 19 16:06:51 2020
-
-@author: Raphaël Dutrieux
-
-"""
 
 #%% =============================================================================
 #   LIBRARIES
@@ -15,6 +9,7 @@ import click
 from pathlib import Path
 # import geopandas as gp
 import numpy as np
+from tqdm import tqdm
 #%% ===========================================================================
 #   IMPORT FORDEAD MODULES 
 # =============================================================================
@@ -82,7 +77,8 @@ def compute_masked_vegetationindex(
     compress_vi = False,
     ignored_period = None,
     extent_shape_path=None,
-    path_dict_vi = None
+    path_dict_vi = None,
+    progress=True
     ):
     """
     Computes masks and masked vegetation index for each SENTINEL date under a cloudiness threshold.
@@ -113,12 +109,13 @@ def compute_masked_vegetationindex(
     compress_vi : bool
         If True, stores the vegetation index as low-resolution floating-point data as small integers in a netCDF file. Uses less disk space but can lead to very small difference in results as the vegetation index is rounded to three decimal places
     ignored_period : list of two strings
-        Period whose Sentinel dates to ignore (format 'MM-DD', ex : ["11-01","05-01"]
+        Period whose Sentinel dates to ignore (format 'MM-DD', ex : ["11-01","05-01"])
     extent_shape_path : str
         Path of shapefile used as extent of detection, if None, the whole tile is used
     path_dict_vi : str
         Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)
-
+    progress : bool, optional
+        Whether to show a progress bar. Defaults to True.
     """
     # if extent_shape_path is not None: data_directory = Path(data_directory).parent / Path(extent_shape_path).stem
 
@@ -171,7 +168,7 @@ def compute_masked_vegetationindex(
 
         tile.used_bands, tile.vi_formula = get_bands_and_formula(vi, path_dict_vi = path_dict_vi, forced_bands = ["B2","B3","B4", "B8A","B11"] if soil_detection else get_bands_and_formula(formula = formula_mask)[0]) #Selects only relevant bands depending on used vegetation index plus forced_bands used in masks
         
-        for date_index, date in enumerate(tile.dates):
+        for date_index, date in tqdm(enumerate(tile.dates), total=len(tile.dates), disable=not progress):
             if date in new_dates:
                 
                 # Resample and import SENTINEL data
@@ -198,7 +195,7 @@ def compute_masked_vegetationindex(
                 # write_raster(mask, tile.paths["MaskDir"] / ("Mask_"+date+".nc"))
 
                 del vegetation_index, mask
-                print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
+                # print('\r', date, " | ", len(tile.dates)-date_index-1, " remaining       ", sep='', end='', flush=True) if date_index != (len(tile.dates) -1) else print('\r', '                                              ', '\r', sep='', end='', flush=True)
             
         if soil_detection:
             #Writing soil data 

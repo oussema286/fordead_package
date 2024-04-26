@@ -117,7 +117,9 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
                         tile_already_extracted = extracted_reflectance[extracted_reflectance["area_name"] == tile]
                     
                     if sentinel_source == "Planetary":
-                        collection = get_harmonized_planetary_collection(start_date, end_date, get_bbox(tile_obs), lim_perc_cloud, tile)
+                        collection = get_harmonized_planetary_collection(
+                            start_date, end_date, get_bbox(tile_obs),
+                            lim_perc_cloud, tile, sign=True)
                     else:
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)

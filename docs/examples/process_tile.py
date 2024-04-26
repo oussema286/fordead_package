@@ -63,7 +63,7 @@ def parse_command_line():
 
     dictArgs={}
     for key, value in parser.parse_args()._get_kwargs():
-    	dictArgs[key]=value
+        dictArgs[key]=value
     return dictArgs
 
 def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source, extent_shape_path,ignored_period,
@@ -120,6 +120,7 @@ def process_tiles(main_directory, sentinel_directory, tuiles, forest_mask_source
 # =====================================================================================================================
             
         train_model(data_directory=main_directory / Path(extent_shape_path).stem if extent_shape_path is not None else main_directory / tuile,
+                    min_last_date_training = min_last_date_training,
                     max_last_date_training = max_last_date_training,
                     nb_min_date = nb_min_date, correct_vi = correct_vi)
         file = open(logpath, "a")

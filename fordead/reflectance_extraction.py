@@ -424,7 +424,7 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         coords2 = coords.reset_index(drop=False).merge(pd.Series(arr.time.values, name="time"), how="cross")
         coords2["Date"] = coords2.time.dt.date.astype(str)
         # keep only the points and dates not in extracted_reflectance
-        to_extract = coords2.merge(extracted_reflectance, on=extracted_reflectance.keys(), how="outer", indicator=True)
+        to_extract = coords2.merge(extracted_reflectance, on=extracted_reflectance.keys().tolist(), how="outer", indicator=True)
         to_extract = to_extract.query("_merge == 'left_only'").drop("_merge", axis=1)
         if to_extract.empty:
             # nothing to extract

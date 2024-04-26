@@ -1,10 +1,16 @@
-.shared_windows_runners:
-  tags:
-  - win10-mop8243
+# .shared_windows_runners:
+#   tags:
+#   - win10-mop8243
   # - shared-windows
   # - windows
   # - windows-1809
+
+.win10_runner:
+  tags:
+  - win10
+
 stages:
+  - test
   - build
   - deploy
 ## docker build does not end within the 1h limit
@@ -25,30 +31,23 @@ stages:
 #  only:
 #    - docker_ci
 
-intall-win:
-  stage: build
+test-win10:
+  stage: test
   extends:
-    - .shared_windows_runners
-  variables: 
-    ErrorActionPreference: stop 
+    - .win10_runner
   script:
     - git config --system core.longpaths true
     # install Miniforge if $env:userprofile\miniforge3 is not found
     # other just load profile
     - gitlab-ci\conda-build.ps1
     - mamba env create -y -n fordead-gitlab-ci -f environment.yml
-    - cd docs\examples
-    - conda run -n fordead-gitlab-ci --live-stream python download_data.py
-    - conda run -n fordead-gitlab-ci --live-stream python full_test_script.py
-    # cleaning
-    - Remove-Item2 -Recurse fordead_data
-    - Remove-Item2 -Recurse test_output_dir
-    - mamba remove -n fordead-gitlab-ci --all -y
-    - mamba clean --all -y
-  only:
-    - merge_requests
-    - schedules
-  
+    - mamba install -y -n fordead-gitlab-ci pytest
+    - conda run -n fordead-gitlab-ci --live-stream pip install -e .
+    - conda run -n fordead-gitlab-ci --live-stream pytest -s tests
+  rules:
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^win/ && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"
+
 
 install-linux:
   stage: build
@@ -57,29 +56,16 @@ install-linux:
     MAMBA_DOCKERFILE_ACTIVATE: 1
   script:
     - micromamba install -y -n base -f environment.yml
+    - micromamba install -y -n base -c conda-forge pytest
     - pip install -e .
     - python -c "import fordead"
-    - cd docs/examples
-    - python download_data.py
-    - python full_test_script.py
+    - pytest -s tests
   only:
+    - merge_requests
     - dev
     - master
 
 #[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
-badges:
-  stage: deploy
-  image: python:latest
-  script:
-    - version=`grep __version__ fordead/_version.py| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
-    - echo "{\"version\":\"$version\"}" > badges.json
-  artifacts:
-    paths:
-      - badges.json
-  only:
-    - master
-
-
 pages:
   stage: deploy
   image: $CI_REGISTRY/fordead/fordead_package:latest
@@ -90,9 +76,12 @@ pages:
     - pip install -e .
     - portray as_html -c pyproject_doc.toml
     - mv site public
+    - version=`fordead --version| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
+    - echo "{\"version\":\"$version\"}" > badges.json
   artifacts:
     paths:
      - public
+     - badges.json
   only:
    - master
    - pages

@@ -3,14 +3,14 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  - click
+  - click-option-group
   - dask
   - eodag
-  - eoreader
   - fiona
   - geopandas
   - git
   - matplotlib
-  - netcdf4
   - numpy
   - path
   - pathlib
@@ -29,7 +29,7 @@ dependencies:
 
   # additionnal dependencies for stac-static
   - pygeofilter
-  - pyarrow
+  - pyarrow != 15.0.2
   - pip:
     # ensure that stac-geoparquet v0.3.2+ (conda version is too old),
     # dependency of stac-static
