@@ -74,11 +74,12 @@ pages:
     - pip install portray python-markdown-math mdx-breakless-lists mkdocs-click
     - python -V  # Print out python version for debugging
     - pip install -e .
-    - portray as_html -c pyproject_doc.toml
-    - mv site public
     - version=`fordead --version| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
     - echo $version
     - echo "{\"version\":\"$version\"}" > badges.json
+    - portray as_html -c pyproject_doc.toml
+    - mv site public
+
   artifacts:
     paths:
      - public
