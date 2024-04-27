@@ -69,6 +69,8 @@ install-linux:
 pages:
   stage: deploy
   image: $CI_REGISTRY/fordead/fordead_package:latest
+  variables:
+    GIT_STRATEGY: clone
   script:
     - conda env list
     - pip install portray python-markdown-math mdx-breakless-lists mkdocs-click
