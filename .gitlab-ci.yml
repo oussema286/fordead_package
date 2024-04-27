@@ -69,15 +69,19 @@ install-linux:
 pages:
   stage: deploy
   image: $CI_REGISTRY/fordead/fordead_package:latest
+  variables:
+    GIT_STRATEGY: clone
   script:
     - conda env list
     - pip install portray python-markdown-math mdx-breakless-lists mkdocs-click
     - python -V  # Print out python version for debugging
     - pip install -e .
+    - version=`fordead --version| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
+    - echo $version
+    - echo "{\"version\":\"$version\"}" > badges.json
     - portray as_html -c pyproject_doc.toml
     - mv site public
-    - version=`fordead --version| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
-    - echo "{\"version\":\"$version\"}" > badges.json
+
   artifacts:
     paths:
      - public
