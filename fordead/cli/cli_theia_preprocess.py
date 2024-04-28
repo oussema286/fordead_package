@@ -96,15 +96,15 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=No
     if end_date is None:
         end_date = date.today().strftime('%Y-%m-%d')
     
-    for tuile in tiles:
-        print("\n Downloading THEIA data for tile " + tuile + "\n")
-        tile_zip_dir = (zipped_directory / tuile).mkdir_p()   
-        tile_unzip_dir = (unzipped_directory / tuile).mkdir_p()
+    for tile in tiles:
+        print("\n Downloading THEIA data for tile " + tile + "\n")
+        tile_zip_dir = (zipped_directory / tile).mkdir_p()   
+        tile_unzip_dir = (unzipped_directory / tile).mkdir_p()
         
 
         delete_empty_zip(tile_zip_dir, tile_unzip_dir) #Deletes empty zip files if the unzipped directory is missing
                 
-        to_unzip = theia_download(tuile, start_date, end_date, tile_zip_dir,
+        to_unzip = theia_download(tile, start_date, end_date, tile_zip_dir,
                     lim_perc_cloud, login_theia, password_theia, level, 
                     tile_unzip_dir, retry=retry, wait=wait)
 
