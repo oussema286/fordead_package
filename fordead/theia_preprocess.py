@@ -245,7 +245,8 @@ def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_c
 #         print(">>>no product corresponds to selection criteria")
 
 def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
-                   login_theia=None, password_theia=None, level='LEVEL2A', unzip_dir = None):
+                   login_theia=None, password_theia=None, level='LEVEL2A',
+                   unzip_dir = None, retry=10, wait=300):
     """
     Downloads Sentinel-2 acquisitions of the specified tile from THEIA from start_date to end_date under a cloudiness threshold
 
@@ -267,7 +268,11 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
         Password of your theia account
     level : str, optional (see notes)
         Product level for reflectance products, can be 'LEVEL1C', 'LEVEL2A' or 'LEVEL3A'
-    
+    retry : int, optional
+        Number of retries if download fails
+    wait : int, optional
+        Wait time between retries in seconds
+
     Returns
     -------
     List
@@ -315,8 +320,17 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
         product_type = 'S2_MSI_L3A_WASP'
 
     dag = EODataAccessGateway()
-    dag._prune_providers_list()
+    # dag._prune_providers_list()
 
+    if login_theia is not None and password_theia is not None:
+        dag.providers_config["theia"].auth.credentials.update(
+            {
+                "ident": login_theia,
+                "pass": password_theia
+            }
+        )
+
+    # search products
     search_args = dict(
         productType=product_type,
         start=start_date,
@@ -328,52 +342,71 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
 
     search_results = dag.search_all(**search_args)
 
-    if login_theia is not None and password_theia is not None:
-        dag.providers_config["theia"].auth.credentials.update(
-            {
-                "ident": login_theia,
-                "pass": password_theia
-            }
-        )
-
-    unzipped = []
-    merged = []
-    to_unzip = []
-    to_download = [] 
-    for r in search_results:
-        zip_file = Path(write_dir) / (r.properties['id']+".zip")
-        unzip_file = []
-        if unzip_dir is not None:
-            id = re.sub(r'(.*)_[A-Z]', r'\1',r.properties['id'])
-            unzip_file = Path(unzip_dir).glob(f'{id}_[A-D]_V*')
-        if len(unzip_file)>0:
-            unzipped.append(unzip_file[0])
-        elif zip_file.exists():
-            if len(ZipFile(zip_file).namelist())==0:
-                merged.append(zip_file)
+    # Several failure can happen: remote onnection closed, authentication error, empty download.
+    # We will loop until we get all products or until we reach the number of retries.
+    done = False
+    trials = 0
+    while not done:
+        # distribute search results among the different categories
+        unzipped = []
+        merged = []
+        to_unzip = []
+        to_download = [] 
+        for r in search_results:
+            zip_file = Path(write_dir) / (r.properties['id']+".zip")
+            unzip_file = []
+            if unzip_dir is not None:
+                id = re.sub(r'(.*)_[A-Z]', r'\1',r.properties['id'])
+                unzip_file = Path(unzip_dir).glob(f'{id}_[A-D]_V*')
+            if len(unzip_file)>0:
+                unzipped.append(unzip_file[0])
+            elif zip_file.exists():
+                if len(ZipFile(zip_file).namelist())==0:
+                    merged.append(zip_file)
+                else:
+                    # products downloaded but not unzipped
+                    to_unzip.append(zip_file)
             else:
-                # products downloaded but not unzipped
-                to_unzip.append(zip_file)
-        else:
-            to_download.append(r)
-    
-    unzipped_str = '\n'.join(unzipped)
-    merged_str = '\n'.join(merged)
-    to_unzip_str = '\n'.join(to_unzip)
-    print(f"Products already unzipped:\n{unzipped_str}\n")
-    print(f"Products considered as merged:\n{merged_str}\n")
-    print(f"Products already downloaded but not unzipped:\n{to_unzip_str}\n")
-    print(f'{len(search_results)-len(to_download)} files already downloaded or unzipped, {len(to_download)} files left to download.')
-    print(f"Downloading products: {to_download}")
+                to_download.append(r)
+        
+        unzipped_str = '\n'.join(unzipped)
+        merged_str = '\n'.join(merged)
+        to_unzip_str = '\n'.join(to_unzip)
+        print(f"Products already unzipped:\n{unzipped_str}\n")
+        print(f"Products considered as merged:\n{merged_str}\n")
+        print(f"Products already downloaded but not unzipped:\n{to_unzip_str}\n")
+        print(f'{len(search_results)-len(to_download)} files already downloaded or unzipped, {len(to_download)} files left to download.')
+        print(f"Downloading products: {to_download}")
 
-    downloaded = []
-    if len(to_download) > 0:
-        downloaded = dag.download_all(to_download,
-                     outputs_prefix=write_dir,
-                     extract=False)
-        for f in downloaded:
-            if not (Path(f).exists() and f.endswith(".zip")):
-                raise Exception("Something went wrong with the download")
+        # start downloading
+        downloaded = []
+        if len(to_download) > 0:
+            try:
+                downloaded = dag.download_all(to_download,
+                            outputs_prefix=write_dir,
+                            extract=False)
+            except Exception as e:
+                    print(f"Download failed with error: {e}")
+
+            # check all downloaded files exists and correct zip
+            for f in downloaded:
+                try:
+                    ZipFile(f).namelist()
+                except BadZipfile:
+                    print(f"Bad zip file, removing file: {f}")
+                    Path(f).remove()
+                    downloaded.remove(f)
+            
+            # check all files were downloaded
+            if len(to_download) == len(downloaded):
+                done=True
+                print("\nDownload done!\n")
+            elif trials==retry:
+                raise RuntimeError("\nRetry limit reached.\n")
+            else:
+                trials+=1
+                print(f"\nRetries in {wait} seconds {trials}/{retry} ...\n")
+                time.sleep(wait)
 
     return to_unzip + downloaded
 
