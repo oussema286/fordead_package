@@ -361,11 +361,17 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
             if len(unzip_file)>0:
                 unzipped.append(unzip_file[0])
             elif zip_file.exists():
-                if len(ZipFile(zip_file).namelist())==0:
-                    merged.append(zip_file)
-                else:
-                    # products downloaded but not unzipped
-                    to_unzip.append(zip_file)
+                try:
+                    zip_len = len(ZipFile(zip_file).namelist())
+                    if zip_len==0:
+                        merged.append(zip_file)
+                    else:
+                        # products downloaded but not unzipped
+                        to_unzip.append(zip_file)
+                except BadZipfile:
+                    print(f"Bad zip file, removing file: {f}")
+                    Path(zip_file).remove()
+                    to_download.append(r)    
             else:
                 to_download.append(r)
         
