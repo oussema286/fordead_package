@@ -3,6 +3,7 @@
 Created on Tue Feb 16 13:53:50 2021
 
 @author: Raphael Dutrieux
+@author: Florian de Boissieu
 """
 from path import Path
 from zipfile import ZipFile, BadZipfile
@@ -10,12 +11,7 @@ import zipfile
 import tempfile
 import numpy as np
 import rasterio
-import shutil
-import glob
-import json
 import time
-import os
-import os.path
 import re
 import sys
 from datetime import datetime, timedelta
@@ -24,225 +20,6 @@ from eodag import EODataAccessGateway
 
 from fordead.import_data import retrieve_date_from_string, TileInfo
 
-
-# from datetime import date, datetime
-if sys.version_info[0] == 2:
-    from urllib import urlencode
-elif sys.version_info[0] > 2:
-    from urllib.parse import urlencode
-    
-
-        
-def missing_theia_acquisitions(tile, start_date, end_date, write_dir, lim_perc_cloud, login_theia, password_theia, level, logpath = None):
-    """
-    Checks if there are undownloaded Sentinel-2 acquisitions available
-
-    Parameters
-    ----------
-    tile : str
-        Name of the Sentinel-2 tile (format : "T31UFQ").
-    start_date : str
-        Acquisitions before this date are ignored (format : "YYYY-MM-DD") 
-    end_date : str
-        Acquisitions after this date are ignored (format : "YYYY-MM-DD") 
-    write_dir : str
-        Directory where THEIA data is downloaded
-    lim_perc_cloud : int
-        Maximum cloud cover (%)
-    login_theia : str
-        Login of your theia account
-    password_theia : str
-        Password of your theia account
-    level : str
-        Product level for reflectance products, can be 'LEVEL1C', 'LEVEL2A' or 'LEVEL3A'
-
-    Returns
-    -------
-    bool
-        True if there are undownloaded acquisitions available, False if not
-
-    """
-    
-
-    dict_query = {'location': tile,
-                  "startDate" : start_date,
-                  'completionDate': end_date, 
-                  'maxRecords': 500, 
-                  'processingLevel': level}
-    
-    config = {'serveur': 'https://theia.cnes.fr/atdistrib', 
-              'resto': 'resto2', 
-              'token_type': 'text', 
-              'login_theia': login_theia, 
-              'password_theia': password_theia}
-
-    print("Get theia single sign on token")
-    get_token = 'curl -k -s -X POST %s --data-urlencode "ident=%s" --data-urlencode "pass=%s" %s/services/authenticate/>token.json' % (
-        "", config["login_theia"], config["password_theia"], config["serveur"])
-    
-    # print get_token
-    
-    os.system(get_token)
-
-    query = "%s/%s/api/collections/%s/search.json?" % (
-        config["serveur"], config["resto"], "SENTINEL2")+urlencode(dict_query)
-    print(query)
-    search_catalog = 'curl -k %s -o search.json "%s"' % ("", query)
-    print(search_catalog)
-    os.system(search_catalog)
-    time.sleep(5)
-    
-    with open('search.json') as data_file:
-        data = json.load(data_file)
-    
-    try:
-        if logpath is not None:
-            file = open(logpath, "w") 
-
-        for i in range(len(data["features"])):
-            prod = data["features"][i]["properties"]["productIdentifier"]
-            cloudtemp = data["features"][i]["properties"]["cloudCover"]
-            
-            acqDate = data["features"][i]["properties"]["startDate"]
-            prodDate = data["features"][i]["properties"]["productionDate"]
-            pubDate = data["features"][i]["properties"]["published"]
-            
-            if cloudtemp != None:
-                cloudCover = int(cloudtemp)
-            else:
-                cloudCover = 0
-                
-            if logpath is not None:
-                file.write("acq date" + acqDate[0:14] + "prod date" + prodDate[0:14] + "pub date" + pubDate[0:14] + "cloudCover " +  str(cloudtemp) + "\n")
-                # file.write("test")
-                
-            file_exists = os.path.exists("%s/%s.zip" % (write_dir, prod))
-            if not(file_exists) and (cloudCover <= lim_perc_cloud):
-                # download only if cloudCover below maxcloud
-                return True
-        if logpath is not None:
-            file.close()
-    except KeyError:
-        print("No undownloaded product corresponds to selection criteria")
-    return False
-        
-        
-# def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud, login_theia, password_theia, level):
-#     """
-#     Downloads Sentinel-2 acquisitions of the specified tile from THEIA from start_date to end_date under a cloudiness threshold
-
-#     Parameters
-#     ----------
-#     tile : str
-#         Name of the Sentinel-2 tile (format : "T31UFQ").
-#     start_date : str
-#         Acquisitions before this date are ignored (format : "YYYY-MM-DD") 
-#     end_date : str
-#         Acquisitions after this date are ignored (format : "YYYY-MM-DD") 
-#     write_dir : str
-#         Directory where THEIA data is downloaded
-#     lim_perc_cloud : int
-#         Maximum cloud cover (%)
-#     login_theia : str
-#         Login of your theia account
-#     password_theia : str
-#         Password of your theia account
-#     level : str
-#         Product level for reflectance products, can be 'LEVEL1C', 'LEVEL2A' or 'LEVEL3A'
-
-#     """
-
-#     dict_query = {'location': tile,
-#                   "startDate" : start_date,
-#                   'completionDate': end_date, 
-#                   'maxRecords': 500, 
-#                   'processingLevel': level}
-    
-#     config = {'serveur': 'https://theia.cnes.fr/atdistrib', 
-#               'resto': 'resto2', 
-#               'token_type': 'text', 
-#               'login_theia': login_theia, 
-#               'password_theia': password_theia}
-
-#     print("Get theia single sign on token")
-#     get_token = 'curl -k -s -X POST %s --data-urlencode "ident=%s" --data-urlencode "pass=%s" %s/services/authenticate/>token.json' % (
-#         "", config["login_theia"], config["password_theia"], config["serveur"])
-        
-#     os.system(get_token)
-#     print("Done")
-#     with open('token.json') as data_file:
-#         token = data_file.readline()
-    
-#     query = "%s/%s/api/collections/%s/search.json?" % (
-#         config["serveur"], config["resto"], "SENTINEL2")+urlencode(dict_query)
-#     print(query)
-#     search_catalog = 'curl -k %s -o search.json "%s"' % ("", query)
-#     print(search_catalog)
-#     os.system(search_catalog)
-#     time.sleep(5)
-    
-#     # ====================
-#     # Download
-#     # ====================
-    
-#     with open('search.json') as data_file:
-#         data = json.load(data_file)
-    
-#     try:
-#         for i in range(len(data["features"])):
-#             prod = data["features"][i]["properties"]["productIdentifier"]
-#             feature_id = data["features"][i]["id"]
-#             cloudtemp = data["features"][i]["properties"]["cloudCover"]
-#             if cloudtemp != None:
-#                 cloudCover = int(cloudtemp)
-#             else:
-#                 cloudCover = 0
-#             acqDate = data["features"][i]["properties"]["startDate"]
-#             prodDate = data["features"][i]["properties"]["productionDate"]
-#             pubDate = data["features"][i]["properties"]["published"]
-#             print ('------------------------------------------------------')
-#             print(prod, feature_id)
-#             print("cloudCover:", cloudCover)
-#             print("acq date", acqDate[0:14], "prod date", prodDate[0:14], "pub date", pubDate[0:14])
-    
-#             if write_dir == None:
-#                 write_dir = os.getcwd()
-#             file_exists = os.path.exists("%s/%s.zip" % (write_dir, prod))
-#             rac_file = '_'.join(prod.split('_')[0: -1])
-#             print((">>>>>>>", rac_file))
-#             fic_unzip = glob.glob("%s/%s*" % (write_dir, rac_file))
-#             if len(fic_unzip) > 0:
-#                 unzip_exists = True
-#             else:
-#                 unzip_exists = False
-#             tmpfile = "%s/%s.tmp" % (write_dir, prod)
-#             get_product = 'curl %s -o "%s" -k -H "Authorization: Bearer %s" %s/%s/collections/%s/%s/download/?issuerId=theia' % (
-#                 "", tmpfile, token, config["serveur"], config["resto"], "SENTINEL2", feature_id)
-#             print(get_product)
-#             if not(file_exists) and not(unzip_exists):
-#                 # download only if cloudCover below maxcloud
-#                 if cloudCover <= lim_perc_cloud:
-#                     os.system(get_product)
-    
-#                     # check if binary product
-    
-#                     with open(tmpfile) as f_tmp:
-#                         try:
-#                             tmp_data = json.load(f_tmp)
-#                             print("Result is a text file")
-#                             print(tmp_data)
-#                         except ValueError:
-#                             pass
-    
-#                     os.rename("%s" % tmpfile, "%s/%s.zip" % (write_dir, prod))
-#                     print("product saved as : %s/%s.zip" % (write_dir, prod))
-#                 else:
-#                     print("cloud cover too high : %s" % (cloudCover))
-#             elif file_exists:
-#                 print("%s already exists" % prod)
-    
-#     except KeyError:
-#         print(">>>no product corresponds to selection criteria")
 
 def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
                    login_theia=None, password_theia=None, level='LEVEL2A',
@@ -642,33 +419,5 @@ def merge_same_date(bands,out_dir):
                     with rasterio.open(doublon /  "MASKS" / (doublon.name +"_CLM_R2.tif"), 'w', **ProfileSave) as dst:
                             dst.write(MergedBand,indexes=1)
                 else:
-                    shutil.rmtree(str(doublon)) #Supprime les inutiles
+                    doublon.rmtree() #Supprime les inutiles
                     print("Suppression doublons")
-                
-
-def decompose_interval(start_date, end_date):
-    # Convert input strings to datetime objects
-    start_date = datetime.strptime(start_date, '%Y-%m-%d')
-    end_date = datetime.strptime(end_date, '%Y-%m-%d')
-
-    # Initialize the list to store decomposed intervals
-    intervals = []
-
-    # Check if the interval is longer than a year
-    while start_date < end_date:
-        next_year = start_date + timedelta(days=365)
-        
-        # Adjust for leap year
-        if next_year.year % 4 == 0 and (next_year.year % 100 != 0 or next_year.year % 400 == 0):
-            next_year += timedelta(days=1)
-
-        # Determine the end date for the current interval
-        interval_end = min(next_year, end_date)
-
-        # Append the current interval to the list
-        intervals.append((start_date, interval_end))
-
-        # Move the start date to the beginning of the next interval
-        start_date = interval_end
-
-    return intervals

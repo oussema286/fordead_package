@@ -6,7 +6,7 @@ Module with the theia preprocess function and a corresponding command line.
 import click
 from path import Path
 from datetime import date
-from fordead.theia_preprocess import unzip_theia, merge_same_date, delete_empty_zip, theia_download, missing_theia_acquisitions, decompose_interval
+from fordead.theia_preprocess import unzip_theia, merge_same_date, delete_empty_zip, theia_download
 
 
 @click.command(name='theia_preprocess')
