@@ -319,34 +319,35 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
     elif level == 'LEVEL3A':
         product_type = 'S2_MSI_L3A_WASP'
 
-    dag = EODataAccessGateway()
-    # dag._prune_providers_list()
-
-    if login_theia is not None and password_theia is not None:
-        dag.providers_config["theia"].auth.credentials.update(
-            {
-                "ident": login_theia,
-                "pass": password_theia
-            }
-        )
-
-    # search products
-    search_args = dict(
-        productType=product_type,
-        start=start_date,
-        end=end_date,
-        location=re.sub(r'^([0-9].*)', r'T\1', tile),
-        cloudCover=lim_perc_cloud,
-        provider="theia"
-    )
-
-    search_results = dag.search_all(**search_args)
-
-    # Several failure can happen: remote onnection closed, authentication error, empty download.
-    # We will loop until we get all products or until we reach the number of retries.
     done = False
     trials = 0
     while not done:
+        dag = EODataAccessGateway()
+        # dag._prune_providers_list()
+
+        if login_theia is not None and password_theia is not None:
+            dag.providers_config["theia"].auth.credentials.update(
+                {
+                    "ident": login_theia,
+                    "pass": password_theia
+                }
+            )
+
+        # search products
+        search_args = dict(
+            productType=product_type,
+            start=start_date,
+            end=end_date,
+            location=re.sub(r'^([0-9].*)', r'T\1', tile),
+            cloudCover=lim_perc_cloud,
+            provider="theia"
+        )
+
+        search_results = dag.search_all(**search_args)
+
+        # Several failure can happen: remote onnection closed, authentication error, empty download.
+        # We will loop until we get all products or until we reach the number of retries.
+
         # distribute search results among the different categories
         unzipped = []
         merged = []
@@ -386,7 +387,9 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
 
         # start downloading
         downloaded = []
-        if len(to_download) > 0:
+        if len(to_download) == 0:
+            done = True
+        else:
             try:
                 downloaded = dag.download_all(to_download,
                             outputs_prefix=write_dir,
