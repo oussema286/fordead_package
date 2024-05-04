@@ -602,7 +602,7 @@ def merge_same_date(bands,out_dir):
         if np.sum(np.array(SenDateList)==date)>1:
             print("Doublon détecté à la date : " + date)
             Doublons=np.array(SenPathList)[np.array(SenDateList)==date]
-            
+            Doublons = [Path(f) for f in Doublons]
             #MOSAIQUE BANDES
             
             for band in bands:
