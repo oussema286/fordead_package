@@ -121,7 +121,7 @@ DEFAULT_GDAL_ENV = stackstac.rio_reader.LayeredEnv(
 def valid_name(x, pattern, directory=False):
    x = Path(x)
    reg = re.compile(pattern)
-   if len(reg.findall(x.name))==1 and (x.isdir()==directory):
+   if len(reg.findall(x.name))==1 and (x.is_dir()==directory):
       return True
    else:
       return False
