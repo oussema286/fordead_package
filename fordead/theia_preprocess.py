@@ -153,14 +153,19 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
             else:
                 to_download.append(r)
         
-        unzipped_str = '\n'.join(unzipped)
-        merged_str = '\n'.join(merged)
-        to_unzip_str = '\n'.join(to_unzip)
-        print(f"Products already unzipped:\n{unzipped_str}\n")
-        print(f"Products considered as merged:\n{merged_str}\n")
-        print(f"Products already downloaded but not unzipped:\n{to_unzip_str}\n")
+        
+        if len(unzipped):
+            unzipped_str = '\n'.join(unzipped)
+            print(f"Products already unzipped:\n{unzipped_str}\n")
+        if len(merged):
+            merged_str = '\n'.join(merged)
+            print(f"Products considered as merged:\n{merged_str}\n")
+        if to_unzip:
+            to_unzip_str = '\n'.join(to_unzip)
+            print(f"Products already downloaded but not unzipped:\n{to_unzip_str}\n")
         print(f'{len(search_results)-len(to_download)} files already downloaded or unzipped, {len(to_download)} files left to download.')
-        print(f"Downloading products: {to_download}")
+        if len(to_download):
+            print(f"Downloading products: {to_download}")
 
         # start downloading
         downloaded = []
