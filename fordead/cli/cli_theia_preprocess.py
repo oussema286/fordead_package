@@ -6,7 +6,7 @@ Module with the theia preprocess function and a corresponding command line.
 import click
 from path import Path
 from datetime import date
-from fordead.theia_preprocess import unzip_theia, merge_same_date, delete_empty_zip, theia_download, missing_theia_acquisitions, decompose_interval
+from fordead.theia_preprocess import unzip_theia, merge_same_date, delete_empty_zip, theia_download
 
 
 @click.command(name='theia_preprocess')
@@ -41,7 +41,7 @@ def cli_theia_preprocess(zipped_directory, unzipped_directory, tiles, login_thei
 def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=None, password_theia=None,
                      level = "LEVEL2A", start_date = "2015-06-23", end_date = None, lim_perc_cloud = 50,
                      bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], 
-                     correction_type = "FRE", empty_zip = False, retry = 3):
+                     correction_type = "FRE", empty_zip = False, retry = 10, wait=300):
     """
     Download Sentinel-2 zip files from THEIA portal, 
     extract band files and eventually merge tile+date duplicates.
@@ -79,7 +79,9 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=No
     empty_zip : bool, optional
         If True, the zip files are emptied as a way to save space. The default is False.
     retry : int, optional
-        Number of times the download can be retried. The default is 3.
+        Number of retries if download fails. The default is 10.
+    wait : int, optional
+        Wait time between retries in seconds. The default is 300.
 
     Returns
     -------
@@ -94,32 +96,17 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=No
     if end_date is None:
         end_date = date.today().strftime('%Y-%m-%d')
     
-    for tuile in tiles:
-        print("\n Downloading THEIA data for tile " + tuile + "\n")
-        tile_zip_dir = (zipped_directory / tuile).mkdir_p()   
-        tile_unzip_dir = (unzipped_directory / tuile).mkdir_p()
+    for tile in tiles:
+        print("\n Downloading THEIA data for tile " + tile + "\n")
+        tile_zip_dir = (zipped_directory / tile).mkdir_p()   
+        tile_unzip_dir = (unzipped_directory / tile).mkdir_p()
         
-        trials = 0
-        done = False
-        while not done:
-            try:
-                delete_empty_zip(tile_zip_dir, tile_unzip_dir) #Deletes empty zip files if the unzipped directory is missing
-                
-                to_unzip = theia_download(tuile, start_date, end_date, tile_zip_dir,
-                            lim_perc_cloud, login_theia, password_theia, level, 
-                            tile_unzip_dir)
-                print("\nDownload done!\n")
-                done = True
-            except Exception as e:
-                print("Something went wrong while downloading data...")
-                if trials == retry:
-                    print("Too many trials, exiting...")
-                    raise e
-                print(f"The error was:\n{e}\n")
-                trials += 1
-                print(f"Making another trial ({trials}/{retry})...")
-                
 
+        delete_empty_zip(tile_zip_dir, tile_unzip_dir) #Deletes empty zip files if the unzipped directory is missing
+                
+        to_unzip = theia_download(tile, start_date, end_date, tile_zip_dir,
+                    lim_perc_cloud, login_theia, password_theia, level, 
+                    tile_unzip_dir, retry=retry, wait=wait)
 
         unzip_theia(bands, to_unzip, tile_unzip_dir, empty_zip, correction_type)
         merge_same_date(bands, tile_unzip_dir)

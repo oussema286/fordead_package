@@ -1,0 +1,52 @@
+# v1.8.5
+
+## Fix
+* issue #27 for theia_download
+
+# v1.8.4
+
+## Add
+* function `process_tiles` in `fordead.cli.cli_process_tiles.py` with full workflow (steps 1 to 5): can be called as a function or with the CLI `fordead process_tiles`. It includes the saving of input parameters in a .json file and logging of processing time in .log file
+* install and processing tests for linux and windows
+* arg `retry` in `theia_preprocess` in order to retry download in case of failure
+* retries (default 5 retries with 1 sec. wait between each) in case of failure for the STAC reader (e.g. for Planetary Computer)
+
+## Changes
+* setup.py --> pyproject.py with automatic package version numbering
+* replaced progress prints by progress bars in step 1 and step 3
+* update a few elements of documentation (e.g. print default values in CLI)
+
+## Fix
+* since versions 1.8*, a bug was introduced in `theia_preprocess` for the detection of merged scenes in the download section, see issue #25. It was fixed for the case of `empty_zip=True`. For the case for `empty_zip=False`, the function might try to re-download the scenes with duplicated dates and try to merge them again.
+
+# v1.8.3
+
+## Change
+* the downloader of theia data is now run with eodag.
+  The login and password can now be set in a configuration
+  file instead of writing them as arguments,
+  see [theia_preprocess](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/other_tools/theia_preprocess)
+
+# v1.8.2
+
+## Fix
+* Sen2Cor offset issue #21
+* duplicates from planetary computer #20
+* doc typo #19
+* systematic warning from stackstac #18
+
+## Change
+* accelerate points extraction by \~x30 using xarray of the whole collection
+* change a few internal function signatures, removing useless arguments (`get_already_extracted`, `extract_raster_values`)
+
+## Add
+* test in CI
+
+# v1.8.1
+
+## Add
+* Add CI for windows
+
+## Fix
+* remove a few warnings
+  
