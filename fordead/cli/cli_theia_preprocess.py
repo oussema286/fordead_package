@@ -22,11 +22,13 @@ from fordead.theia_preprocess import unzip_theia, merge_same_date, delete_empty_
 @click.option("-b", "--bands", multiple=True, default=["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"],help = "List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, as well as CLMR2, CLMR2, EDGR1, EDGR2, SATR1, SATR2 for LEVEL2A data, and DTS1, DTS2, FLG1, FLG2, WGT1, WGT2 for LEVEL3A)", show_default=True)
 @click.option("-c", '--correction_type', type = click.Choice(['SRE', 'FRE', 'FRC'], case_sensitive=False),  help='Chosen correction type (SRE or FRE for LEVEL2A data, FRC for LEVEL3A)', default='FRE', show_default=True)
 @click.option("--empty_zip",  is_flag=True, help = "If True, the zip files are emptied as a way to save space.", show_default=True)
-@click.option("-r", "--retry", type=int, default=3, help = "Number of retries when downloading data", show_default=True)
+@click.option("--retry", type=int, default=3, help = "Number of retries when downloading data", show_default=True)
+@click.option("--wait", type=int, default=300, help = "Wait time between retries in seconds", show_default=True)
+@click.option("--search_timeout", type=int, default=10, help = "Search time out in seconds", show_default=True)
 def cli_theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia,
                          level, start_date = "2015-06-23", end_date = "2023-06-23", lim_perc_cloud = 50,
                          bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"],
-                         correction_type = "FRE", empty_zip = False, retry = 3):
+                         correction_type = "FRE", empty_zip = False, retry = 3, wait=300, search_timeout=10):
     """
     Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold. Then this data is unzipped, keeping only chosen bands from Flat REflectance data, and zip files can be emptied as a way to save storage space.
     Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
@@ -35,13 +37,27 @@ def cli_theia_preprocess(zipped_directory, unzipped_directory, tiles, login_thei
 
     """
     
-    theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia, password_theia,
-                     level, start_date, end_date, lim_perc_cloud, bands, correction_type, empty_zip, retry)
+    theia_preprocess(
+        zipped_directory=zipped_directory,
+        unzipped_directory=unzipped_directory,
+        tiles=tiles,
+        login_theia=login_theia,
+        password_theia=password_theia,
+        level=level,
+        start_date=start_date,
+        end_date=end_date,
+        lim_perc_cloud=lim_perc_cloud,
+        bands=bands,
+        correction_type=correction_type,
+        empty_zip=empty_zip,
+        retry=retry,
+        wait=wait,
+        search_timeout=search_timeout)
 
 def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=None, password_theia=None,
                      level = "LEVEL2A", start_date = "2015-06-23", end_date = None, lim_perc_cloud = 50,
                      bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], 
-                     correction_type = "FRE", empty_zip = False, retry = 10, wait=300):
+                     correction_type = "FRE", empty_zip = False, retry = 10, wait=300, search_timeout=10):
     """
     Download Sentinel-2 zip files from THEIA portal, 
     extract band files and eventually merge tile+date duplicates.
@@ -82,7 +98,9 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=No
         Number of retries if download fails. The default is 10.
     wait : int, optional
         Wait time between retries in seconds. The default is 300.
-
+    search_timeout : int, optional
+        Search timeout in seconds. The default is 10.
+    
     Returns
     -------
     None.
@@ -106,7 +124,7 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles, login_theia=No
                 
         to_unzip = theia_download(tile, start_date, end_date, tile_zip_dir,
                     lim_perc_cloud, login_theia, password_theia, level, 
-                    tile_unzip_dir, retry=retry, wait=wait)
+                    tile_unzip_dir, retry=retry, wait=wait, search_timeout=search_timeout)
 
         unzip_theia(bands, to_unzip, tile_unzip_dir, empty_zip, correction_type)
         merge_same_date(bands, tile_unzip_dir)

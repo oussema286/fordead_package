@@ -23,7 +23,7 @@ from fordead.import_data import retrieve_date_from_string, TileInfo
 
 def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
                    login_theia=None, password_theia=None, level='LEVEL2A',
-                   unzip_dir = None, retry=10, wait=300):
+                   unzip_dir = None, retry=10, wait=300, search_timeout=10):
     """
     Downloads Sentinel-2 acquisitions of the specified tile from THEIA from start_date to end_date under a cloudiness threshold
 
@@ -49,6 +49,9 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
         Number of retries if download fails
     wait : int, optional
         Wait time between retries in seconds
+    search_timeout : int, optional
+        Timeout in seconds for search of theia products. Default is 10.
+        It updates the htttp request timeout for the search.
 
     Returns
     -------
@@ -109,6 +112,8 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
                     "pass": password_theia
                 }
             )
+        if search_timeout is not None:
+            dag.providers_config["theia"].search.timeout = search_timeout
 
         # search products
         search_args = dict(
