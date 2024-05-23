@@ -125,7 +125,14 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
             provider="theia"
         )
 
-        search_results = dag.search_all(**search_args)
+        try:
+            search_results = dag.search_all(**search_args)
+        except Exception as e:
+            print("search failed : ", e)
+            trials+=1
+            print(f"\nRetries in {wait} seconds {trials}/{retry} ...\n")
+            time.sleep(wait)
+            continue
 
         # Several failure can happen: remote onnection closed, authentication error, empty download.
         # We will loop until we get all products or until we reach the number of retries.
