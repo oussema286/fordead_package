@@ -129,10 +129,13 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
             search_results = dag.search_all(**search_args)
         except Exception as e:
             print("search failed : ", e)
-            trials+=1
-            print(f"\nRetries in {wait} seconds {trials}/{retry} ...\n")
-            time.sleep(wait)
-            continue
+            if trials==retry:
+                raise RuntimeError("\nRetry limit reached.\n")
+            else:
+                trials+=1
+                print(f"\nRetries in {wait} seconds {trials}/{retry} ...\n")
+                time.sleep(wait)
+                continue
 
         # Several failure can happen: remote onnection closed, authentication error, empty download.
         # We will loop until we get all products or until we reach the number of retries.
@@ -203,14 +206,13 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
             # check all files were downloaded
             if len(to_download) == len(downloaded):
                 done=True
-                print("\nDownload done!\n")
+                print(f"\nDownload done after {trials} retries!\n")
             elif trials==retry:
                 raise RuntimeError("\nRetry limit reached.\n")
             else:
                 trials+=1
                 print(f"\nRetries in {wait} seconds {trials}/{retry} ...\n")
                 time.sleep(wait)
-
     return to_unzip + downloaded
 
 BAND_NAMES = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12',
