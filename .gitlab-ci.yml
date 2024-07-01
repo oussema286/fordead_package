@@ -13,6 +13,10 @@ stages:
   - test
   - build
   - deploy
+
+variables:
+  GIT_STRATEGY: clone
+
 ## docker build does not end within the 1h limit
 ## thus it was build locally and transfered manually
 #docker-ci:
@@ -69,8 +73,6 @@ install-linux:
 pages:
   stage: deploy
   image: $CI_REGISTRY/fordead/fordead_package:latest
-  variables:
-    GIT_STRATEGY: clone
   script:
     - conda env list
     - pip install portray python-markdown-math mdx-breakless-lists mkdocs-click
