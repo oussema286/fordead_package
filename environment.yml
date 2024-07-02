@@ -12,7 +12,7 @@ dependencies:
   - geopandas
   - git
   - matplotlib
-  - numpy
+  - numpy < 2
   - path
   - pathlib
   - pip
