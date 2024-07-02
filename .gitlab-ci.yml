@@ -39,6 +39,8 @@ test-win10:
   stage: test
   extends:
     - .win10_runner
+  variables:
+    GIT_STRATEGY: clone
   script:
     - git config --system core.longpaths true
     # install Miniforge if $env:userprofile\miniforge3 is not found
