@@ -39,12 +39,13 @@ test-win10:
   stage: test
   extends:
     - .win10_runner
-  variables:
-    GIT_STRATEGY: clone
   script:
     - git config --system core.longpaths true
-    # install Miniforge if $env:userprofile\miniforge3 is not found
-    # other just load profile
+    # recover the good tags
+    - git tag --delete $(git tag) # delete all local tags  
+    - git fetch --all    
+    # installs Miniforge if $env:userprofile\miniforge3 is not found
+    # otherwise just loads profile
     - gitlab-ci\conda-build.ps1
     - mamba env create -y -n fordead-gitlab-ci -f environment.yml
     - mamba install -y -n fordead-gitlab-ci pytest
