@@ -23,7 +23,7 @@ from fordead.import_data import retrieve_date_from_string, TileInfo
 
 def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
                    login_theia=None, password_theia=None, level='LEVEL2A',
-                   unzip_dir = None, retry=10, wait=300):
+                   unzip_dir = None, retry=10, wait=300, search_timeout=10):
     """
     Downloads Sentinel-2 acquisitions of the specified tile from THEIA from start_date to end_date under a cloudiness threshold
 
@@ -49,6 +49,9 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
         Number of retries if download fails
     wait : int, optional
         Wait time between retries in seconds
+    search_timeout : int, optional
+        Timeout in seconds for search of theia products. Default is 10.
+        It updates the htttp request timeout for the search.
 
     Returns
     -------
@@ -109,6 +112,8 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
                     "pass": password_theia
                 }
             )
+        if search_timeout is not None:
+            dag.providers_config["theia"].search.timeout = search_timeout
 
         # search products
         search_args = dict(
@@ -120,7 +125,17 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
             provider="theia"
         )
 
-        search_results = dag.search_all(**search_args)
+        try:
+            search_results = dag.search_all(**search_args)
+        except Exception as e:
+            print("search failed : ", e)
+            if trials==retry:
+                raise RuntimeError("\nRetry limit reached.\n")
+            else:
+                trials+=1
+                print(f"\nRetries in {wait} seconds {trials}/{retry} ...\n")
+                time.sleep(wait)
+                continue
 
         # Several failure can happen: remote onnection closed, authentication error, empty download.
         # We will loop until we get all products or until we reach the number of retries.
@@ -191,14 +206,13 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
             # check all files were downloaded
             if len(to_download) == len(downloaded):
                 done=True
-                print("\nDownload done!\n")
+                print(f"\nDownload done after {trials} retries!\n")
             elif trials==retry:
                 raise RuntimeError("\nRetry limit reached.\n")
             else:
                 trials+=1
                 print(f"\nRetries in {wait} seconds {trials}/{retry} ...\n")
                 time.sleep(wait)
-
     return to_unzip + downloaded
 
 BAND_NAMES = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12',

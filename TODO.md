@@ -1,6 +1,6 @@
-# Faire un test gitlab-ci avec stac
-Raphael a eu qq problèmes lors de l'installation (packages manquant, channel pas prioritaire, ...)
-Un test en CI d'installation de l'environnement dev et du script de test stac pourrait vérifier si tout y est.
+# Waiting for
+- `EODAG v3.0` that has a fix for THEIA requests, using EODAG dev branch until then
+- `stackstac` pull request to be merged: https://github.com/gjoseph92/stackstac/pull/251, contraining to `numpy < 2` until then
 
 # Tester la construction de la collection sur un gros jeu de données (1000 images)
 

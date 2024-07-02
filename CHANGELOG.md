@@ -1,3 +1,15 @@
+# v1.8.6
+## Add
+- message with final count of retries in function `theia_download`.
+  These retry strategy should be removed when EODAG released,
+  as no retries were observed since EODAG fix.
+- arg `search_timeout` in order avoid timeouts for THEIA search requests
+
+## Fix
+- `numpy < 2` inroder to avoid stackstac issue [#250](https://github.com/gjoseph92/stackstac/issues/250)
+- fix issue [#27] for THEIA request with `EODAG` [#1123](https://github.com/CS-SI/eodag/issues/1123) (waiting for `EODAG 3.0`),
+- some `is_dir` issue, maybe due to `path` version (to be checked)
+
 # v1.8.5
 
 ## Fix
