@@ -162,7 +162,7 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
                         # products downloaded but not unzipped
                         to_unzip.append(zip_file)
                 except BadZipfile:
-                    print(f"Bad zip file, removing file: {f}")
+                    print(f"Bad zip file, removing file: {zip_file}")
                     Path(zip_file).remove()
                     to_download.append(r)    
             else:
