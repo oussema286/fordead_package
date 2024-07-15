@@ -35,14 +35,15 @@ def cli_extract_reflectance(obs_path, sentinel_source, export_path, name_column,
     \f
 
     """
-    
-    start_time_debut = time.time()
-    extract_reflectance(**locals())
-    print("Exporting reflectance : %s secondes ---" % (time.time() - start_time_debut))
+    kwargs = locals() # keep as first line of function
+    extract_reflectance(**kwargs)
 
-
-def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "id", 
-                        cloudiness_path = None, lim_perc_cloud = 1,
+def extract_reflectance(obs_path,
+                        sentinel_source, 
+                        export_path, 
+                        name_column = "id", 
+                        cloudiness_path = None, 
+                        lim_perc_cloud = 1,
                         bands_to_extract = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"],
                         tile_selection = None,
                         start_date = "2015-01-01",
