@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import click
+from fordead.cli.utils import empty_to_none
 from fordead.import_data import TileInfo, import_binary_raster, get_raster_metadata, clip_xarray
 from fordead.masking_vi import rasterize_bdforet, clip_oso, raster_full, rasterize_vector
 from fordead.writing_data import write_tif
@@ -25,25 +26,16 @@ from pathlib import Path
                     help="path of shapefile whose polygons will be rasterized as a binary raster with resolution, extent and crs of the raster at path_example_raster. Only used if forest_mask_source = 'vector'", show_default=True)
 @click.option("--path_example_raster",  type=str, default=None,
                     help="Path to raster from which to copy the extent, resolution, CRS...", show_default=True)
-def cli_compute_forest_mask(data_directory,
-                        forest_mask_source = None,
-
-                        list_forest_type = ["FF2-00-00", "FF2-90-90", "FF2-91-91", "FF2G61-61"],
-                        dep_path = None,
-                        bdforet_dirpath = None,
-                        
-                        path_oso = None,
-                        list_code_oso = [32],
-                        vector_path = None,
-                        path_example_raster = None
-                        ):
+def cli_compute_forest_mask(**kwargs):
     """
     Compute forest mask from IGN's BDFORET or CESBIO's OSO map
     See details here : https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/
     \f
 
     """
-    compute_forest_mask(data_directory, forest_mask_source, list_forest_type, dep_path, bdforet_dirpath, path_oso, list_code_oso, vector_path, path_example_raster)
+    empty_to_none(kwargs, "list_forest_type")
+    empty_to_none(kwargs, "list_code_oso")
+    compute_forest_mask(**kwargs)
 
 
 def compute_forest_mask(data_directory,

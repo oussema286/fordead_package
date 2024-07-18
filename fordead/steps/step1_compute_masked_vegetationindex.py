@@ -13,7 +13,7 @@ from tqdm import tqdm
 #%% ===========================================================================
 #   IMPORT FORDEAD MODULES 
 # =============================================================================
-
+from fordead.cli.utils import empty_to_none
 from fordead.import_data import TileInfo, get_band_paths, get_cloudiness, import_resampled_sen_stack, import_soil_data, initialize_soil_data, get_raster_metadata
 from fordead.masking_vi import compute_masks, compute_vegetation_index, get_bands_and_formula, get_source_mask, compute_user_mask
 from fordead.writing_data import write_raster, write_tif
@@ -36,21 +36,7 @@ from fordead.writing_data import write_raster, write_tif
 @click.option("--ignored_period", multiple=True, type = str, default = None, help = "Period whose Sentinel dates to ignore (format 'MM-DD', ex : --ignored_period 11-01 --ignored_period 05-01", show_default=True)
 @click.option("--extent_shape_path", type = str,default = None, help = "Path of shapefile used as extent of detection, if None, the whole tile is used", show_default=True)
 @click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
-def cli_compute_masked_vegetationindex(
-    input_directory,
-    data_directory,
-    lim_perc_cloud=0.4,
-    interpolation_order = 0,
-    sentinel_source = "THEIA",
-    apply_source_mask = False,
-    soil_detection = False, 
-    formula_mask = "(B2 >= 700)",
-    vi = "CRSWIR",
-    compress_vi = False,
-    ignored_period = None,
-    extent_shape_path=None,
-    path_dict_vi = None,
-    ):
+def cli_compute_masked_vegetationindex(**kwargs):
     """
     Computes masks and masked vegetation index for each SENTINEL date under a cloudiness threshold.
     The mask includes pixels ouside satellite swath, some shadows, and the mask from SENTINEL data provider if the option is chosen.
@@ -61,7 +47,8 @@ def cli_compute_masked_vegetationindex(
     \f
 
     """
-    compute_masked_vegetationindex(input_directory,data_directory, lim_perc_cloud, interpolation_order, sentinel_source, apply_source_mask, soil_detection, formula_mask, vi, compress_vi, ignored_period, extent_shape_path, path_dict_vi)
+    empty_to_none(kwargs, "ignored_period")
+    compute_masked_vegetationindex(**kwargs)
 
 
 def compute_masked_vegetationindex(

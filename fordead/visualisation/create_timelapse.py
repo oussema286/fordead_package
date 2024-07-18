@@ -19,6 +19,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from fordead.results_visualisation import CreateTimelapse, intersects_area
 from fordead.import_data import TileInfo
+from fordead.cli.utils import empty_to_none
 
 @click.group()
 def timelapse():
@@ -36,7 +37,7 @@ def timelapse():
 @click.option("--max_date", type = str, default = None, help = "Last date used in the timelapse")
 @click.option("--show_confidence_class",  is_flag=True, help = "If True, detected dieback is shown with the confidence class at the last date used, as vectorized in the step [05_export_results](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_export_results/)", show_default=True)
 @click.option("--zip_results",  is_flag=True, help = "If True, puts timelapses in a zip file", show_default=True)
-def cli_create_timelapse(data_directory, shape_path = None, name_column = "id", x = None, y = None, buffer = 100, vector_display_path = None, hover_column_list = None, max_date = None, show_confidence_class = False, zip_results = False):
+def cli_create_timelapse(**kwargs):
     """
     Create timelapse allowing navigation through Sentinel-2 dates with detection results superimposed.
     By specifying 'shape_path' and 'name_column' parameters, it can be used with a shapefile containing one or multiple polygons or points with a column containing a unique ID used to name the export. 
@@ -45,7 +46,8 @@ def cli_create_timelapse(data_directory, shape_path = None, name_column = "id", 
 
     See details https://fordead.gitlab.io/fordead_package/docs/user_guides/english/Results_visualization
     """
-    create_timelapse(data_directory, shape_path, name_column, x, y, buffer, vector_display_path, hover_column_list, max_date, show_confidence_class, zip_results)
+    empty_to_none(kwargs, "hover_column_list")
+    create_timelapse(**kwargs)
 
 #%% =============================================================================
 #   MAIN CODE

@@ -9,6 +9,7 @@ import click
 import geopandas as gp
 import pandas as pd
 from pathlib import Path
+from fordead.cli.utils import empty_to_none
 from fordead.reflectance_extraction import get_grid_points, process_points, get_polygons_from_sentinel_dirs
 from fordead.stac.stac_module import getItemCollection, get_bbox, get_harmonized_planetary_collection, get_polygons_from_sentinel_planetComp
 
@@ -17,9 +18,9 @@ from fordead.stac.stac_module import getItemCollection, get_bbox, get_harmonized
 @click.option("--sentinel_source", type = str,default = None, help = "Can be either 'Planetary', in which case the Sentinel-2 grid is infered from Microsoft Planetary Computer stac catalogs, or the path of the directory containing Sentinel-2 data.", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path used to write resulting vector file, with added 'epsg','area_name' and 'id_pixel' columns", show_default=True)
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
-@click.option("-t","--tile_selection", type = list, default = None, help = "A list of names of Sentinel-2 directories. (ex : -t T31UFQ -t T31UGQ). If None, all tiles are used.", show_default=True)
+@click.option("-t","--tile_selection", type=str, multiple=True, default = None, help = "A list of names of Sentinel-2 directories. (ex : -t T31UFQ -t T31UGQ). If None, all tiles are used.", show_default=True)
 @click.option("--overwrite",  is_flag=True, help = "Overwrites file at obs_path", show_default=True)
-def cli_obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column, tile_selection, overwrite):
+def cli_obs_to_s2_grid(**kwargs):
     """
     Attributes intersecting Sentinel-2 tiles to observation points or polygons, adding their epsg and name. If polygons are used, they are converted to grid points located at the centroid of Sentinel-2 pixels.
     If points or polygons intersect several Sentinel-2 tiles, they are duplicated for each of them.
@@ -28,8 +29,8 @@ def cli_obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column, tile
     \f
 
     """
-    
-    obs_to_s2_grid(**locals())
+    empty_to_none(kwargs, "tile_selection")
+    obs_to_s2_grid(**kwargs)
 
 def obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column = "id", tile_selection = None, overwrite = False):
     """

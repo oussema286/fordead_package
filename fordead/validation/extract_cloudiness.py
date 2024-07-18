@@ -12,28 +12,29 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from fordead.import_data import TileInfo, get_band_paths, get_cloudiness
+from fordead.cli.utils import empty_to_none
 
 @click.command(name='extract_cloudiness')
 @click.option("--sentinel_dir", type = str,default = None, help = "Path of the directory containing Sentinel-2 data.", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted cloudiness", show_default=True)
-@click.option("-t","--tile_selection", multiple=True, type = str, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.", show_default=True)
+@click.option("-t","--tile_selection", multiple=True, type = str, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.")
 @click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
-def cli_extract_cloudiness(sentinel_dir, export_path, tile_selection, sentinel_source):
+def cli_extract_cloudiness(**kwargs):
     """
     
     \f
 
     """
-    
-    extract_cloudiness(**locals())
+    empty_to_none(kwargs, "tile_selection")
+    extract_cloudiness(**kwargs)
 
 
 def extract_cloudiness(sentinel_dir, export_path, tile_selection = None, sentinel_source = "THEIA"):
     """
     
     For each acquisition, extracts percentage of pixels in the mask provided by the Sentinel-2 data provider.
-    For THEIA, all pixels different to 0 in the CLM mask are considered cloudy
-    For Scihub and PEPS, all pixels different to 4 or 5 in the SCL mask are considered cloudy
+    For THEIA, all pixels different of 0 in the CLM mask are considered cloudy
+    For Scihub and PEPS, all pixels different of [4, 5] in the SCL mask are considered cloudy
     The results are exported in a csv file, with the columns "area_name", "Date" and "cloudiness", containing the name of the Sentinel-2 tile, the date of acquisition, and the percentage of cloudy pixels.
  
     Parameters
@@ -48,7 +49,8 @@ def extract_cloudiness(sentinel_dir, export_path, tile_selection = None, sentine
         Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'
     """
     
-    sentinel_dir = Path(sentinel_dir) ; export_path = Path(export_path)
+    sentinel_dir = Path(sentinel_dir)
+    export_path = Path(export_path)
     
     # if export_path.exists():
     #     extracted_cloudiness = pd.read_csv(export_path)

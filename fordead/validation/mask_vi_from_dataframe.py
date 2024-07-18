@@ -10,6 +10,7 @@ import click
 import pandas as pd
 from fordead.validation_process import compute_and_apply_mask, filter_cloudy_acquisitions, get_mask_vi_periods
 from fordead.masking_vi import compute_vegetation_index
+from fordead.cli.utils import empty_to_none
 from pathlib import Path
 import time
 import numpy as np
@@ -24,14 +25,17 @@ import numpy as np
 @click.option("--cloudiness_path", type = str, default = None, help = "Path of a csv with the columns 'area_name','Date' and 'cloudiness' used to filter acquisitions, can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/). Not used if not given.", show_default=True)
 @click.option("--vi", type = str,default = "CRSWIR", help = "Chosen vegetation index", show_default=True)
 @click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
-@click.option("--soil_detection",  is_flag=True, help = "If True, bare ground is detected and used as mask, but the process has not been tested on other data than THEIA data in France (see https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/). If False, mask from formula_mask is applied.", show_default=True)
+@click.option("--soil_detection",  is_flag=True, help = "If True, bare ground is detected and used as mask,"
+                                                        " but the process has not been tested on other data "
+                                                        "than THEIA data in France (see https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)."
+                                                        " If False, mask from formula_mask is applied.", show_default=True)
 @click.option("--formula_mask", type = str,default = "(B2 >= 700)", help = "formula whose result would be binary, as described here https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index. Is only used if soil_detection is False.", show_default=True)
 @click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
-@click.option("-b","--list_bands", type = list, default = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"], help = "Bands to import and use ex : -b B2 -b  B3 -b B11", show_default=True)
+@click.option("-b","--list_bands", type=str, multiple=True, default = ["B2","B3","B4", "B8", "B8A", "B11","B12"], help = "Bands to import and use ex : -b B2 -b  B3 -b B11", show_default=True) # ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"]
 @click.option("--apply_source_mask",  is_flag=True, help = "If True, applies the mask from SENTINEL-data supplier", show_default=True)
-@click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
+@click.option("--sentinel_source", type=str, default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
 @click.option("--ignored_period", multiple=True, type = str, default = None, help = "Period whose Sentinel dates to ignore (format 'MM-DD', ex : --ignored_period 11-01 --ignored_period 05-01", show_default=True)
-def cli_mask_vi_from_dataframe(reflectance_path,masked_vi_path, periods_path,name_column, cloudiness_path, vi, lim_perc_cloud, soil_detection,formula_mask, path_dict_vi,list_bands, apply_source_mask,sentinel_source, ignored_period):
+def cli_mask_vi_from_dataframe(**kwargs):
     """
     Computes the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.
     Filters out data by applying the fordead mask (if soil_detection is True) or a user mask defined by the user. 
@@ -40,9 +44,11 @@ def cli_mask_vi_from_dataframe(reflectance_path,masked_vi_path, periods_path,nam
     
     See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/05_compute_masks_and_vegetation_index_from_dataframe/)
     """
-    
-   
-    mask_vi_from_dataframe(**locals())
+    # Remove args with multiple, as default is an empty tuple
+    empty_to_none(kwargs, "list_bands")
+    empty_to_none(kwargs, "ignored_period")
+    print(kwargs)
+    mask_vi_from_dataframe(**kwargs)
 
 
 def mask_vi_from_dataframe(reflectance_path,
@@ -91,7 +97,8 @@ def mask_vi_from_dataframe(reflectance_path,
     path_dict_vi : str, optional
         Path to a text file used to add potential vegetation indices. If not filled in, only the indices provided in the package can be used (CRSWIR, NDVI, NDWI). The file [ex_dict_vi.txt](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_vi.txt) gives an example for how to format this file. One must fill the index's name, formula, and "+" or "-" according to whether the index increases or decreases when anomalies occur.. The default is None.
     list_bands : list of str, optional
-        List of the bands used. The default is ["B2","B3","B4", "B8", "B8A", "B11","B12"].
+        List of the bands used (do not include mask as 0 are considered as NaN and removed).
+        The default is ["B2","B3","B4", "B8", "B8A", "B11","B12"].
     apply_source_mask : bool, optional
         If True, the mask of the provider is also used to mask the data. The default is False.
     sentinel_source : str, optional

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import click
+from fordead.cli.utils import empty_to_none
 from fordead.import_data import import_dieback_data, TileInfo, import_binary_raster, import_soil_data, import_stress_data, import_stress_index
 from fordead.writing_data import vectorizing_confidence_class, get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date, union_confidence_class, write_tif
 import numpy as np
@@ -21,21 +22,15 @@ warnings.filterwarnings("ignore", message="`unary_union` returned None due to al
                     help="If True, one shapefile is exported for each period containing the areas in dieback at the end of the period. Else, a single shapefile is exported containing diebackd areas associated with the period of dieback", show_default=True)
 @click.option("-t", "--conf_threshold_list", type = float, multiple=True, default = None, help = "List of thresholds used as bins to discretize the confidence index into several classes", show_default=True)
 @click.option("-c", "--conf_classes_list", type = str, multiple=True, default = None, help = "List of classes names, if conf_threshold_list has n values, conf_classes_list must have n+1 values", show_default=True)
-def cli_export_results(
-    data_directory,
-    start_date = '2015-06-23',
-    end_date = "2030-01-02",
-    frequency = 'M',
-    multiple_files = False,
-    conf_threshold_list = None,
-    conf_classes_list = None,
-    ):
+def cli_export_results(**kwargs):
     """
     Export results to a vectorized shapefile format.
     \f
 
     """
-    export_results(data_directory, start_date, end_date, frequency, multiple_files, conf_threshold_list, conf_classes_list)
+    empty_to_none(kwargs, "conf_threshold_list")
+    empty_to_none(kwargs, "conf_classes_list")
+    export_results(**kwargs)
 
 
 
