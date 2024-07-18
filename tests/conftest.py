@@ -16,5 +16,5 @@ def input_dir():
 
 @pytest.fixture(scope="session")
 def output_dir():
-    x = (here / "tests_output").mkdir_p()
+    x = (here / "outputs").mkdir_p()
     yield x

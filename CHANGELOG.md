@@ -2,7 +2,7 @@
 
 ## Fix
 - Typo bug in BadZip print of theia_download
-- Unexpected keyword argument start_time_debut in extract_refletance CLI (issue [#31](https://gitlab.com/fordead/fordead_package/-/issues/31))
+- several bugs in CLI (issue [#31](https://gitlab.com/fordead/fordead_package/-/issues/31))
 
 # v1.8.6
 ## Add

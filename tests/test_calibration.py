@@ -78,7 +78,7 @@ def test_calibration(input_dir, output_dir, sentinel_source):
 @pytest.mark.parametrize("sentinel_source", ["THEIA", "Planetary"])
 def test_calibration_cli(input_dir, output_dir, sentinel_source):
     # TODO: maybe use CliRunner for pytest https://click.palletsprojects.com/en/8.1.x/testing/
-    # First not were not successful because of an isolation error...
+    # First tests were not successful because of an isolation error...
     print(f"Using {sentinel_source} data")
     ########################################################
     obs_path = input_dir / "vector/observations_tuto.shp"
