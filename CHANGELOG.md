@@ -1,4 +1,7 @@
 # v1.8.7
+## Change
+- example full_test_script.py replaced by dieback_detection.py and calibration_validation.py
+
 ## Add
 - CI tests for CLI
 
