@@ -1,4 +1,6 @@
 # v1.8.7
+## Add
+- CI tests for CLI
 
 ## Fix
 - Typo bug in BadZip print of theia_download
