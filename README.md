@@ -5,7 +5,7 @@
 [![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=pages&query=version&colorB=green)](https://gitlab.com/fordead/fordead_package)
 [![licence](https://img.shields.io/badge/Licence-GPL--3-blue.svg)](https://www.r-project.org/Licenses/GPL-3)
 [![python](https://img.shields.io/badge/Python-3-blue.svg)](https://www.python.org)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12802456.svg)](https://doi.org/10.5281/zenodo.12802457)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12802456.svg)](https://doi.org/10.5281/zenodo.12802456)
 
 Read in french [here](https://gitlab.com/fordead/fordead_package/-/blob/master/README_fr.md).
 
