@@ -5,7 +5,7 @@
 [![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=pages&query=version&colorB=green)](https://gitlab.com/fordead/fordead_package)
 [![licence](https://img.shields.io/badge/Licence-GPL--3-blue.svg)](https://www.r-project.org/Licenses/GPL-3)
 [![python](https://img.shields.io/badge/Python-3-blue.svg)](https://www.python.org)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12802456.svg)](https://zenodo.org/doi/10.5281/zenodo.12802456)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12802456.svg)](https://doi.org/10.5281/zenodo.12802457)
 
 Read in french [here](https://gitlab.com/fordead/fordead_package/-/blob/master/README_fr.md).
 
@@ -52,6 +52,10 @@ The installation guide can be found [here](https://fordead.gitlab.io/fordead_pac
 ## Tutorial
 
 A tutorial for getting started, and testing the package on a small dataset, can be found [here](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/00_Intro/).
+
+## Citation
+
+Dutrieux, R., Ose, K., de Boissieu, F., Féret, J.-B., 2024. fordead: a python package for vegetation anomalies detection from SENTINEL-2 images. https://doi.org/10.5281/zenodo.12802456
 
 ## Associated publications
 
