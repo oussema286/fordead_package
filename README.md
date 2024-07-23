@@ -5,10 +5,11 @@
 [![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=pages&query=version&colorB=green)](https://gitlab.com/fordead/fordead_package)
 [![licence](https://img.shields.io/badge/Licence-GPL--3-blue.svg)](https://www.r-project.org/Licenses/GPL-3)
 [![python](https://img.shields.io/badge/Python-3-blue.svg)](https://www.python.org)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12802456.svg)](https://zenodo.org/doi/10.5281/zenodo.12802456)
 
 Read in french [here](https://gitlab.com/fordead/fordead_package/-/blob/master/README_fr.md).
 
-The `fordead` package, developed for the detection of vegetation anomalies from SENTINEL-2 time series, provides monitoring tools to adress the bark beetle health crisis on spruce trees in France. It includes several tools that make use of SENTINEL-2 satellite data easier, and allow potential anomaly detection in other contexts. The proposed method takes advantage of complete SENTINEL-2 time series, from the launch of the first satellite in 2015. It detects anomalies at the pixel level in order to analyze archive data or to carry out continuous monitoring. The detections are then updated for each new SENTINEL-2 acquisition.
+The `fordead` package, developed for the detection of vegetation anomalies from SENTINEL-2 time series, provides monitoring tools to address the bark beetle health crisis on spruce trees in France. It includes several tools that make use of SENTINEL-2 satellite data easier, and allow potential anomaly detection in other contexts. The proposed method takes advantage of complete SENTINEL-2 time series, from the launch of the first satellite in 2015. It detects anomalies at the pixel level in order to analyze archive data or to carry out continuous monitoring. The detections are then updated for each new SENTINEL-2 acquisition.
 
 ## Dieback detection
 
