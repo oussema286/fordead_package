@@ -46,3 +46,7 @@ Le guide d'installation est disponible [ici](https://fordead.gitlab.io/fordead_p
 ## Tutoriel
 
 Un tutoriel pour bien commencer et, tester le package sur un jeu de données fourni, est disponible [ici](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/00_Intro/).
+
+## Citation
+
+Dutrieux, R., Ose, K., de Boissieu, F., Féret, J.-B., 2024. fordead: a python package for vegetation anomalies detection from SENTINEL-2 images. https://doi.org/10.5281/zenodo.12802456
