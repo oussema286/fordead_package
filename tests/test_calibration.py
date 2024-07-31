@@ -84,6 +84,7 @@ def test_calibration_cli(input_dir, output_dir, sentinel_source):
     obs_path = input_dir / "vector/observations_tuto.shp"
     calval_dir = (output_dir / f"calval_{sentinel_source}_cli").rmtree_p().mkdir()
 
+    source = sentinel_source
     if sentinel_source == "THEIA":
         sentinel_source = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
         cloudiness_path = calval_dir / "extracted_cloudiness.csv"
@@ -95,6 +96,9 @@ def test_calibration_cli(input_dir, output_dir, sentinel_source):
     masked_vi_path = calval_dir / 'mask_vi.csv'
     periods_path = calval_dir / 'periods.csv'
     pixel_info_path = calval_dir / 'pixel_info.csv'
+
+    sensitivity_dir = (calval_dir / "sensitivity_analysis").mkdir_p()
+    args_to_test = input_dir.parent.parent / "docs" / "examples" / "ex_dict_args.txt"
     #########################################################
 
     def run_cmd(cmd):
@@ -131,8 +135,19 @@ def test_calibration_cli(input_dir, output_dir, sentinel_source):
         ]
     if cloudiness_path is not None:
         cmd += [f"--cloudiness_path {cloudiness_path}"]
-
+    
     run_cmd(cmd)
+
+    sensitivity_analysis = (source == "THEIA")
+    if sensitivity_analysis:
+        cmd = [
+            "sensitivity_analysis",
+            f"--testing_directory {sensitivity_dir}",
+            f"--reflectance_path {reflectance_path}",
+            f"--cloudiness_path {cloudiness_path}",
+            # f"--name_column id",
+            f"--args_to_test {args_to_test}"]
+        run_cmd(cmd)
 
     cmd = [
         "calval_masked_vi",
