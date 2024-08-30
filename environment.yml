@@ -13,7 +13,7 @@ dependencies:
   - git
   - matplotlib
   - numpy < 2
-  - path
+  - path < 17
   - pathlib
   - pip
   - planetary-computer
