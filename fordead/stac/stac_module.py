@@ -210,7 +210,7 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
     
     Notes
     -----
-    The offset is harmonized with `harmonize_sen2cor_offet`.
+    The offset is harmonized with `harmonize_sen2cor_offset`.
     """
     
     corresp_keys = {'B01' : 'B1', 'B02' : 'B2', 'B03' : "B3", 'B04' : "B4", 'B05' : "B5", 
@@ -232,14 +232,14 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
         print("Extracting Sentinel-2 data from "+ tile + " collected from Microsoft Planetary Computer")
         collection = collection.filter(filter=f"tilename = '{tile}'")
     
-    harmonize_sen2cor_offet(collection, bands=S2_THEIA_BANDS, inplace=True)
+    harmonize_sen2cor_offset(collection, bands=S2_THEIA_BANDS, inplace=True)
     collection.drop_duplicates(inplace=True)
 
     if sign:
         collection = planetary_computer.sign_item_collection(collection)
     return collection
 
-def harmonize_sen2cor_offet(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_BANDS), inplace=False):
+def harmonize_sen2cor_offset(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_BANDS), inplace=False):
     if not inplace:
         collection = collection.copy()
     for item in collection:
@@ -249,7 +249,7 @@ def harmonize_sen2cor_offet(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_BA
                     item.assets[asset].extra_fields["raster:bands"] = [dict(offset=-1000)]
                 else:
                     item.assets[asset].extra_fields["raster:bands"] = [dict(offset=0)]
-    if inplace:
+    if not inplace:
         return collection
 
 def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile):
