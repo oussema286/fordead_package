@@ -86,6 +86,7 @@ from shapely import to_geojson
 import warnings
 import stackstac
 from stac_static.search import to_geodataframe
+from stac_geoparquet import __version__ as sg_version
 
 # Adds GDAL_HTTP_MAX_RETRY and GDAL_HTTP_RETRY_DELAY to
 # stackstac.rio_reader.DEFAULT_GDAL_ENV
@@ -330,7 +331,7 @@ class ExtendPystacClasses:
         return res
 
     def to_geodataframe(self, **kwargs):
-       return to_geodataframe(self)
+        return to_geodataframe(self)
 
     def drop_duplicates(self, inplace=False):
         """
@@ -363,12 +364,37 @@ class ExtendPystacClasses:
             return x
 
 class ItemCollection(pystac.ItemCollection, ExtendPystacClasses):
-    pass
+    
+    def __init__(self, items: Iterable[ItemLike], **kwargs):
+        super().__init__(items, **kwargs)
+        if sg_version > "0.3.2":
+            remove_uncommon_properties(self, inplace=True)
 
 class Catalog(pystac.Catalog, ExtendPystacClasses):
     pass
 #######################################
 
+####
+def remove_uncommon_properties(x, inplace=False):
+    if not inplace:
+        collection = collection.copy()
+
+    keys = set(x.items[0].properties.keys())
+    udiff = []
+    for item in x.items:
+        keys = keys.intersection(item.properties.keys())
+        
+    for item in x.items:
+        diff = keys.symmetric_difference(item.properties.keys())
+        for k in diff:
+            item.properties.pop(k)
+            udiff.append(k)
+
+    if len(udiff) > 0:
+        print(f"Removed properties that were not common to all items:\n{set(udiff)}")
+
+    if not inplace:
+        return collection
 
 #### Collection specific fucntions and classes #####
 def parse_theia_name(x):
