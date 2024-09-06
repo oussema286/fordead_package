@@ -2,7 +2,7 @@
 
 [Full Documention](https://fordead.gitlab.io/fordead_package)
 
-[![release](https://gitlab.example.com/fordead/fordead_package/-/badges/release.svg)](https://gitlab.com/fordead/fordead_package)
+[![release](https://gitlab.com/fordead/fordead_package/-/badges/release.svg)](https://gitlab.com/fordead/fordead_package)
 [![licence](https://img.shields.io/badge/Licence-GPL--3-blue.svg)](https://www.r-project.org/Licenses/GPL-3)
 [![python](https://img.shields.io/badge/Python-3-blue.svg)](https://www.python.org)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12802456.svg)](https://doi.org/10.5281/zenodo.12802456)
