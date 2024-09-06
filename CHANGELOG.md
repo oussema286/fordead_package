@@ -1,3 +1,10 @@
+# v1.8.8
+## Fix
+- `harmonize_sen2cor_offet` --> `harmonize_sen2cor_offset`
+- error message when data is insufficient for training in `train_model_from_dataframe`
+- path version in requirement (< 17)
+- issue with stac-geoparquet > 3.2 https://github.com/stac-utils/stac-geoparquet/issues/76
+
 # v1.8.7
 ## Change
 - example full_test_script.py replaced by dieback_detection.py and calibration_validation.py
