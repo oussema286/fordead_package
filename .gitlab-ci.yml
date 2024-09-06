@@ -73,19 +73,19 @@ install-linux:
     - master
 
 #[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
-make-badge:
-  stage: deploy
-  image: python:latest
-  script:
-    - pip install setuptools-scm
-    - version=`python -m setuptools_scm --strip-dev`
-    - echo "{\"version\":\"$version\"}" > badges.json
-  artifacts:
-    paths:
-      - badges.json
-  only:
-    - master
-    - pages
+# make-badge:
+#   stage: deploy
+#   image: python:latest
+#   script:
+#     - pip install setuptools-scm
+#     - version=`python -m setuptools_scm --strip-dev`
+#     - echo "{\"version\":\"$version\"}" > badges.json
+#   artifacts:
+#     paths:
+#       - badges.json
+#   only:
+#     - master
+#     - pages
 
 pages:
   stage: deploy
@@ -97,9 +97,6 @@ pages:
     - pip install portray python-markdown-math mdx-breakless-lists mkdocs-click
     - python -V  # Print out python version for debugging
     - pip install -e .
-    - version=`fordead --version| sed -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
-    - echo $version
-    - echo "{\"version\":\"$version\"}" > badges.json
     - portray as_html -c pyproject_doc.toml
     - mv site public
 
