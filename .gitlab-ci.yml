@@ -13,6 +13,10 @@ stages:
   - test
   - build
   - deploy
+
+variables:
+  GIT_STRATEGY: clone
+
 ## docker build does not end within the 1h limit
 ## thus it was build locally and transfered manually
 #docker-ci:
@@ -37,8 +41,11 @@ test-win10:
     - .win10_runner
   script:
     - git config --system core.longpaths true
-    # install Miniforge if $env:userprofile\miniforge3 is not found
-    # other just load profile
+    # recover the good tags
+    - git tag --delete $(git tag) # delete all local tags  
+    - git fetch --all    
+    # installs Miniforge if $env:userprofile\miniforge3 is not found
+    # otherwise just loads profile
     - gitlab-ci\conda-build.ps1
     - mamba env create -y -n fordead-gitlab-ci -f environment.yml
     - mamba install -y -n fordead-gitlab-ci pytest
@@ -66,6 +73,20 @@ install-linux:
     - master
 
 #[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
+make-badge:
+  stage: deploy
+  image: python:latest
+  script:
+    - pip install setuptools-scm
+    - version=`python -m setuptools_scm --strip-dev`
+    - echo "{\"version\":\"$version\"}" > badges.json
+  artifacts:
+    paths:
+      - badges.json
+  only:
+    - master
+    - pages
+
 pages:
   stage: deploy
   image: $CI_REGISTRY/fordead/fordead_package:latest
@@ -89,3 +110,18 @@ pages:
   only:
    - master
    - pages
+
+zenodo:
+  stage: deploy
+  image: python:3.7
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v?[0-9]+\.[0-9]+/
+  variables:
+    VERSION: $CI_COMMIT_TAG  
+  script:
+    - pip install git+https://gitlab.com/sbeniamine/gitlab2zenodo
+    - git archive --format zip --worktree-attributes --output ${CI_PROJECT_TITLE}-${VERSION}.zip ${VERSION}
+    - unzip -l ${CI_PROJECT_TITLE}-${VERSION}.zip
+    - g2z-get-meta -i $zenodo_record -o .zenodo.json
+    - vdate=$(git log -1 --format=%cd --date=short $VERSION) && sed -i "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}/${vdate}/g" .zenodo.json
+    - g2z-send -i $zenodo_record -t $zenodo_token -m .zenodo.json -v ${VERSION} ${CI_PROJECT_TITLE}-${VERSION}.zip

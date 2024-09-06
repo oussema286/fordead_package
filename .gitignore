@@ -3,4 +3,5 @@
 *.egg-info
 draft
 build
-*/fordead_data
+**/fordead_data
+**/outputs

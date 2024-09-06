@@ -37,7 +37,7 @@ def get_args_dataframe(comb_dict):
 @click.option("--args_to_test", type = str,default = None, help = "Path to a text file where each line begins parameter name, then each value is separated with a space. All combinations will be tested. See an example [here](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_args.txt)", show_default=True)
 @click.option("--update_masked_vi",  is_flag=True, help = "If True, updates the csv at masked_vi_path with the columns 'period_id', 'state', 'predicted_vi', 'diff_vi' and 'anomaly'", show_default=True)
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
-def cli_sensitivity_analysis(testing_directory, reflectance_path, cloudiness_path, args_to_test, update_masked_vi, name_column):
+def cli_sensitivity_analysis(**kwargs):
     """
     Allows the testing of many parameter combinations, running three detection steps mask_vi_from_dataframe, train_model_from_dataframe and dieback_detection_from_dataframe using default parameters as well as user defined parameter combinations.
     A 'test_info.csv' is written in 'testing_directory', where each test_id is associated with the value of all parameters used in the iteration.
@@ -47,7 +47,7 @@ def cli_sensitivity_analysis(testing_directory, reflectance_path, cloudiness_pat
 
     """
     
-    sensitivity_analysis(**locals())
+    sensitivity_analysis(**kwargs)
 
 
 

@@ -262,7 +262,8 @@ def model(date_as_number, vi, id_pixel):
 
 def model_vi_dataframe(data_frame, name_column):
     
-    
+    if data_frame.shape[0] == 0:
+        raise ValueError("Cannot compute model, data_frame is empty")
     
     data_frame['Date'] = pd.to_datetime(data_frame['Date'])
     data_frame["date_as_number"] = (data_frame['Date'] - pd.to_datetime("2015-01-01")).dt.days

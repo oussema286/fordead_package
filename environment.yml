@@ -6,13 +6,14 @@ dependencies:
   - click
   - click-option-group
   - dask
-  - eodag
+  # - eodag # waiting for release, see 
+  - shapely >= 2.0.0
   - fiona
   - geopandas
   - git
   - matplotlib
-  - numpy
-  - path
+  - numpy < 2
+  - path < 17
   - pathlib
   - pip
   - planetary-computer
@@ -33,7 +34,10 @@ dependencies:
   - pip:
     # ensure that stac-geoparquet v0.3.2+ (conda version is too old),
     # dependency of stac-static
-    - stac-geoparquet>=0.3.2
+    # keep it to 0.3.2 to avoid issue https://github.com/stac-utils/stac-geoparquet/issues/76
+    - stac-geoparquet==0.3.2
     - git+https://github.com/jsignell/stac-static
     - git+https://gitlab.com/fordead/fordead_package
+    - git+https://github.com/CS-SI/eodag.git@develop
+
 

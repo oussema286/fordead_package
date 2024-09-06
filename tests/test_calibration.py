@@ -1,123 +1,182 @@
 from path import Path
-from tempfile import TemporaryDirectory
+import pytest
 from fordead.validation.obs_to_s2_grid import obs_to_s2_grid
 from fordead.validation.extract_cloudiness import extract_cloudiness
 from fordead.validation.extract_reflectance import extract_reflectance
 from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
 from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
 from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
+import subprocess
 
-def test_local_calibration(input_dir):
-
+@pytest.mark.parametrize("sentinel_source", ["THEIA", "Planetary"])
+def test_calibration(input_dir, output_dir, sentinel_source):
+    
+    print(f"Using {sentinel_source} data")
+    ########################################################
     obs_path = input_dir / "vector/observations_tuto.shp"
-    sentinel_dir = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
+    calval_dir = (output_dir / f"calval_{sentinel_source}").rmtree_p().mkdir()
 
-    with TemporaryDirectory(prefix="fordead-tests_") as tempdir:
-        calval_dir = Path(tempdir)
-        #########################################################
-        print("Using local THEIA data")
-
-        preprocessed_obs_path = calval_dir / "preprocessed_obs_theia.gpkg"
-
-        obs_to_s2_grid(
-            obs_path = obs_path,
-            sentinel_source = sentinel_dir, 
-            export_path = preprocessed_obs_path,
-            name_column = "id")
-
+    if sentinel_source == "THEIA":
+        sentinel_source = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
         cloudiness_path = calval_dir / "extracted_cloudiness.csv"
-        reflectance_path = calval_dir / "extracted_reflectance_theia.csv"
+    else:
+        cloudiness_path = None
 
+    preprocessed_obs_path = calval_dir / "preprocessed_obs.geojson"
+    reflectance_path = calval_dir / "extracted_reflectance.csv"
+    masked_vi_path = calval_dir / 'mask_vi.csv'
+    periods_path = calval_dir / 'periods.csv'
+    pixel_info_path = calval_dir / 'pixel_info.csv'
+    #########################################################
+
+    obs_to_s2_grid(
+        obs_path = obs_path,
+        sentinel_source = sentinel_source, 
+        export_path = preprocessed_obs_path,
+        name_column = "id")
+
+    if cloudiness_path is not None:
+        # not implemented for Planetary
         extract_cloudiness(
-            sentinel_dir = sentinel_dir, 
+            sentinel_dir = sentinel_source, 
             export_path = cloudiness_path,
             sentinel_source = "THEIA")
+    
+    extract_reflectance(
+        obs_path = preprocessed_obs_path,
+        sentinel_source = sentinel_source, 
+        cloudiness_path = cloudiness_path,
+        lim_perc_cloud = 0.3,
+        export_path = reflectance_path,
+        name_column = "id",
+        tile_selection="T31UGP")
 
-        extract_reflectance(
-            obs_path = preprocessed_obs_path,
-            sentinel_source = sentinel_dir, 
-            cloudiness_path = cloudiness_path,
-            lim_perc_cloud = 0.3,
-            export_path = reflectance_path,
-            name_column = "id")
-
-        print("Applying FORDEAD")
-
-        mask_vi_from_dataframe(reflectance_path = reflectance_path,
-                            masked_vi_path = calval_dir / "mask_vi_theia.csv",
-                            periods_path = calval_dir / "periods_theia.csv",
-                            vi = "CRSWIR",
-                            soil_detection = True,
-                            name_column = "id")
+    mask_vi_from_dataframe(reflectance_path = reflectance_path,
+                        masked_vi_path = masked_vi_path,
+                        periods_path = periods_path,
+                        vi = "CRSWIR",
+                        soil_detection = True,
+                        name_column = "id")
 
 
-        train_model_from_dataframe(masked_vi_path = calval_dir / "mask_vi_theia.csv",
-                                    pixel_info_path = calval_dir / "pixel_info_theia.csv",
-                                    periods_path = calval_dir / "periods_theia.csv",
-                                name_column = 'id',
-                                min_last_date_training = "2018-01-01",
-                                max_last_date_training = "2018-06-01",
-                                nb_min_date = 10)
+    train_model_from_dataframe(masked_vi_path = masked_vi_path,
+                                pixel_info_path = pixel_info_path,
+                                periods_path = periods_path,
+                            name_column = 'id',
+                            min_last_date_training = "2018-01-01",
+                            max_last_date_training = "2018-06-01",
+                            nb_min_date = 10)
 
-        dieback_detection_from_dataframe(
-                        masked_vi_path = calval_dir / "mask_vi_theia.csv",
-                        pixel_info_path = calval_dir / "pixel_info_theia.csv",
-                        periods_path = calval_dir / "periods_theia.csv",
-                        name_column = "id",
-                        stress_index_mode = "mean",
-                        update_masked_vi = True)
+    dieback_detection_from_dataframe(
+                    masked_vi_path = masked_vi_path,
+                    pixel_info_path = pixel_info_path,
+                    periods_path = periods_path,
+                    name_column = "id",
+                    stress_index_mode = "mean",
+                    update_masked_vi = True)
 
-def test_pc_calibration(input_dir):
-
+@pytest.mark.parametrize("sentinel_source", ["THEIA", "Planetary"])
+def test_calibration_cli(input_dir, output_dir, sentinel_source):
+    # TODO: maybe use CliRunner for pytest https://click.palletsprojects.com/en/8.1.x/testing/
+    # First tests were not successful because of an isolation error...
+    print(f"Using {sentinel_source} data")
+    ########################################################
     obs_path = input_dir / "vector/observations_tuto.shp"
-    sentinel_dir = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
+    calval_dir = (output_dir / f"calval_{sentinel_source}_cli").rmtree_p().mkdir()
 
-    with TemporaryDirectory(prefix="fordead-tests_") as tempdir:
-        calval_dir = Path(tempdir)
+    source = sentinel_source
+    if sentinel_source == "THEIA":
+        sentinel_source = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
+        cloudiness_path = calval_dir / "extracted_cloudiness.csv"
+    else:
+        cloudiness_path = None
 
-        #########################################################
-        print("Using Planetary Computer")
+    preprocessed_obs_path = calval_dir / "preprocessed_obs.geojson"
+    reflectance_path = calval_dir / "extracted_reflectance.csv"
+    masked_vi_path = calval_dir / 'mask_vi.csv'
+    periods_path = calval_dir / 'periods.csv'
+    pixel_info_path = calval_dir / 'pixel_info.csv'
 
-        preprocessed_obs_path = calval_dir / "preprocessed_obs_planetary.gpkg"
+    sensitivity_dir = (calval_dir / "sensitivity_analysis").mkdir_p()
+    args_to_test = input_dir.parent.parent / "docs" / "examples" / "ex_dict_args.txt"
+    #########################################################
 
-        obs_to_s2_grid(
-            obs_path = obs_path,
-            sentinel_source = "Planetary", 
-            export_path = preprocessed_obs_path,
-            name_column = "id")
+    def run_cmd(cmd):
+        cmd = ["fordead"] + cmd
+        print(" ".join(cmd))
+        subprocess.run(" ".join(cmd), check=True, shell=True)
 
-        reflectance_path = calval_dir / "extracted_reflectance_planetary.csv"
+    # obs_to_s2_grid
+    cmd = [
+        "obs_to_s2_grid",
+        f"--obs_path {obs_path}", 
+        f"--sentinel_source {sentinel_source}",
+        f"--export_path {preprocessed_obs_path}",
+        f"--name_column id"]
+    run_cmd(cmd)
 
-        # extracting may take time as it downloads the data from the net
-        extract_reflectance(
-            obs_path = preprocessed_obs_path,
-            sentinel_source = "Planetary", 
-            lim_perc_cloud = 0.3,
-            export_path = reflectance_path,
-            name_column = "id")
+    if cloudiness_path is not None:
+        # not implemented for Planetary
+        cmd = [
+            "extract_cloudiness",
+            f"--sentinel_dir {sentinel_source}",
+            f"--export_path {cloudiness_path}",
+            f"--sentinel_source THEIA"]
+        run_cmd(cmd)
 
-        print("Applying FORDEAD")
+    cmd = [
+        "extract_reflectance",
+        f"--obs_path {preprocessed_obs_path}",
+        f"--sentinel_source {sentinel_source}", 
+        f"--lim_perc_cloud 0.3",
+        f"--export_path {reflectance_path}",
+        f"--name_column id",
+        f"--tile_selection T31UGP",
+        ]
+    if cloudiness_path is not None:
+        cmd += [f"--cloudiness_path {cloudiness_path}"]
+    
+    run_cmd(cmd)
 
-        mask_vi_from_dataframe(reflectance_path = reflectance_path,
-                            masked_vi_path = calval_dir / "mask_vi_theia.csv",
-                            periods_path = calval_dir / "periods_theia.csv",
-                            vi = "CRSWIR",
-                            soil_detection = True,
-                            name_column = "id")
+    sensitivity_analysis = (source == "THEIA")
+    if sensitivity_analysis:
+        cmd = [
+            "sensitivity_analysis",
+            f"--testing_directory {sensitivity_dir}",
+            f"--reflectance_path {reflectance_path}",
+            f"--cloudiness_path {cloudiness_path}",
+            # f"--name_column id",
+            f"--args_to_test {args_to_test}"]
+        run_cmd(cmd)
 
+    cmd = [
+        "calval_masked_vi",
+        f"--reflectance_path {reflectance_path}",
+        f"--masked_vi_path {masked_vi_path}",
+        f"--periods_path {periods_path}",
+        f"--vi CRSWIR",
+        f"--soil_detection",
+        f"--name_column id"]
+    
+    run_cmd(cmd)
 
-        train_model_from_dataframe(masked_vi_path = calval_dir / "mask_vi_theia.csv",
-                                    pixel_info_path = calval_dir / "pixel_info_theia.csv",
-                                    periods_path = calval_dir / "periods_theia.csv",
-                                name_column = 'id',
-                                min_last_date_training = "2018-01-01",
-                                max_last_date_training = "2018-06-01",
-                                nb_min_date = 10)
+    cmd = [
+        "calval_train_model",
+        f"--masked_vi_path {masked_vi_path}",
+        f"--pixel_info_path {pixel_info_path}",
+        f"--periods_path {periods_path}",
+        f"--name_column id",
+        f"--min_last_date_training 2018-01-01",
+        f"--max_last_date_training 2018-06-01",
+        f"--nb_min_date 10"]
+    run_cmd(cmd)
 
-        dieback_detection_from_dataframe(
-                        masked_vi_path = calval_dir / "mask_vi_theia.csv",
-                        pixel_info_path = calval_dir / "pixel_info_theia.csv",
-                        periods_path = calval_dir / "periods_theia.csv",
-                        name_column = "id",
-                        stress_index_mode = "mean",
-                        update_masked_vi = True)
+    cmd = [
+        "calval_dieback_detection",
+        f"--masked_vi_path {masked_vi_path}",
+        f"--pixel_info_path {pixel_info_path}",
+        f"--periods_path {periods_path}",
+        f"--name_column id",
+        f"--stress_index_mode mean",
+        f"--update_masked_vi"]
+    run_cmd(cmd)

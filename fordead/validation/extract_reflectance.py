@@ -10,6 +10,7 @@ import geopandas as gp
 import pandas as pd
 from pathlib import Path
 # from fordead.reflectance_extraction import get_reflectance_at_points
+from fordead.cli.utils import empty_to_none
 from fordead.reflectance_extraction import get_already_extracted, extract_raster_values
 from fordead.stac.stac_module import get_bbox, get_harmonized_planetary_collection, get_harmonized_theia_collection
 # import traceback
@@ -23,11 +24,11 @@ import numpy as np
 @click.option("--cloudiness_path", type = str, default = None, help = "Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/). Can be ignored if sentinel_source is 'Planetary'")
 @click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
-@click.option("-b","--bands_to_extract", type = list, default = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"], help = "Bands to extract ex : -b B2 -b  B3 -b B11", show_default=True)
-@click.option("-t","--tile_selection", type = list, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.", show_default=True)
+@click.option("-b","--bands_to_extract", type=str, multiple=True, default = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"], help = "Bands to extract ex : -b B2 -b  B3 -b B11", show_default=True)
+@click.option("-t","--tile_selection", type=str, multiple=True, default = None, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.", show_default=True)
 @click.option("--start_date", type = str,default = "2015-01-01", help = "First date of the period from which to extract reflectance.", show_default=True)
 @click.option("--end_date", type = str,default = "2030-01-01", help = "Last date of the period from which to extract reflectance.", show_default=True)
-def cli_extract_reflectance(obs_path, sentinel_source, export_path, name_column, cloudiness_path, lim_perc_cloud, bands_to_extract, tile_selection, start_date, end_date):
+def cli_extract_reflectance(**kwargs):
     """
     Extracts reflectance from Sentinel-2 data using a vector file containing points, exports the data to a csv file.
     If new acquisitions are added to the Sentinel-2 directory, new data is extracted and added to the existing csv file.
@@ -35,14 +36,16 @@ def cli_extract_reflectance(obs_path, sentinel_source, export_path, name_column,
     \f
 
     """
-    
-    start_time_debut = time.time()
-    extract_reflectance(**locals())
-    print("Exporting reflectance : %s secondes ---" % (time.time() - start_time_debut))
+    empty_to_none(kwargs, "bands_to_extract")
+    empty_to_none(kwargs, "tile_selection")
+    extract_reflectance(**kwargs)
 
-
-def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "id", 
-                        cloudiness_path = None, lim_perc_cloud = 1,
+def extract_reflectance(obs_path,
+                        sentinel_source, 
+                        export_path, 
+                        name_column = "id", 
+                        cloudiness_path = None, 
+                        lim_perc_cloud = 1,
                         bands_to_extract = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"],
                         tile_selection = None,
                         start_date = "2015-01-01",
@@ -97,6 +100,9 @@ def extract_reflectance(obs_path, sentinel_source, export_path, name_column = "i
 
     if tile_selection is None:
         tile_selection = np.unique(obs.area_name)
+
+    if isinstance(tile_selection, str):
+        tile_selection = [tile_selection]
 
     extracted_reflectance = get_already_extracted(export_path, name_column, bands_to_extract)
 

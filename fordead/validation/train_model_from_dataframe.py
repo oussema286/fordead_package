@@ -22,14 +22,14 @@ import time
 @click.option("--min_last_date_training", type = str,default = "2018-01-01", help = "The date in YYYY-MM-DD format after which SENTINEL dates are no longer used for training, as long as there are at least nb_min_date dates valid for the pixel", show_default=True)
 @click.option("--max_last_date_training", type = str,default = "2018-06-01", help = "Date in YYYY-MM-DD format until which SENTINEL dates can be used for training to reach the number of nb_min_date valid dates", show_default=True)
 @click.option("--nb_min_date", type = int,default = "10", help = "Minimum number of valid dates to calculate a model.", show_default=True)
-def cli_train_model_from_dataframe(masked_vi_path, pixel_info_path, periods_path, name_column, min_last_date_training, max_last_date_training, nb_min_date):
+def cli_train_model_from_dataframe(**kwargs):
     """
     
     Adjusts an harmonic model to predict the temporal periodicity of the vegetation index, based on the acquisitions of a specified training period.
 
     See additional information [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/06_training_model_from_dataframe/)
     """
-    train_model_from_dataframe(**locals())
+    train_model_from_dataframe(**kwargs)
     
     
 def train_model_from_dataframe(masked_vi_path,
@@ -66,6 +66,9 @@ def train_model_from_dataframe(masked_vi_path,
     """
         
     masked_vi = pd.read_csv(masked_vi_path)
+    if masked_vi.shape[0] == 0:
+        raise ValueError("masked_vi is empty.")
+    
     if "bare_ground" in masked_vi.columns:
         masked_vi = masked_vi[~masked_vi["bare_ground"]]
 
@@ -75,6 +78,10 @@ def train_model_from_dataframe(masked_vi_path,
 
     masked_vi = masked_vi[masked_vi["Date"] <= masked_vi["last_training_date"]].reset_index()
     
+    if masked_vi.shape[0] == 0:
+        raise ValueError("masked_vi does not contain sufficient data for training. "
+                         "Please choose a different min_last_date_training, max_last_date_training or nb_min_date.")
+
     coeff_model = model_vi_dataframe(masked_vi, name_column)
     
     pixel_info = last_date_training.merge(coeff_model, on = ["area_name",name_column,"id_pixel"], how='outer')

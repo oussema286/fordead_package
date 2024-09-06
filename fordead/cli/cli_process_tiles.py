@@ -3,6 +3,7 @@
 Module grouping the full fordead process in one function and a corresponding command line.
 """
 import fordead
+from fordead.cli.utils import empty_to_none
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
 from fordead.steps.step3_dieback_detection import dieback_detection
@@ -64,6 +65,7 @@ from click_option_group import optgroup
 def cli_process_tiles(**kwargs):
     """Apply full fordead processing to several tiles: compute_masked_vegetationindex > train_model > dieback_detection > compute_forest_mask > export_results
     """
+    empty_to_none(kwargs, "ignored_period")
     # execute only if run as a script
     process_tiles(**kwargs)
 

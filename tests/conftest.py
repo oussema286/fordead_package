@@ -13,3 +13,8 @@ exec(open(download_script).read())
 def input_dir():
     x = here / "fordead_data"
     yield x
+
+@pytest.fixture(scope="session")
+def output_dir():
+    x = (here / "outputs").mkdir_p()
+    yield x
