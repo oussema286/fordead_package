@@ -375,7 +375,7 @@ class Catalog(pystac.Catalog, ExtendPystacClasses):
 #######################################
 
 ####
-def remove_uncommon_properties(x, inplace=False):
+def remove_uncommon_properties(x: ItemCollection, inplace=False):
     if not inplace:
         collection = collection.copy()
 
