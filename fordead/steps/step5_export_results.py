@@ -72,7 +72,7 @@ def export_results(
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     dieback_data = import_dieback_data(tile.paths, chunks= None)
-    tile.add_parameters({"start_date_results" : start_date,"end_date_results" : end_date, "frequency" : frequency, "multiple_files" : multiple_files, "conf_threshold_list": conf_threshold_list, "conf_classes_list" : conf_classes_list})
+    tile.add_parameters({"start_date" : start_date,"end_date" : end_date, "frequency" : frequency, "multiple_files" : multiple_files, "conf_threshold_list": conf_threshold_list, "conf_classes_list" : conf_classes_list})
     if tile.parameters["Overwrite"] : 
         tile.delete_dirs("periodic_results_dieback","result_files") #Deleting previous detection results if they exist
         tile.delete_attributes("last_date_export")
