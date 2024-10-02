@@ -415,7 +415,12 @@ class TileInfo:
                     if self.parameters[parameter]!=parameters[parameter]: #If parameter was changed
                         self.parameters["Overwrite"]=True
                 else:#If unknown parameters
-                    self.parameters["Overwrite"]=True
+                    # For retro-compatibility of version 1.9.0:
+                    # First date was introduced in v1.9.0.
+                    # if start_date_train is the default, 
+                    # it is added without activating overwrite
+                    if not(parameter=="start_date_train" and parameters[parameter]=="2015-01-01"):
+                        self.parameters["Overwrite"]=True
             self.parameters.update(parameters)
             
     def add_path(self, key, path):

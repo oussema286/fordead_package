@@ -25,6 +25,7 @@ from fordead.writing_data import write_raster, write_tif
 @click.command(name='masked_vi')
 @click.option("-i", "--input_directory", type = str, help = "Path of the directory with Sentinel dates")
 @click.option("-o", "--data_directory", type = str, help = "Path of the output directory")
+@click.option("-s", "--start_date", type = str,default = "2015-01-01", help = "First date of processing, dates before this date will be ignored.", show_default=True)
 @click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
 @click.option("--interpolation_order", type = int,default = 0, help ="interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique", show_default=True)
 @click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
@@ -54,6 +55,7 @@ def cli_compute_masked_vegetationindex(**kwargs):
 def compute_masked_vegetationindex(
     input_directory,
     data_directory,
+    start_date = "2015-01-01",
     lim_perc_cloud=0.4,
     interpolation_order = 0,
     sentinel_source = "THEIA",
@@ -79,6 +81,8 @@ def compute_masked_vegetationindex(
         Path of the directory with Sentinel dates
     data_directory : str
         Path of the output directory
+    start_date : str
+        First date to process, dates before this date will be ignored. Format : 'YYYY-MM-DD'
     lim_perc_cloud : float
         Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness
     interpolation_order : int
@@ -111,7 +115,19 @@ def compute_masked_vegetationindex(
     tile = tile.import_info()
     
     # Parameters used are added to the TileInfo Object
-    tile.add_parameters({"lim_perc_cloud" : lim_perc_cloud, "interpolation_order" : interpolation_order, "sentinel_source" : sentinel_source, "apply_source_mask" : apply_source_mask, "vi" : vi, "extent_shape_path" : extent_shape_path, "path_dict_vi" : path_dict_vi, "soil_detection" : soil_detection,"formula_mask" : formula_mask, "ignored_period" : ignored_period, "compress_vi" : compress_vi})
+    tile.add_parameters({
+        "start_date_train" : start_date,
+        "lim_perc_cloud" : lim_perc_cloud,
+        "interpolation_order" : interpolation_order,
+        "sentinel_source" : sentinel_source,
+        "apply_source_mask" : apply_source_mask,
+        "vi" : vi, "extent_shape_path" : extent_shape_path,
+        "path_dict_vi" : path_dict_vi,
+        "soil_detection" : soil_detection,
+        "formula_mask" : formula_mask,
+        "ignored_period" : ignored_period,
+        "compress_vi" : compress_vi
+        })
   
     # If parameters added differ from previously used parameters, all previous computation results are deleted
     if tile.parameters["Overwrite"] : 
@@ -133,7 +149,7 @@ def compute_masked_vegetationindex(
         
     #Computing cloudiness percentage for each date
     cloudiness = get_cloudiness(Path(input_directory) / "cloudiness", tile.paths["Sentinel"], sentinel_source) if lim_perc_cloud != -1 else dict(zip(tile.paths["Sentinel"], [-1]*len(tile.paths["Sentinel"]))) #Returns dictionnary with cloud percentage for each date, except if lim_perc_cloud is set as 1, in which case cloud percentage is -1 for every date so source mask is not used and every date is used 
-    new_dates = np.array([date for date in tile.paths["Sentinel"] if cloudiness[date] <= lim_perc_cloud and ((ignored_period is None or len(ignored_period) == 0) or (date[5:] > min(ignored_period) and date[5:] < max(ignored_period))) and (not(hasattr(tile, "dates")) or date > tile.dates[-1])]) #Creates array containing only the dates with cloudiness inferior to lim_perc_cloud parameter. Also filters out dates anterior to already used dates.
+    new_dates = np.array([date for date in tile.paths["Sentinel"] if cloudiness[date] <= lim_perc_cloud and date>=start_date and ((ignored_period is None or len(ignored_period) == 0) or (date[5:] > min(ignored_period) and date[5:] < max(ignored_period))) and (not(hasattr(tile, "dates")) or date > tile.dates[-1])]) #Creates array containing only the dates with cloudiness inferior to lim_perc_cloud parameter. Also filters out dates anterior to already used dates.
     tile.dates = np.concatenate((tile.dates, new_dates)) if hasattr(tile, "dates") else new_dates #Adds list of all used dates (already used + new dates) as attribute to TileInfo object
     tile.raster_meta = get_raster_metadata(list(tile.paths["Sentinel"].values())[-1][next(x for x in list(tile.paths["Sentinel"].values())[0] if x in ["B2","B3","B4","B8"])], #path of first 10m resolution band found
                                            extent_shape_path = extent_shape_path)  #Imports all raster metadata from one band. 

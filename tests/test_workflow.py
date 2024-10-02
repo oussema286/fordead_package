@@ -1,6 +1,6 @@
 from path import Path
 from tempfile import TemporaryDirectory
-
+from fordead.import_data import TileInfo
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
 from fordead.steps.step3_dieback_detection import dieback_detection
@@ -11,10 +11,12 @@ def test_fordead_steps(input_dir, output_dir):
    
     test_output_dir = (output_dir / "workflow_steps").rmtree_p().mkdir()
     data_directory = test_output_dir / "dieback_detection"
+    start_date = "2016-01-01"
 
     compute_masked_vegetationindex(
         input_directory = input_dir / "sentinel_data" / "dieback_detection_tutorial" / "study_area", 
-        data_directory = data_directory, 
+        data_directory = data_directory,
+        start_date=start_date,
         lim_perc_cloud = 0.4, 
         interpolation_order = 0, 
         sentinel_source  = "THEIA", 
@@ -22,6 +24,10 @@ def test_fordead_steps(input_dir, output_dir):
         formula_mask = "B2 > 600", 
         vi = "CRSWIR", 
         apply_source_mask = True)
+
+    tile = TileInfo(data_directory)
+    tile = tile.import_info()
+    assert min(list(tile.paths["VegetationIndex"].keys())) >= start_date
 
     train_model(
         data_directory = data_directory, 

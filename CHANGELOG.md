@@ -1,3 +1,10 @@
+# v1.9.0
+## Add
+- argument `start_date` to `compute_masked_vegetationindex`. It defines the first date of processing.
+  __Warning:__ it is retrocompatible with 1.8 (without recomputation), if and only if start_date=="2015-01-01" (default value).
+  Otherwise, the time series is considered as different and the whole workflow (vegetation indices, masks, model, etc.) 
+  is recomputed overwriting the existing results.
+  
 # v1.8.8
 ## Fix
 - `harmonize_sen2cor_offet` --> `harmonize_sen2cor_offset`
