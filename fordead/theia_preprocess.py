@@ -184,13 +184,26 @@ def theia_download(tile, start_date, end_date, write_dir, lim_perc_cloud,
 
         # start downloading
         downloaded = []
+        failed = 0
         if len(to_download) == 0:
             done = True
         else:
             try:
-                downloaded = dag.download_all(to_download,
-                            outputs_prefix=write_dir,
-                            extract=False)
+                for d in to_download:
+                    res = dag.download(d,
+                        outputs_prefix=write_dir,
+                        extract=False)
+                    print(f"{d.properties['id']}: {res}")
+                    if res is None or not Path(res).exists():
+                        failed += 1
+                        if len(failed) >= 10:
+                            raise RuntimeError("Failed 10 times in a row, reinitializing download.")
+                    else:
+                        failed = 0
+                        downloaded.append(res)
+                # downloaded = dag.download_all(to_download,
+                #             outputs_prefix=write_dir,
+                #             extract=False)
             except Exception as e:
                     print(f"Download failed with error: {e}")
 
