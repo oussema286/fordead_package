@@ -965,7 +965,13 @@ def initialize_stress_data(shape,coords, max_nb_stress_periods):
     Returns
     -------
     stress_data : xarray DataSet or dask DataSet
-        DataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
+        DataSet containing four DataArrays, 
+        "date" containing the date index of each pixel state change, 
+        "nb_periods" containing the total number of stress periods detected for each pixel, 
+        "cum_diff" containing for each stress period the sum of
+        the difference between the vegetation index and its prediction, 
+        multiplied by the weight if stress_index_mode is "weighted_mean", 
+        and "nb_dates" containing the number of valid dates of each stress period.
         For all four arrays, all pixels are intitialized at zero.
     """
 
