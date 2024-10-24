@@ -7,6 +7,8 @@ from fordead.steps.step3_dieback_detection import dieback_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step5_export_results import export_results
 from fordead.cli.cli_process_tiles import process_tiles
+from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
+
 def test_fordead_steps(input_dir, output_dir):
    
     test_output_dir = (output_dir / "workflow_steps").rmtree_p().mkdir()
@@ -53,15 +55,30 @@ def test_fordead_steps(input_dir, output_dir):
         conf_classes_list = ["Low anomaly","Severe anomaly"])
 
 def test_process_tiles(input_dir, output_dir):
-    test_ouptut_dir = (output_dir / "workflow_process_tiles").rmtree_p().mkdir()
+    test_output_dir = (output_dir / "workflow_process_tiles").rmtree_p().mkdir()
     sentinel_dir = input_dir / "sentinel_data" / "dieback_detection_tutorial"
     forest_mask_source = input_dir / "vector" / "area_interest.shp"
-    process_tiles(test_ouptut_dir, sentinel_dir, tiles=["study_area"], forest_mask_source=forest_mask_source)
+    process_tiles(test_output_dir, sentinel_dir, tiles=["study_area"], forest_mask_source=forest_mask_source)
 
     # check result files exist
-    res_dir = test_ouptut_dir / "study_area" / "Results"
+    res_dir = test_output_dir / "study_area" / "Results"
     expected_files = ["stress_periods.shp", "periodic_results_dieback.shp"]
     for f in expected_files:
         assert (res_dir / f).exists()
 
-
+def test_visualisation(output_dir):
+    test_output_dir = (output_dir / "workflow_process_tiles" / "study_area")
+    x = [642385.] # index=122
+    y = [5451865.] # index=219
+    import geopandas as gpd
+    points = gpd.GeoDataFrame(gpd.points_from_xy(x, y, crs=32631))
+    points["id"]=0
+    points_path = output_dir / "points.json"
+    points.to_file(points_path)
+    vi_series_visualisation(data_directory = test_output_dir, 
+                        shape_path = points_path, 
+                        name_column = "id",
+                        ymin = 0, 
+                        ymax = 2, 
+                        chunks = 100)
+    assert (test_output_dir / "TimeSeries" / "0.png").exists()
