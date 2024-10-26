@@ -439,6 +439,14 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
     # in that case `id` should be added to the index arg,
     # and a solution should be found to choose between these values
     index = ["id_point", "time"]
+    
+    # some duplicates may exist, example:
+    # product_uri = ['S2B_MSIL2A_20240908T103629_N0511_R008_T31UGP_20240908T140258.SAFE', 
+    # 'S2B_MSIL2A_20240908T103629_N0511_R008_T31UGP_20240908T135227.SAFE']
+    if p[index + ["band"]].duplicated().any():
+        print(f"Found duplicates of {', '.join(index+['band'])}, averaging point values...")
+        p = p[index + ["band", "value"]].groupby(index + ["band"]).mean().reset_index()
+
     p = p.pivot(columns="band", values="value", index=index)
 
     # drop rows with NA values
