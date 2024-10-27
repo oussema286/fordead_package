@@ -138,7 +138,6 @@ def vi_series_visualisation(data_directory, x= None, y = None, shape_path = None
             geometry_point = shape.iloc[point_index]["geometry"]
             print(id_point)
             row, col = transform.rowcol(tile.raster_meta["transform"],geometry_point.x,geometry_point.y)
-
             select_and_plot_time_series(col,row, forest_mask, harmonic_terms, coeff_model, first_detection_date_index, soil_data, dieback_data, stack_masks, stack_vi, anomalies, stress_data, tile, ymin, ymax, name_file = str(id_point))
     elif (x is not None) and (y is not None):
         row, col = transform.rowcol(tile.raster_meta["transform"],x,y)
