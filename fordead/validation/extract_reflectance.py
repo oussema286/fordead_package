@@ -5,6 +5,7 @@ Created on Tue Dec 13 10:52:12 2022
 @author: rdutrieux
 """
 import time
+from datetime import timedelta
 import click
 import geopandas as gp
 import pandas as pd
@@ -106,16 +107,18 @@ def extract_reflectance(obs_path,
 
     extracted_reflectance = get_already_extracted(export_path, name_column, bands_to_extract)
 
+    start = time.time()
     for tile in tile_selection:
 
         tile_obs = obs[obs["area_name"] == tile]
         if len(tile_obs)==0:
             print("No observations in selected tile "+ tile)
         else:
-            
+            start_tile = time.time()
             tile_obs = tile_obs.to_crs(epsg = tile_obs.epsg.values[0])
             
             unfinished = True
+            by_chunk = True
             while unfinished:
                 try:                    
                     tile_already_extracted = None
@@ -129,13 +132,18 @@ def extract_reflectance(obs_path,
                     else:
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
-                    extract_raster_values(tile_obs, collection, bands_to_extract, tile_already_extracted, export_path)
+                    extract_raster_values(tile_obs, collection, bands_to_extract, tile_already_extracted, export_path, by_chunk=by_chunk)
                     unfinished = False
                 except Exception as e:
                     # traceback_str = traceback.format_exc()
                     print(f"Error: {e}")
                     # print(f"Error: {e}\nTraceback:\n{traceback_str}")
                     print("Retrying...")
+                    extracted_reflectance = get_already_extracted(export_path, name_column, bands_to_extract)
+            end_tile = time.time()
+            print(f"Time for reflectance extraction in {tile}: {timedelta(seconds=end_tile-start_tile)}")
+    end = time.time()
+    print(f"Total time for reflectance extraction: {timedelta(seconds=end-start)}")
 
 
 if __name__ == '__main__':

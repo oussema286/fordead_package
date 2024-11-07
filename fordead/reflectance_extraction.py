@@ -1,7 +1,7 @@
-import pandas as pd
 from shapely.geometry import Polygon, Point
 import rasterio
 import geopandas as gp
+import pandas as pd
 from pathlib import Path
 import numpy as np
 from rasterio.crs import CRS
@@ -377,7 +377,7 @@ def extract_points(x, df, **kwargs):
     points = x.sel(coords.to_xarray(), **kwargs)
     return points
 
-def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflectance, export_path=None):
+def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflectance, export_path=None, by_chunk=True, chunksize=512):
     """
     Sample raster values for each XY points
 
@@ -394,7 +394,15 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         Expected columns are "area_name", "Date" and an ID columns to merge with points dataframe.
     export_path : str, optional
         Path to export the result
-        
+    by_chunk : bool, optional
+        If True, the extraction is splitted in chunks and saved after each chunk. The default is False.
+        This is especially useful for long time series extraction.
+        Saving each chunk avoids loosing already extracted values in case of interruption,
+        e.g. if the server fails to respond to the request which occurs time to time with Planetary Computer
+    chunksize : int, optional
+        Size of the chunk {x,y}. The default is 512, the same as the default chunksize for COG.
+        This is the size of the chunk that will be (down)loaded to extract points, see stackstac.stack.
+        For info, a chunk of an S2 band (int16) is 512x512x2 = 524KB.
     Returns
     -------
     pandas DataFrame or None
@@ -408,21 +416,63 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
             raise ValueError("Date not in extracted_reflectance")
 
 
-    arr = tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract).rename("value")
+    arr = tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract, chunksize=chunksize).rename("value")
     if not points.crs.equals(arr.rio.crs):
         points = points.to_crs(arr.rio.crs)
     points.index.rename("id_point", inplace=True)
-    coords = points.get_coordinates().join(points.drop(columns='geometry'))
 
-    # To respect original implementation: extract only the points not already extracted
-    # not sure it is faster than extracting directly the all the points...
+    if by_chunk:
+        idx = np.append([0], np.cumsum(arr.chunksizes["x"]))
+        idy = np.append([0], np.cumsum(arr.chunksizes["y"]))
+        cx = arr.x.values.min() + arr.attrs["resolution"] * idx
+        cy = arr.y.values.min() + arr.attrs["resolution"] * idy
+        icx = np.digitize(points.geometry.x, cx)
+        icy = np.digitize(points.geometry.y, cy)
+        points["chunk_x"] = icx
+        points["chunk_y"] = icy
+        points.sort_values(by=["chunk_x", "chunk_y"], inplace=True)
+        res_list = []
+        gpoints = points.groupby(by=["chunk_x", "chunk_y"])
+        print(f"Extracting {points.shape[0]} points in {len(gpoints)} xy chunks...")
+        for idg, g in gpoints:
+            print(f"extracting {g.shape[0]} points in xy chunk ", idg)
+            g1 = g.drop(columns=["chunk_x", "chunk_y"])
+            res = extract_raster_values(g1, tile_coll, bands_to_extract, extracted_reflectance, export_path, by_chunk=False)
+            if res is not None:
+                res_list.append(res)
+        if export_path is None:
+            if len(res_list) > 0:
+                return pd.concat(res_list, ignore_index=True)
+        return    
+    
+
+    # To respect original implementation: extract only the points not already extracted.
+    # It accelerates much the extraction in case of error on the STAC point side.
+    coords = points.get_coordinates().join(points.drop(columns='geometry'))
     if extracted_reflectance is None or extracted_reflectance.empty:
         p = extract_points(arr, coords, method="nearest", tolerance=arr.rio.resolution()[0]/2)
     else:
+        ### trick for splitted scenes, example:
+        # - S2B_MSIL2A_20240607T102559_N0510_R108_T31UGP_20240607T153938.SAFE
+        # - S2B_MSIL2A_20240607T102559_N0510_R108_T31UGP_20240607T133635.SAFE
+        # These scenes have the same acquisition time, thus the same time in the xarray,
+        # but not the same processing time fortunately, i.e. different id.
+        # In the following, coordinate "time" is replaced by "id" to avoid duplicates
+        # at `extra_points(p_temp, to_extract)` execution, that fails otherwise.
+        # After extraction, time coordinate is restored.
+        temp_time = arr["time"]
+        temp_id = arr["id"]
+        arr["time"] = temp_id
+        arr = arr.assign_coords(timens = ("time", temp_time.values))
         p_temp = extract_points(arr, coords, method="nearest", tolerance=arr.rio.resolution()[0]/2)
         # copy coords for each dates
-        coords2 = coords.reset_index(drop=False).merge(pd.Series(arr.time.values, name="time"), how="cross")
+        # coords2 = coords.reset_index(drop=False).merge(pd.Series(arr.time.values, name="time"), how="cross")
+        if "id_time" in coords:
+            raise ValueError("'id_time' is reserved, please rename that column the 'points' dataframe.")
+        coords2 = coords.reset_index(drop=False).merge(temp_time.rename(dict(id="id_time")).to_dataframe()["id_time"].reset_index(drop=False), how="cross")
         coords2["Date"] = coords2.time.dt.date.astype(str)
+        # rename id
+        coords2.rename(columns={"id_time" : "time", "time" : "timens"}, inplace=True)
         # keep only the points and dates not in extracted_reflectance
         to_extract = coords2.merge(extracted_reflectance, on=extracted_reflectance.keys().tolist(), how="outer", indicator=True)
         to_extract = to_extract.query("_merge == 'left_only'").drop("_merge", axis=1)
@@ -431,30 +481,46 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
             return
         # subset only the points to extract
         p = extract_points(p_temp, to_extract)
+        # restore time coordinate
+        p["time"] = p["timens"]
+
     with ProgressBar():
         p = p.to_dataframe()
-    p.reset_index(drop=False, inplace=True)
 
+    # first NA check
+    if p.value.isna().all():
+        print("All NA values...")
+        return
+
+    p.reset_index(drop=False, inplace=True)
     # it may have a problem if two images at the same time,
     # in that case `id` should be added to the index arg,
     # and a solution should be found to choose between these values
     index = ["id_point", "time"]
     
-    # some duplicates may exist, example:
-    # product_uri = ['S2B_MSIL2A_20240908T103629_N0511_R008_T31UGP_20240908T140258.SAFE', 
-    # 'S2B_MSIL2A_20240908T103629_N0511_R008_T31UGP_20240908T135227.SAFE']
+    # Some duplicates may exist, example:
+    # - S2B_MSIL2A_20240607T102559_N0510_R108_T31UGP_20240607T153938.SAFE
+    # - S2B_MSIL2A_20240607T102559_N0510_R108_T31UGP_20240607T133635.SAFE
+    # It is solved by averaging the values of duplicates.
+    # As `skipna=True` is the default, NA value are ignored.
+    # Another solution would have been to keep only the first non-NA value.
     if p[index + ["band"]].duplicated().any():
         print(f"Found duplicates of {', '.join(index+['band'])}, averaging point values...")
         p = p[index + ["band", "value"]].groupby(index + ["band"]).mean().reset_index()
 
+    # make bands as columns
     p = p.pivot(columns="band", values="value", index=index)
 
+    # Some acquisition may have NA value but not for all bands, example
+    # - S2B_MSIL2A_20230209T105109_R051_T31TDL_20230210T032118, x=488490.0,  y=5001470.0
     # drop rows with NA values
     if p.isna().any().any():
-        from warnings import warn
-        warn("Found NA values, dropping them...")
+        print("Found pixels with NA values, dropping them...")
         p.dropna(inplace=True)
-
+        if p.shape[0] == 0:
+            print("No row left...")
+            return
+    
     # change type to int
     extractions = p.astype("int").reset_index(drop=False)
     # join extractions with points
