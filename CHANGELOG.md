@@ -1,3 +1,14 @@
+# v1.9.1
+## Add
+- args `chunsize` and `by_chunk` to `extract_raster_values`: 
+  processing by chunk to avoid loosing already downloaded when interrupted
+
+## Change
+- update dependency version to eodag >= 3
+
+## Fix
+- in extract_raster_values: possible duplicated {date, id_point, band}, usually due to splitted scenes --> averaging.
+
 # v1.9.0
 ## Add
 - argument `start_date` to `process_tile` and `compute_masked_vegetationindex`. It defines the first date of processing.
