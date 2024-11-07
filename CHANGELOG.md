@@ -2,12 +2,15 @@
 ## Add
 - args `chunsize` and `by_chunk` to `extract_raster_values`: 
   processing by chunk to avoid loosing already downloaded when interrupted
+- tests for results_visualsation
 
 ## Change
 - update dependency version to eodag >= 3
+- default chunsize in extract_raster_values: 512 (instead of 1024)
 
 ## Fix
 - in extract_raster_values: possible duplicated {date, id_point, band}, usually due to splitted scenes --> averaging.
+- result_visualisation (int index requested for xr.DataArray.isel)
 
 # v1.9.0
 ## Add
