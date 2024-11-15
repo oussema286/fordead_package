@@ -8,6 +8,7 @@ from rasterio.crs import CRS
 
 from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 from dask.diagnostics import ProgressBar
+import sys
 
 # import rasterio.sample
 # =============================================================================
@@ -428,14 +429,17 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         cy = arr.y.values.min() + arr.attrs["resolution"] * idy
         icx = np.digitize(points.geometry.x, cx)
         icy = np.digitize(points.geometry.y, cy)
+        daterange = [str(arr.time.dt.date.values.min()),
+                     str(arr.time.dt.date.values.max())]
         points["chunk_x"] = icx
         points["chunk_y"] = icy
         points.sort_values(by=["chunk_x", "chunk_y"], inplace=True)
         res_list = []
         gpoints = points.groupby(by=["chunk_x", "chunk_y"])
-        print(f"Extracting {points.shape[0]} points in {len(gpoints)} xy chunks...")
-        for idg, g in gpoints:
-            print(f"extracting {g.shape[0]} points in xy chunk ", idg)
+        print(f"Extracting {points.shape[0]} points in {len(gpoints)} xy chunks within date range {daterange}...")
+        for i, group in enumerate(gpoints):
+            g = group[1]
+            print(f"extracting {g.shape[0]} points in xy chunk {i+1}")
             g1 = g.drop(columns=["chunk_x", "chunk_y"])
             res = extract_raster_values(g1, tile_coll, bands_to_extract, extracted_reflectance, export_path, by_chunk=False)
             if res is not None:
@@ -484,7 +488,7 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         # restore time coordinate
         p["time"] = p["timens"]
 
-    with ProgressBar():
+    with ProgressBar(out=sys.stderr):
         p = p.to_dataframe()
 
     # first NA check

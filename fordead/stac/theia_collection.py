@@ -323,6 +323,9 @@ class ExtendPystacClasses:
             
              In order to filter/select assets, use to_xarray(asset=...) or to_xarray().sel(band=...)
         """
+        # issue with proj:epsg that is converted sometimes to float, if 
+        # not all of them have it at the same level, e.g. some at item level,
+        # others at the asset level...
         res = ItemCollection(stac_static.search(self, **kwargs).item_collection())
         if asset_names is not None:
             for item in res.items:
