@@ -319,13 +319,8 @@ def get_harmonized_dinamis_collection(start_date, end_date, obs_bbox, lim_perc_c
 
         # issue: proj:epsg not all at the same level --> produces NaN in dataframe (inside stac_static) and thus converts to float
         # should be removed when collection is homogeneous...
-        for item in collection:
-            if "proj:epsg" in item.properties and not isinstance(item.properties["proj:epsg"], int):
-                if np.isnan(item.properties["proj:epsg"]):
-                    item.properties.pop("proj:epsg")
-                else:
-                    item.properties["proj:epsg"] = int(item.properties["proj:epsg"])
-    
+        harmonize_epsg(collection, inplace=True)
+
     # harmonize_sen2cor_offset(collection, bands=S2_THEIA_BANDS, inplace=True)
     collection.drop_duplicates(inplace=True)
 
@@ -343,6 +338,39 @@ def harmonize_sen2cor_offset(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_B
                     item.assets[asset].extra_fields["raster:bands"] = [dict(offset=-1000)]
                 else:
                     item.assets[asset].extra_fields["raster:bands"] = [dict(offset=0)]
+    if not inplace:
+        return collection
+
+def harmonize_epsg(collection, inplace=False):
+    # Harmonize epsg at the item level
+    # This is a patch for Dinamis collection which has
+    # the 'proj:epsg' attribute at either at the item level
+    # or at the asset level or even no 'proj:epsg' but a 'proj:wkt2'
+    #
+    # 'collection' expects actually an ItemCollection
+    if not inplace:
+        collection = collection.copy()
+    for item in collection:
+        if "proj:epsg" in item.properties and not isinstance(item.properties["proj:epsg"], int):
+            if np.isnan(item.properties["proj:epsg"]):
+                # looking in assets for proj:epsg
+                epsg = set([asset.extra_fields["proj:epsg"] for asset in item.assets.values() if "proj:epsg" in asset.extra_fields])
+                if len(epsg) > 1:
+                    raise Exception("Multiple proj:epsg found in item nor assets: "+ item.id)
+                elif len(epsg) == 1:
+                    epsg = list(epsg)[0]
+                else:
+                    # looking in assets for proj:wkt2
+                    wkt2 = set([asset.extra_fields["proj:wkt2"] for asset in item.assets.values() if "proj:wkt2" in asset.extra_fields])
+                    if len(wkt2) > 1:
+                        raise Exception("Multiple proj:wkt2 found in item nor assets: "+ item.id)
+                    if len(wkt2) == 0:
+                        raise Exception("No proj:epsg or proj:wkt2 found in item nor assets: "+ item.id)
+                    from rasterio.crs import CRS
+                    epsg = CRS.from_wkt(list(wkt2)[0]).to_epsg()
+                item.properties["proj:epsg"] = int(epsg)
+            else:
+                item.properties["proj:epsg"] = int(item.properties["proj:epsg"])
     if not inplace:
         return collection
 
