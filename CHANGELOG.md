@@ -11,7 +11,9 @@
 - `sentinel_source` is now case insensitive e.g. 'Theia', 'THEIA' and 'theia' are accepted.
 
 ## Fix
-- slightly different results with same data in CalVal and production (issue #35) : wrong pixel was extracted by CalVal
+- slightly different results with same data in CalVal and production (issue #35) : 
+  sometimes the pixel next to the one focused was extracted by `extract_relflectance`
+  due to a shift of res/2 of the raster spatial coordinates.
 
 
 # v1.9.1
