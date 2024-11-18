@@ -119,6 +119,7 @@ def extract_reflectance(obs_path,
             
             unfinished = True
             by_chunk = True
+            chunksize = 512
             while unfinished:
                 try:                    
                     tile_already_extracted = None
@@ -136,7 +137,12 @@ def extract_reflectance(obs_path,
                     else:                        
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
-                    extract_raster_values(tile_obs, collection, bands_to_extract, tile_already_extracted, export_path, by_chunk=by_chunk)
+                        chunksize = 100
+                    extract_raster_values(
+                        collection, tile_obs, bands_to_extract, tile_already_extracted,
+                        export_path, by_chunk=by_chunk, chunksize=chunksize,
+                        dropna=True, dtype=int
+                        )
                     unfinished = False
                 except Exception as e:
                     # traceback_str = traceback.format_exc()

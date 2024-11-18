@@ -1,6 +1,12 @@
-# v1.9.2
+# v1.10.0
 ## Fix
 - slightly different results with same data in CalVal and production (issue #35) : wrong pixel was extracted by CalVal
+
+## Change
+- in `extract_raster_values`:
+  - switch the args order of inputs in  to reflect usual ergonomy of such a function
+  - add possibility to input an xarray to `extract_raster_values`
+  - add arguments with default values `chunksize=512` `dropna=True` and `dtype=int`
 
 # v1.9.1
 ## Add

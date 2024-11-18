@@ -9,6 +9,9 @@ from rasterio.crs import CRS
 from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 from dask.diagnostics import ProgressBar
 import sys
+import pystac
+from fordead.stac.theia_collection import ItemCollection
+import xarray as xr
 
 # import rasterio.sample
 # =============================================================================
@@ -378,18 +381,18 @@ def extract_points(x, df, **kwargs):
     points = x.sel(coords.to_xarray(), **kwargs)
     return points
 
-def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflectance, export_path=None, by_chunk=True, chunksize=512):
+def extract_raster_values(tile_coll, points, bands_to_extract=None, extracted_reflectance=None, export_path=None, by_chunk=True, chunksize=512, dropna=True, dtype=int):
     """
     Sample raster values for each XY points
 
     Parameters
     ----------
-    points : geodataframe
+    tile_coll : pystac.ItemCollection | xarray.DataArray
+        Item_collection of a unique MGRS Tile or the corresponding xarray DataArray
+    points : geopandas.GeoDataFrame
         Observation points
-    tile_coll : pystac.ItemCollection
-        Item_collection of a unique MGRS Tile
     bands_to_extract : list of strings
-        List of bands to extract
+        List of bands to extract. If None, all bands are extracted.
     extracted_reflectance: pandas.DataFrame
         Table of already sampled raster values, not to extract again.
         Expected columns are "area_name", "Date" and an ID columns to merge with points dataframe.
@@ -416,8 +419,16 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         if "Date" not in er_keys:
             raise ValueError("Date not in extracted_reflectance")
 
+    if isinstance(tile_coll, (ItemCollection, pystac.ItemCollection)):
+        arr = tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract, chunksize=chunksize).rename("value")
+    elif isinstance(tile_coll, xr.DataArray):
+        arr = tile_coll
+    else:
+        raise ValueError("tile_coll must be an ItemCollection or an xarray.DataArray")
+    
+    if not isinstance(points, gp.GeoDataFrame):
+        raise ValueError("points must be a GeoDataFrame")
 
-    arr = tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract, chunksize=chunksize).rename("value")
     if not points.crs.equals(arr.rio.crs):
         points = points.to_crs(arr.rio.crs)
     points.index.rename("id_point", inplace=True)
@@ -425,8 +436,8 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
     if by_chunk:
         idx = np.append([0], np.cumsum(arr.chunksizes["x"]))
         idy = np.append([0], np.cumsum(arr.chunksizes["y"]))
-        cx = arr.x.values.min() + arr.attrs["resolution"] * idx
-        cy = arr.y.values.min() + arr.attrs["resolution"] * idy
+        cx = arr.x.values.min() + arr.rio.resolution()[0] * idx
+        cy = arr.y.values.min() + arr.rio.resolution()[0] * idy
         icx = np.digitize(points.geometry.x, cx)
         icy = np.digitize(points.geometry.y, cy)
         daterange = [str(arr.time.dt.date.values.min()),
@@ -441,7 +452,7 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
             g = group[1]
             print(f"extracting {g.shape[0]} points in xy chunk {i+1}")
             g1 = g.drop(columns=["chunk_x", "chunk_y"])
-            res = extract_raster_values(g1, tile_coll, bands_to_extract, extracted_reflectance, export_path, by_chunk=False)
+            res = extract_raster_values(tile_coll, g1, bands_to_extract, extracted_reflectance, export_path, by_chunk=False, chunksize=chunksize, dropna=dropna, dtype=dtype)
             if res is not None:
                 res_list.append(res)
         if export_path is None:
@@ -518,7 +529,7 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
     # Some acquisition may have NA value but not for all bands, example
     # - S2B_MSIL2A_20230209T105109_R051_T31TDL_20230210T032118, x=488490.0,  y=5001470.0
     # drop rows with NA values
-    if p.isna().any().any():
+    if dropna and p.isna().any().any():
         print("Found pixels with NA values, dropping them...")
         p.dropna(inplace=True)
         if p.shape[0] == 0:
@@ -526,7 +537,9 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
             return
     
     # change type to int
-    extractions = p.astype("int").reset_index(drop=False)
+    if dtype is not None:
+        p = p.astype(dtype)
+    extractions = p.reset_index(drop=False)
     # join extractions with points
     points = points.drop(columns='geometry').reset_index(drop=False)
     # reformat result
