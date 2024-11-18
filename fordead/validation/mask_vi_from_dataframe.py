@@ -33,7 +33,7 @@ import numpy as np
 @click.option("--path_dict_vi", type = str,default = None, help = "Path of text file to add vegetation index formula, if None, only built-in vegetation indices can be used (CRSWIR, NDVI)", show_default=True)
 @click.option("-b","--list_bands", type=str, multiple=True, default = ["B2","B3","B4", "B8", "B8A", "B11","B12"], help = "Bands to import and use ex : -b B2 -b  B3 -b B11", show_default=True) # ["B2","B3","B4","B5","B6","B7","B8","B8A","B11", "B12", "Mask"]
 @click.option("--apply_source_mask",  is_flag=True, help = "If True, applies the mask from SENTINEL-data supplier", show_default=True)
-@click.option("--sentinel_source", type=str, default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
+@click.option("--sentinel_source", type=str, default = "theia", help = "Source of data, can be 'theia' et 'scihub' et 'peps'", show_default=True)
 @click.option("--ignored_period", multiple=True, type = str, default = None, help = "Period whose Sentinel dates to ignore (format 'MM-DD', ex : --ignored_period 11-01 --ignored_period 05-01", show_default=True)
 def cli_mask_vi_from_dataframe(**kwargs):
     """
@@ -63,7 +63,7 @@ def mask_vi_from_dataframe(reflectance_path,
                            path_dict_vi = None,
                            list_bands =  ["B2","B3","B4", "B8", "B8A", "B11","B12"],
                            apply_source_mask = False,
-                           sentinel_source = "THEIA",
+                           sentinel_source = "theia",
                            ignored_period = None
                            ):
     """
@@ -102,7 +102,7 @@ def mask_vi_from_dataframe(reflectance_path,
     apply_source_mask : bool, optional
         If True, the mask of the provider is also used to mask the data. The default is False.
     sentinel_source : str, optional
-        Provider of the data among 'THEIA' and 'Scihub' and 'PEPS'.. The default is "THEIA".
+        Provider of the data among 'theia' and 'scihub' and 'peps'.. The default is "theia".
     ignored_period : list of two strings
         Period whose Sentinel acquisitions to ignore (format 'MM-DD', ex : ["11-01","05-01"])
     """

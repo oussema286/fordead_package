@@ -22,7 +22,7 @@ def test_fordead_steps(input_dir, output_dir):
         start_date=start_date,
         lim_perc_cloud = 0.4, 
         interpolation_order = 0, 
-        sentinel_source  = "THEIA", 
+        sentinel_source  = "theia", 
         soil_detection = False, 
         formula_mask = "B2 > 600", 
         vi = "CRSWIR", 

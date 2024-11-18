@@ -18,7 +18,7 @@ from fordead.cli.utils import empty_to_none
 @click.option("--sentinel_dir", type = str,default = None, help = "Path of the directory containing Sentinel-2 data.", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted cloudiness", show_default=True)
 @click.option("-t","--tile_selection", multiple=True, type = str, help = "List of tiles from which to extract reflectance (ex : -t T31UFQ -t T31UGQ). If None, all tiles are extracted.")
-@click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
+@click.option("--sentinel_source", type = str, default = "theia", help = "Source of data, can be 'theia' et 'scihub' et 'peps'", show_default=True)
 def cli_extract_cloudiness(**kwargs):
     """
     
@@ -29,7 +29,7 @@ def cli_extract_cloudiness(**kwargs):
     extract_cloudiness(**kwargs)
 
 
-def extract_cloudiness(sentinel_dir, export_path, tile_selection = None, sentinel_source = "THEIA"):
+def extract_cloudiness(sentinel_dir, export_path, tile_selection = None, sentinel_source = "theia"):
     """
     
     For each acquisition, extracts percentage of pixels in the mask provided by the Sentinel-2 data provider.

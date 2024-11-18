@@ -13,14 +13,14 @@ from pathlib import Path
 # from fordead.reflectance_extraction import get_reflectance_at_points
 from fordead.cli.utils import empty_to_none
 from fordead.reflectance_extraction import get_already_extracted, extract_raster_values
-from fordead.stac.stac_module import get_bbox, get_harmonized_planetary_collection, get_harmonized_theia_collection, get_harmonized_dinamis_collection
+from fordead.stac.stac_module import get_bbox, get_harmonized_planetary_collection, get_harmonized_theia_collection, get_harmonized_theiastac_collection
 import traceback
 
 import numpy as np
 
 @click.command(name='extract_reflectance')
 @click.option("--obs_path", type = str,default = None, help = "Path to a vector file containing observation points, must have an ID column corresponding to name_column parameter, an 'area_name' column with the name of the Sentinel-2 tile from which to extract reflectance, and a 'espg' column containing the espg integer corresponding to the CRS of the Sentinel-2 tile.", show_default=True)
-@click.option("--sentinel_source", type = str,default = None, help = "Can be either the path of the directory containing Sentinel-2 Theia data, or 'Planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'Dinamis' for 's2-theia' CDS Theia Montpellier S2 STAC collection.", show_default=True)
+@click.option("--sentinel_source", type = str,default = None, help = "Can be either the path of the directory containing Sentinel-2 Theia data, or 'planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'theiastac' for 's2-theia' CDS Theia Montpellier S2 STAC collection.", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted reflectance", show_default=True)
 @click.option("--cloudiness_path", type = str, default = None, help = "Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/). Can be ignored if sentinel_source is 'Planetary'")
 @click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
@@ -61,7 +61,7 @@ def extract_reflectance(obs_path,
     obs_path : str
         Path to a vector file containing observation points, must have an ID column corresponding to name_column parameter, an 'area_name' column with the name of the Sentinel-2 tile from which to extract reflectance, and a 'espg' column containing the espg integer corresponding to the CRS of the Sentinel-2 tile.
     sentinel_source : str
-        Can be either the path of the directory containing Sentinel-2 Theia data, or 'Planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'Dinamis' for 's2-theia' CDS Theia Montpellier S2 STAC collection.
+        Can be either the path of the directory containing Sentinel-2 Theia data, or 'planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'theiastac' for 's2-theia' CDS Theia Montpellier S2 STAC collection.
     export_path : str
         Path to write csv file with extracted reflectance.
     cloudiness_path : str
@@ -93,8 +93,12 @@ def extract_reflectance(obs_path,
             print("Removing " + str(export_path))
             export_path.unlink()
     obs = gp.read_file(obs_path)
-    
-    if (sentinel_source != "Planetary") and (cloudiness_path is not None):
+
+    if sentinel_source.lower() in ["planetary", "theiastac"]:
+        sentinel_source = sentinel_source.lower()
+        cloudiness_path = None
+
+    if cloudiness_path is not None:
         cloudiness = pd.read_csv(cloudiness_path)
 
     if tile_selection is None:
@@ -124,15 +128,16 @@ def extract_reflectance(obs_path,
                     if extracted_reflectance is not None:
                         tile_already_extracted = extracted_reflectance[extracted_reflectance["area_name"] == tile]
                     
-                    if sentinel_source == "Planetary":
+                    if sentinel_source == "planetary":
                         collection = get_harmonized_planetary_collection(
                             start_date, end_date, get_bbox(tile_obs),
                             lim_perc_cloud, tile, sign=True)
-                    elif sentinel_source == "Dinamis":
-                        collection = get_harmonized_dinamis_collection(
+                    elif sentinel_source == "theiastac":
+                        collection = get_harmonized_theiastac_collection(
                             start_date, end_date, get_bbox(tile_obs),
                             lim_perc_cloud, tile, sign=True)
-                    else:                        
+                    else:
+                        # theia local data
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
                         chunksize = 100
@@ -181,7 +186,7 @@ if __name__ == '__main__':
         # # #Planetary
         extract_reflectance(
             obs_path = "D:/fordead/fordead_data/calval_output/preprocessed_obs_tuto.shp",
-            sentinel_source = "Planetary", 
+            sentinel_source = "planetary", 
             export_path = "D:/fordead/fordead_data/calval_output/test_extract_planetary.csv",
             name_column = "id",
             lim_perc_cloud = 0.4,

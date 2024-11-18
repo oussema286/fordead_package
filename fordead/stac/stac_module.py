@@ -55,7 +55,7 @@ PLANETARY = dict(
     mgrs_tile = "s2:mgrs_tile"
 )
 
-DINAMIS = dict(
+THEIASTAC = dict(
     url = 'https://stacapi-cdos.apps.okd.crocc.meso.umontpellier.fr',
     collection = "sentinel2-l2a-theia",
     # collection = "sentinel2-l2a-sen2lasrc",
@@ -93,7 +93,7 @@ def getItemCollection(start_date, end_date, bbox, cloud_nb = 100, source = PLANE
 
     # itemsColl = search.pages()
     itemsColl = search.item_collection()
-    # Waiting for standardization of DINAMIS "sentinel-2-l2a-theia" properties:
+    # Waiting for standardization of THEIASTAC "sentinel-2-l2a-theia" properties:
     # until then, uniformize used properties for the following
     if source["cloud_cover"] != PLANETARY["cloud_cover"]:
         cloud_cover = source["cloud_cover"]
@@ -271,7 +271,7 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
         collection = planetary_computer.sign_item_collection(collection)
     return collection
 
-def get_harmonized_dinamis_collection(start_date, end_date, obs_bbox, lim_perc_cloud, tile=None, sign=False):
+def get_harmonized_theiastac_collection(start_date, end_date, obs_bbox, lim_perc_cloud, tile=None, sign=False):
     """
     Get the planetary item collection with band names
     and offset harmonized with THEIA format.
@@ -303,7 +303,7 @@ def get_harmonized_dinamis_collection(start_date, end_date, obs_bbox, lim_perc_c
     corresp_keys = {'B01' : 'B1', 'B02' : 'B2', 'B03' : "B3", 'B04' : "B4", 'B05' : "B5", 
                     'B06' : "B6", 'B07' : "B7", 'B08' : "B8", 'B09' : "B9", 'CLM_R2' : "Mask"}
     
-    collection = getItemCollection(start_date, end_date, obs_bbox, int(lim_perc_cloud*100), source=DINAMIS)
+    collection = getItemCollection(start_date, end_date, obs_bbox, int(lim_perc_cloud*100), source=THEIASTAC)
     # item_list = []
     for item in collection:
         # item.properties["cloud_cover"] = item.properties['eo:cloud_cover']
@@ -317,7 +317,7 @@ def get_harmonized_dinamis_collection(start_date, end_date, obs_bbox, lim_perc_c
     # for item in collection:
     #     print(item.properties["cloud_cover"])
     if tile is not None:
-        print("Extracting Sentinel-2 data from "+ tile + " collected from Dinamis")
+        print("Extracting Sentinel-2 data from "+ tile + " collected from theiastac")
         collection = collection.filter(filter=f"tilename = '{tile}'")
 
         # issue: proj:epsg not all at the same level --> produces NaN in dataframe (inside stac_static) and thus converts to float
@@ -346,7 +346,7 @@ def harmonize_sen2cor_offset(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_B
 
 def harmonize_epsg(collection, inplace=False):
     # Harmonize epsg at the item level
-    # This is a patch for Dinamis collection which has
+    # This is a patch for theiastac collection which has
     # the 'proj:epsg' attribute at either at the item level
     # or at the asset level or even no 'proj:epsg' but a 'proj:wkt2'
     #

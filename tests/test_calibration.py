@@ -8,7 +8,7 @@ from fordead.validation.train_model_from_dataframe import train_model_from_dataf
 from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
 import subprocess
 
-@pytest.mark.parametrize("sentinel_source", ["THEIA", "Planetary"])
+@pytest.mark.parametrize("sentinel_source", ["THEIA", "Planetary"]) # "theiastac", 
 def test_calibration(input_dir, output_dir, sentinel_source):
     
     print(f"Using {sentinel_source} data")
@@ -85,7 +85,7 @@ def test_calibration_cli(input_dir, output_dir, sentinel_source):
     calval_dir = (output_dir / f"calval_{sentinel_source}_cli").rmtree_p().mkdir()
 
     source = sentinel_source
-    if sentinel_source == "THEIA":
+    if sentinel_source.lower() == "theia":
         sentinel_source = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
         cloudiness_path = calval_dir / "extracted_cloudiness.csv"
     else:

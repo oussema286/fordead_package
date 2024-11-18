@@ -28,7 +28,7 @@ from fordead.writing_data import write_raster, write_tif
 @click.option("-s", "--start_date", type = str,default = "2015-01-01", help = "First date of processing, dates before this date will be ignored.", show_default=True)
 @click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
 @click.option("--interpolation_order", type = int,default = 0, help ="interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique", show_default=True)
-@click.option("--sentinel_source", type = str,default = "THEIA", help = "Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'", show_default=True)
+@click.option("--sentinel_source", type = str,default = "theia", help = "Source of data, can be 'theia' et 'scihub' et 'peps'", show_default=True)
 @click.option("--apply_source_mask",  is_flag=True, help = "If True, applies the mask from SENTINEL-data supplier", show_default=True)
 @click.option("--soil_detection",  is_flag=True, help = "If True, bare ground is detected and used as mask, but the process has not been tested on other data than THEIA data in France (see https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/). If False, mask from formula_mask is applied.", show_default=True)
 @click.option("--formula_mask", type = str,default = "(B2 >= 700)", help = "formula whose result would be binary, as described here https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index. Is only used if soil_detection is False.", show_default=True)
@@ -58,7 +58,7 @@ def compute_masked_vegetationindex(
     start_date = "2015-01-01",
     lim_perc_cloud=0.4,
     interpolation_order = 0,
-    sentinel_source = "THEIA",
+    sentinel_source = "theia",
     apply_source_mask = False,
     soil_detection = True,
     formula_mask = "(B2 >= 700)",
@@ -88,7 +88,7 @@ def compute_masked_vegetationindex(
     interpolation_order : int
         interpolation order for bands at 20m resolution : 0 = nearest neighbour, 1 = linear, 2 = bilinéaire, 3 = cubique
     sentinel_source : str
-        Source of data, can be 'THEIA' et 'Scihub' et 'PEPS'
+        Source of data, can be 'theia' et 'scihub' et 'peps'
     apply_source_mask : bool
         If True, applies the mask from SENTINEL-data supplier
     soil_detection : bool

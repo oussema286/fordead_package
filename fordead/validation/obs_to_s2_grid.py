@@ -11,11 +11,11 @@ import pandas as pd
 from pathlib import Path
 from fordead.cli.utils import empty_to_none
 from fordead.reflectance_extraction import get_grid_points, process_points, get_polygons_from_sentinel_dirs
-from fordead.stac.stac_module import getItemCollection, get_bbox, get_harmonized_planetary_collection, get_polygons_from_sentinel_planetComp, get_harmonized_dinamis_collection
+from fordead.stac.stac_module import getItemCollection, get_bbox, get_harmonized_planetary_collection, get_polygons_from_sentinel_planetComp, get_harmonized_theiastac_collection
 
 @click.command(name='obs_to_s2_grid')
 @click.option("--obs_path", type = str,default = None, help = "Path to a vector file containing observation points or polygons, must have an ID column corresponding to name_column parameter", show_default=True)
-@click.option("--sentinel_source", type = str,default = None, help = "Can be either the path of the directory containing Sentinel-2 Theia data, or 'Planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'Dinamis' for 's2-theia' CDS Theia Montpellier S2 STAC collection.", show_default=True)
+@click.option("--sentinel_source", type = str,default = None, help = "Can be either the path of the directory containing Sentinel-2 Theia data, or 'planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'theiastac' for 's2-theia' CDS Theia Montpellier S2 STAC collection.", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path used to write resulting vector file, with added 'epsg','area_name' and 'id_pixel' columns", show_default=True)
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
 @click.option("-t","--tile_selection", type=str, multiple=True, default = None, help = "A list of names of Sentinel-2 directories. (ex : -t T31UFQ -t T31UGQ). If None, all tiles are used.", show_default=True)
@@ -43,7 +43,7 @@ def obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column = "id", t
     obs_path : str
         Path to a vector file containing observation points or polygons, must have an ID column corresponding to name_column parameter.
     sentinel_source : str
-        Can be either the path of the directory containing Sentinel-2 Theia data, or 'Planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'Dinamis' for 's2-theia' CDS Theia Montpellier S2 STAC collection.
+        Can be either the path of the directory containing Sentinel-2 Theia data, or 'planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'theiastac' for 's2-theia' CDS Theia Montpellier S2 STAC collection.
     export_path : str
         Path used to write resulting vector file, with added "epsg","area_name" and "id_pixel" columns.
     name_column : str, optional
@@ -74,11 +74,16 @@ def obs_to_s2_grid(obs_path, sentinel_source, export_path, name_column = "id", t
     points = obs[(geom_type == 'Point') | (geom_type == 'MultiPoint')]
     polygons = obs[(geom_type == 'Polygon') | (geom_type == 'MultiPolygon')]
     
-    if sentinel_source == "Planetary":
+    if sentinel_source.lower() in ["theiastac", "planetary"]:
+        sentinel_source = sentinel_source.lower()
+    elif not Path(sentinel_source).is_dir():
+        raise Exception("Unrecognized sentinel_source: not a Sentinel-2 data directory nor 'planetary' or 'theiastac'")
+    
+    if sentinel_source == "planetary":
         collection = get_harmonized_planetary_collection("2015-01-01", "2024-01-01", get_bbox(obs), 0.01)
         sen_polygons = get_polygons_from_sentinel_planetComp(collection, tile_selection)
-    elif sentinel_source == "Dinamis":
-        collection = get_harmonized_dinamis_collection("2015-01-01", "2024-01-01", get_bbox(obs), 0.01)
+    elif sentinel_source == "theiastac":
+        collection = get_harmonized_theiastac_collection("2015-01-01", "2024-01-01", get_bbox(obs), 0.01)
         sen_polygons = get_polygons_from_sentinel_planetComp(collection, tile_selection)
     else:
         sen_polygons = get_polygons_from_sentinel_dirs(sentinel_source, tile_selection)
@@ -96,7 +101,7 @@ if __name__ == '__main__':
     #Planetary
     obs_to_s2_grid(
         obs_path = "D:/fordead/fordead_data/vector/observations_tuto.shp",
-        sentinel_source = "Planetary", 
+        sentinel_source = "planetary", 
         export_path = "D:/fordead/05_SUBPROJECTS/03_stac/03_RESULTS/pp_observations_tuto_plan.shp",
         name_column = "id",
         # tile_selection = ["T32ULU"],
