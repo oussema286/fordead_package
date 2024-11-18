@@ -33,7 +33,8 @@ from click_option_group import optgroup
 @optgroup.option("--start_date", type = str, default = "2015-01-01", help = "First date of processing, dates before this date will be ignored.")
 @optgroup.option("-c", "--lim_perc_cloud", type = float, default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
 @optgroup.option("--vi", type = str, default = "CRSWIR", help = "Chosen vegetation index")
-@optgroup.option("--sentinel_source", type = click.Choice(["theia", "scihub", "peps"]), default = "theia", help = "Source of Sentinel data: 'theia', 'scihub' or 'peps'")
+@optgroup.option("--sentinel_source", type = click.Choice(["theia", "scihub", "peps"], case_sensitive=False),
+                 default = "theia", help = "Source of Sentinel data: 'theia', 'scihub' or 'peps'")
 @optgroup.option("--apply_source_mask", is_flag=True, default = False, help = "If activated, applies the mask from SENTINEL-data provider")
 @optgroup.option("--extent_shape_path", type = click.Path(), default = None, help = "Path of shapefile used as extent of detection")
 @optgroup.option("--soil_detection", is_flag=True, default = False, help = "If activated, detects bare ground")

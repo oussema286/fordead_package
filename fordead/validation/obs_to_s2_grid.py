@@ -15,7 +15,8 @@ from fordead.stac.stac_module import getItemCollection, get_bbox, get_harmonized
 
 @click.command(name='obs_to_s2_grid')
 @click.option("--obs_path", type = str,default = None, help = "Path to a vector file containing observation points or polygons, must have an ID column corresponding to name_column parameter", show_default=True)
-@click.option("--sentinel_source", type = str,default = None, help = "Can be either the path of the directory containing Sentinel-2 Theia data, or 'planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'theiastac' for 's2-theia' CDS Theia Montpellier S2 STAC collection.", show_default=True)
+@click.option("--sentinel_source", click.Choice(["theia", "theiastac", "planetary"], case_sensitive=False),
+              default = None, help = "Can be either the path of the directory containing Sentinel-2 Theia data, or 'planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'theiastac' for 's2-theia' CDS Theia Montpellier S2 STAC collection.", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path used to write resulting vector file, with added 'epsg','area_name' and 'id_pixel' columns", show_default=True)
 @click.option("--name_column", type = str,default = "id", help = "Name of the ID column", show_default=True)
 @click.option("-t","--tile_selection", type=str, multiple=True, default = None, help = "A list of names of Sentinel-2 directories. (ex : -t T31UFQ -t T31UGQ). If None, all tiles are used.", show_default=True)
