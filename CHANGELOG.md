@@ -1,3 +1,7 @@
+# v1.9.2
+## Fix
+- slightly different results with same data in CalVal and production (issue #35) : wrong pixel was extracted by CalVal
+
 # v1.9.1
 ## Add
 - args `chunsize` and `by_chunk` to `extract_raster_values`: 
