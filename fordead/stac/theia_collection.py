@@ -249,7 +249,7 @@ class ExtendPystacClasses:
         """
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
-            arr = stackstac.stack(self, **kwargs)
+            arr = stackstac.stack(self, xy_coords=xy_coords, gdal_env=gdal_env, **kwargs)
         return arr
     
     def filter(self, asset_names=None, **kwargs):
