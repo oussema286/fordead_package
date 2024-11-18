@@ -1,3 +1,4 @@
+import geopandas as gpd
 from path import Path
 from tempfile import TemporaryDirectory
 from fordead.import_data import TileInfo
@@ -5,7 +6,7 @@ from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_ve
 from fordead.steps.step2_train_model import train_model
 from fordead.steps.step3_dieback_detection import dieback_detection
 from fordead.steps.step4_compute_forest_mask import compute_forest_mask
-from fordead.steps.step5_export_results import export_results
+from fordead.steps.step5_export_results import export_results, extract_results
 from fordead.cli.cli_process_tiles import process_tiles
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
 
@@ -66,15 +67,34 @@ def test_process_tiles(input_dir, output_dir):
     for f in expected_files:
         assert (res_dir / f).exists()
 
-def test_visualisation(output_dir):
+def test_extract_results(output_dir: Path):
     test_output_dir = (output_dir / "workflow_process_tiles" / "study_area")
+    export_dir = (test_output_dir / "extractions").rmtree_p().mkdir_p()
     x = [642385.] # index=122
     y = [5451865.] # index=219
-    import geopandas as gpd
     points = gpd.GeoDataFrame(gpd.points_from_xy(x, y, crs=32631))
     points["id"]=0
     points_path = output_dir / "points.json"
     points.to_file(points_path)
+    
+    extract_results(data_directory = test_output_dir, 
+                        points_file = points_path,
+                        output_dir = export_dir,
+                        name_column = "id",
+                        chunks = 100)
+    assert (export_dir / "timeseries.csv").exists()
+    assert (export_dir / "current_state.csv").exists()
+    assert (export_dir / "periods.csv").exists()
+
+def test_visualisation(output_dir):
+    test_output_dir = (output_dir / "workflow_process_tiles" / "study_area")
+    x = [642385.] # index=122
+    y = [5451865.] # index=219
+    points = gpd.GeoDataFrame(gpd.points_from_xy(x, y, crs=32631))
+    points["id"]=0
+    points_path = output_dir / "points.json"
+    points.to_file(points_path)
+
     vi_series_visualisation(data_directory = test_output_dir, 
                         shape_path = points_path, 
                         name_column = "id",

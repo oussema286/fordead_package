@@ -1,21 +1,24 @@
-# author(s) : Kenji Ose / Raphael Dutrieux
+# author(s) : Kenji Ose / Raphael Dutrieux / Florian de Boissieu
 
-import geopandas as gp
-import pandas as pd
-import numpy as np
-# from shapely.geometry import Polygon, Point
-from pyproj import Proj, transform
-import pystac_client
-import pystac
-import planetary_computer
-from pathlib import Path
-from fordead.stac.theia_collection import build_theia_collection, ItemCollection
 from datetime import datetime
-import fordead.stac.stac_module as st
-from shapely.geometry import Polygon
-from pyproj import Transformer
+import geopandas as gp
+import json
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import planetary_computer
+
+import pystac
+import pystac_client
 import re
+from shapely.geometry import box, Polygon
+from shapely import to_geojson
+
 import dinamis_sdk 
+from fordead.stac.theia_collection import build_theia_collection, ItemCollection, bbox_to_wgs, get_rio_info
+from fordead.import_data import TileInfo
+import fordead.stac.stac_module as st
+
 
 
 def get_vectorBbox(vector_path):
@@ -421,6 +424,78 @@ def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date
     
     return collection
     
+def get_tile_collection(tile, include_s2=False):
+    if not isinstance(tile, TileInfo) and Path(tile).is_dir():
+        tile = TileInfo(tile)
+    tile = tile.import_info()
+    items = []
+    for date in tile.paths["VegetationIndex"]:
+        bbox = list(tile.raster_meta["extent"])
+        epsg =  tile.raster_meta["crs"].to_epsg()
+        geometry = json.loads(to_geojson(box(*bbox)))
+        shape = tile.raster_meta["shape"]
+        transform = list(tile.raster_meta["transform"])
+        
+        bbox_wgs, geom_wgs, centroid = bbox_to_wgs(bbox, epsg)
+        assets = {}
+        for key in ["VegetationIndex","Masks","Anomalies"]:
+            if date in tile.paths[key]:
+                href = str(tile.paths[key][date])
+                p = {
+                        "href": href,
+                        "type": pystac.MediaType.NETCDF if href.endswith(".nc") else pystac.MediaType.GEOTIFF,
+                        "roles": ["data"],
+                        "proj:epsg": epsg,
+                        "proj:bbox": bbox,
+                        "proj:geometry": geometry,
+                        "proj:shape": shape,
+                        "proj:transform": transform,
+                        "gsd": tile.raster_meta["transform"][0],
+                    }
+                if key == "VegetationIndex":
+                    p["raster:bands"] = [dict(offset=0, scale=0.001, nodata=-1, data_type="int16")]
+                else:
+                    p["raster:bands"] = [dict(offset=0, scale=1, nodata=0, data_type="int8")]
+                assets[key] = pystac.Asset.from_dict(p)
+        if include_s2:
+            key = "Sentinel"
+            if date in tile.paths[key]:
+                for band in tile.paths[key][date]:
+                    href = str(tile.paths[key][date][band])
+                    bbox1, media_type, gsd, meta = get_rio_info(href)
+                    
+                    if bbox != list(bbox1):
+                        raise Exception("Sentinel assets should have the same bbox")
+                    assets[band] = pystac.Asset.from_dict(
+                        {
+                            "href": href,
+                            "type": media_type,
+                            "roles": ["data"],
+                            "proj:epsg": epsg,
+                            "proj:bbox": bbox,
+                            "proj:geometry": geometry,
+                            "proj:shape": (meta["height"], meta["width"]),
+                            "proj:transform": list(meta["transform"]),
+                            "gsd": gsd,
+                        }
+                    )
+        item_info = {
+            "id": date,
+            "datetime": pd.to_datetime(date),
+            "geometry": geom_wgs,            
+            "bbox": bbox_wgs,
+            "properties": {"proj:epsg": epsg,},
+            "assets": assets,
+            "stac_extensions": [pystac.extensions.projection.SCHEMA_URI,
+                                pystac.extensions.raster.SCHEMA_URI],
+            }
+        item = pystac.Item(**item_info)
+        item.validate()
+        items.append(item)
+    
+    collection = ItemCollection(items)
+    return collection
+
 def get_polygons_from_sentinel_planetComp(item_collection, tile_selection = None, outputfile = None):
     """
     get image footprint with specified tile crs

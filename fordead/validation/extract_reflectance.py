@@ -83,8 +83,6 @@ def extract_reflectance(obs_path,
     
     """
     
-    # if sentinel_source == 'Planetary':
-        
     
     export_path = Path(export_path)
     if export_path.exists():
