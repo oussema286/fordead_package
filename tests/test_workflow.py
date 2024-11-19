@@ -72,7 +72,7 @@ def test_extract_results(output_dir: Path):
     export_dir = (tile_dir / "extractions").rmtree_p().mkdir_p()
     x = [642385.] # index=122
     y = [5451865.] # index=219
-    points = gpd.GeoDataFrame(gpd.points_from_xy(x, y, crs=32631))
+    points = gpd.GeoDataFrame(geometry=gpd.points_from_xy(x, y, crs=32631))
     points["id"]=0
     points_path = output_dir / "points.json"
     points.to_file(points_path)
@@ -90,7 +90,7 @@ def test_visualisation(output_dir):
     tile_dir = (output_dir / "workflow_process_tiles" / "study_area")
     x = [642385.] # index=122
     y = [5451865.] # index=219
-    points = gpd.GeoDataFrame(gpd.points_from_xy(x, y, crs=32631))
+    points = gpd.GeoDataFrame(geometry=gpd.points_from_xy(x, y, crs=32631))
     points["id"]=0
     points_path = output_dir / "points.json"
     points.to_file(points_path)
