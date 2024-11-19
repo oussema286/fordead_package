@@ -220,8 +220,11 @@ def extract_results(data_directory, points_file, output_dir=None,
     ts_col = get_tile_collection(tile)
     ts = extract_raster_values(ts_col, points, bands_to_extract=None, by_chunk=True, chunksize=100, dropna=False, dtype=None)
     ts.rename(columns={"Anomalies": "anomaly", "VegetationIndex": "vi", "Masks": "masks"}, inplace=True)
-    ts.loc[:,["anomaly", "masks"]] = ts.loc[:,["anomaly", "masks"]].fillna(0)
-    ts = ts.astype({"anomaly": bool, "masks": bool})
+    binary_keys = [k for k in ["anomaly", "masks"] if k in ts]
+    if len(binary_keys) > 0:
+        ts.loc[:,binary_keys] = ts.loc[:,binary_keys].fillna(0)
+        ts = ts.astype({k: bool for k in binary_keys})
+        
     coeff_model = import_coeff_model(tile.paths["coeff_model"],chunks = chunks)
     
     pred = prediction_vegetation_index(coeff_model,ts.Date.drop_duplicates().to_list()).rename({"Time":"time", "coeff":"band"})

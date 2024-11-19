@@ -428,6 +428,10 @@ def get_tile_collection(tile, include_s2=False):
     if not isinstance(tile, TileInfo) and Path(tile).is_dir():
         tile = TileInfo(tile)
     tile = tile.import_info()
+    # update to latest content of results directories...
+    tile.getdict_datepaths(key = "VegetationIndex", path_dir = tile.paths["VegetationIndexDir"])
+    tile.getdict_datepaths(key = "Masks", path_dir = tile.paths["MaskDir"])
+    tile.getdict_datepaths(key = "Anomalies", path_dir = tile.paths["AnomaliesDir"])
     items = []
     for date in tile.paths["VegetationIndex"]:
         bbox = list(tile.raster_meta["extent"])

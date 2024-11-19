@@ -68,8 +68,8 @@ def test_process_tiles(input_dir, output_dir):
         assert (res_dir / f).exists()
 
 def test_extract_results(output_dir: Path):
-    test_output_dir = (output_dir / "workflow_process_tiles" / "study_area")
-    export_dir = (test_output_dir / "extractions").rmtree_p().mkdir_p()
+    tile_dir = (output_dir / "workflow_process_tiles" / "study_area")
+    export_dir = (tile_dir / "extractions").rmtree_p().mkdir_p()
     x = [642385.] # index=122
     y = [5451865.] # index=219
     points = gpd.GeoDataFrame(gpd.points_from_xy(x, y, crs=32631))
@@ -77,7 +77,7 @@ def test_extract_results(output_dir: Path):
     points_path = output_dir / "points.json"
     points.to_file(points_path)
     
-    extract_results(data_directory = test_output_dir, 
+    extract_results(data_directory = tile_dir, 
                         points_file = points_path,
                         output_dir = export_dir,
                         name_column = "id",
@@ -87,7 +87,7 @@ def test_extract_results(output_dir: Path):
     assert (export_dir / "periods.csv").exists()
 
 def test_visualisation(output_dir):
-    test_output_dir = (output_dir / "workflow_process_tiles" / "study_area")
+    tile_dir = (output_dir / "workflow_process_tiles" / "study_area")
     x = [642385.] # index=122
     y = [5451865.] # index=219
     points = gpd.GeoDataFrame(gpd.points_from_xy(x, y, crs=32631))
@@ -95,10 +95,10 @@ def test_visualisation(output_dir):
     points_path = output_dir / "points.json"
     points.to_file(points_path)
 
-    vi_series_visualisation(data_directory = test_output_dir, 
+    vi_series_visualisation(data_directory = tile_dir, 
                         shape_path = points_path, 
                         name_column = "id",
                         ymin = 0, 
                         ymax = 2, 
                         chunks = 100)
-    assert (test_output_dir / "TimeSeries" / "0.png").exists()
+    assert (tile_dir / "TimeSeries" / "0.png").exists()
