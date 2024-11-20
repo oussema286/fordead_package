@@ -10,6 +10,7 @@ import click
 import geopandas as gp
 import pandas as pd
 from pathlib import Path
+import rasterio as rio
 # from fordead.reflectance_extraction import get_reflectance_at_points
 from fordead.cli.utils import empty_to_none
 from fordead.reflectance_extraction import get_already_extracted, extract_raster_values
@@ -51,6 +52,8 @@ def extract_reflectance(obs_path,
                         tile_selection = None,
                         start_date = "2015-01-01",
                         end_date = "2030-01-01",
+                        chunksize = None,
+                        by_chunk=True,
                         overwrite = False):
     """
     Extracts reflectance from Sentinel-2 data using a vector file containing points, exports the data to a csv file.
@@ -78,6 +81,10 @@ def extract_reflectance(obs_path,
         First date of the period from which to extract reflectance
     end_date : str
         Last date of the period from which to extract reflectance
+    chunksize : int | tuple[int]
+        passed to stackstac.stack function. If None, the chunsize is
+        fixed to the internal geotiff block shape for local data,
+        or 512 for remote data (theiastac and planetary).
     overwrite : bool
         If True, overwrites the csv file if it already exists. The default is False.
     
@@ -121,7 +128,11 @@ def extract_reflectance(obs_path,
             
             unfinished = True
             by_chunk = True
-            chunksize = 512
+            
+            if chunksize is None:
+                chunksize = 512 # (1, -1, 512,512) not faster as network is already saturated
+            retries = 0
+            nretries = 10
             while unfinished:
                 try:                    
                     tile_already_extracted = None
@@ -140,7 +151,17 @@ def extract_reflectance(obs_path,
                         # theia local data
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
-                        chunksize = 100
+                        if chunksize is None:
+                            # get the file chunk size of local data
+                            with rio.open(collection[0].assets["B2"].href) as src: 
+                                chunksize = src.block_shapes[0]
+                            # get all bands in parallel
+                            chunksize = (1, -1, chunksize[0], chunksize[1])
+                    
+                    if len(collection) == 0:
+                        print(f"Observations are not within selected tile {tile}, use the module `obs_to_s2_grid` to preprocess the observations correctly.")
+                        unfinished = False
+                    
                     extract_raster_values(
                         collection, tile_obs, bands_to_extract, tile_already_extracted,
                         export_path, by_chunk=by_chunk, chunksize=chunksize,
@@ -150,10 +171,15 @@ def extract_reflectance(obs_path,
                 except Exception as e:
                     # traceback_str = traceback.format_exc()
                     # print(f"Error: {e}")
+                    retries += 1
                     print(traceback.format_exc())
                     # print(f"Error: {e}\nTraceback:\n{traceback_str}")
-                    print("Retrying...")
-                    extracted_reflectance = get_already_extracted(export_path, name_column, bands_to_extract)
+                    if retries <= nretries:
+                        print(f"Retrying ({retries}/{nretries})...")
+                        extracted_reflectance = get_already_extracted(export_path, name_column, bands_to_extract)
+                    else:
+                        raise Exception(f"Failed after {retries} retries... there must be an issue here.")
+                    
             end_tile = time.time()
             print(f"Time for reflectance extraction in {tile}: {timedelta(seconds=end_tile-start_tile)}")
     end = time.time()
