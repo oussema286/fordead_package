@@ -250,7 +250,7 @@ def extract_results(data_directory, points_file, output_dir=None,
     static_data = static_data.assign_coords(time=pred.time.values[-1])
     static_data = static_data.to_dataarray("band")
     static_data.name="value"
-    static_df = extract_raster_values(static_data, points, bands_to_extract=None, chunksize=100, by_chunk=True, dropna=False, dtype=None)
+    static_df = extract_raster_values(static_data, points, bands_to_extract=None, chunksize=100, by_chunk=False, dropna=False, dtype=None)
 
     stress_df = None
     if tile.parameters["stress_index_mode"] is not None:
