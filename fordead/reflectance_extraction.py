@@ -8,6 +8,10 @@ from rasterio.crs import CRS
 
 from fordead.import_data import TileInfo, get_band_paths, get_raster_metadata
 from dask.diagnostics import ProgressBar
+import sys
+import pystac
+from fordead.stac.theia_collection import ItemCollection
+import xarray as xr
 
 # import rasterio.sample
 # =============================================================================
@@ -377,18 +381,20 @@ def extract_points(x, df, **kwargs):
     points = x.sel(coords.to_xarray(), **kwargs)
     return points
 
-def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflectance, export_path=None, by_chunk=True, chunksize=512):
+def extract_raster_values(
+        tile_coll, points, bands_to_extract=None, extracted_reflectance=None,
+        export_path=None, chunksize=512, by_chunk=True, dropna=True, dtype=int):
     """
     Sample raster values for each XY points
 
     Parameters
     ----------
-    points : geodataframe
+    tile_coll : pystac.ItemCollection | xarray.DataArray
+        Item_collection of a unique MGRS Tile or the corresponding xarray DataArray
+    points : geopandas.GeoDataFrame
         Observation points
-    tile_coll : pystac.ItemCollection
-        Item_collection of a unique MGRS Tile
     bands_to_extract : list of strings
-        List of bands to extract
+        List of bands to extract. If None, all bands are extracted.
     extracted_reflectance: pandas.DataFrame
         Table of already sampled raster values, not to extract again.
         Expected columns are "area_name", "Date" and an ID columns to merge with points dataframe.
@@ -403,6 +409,12 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         Size of the chunk {x,y}. The default is 512, the same as the default chunksize for COG.
         This is the size of the chunk that will be (down)loaded to extract points, see stackstac.stack.
         For info, a chunk of an S2 band (int16) is 512x512x2 = 524KB.
+    dropna : bool, optional
+        If True, drop rows with NaN values. The default is True.
+    dtype : type, optional
+        Type of the extracted values. The default is int.
+        The conversion from float is done after the extraction, so that
+        NaNs are dropped before converting to another type.
     Returns
     -------
     pandas DataFrame or None
@@ -415,8 +427,16 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         if "Date" not in er_keys:
             raise ValueError("Date not in extracted_reflectance")
 
+    if isinstance(tile_coll, (ItemCollection, pystac.ItemCollection)):
+        arr = tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract, chunksize=chunksize).rename("value")
+    elif isinstance(tile_coll, xr.DataArray):
+        arr = tile_coll
+    else:
+        raise ValueError("tile_coll must be an ItemCollection or an xarray.DataArray")
+    
+    if not isinstance(points, gp.GeoDataFrame):
+        raise ValueError("points must be a GeoDataFrame")
 
-    arr = tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract, chunksize=chunksize).rename("value")
     if not points.crs.equals(arr.rio.crs):
         points = points.to_crs(arr.rio.crs)
     points.index.rename("id_point", inplace=True)
@@ -424,20 +444,38 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
     if by_chunk:
         idx = np.append([0], np.cumsum(arr.chunksizes["x"]))
         idy = np.append([0], np.cumsum(arr.chunksizes["y"]))
-        cx = arr.x.values.min() + arr.attrs["resolution"] * idx
-        cy = arr.y.values.min() + arr.attrs["resolution"] * idy
+        bbox = arr.rio.bounds()
+        cx = bbox[0] + arr.rio.resolution()[0] * idx
+        cy = bbox[1] + arr.rio.resolution()[0] * idy
         icx = np.digitize(points.geometry.x, cx)
         icy = np.digitize(points.geometry.y, cy)
+        daterange = [str(arr.time.dt.date.values.min()),
+                     str(arr.time.dt.date.values.max())]
         points["chunk_x"] = icx
         points["chunk_y"] = icy
         points.sort_values(by=["chunk_x", "chunk_y"], inplace=True)
         res_list = []
         gpoints = points.groupby(by=["chunk_x", "chunk_y"])
-        print(f"Extracting {points.shape[0]} points in {len(gpoints)} xy chunks...")
-        for idg, g in gpoints:
-            print(f"extracting {g.shape[0]} points in xy chunk ", idg)
+        print(f"Extracting {points.shape[0]} points in {len(gpoints)} xy chunks within date range {daterange}...")
+        for i, group in enumerate(gpoints):
+            from time import time
+            start = time()
+            icx, icy = group[0]
+            g = group[1]
+            print(f"extracting {g.shape[0]} points in xy chunk {i+1}")
             g1 = g.drop(columns=["chunk_x", "chunk_y"])
-            res = extract_raster_values(g1, tile_coll, bands_to_extract, extracted_reflectance, export_path, by_chunk=False)
+            # TODO: if len(points) > 1000: use simple stac to write down a cropped collection, or tell user to do so...
+            # maybe even warn with the area of the polygons, in obs_to_s2_grid
+            # or get the data as dataframe and filter it afterwards? e.g. 20k points of 10 bands * 400 dates = 800M values = 3.2GB
+            # crop the array before conversion for faster processing: 
+            # removes graph optimisation time and saves a lot of memory
+            if isinstance(tile_coll, (ItemCollection, pystac.ItemCollection)):
+                arr =  tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract, chunksize=chunksize, bounds = [cx[icx-1], cy[icy-1], cx[icx], cy[icy]], ).rename("value")
+            else:
+                arr = tile_coll
+            res = extract_raster_values(arr, g1, bands_to_extract, extracted_reflectance, export_path, chunksize=chunksize, by_chunk=False, dropna=dropna, dtype=dtype)
+            # res = extract_raster_values(tile_coll, g1, bands_to_extract, extracted_reflectance, export_path, by_chunk=False, chunksize=chunksize, dropna=dropna, dtype=dtype)
+            print(f"elapsed time {round(time()-start, 2)}s")
             if res is not None:
                 res_list.append(res)
         if export_path is None:
@@ -449,7 +487,20 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
     # To respect original implementation: extract only the points not already extracted.
     # It accelerates much the extraction in case of error on the STAC point side.
     coords = points.get_coordinates().join(points.drop(columns='geometry'))
+    
+    # Tried clipping the array, tile_coll.to_xarray
+    # but it did not seem to reduce graph optimization time
+    # nor memory usage...
+    #
+    # points_bbox = points.total_bounds
+    # if len(points) == 1:
+    #     points_bbox = points.buffer(100).total_bounds
+    # arr = arr.rio.clip_box(*list(points_bbox), auto_expand_limit=100)
+
+    # reduce memory usage by dropping unnecessary coordinates
+    arr_coords_to_drop = [k for k in list(arr.coords) if k not in set(list(arr.indexes)+["id", "band", "time"])]
     if extracted_reflectance is None or extracted_reflectance.empty:
+        arr = arr.drop(arr_coords_to_drop)
         p = extract_points(arr, coords, method="nearest", tolerance=arr.rio.resolution()[0]/2)
     else:
         ### trick for splitted scenes, example:
@@ -460,6 +511,7 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         # In the following, coordinate "time" is replaced by "id" to avoid duplicates
         # at `extra_points(p_temp, to_extract)` execution, that fails otherwise.
         # After extraction, time coordinate is restored.
+        arr = arr.drop(arr_coords_to_drop)
         temp_time = arr["time"]
         temp_id = arr["id"]
         arr["time"] = temp_id
@@ -484,7 +536,8 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
         # restore time coordinate
         p["time"] = p["timens"]
 
-    with ProgressBar():
+    # convert to dataframe loading the data
+    with ProgressBar(out=sys.stderr):
         p = p.to_dataframe()
 
     # first NA check
@@ -514,15 +567,18 @@ def extract_raster_values(points, tile_coll, bands_to_extract, extracted_reflect
     # Some acquisition may have NA value but not for all bands, example
     # - S2B_MSIL2A_20230209T105109_R051_T31TDL_20230210T032118, x=488490.0,  y=5001470.0
     # drop rows with NA values
-    if p.isna().any().any():
+    if dropna and p.isna().any().any():
         print("Found pixels with NA values, dropping them...")
         p.dropna(inplace=True)
-        if p.shape[0] == 0:
-            print("No row left...")
-            return
+    
+    if p.shape[0] == 0:
+        print("No row left...")
+        return
     
     # change type to int
-    extractions = p.astype("int").reset_index(drop=False)
+    if dtype is not None:
+        p = p.astype(dtype)
+    extractions = p.reset_index(drop=False)
     # join extractions with points
     points = points.drop(columns='geometry').reset_index(drop=False)
     # reformat result

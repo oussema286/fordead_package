@@ -2,12 +2,17 @@
 
 import click
 from fordead.cli.utils import empty_to_none
-from fordead.import_data import import_dieback_data, TileInfo, import_binary_raster, import_soil_data, import_stress_data, import_stress_index
+from fordead.import_data import TileInfo, import_dieback_data, import_binary_raster, import_soil_data, import_stress_data, import_stress_index, import_coeff_model, import_first_detection_date_index
 from fordead.writing_data import vectorizing_confidence_class, get_bins, convert_dateindex_to_datenumber, get_periodic_results_as_shapefile, get_state_at_date, union_confidence_class, write_tif
+from fordead.stac.stac_module import get_tile_collection
+from fordead.reflectance_extraction import extract_raster_values
+from fordead.model_vegetation_index import prediction_vegetation_index
 import numpy as np
 import geopandas as gp
 import pandas as pd
 import warnings
+import xarray as xr
+
 warnings.filterwarnings("ignore", message="`unary_union` returned None due to all-None GeoSeries. In future, `unary_union` will return 'GEOMETRYCOLLECTION EMPTY' instead.")
 
 @click.command(name='export_results')
@@ -178,6 +183,99 @@ def export_results(
         dieback_data.close()
     else:
         print("Results already exported")
+
+def extract_results(data_directory, points_file, output_dir=None,
+                          name_column = "id", chunks = None):
+    
+    """
+    Extract points of interest from the results computed at the MGRS-tile scale.
+
+    Parameters
+    ----------
+    data_directory : str
+        Path of the directory containing results from the region of interest
+    points_file: str
+        Path to vector file containing points to be extracted.
+    name_column: str
+        Name of the column containing the name of the point, used to name the exported image. Not used if pixel is selected from x and y parameters
+    chunks: int
+        Chunk length to import data as dask arrays and save RAM, advised if computed area in data_directory is large
+
+    Returns
+    -------
+    None
+    
+    Details
+    -------
+    Extracted results are stored in output_dir:
+        - timeseries.csv: time series of vegetation index, anomaly, masks and predicted vegetation index
+        - current_state.csv: current state variables at the last date of analysis (dieback, soil and other timeless masks)
+        - periods.csv: dieback and healthy period summary
+    """
+    tile = TileInfo(data_directory)
+    tile = tile.import_info()
+    
+    # IMPORTING ALL DATA
+    points = gp.read_file(points_file)
+    ts_col = get_tile_collection(tile)
+    ts = extract_raster_values(ts_col, points, bands_to_extract=None, chunksize=100, by_chunk=True, dropna=False, dtype=None)
+    ts.rename(columns={"Anomalies": "anomaly", "VegetationIndex": "vi", "Masks": "masks"}, inplace=True)
+    binary_keys = [k for k in ["anomaly", "masks"] if k in ts]
+    if len(binary_keys) > 0:
+        ts.loc[:,binary_keys] = ts.loc[:,binary_keys].fillna(0)
+        ts = ts.astype({k: bool for k in binary_keys})
+        
+    coeff_model = import_coeff_model(tile.paths["coeff_model"],chunks = chunks)
+    
+    pred = prediction_vegetation_index(coeff_model,ts.Date.drop_duplicates().to_list()).rename({"Time":"time", "coeff":"band"})
+    pred.name = "value"
+    pred["time"] = pd.to_datetime(pred.time)
+    pred["band"] = "predicted_vi"
+    p = extract_raster_values(pred, points, bands_to_extract=None, chunksize=100, by_chunk=True, dropna=False, dtype=None)
+    ts = ts.merge(p, "left", on=["Date", "id"])
+    ts["diff_vi"] = ts["vi"] - ts["predicted_vi"]
+
+
+    dieback_data = import_dieback_data(tile.paths,chunks = chunks)
+    static_data = dieback_data.rename({k: f"dieback_{k}" for k in list(dieback_data)})
+    forest_mask = import_binary_raster(tile.paths["forest_mask"],chunks = chunks)
+    first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
+    static_data["first_detection_date_index"] = first_detection_date_index
+    static_data["forest_mask"] = forest_mask
+    if tile.parameters["soil_detection"]:
+        soil_data = import_soil_data(tile.paths,chunks = chunks)
+        soil_data = soil_data.rename({k: f"soil_{k}" for k in list(soil_data)})
+        static_data = xr.merge([static_data, soil_data], join='outer')
+    
+    static_data = static_data.assign_coords(time=pred.time.values[-1])
+    static_data = static_data.to_dataarray("band")
+    static_data.name="value"
+    static_df = extract_raster_values(static_data, points, bands_to_extract=None, chunksize=100, by_chunk=False, dropna=False, dtype=None)
+
+    stress_df = None
+    if tile.parameters["stress_index_mode"] is not None:
+        stress_data = import_stress_data(tile.paths,chunks = chunks)
+        stress_list = []
+        for point_index in range(len(points)):
+            x = points.geometry.x[point_index]
+            y = points.geometry.y[point_index]
+            stress = stress_data.sel(x=x, y=y, method="nearest")
+            stress = stress.to_dataframe().drop(columns = ["spatial_ref", "band"])
+            if stress is not None:
+                stress[name_column] = points.iloc[point_index][name_column]
+                stress["id_pixel"] = point_index
+                stress_list.append(stress.reset_index(drop = False))
+        if len(stress_list) > 0 :
+            stress_df = pd.concat(stress_list, ignore_index=True)
+
+    if output_dir is None:
+        return ts, static_df, stress_df
+    
+    ts.to_csv(output_dir/"timeseries.csv", index = False, header = True)
+    static_df.to_csv(output_dir/"current_state.csv", index = False, header = True)
+    if stress_df is not None:
+        stress_df.to_csv(output_dir/"periods.csv", index = False, header = True)
+
 
 if __name__ == '__main__':
     cli_export_results()

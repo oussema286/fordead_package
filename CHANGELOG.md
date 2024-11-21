@@ -1,3 +1,21 @@
+# v1.10.0
+## Add
+- function `step5_export_results.extract_results` to extract the results for points of interest
+- in validation module, provider `'theiastac'` to original `['theia', 'planetary']`
+
+## Change
+- in `extract_raster_values`:
+  - switch the args order of inputs in  to reflect usual ergonomy of such a function
+  - add possibility to input an xarray to `extract_raster_values`
+  - add arguments with default values `chunksize=512` `dropna=True` and `dtype=int`
+- `sentinel_source` is now case insensitive e.g. 'Theia', 'THEIA' and 'theia' are accepted.
+
+## Fix
+- slightly different results with same data in CalVal and production (issue #35) : 
+  sometimes the pixel next to the one focused was extracted by `extract_relflectance`
+  due to a shift of res/2 of the raster spatial coordinates.
+
+
 # v1.9.1
 ## Add
 - args `chunsize` and `by_chunk` to `extract_raster_values`: 

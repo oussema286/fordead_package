@@ -2,7 +2,7 @@
 
 This step aims at preprocessing a vector file containing observation points or polygons. It adds an ID column if one does not already exist, and can also apply a buffer to erode or dilate observations.
 
-It is optional if one uses a dataset which already contains an ID column and does not which to apply a buffer to it.
+It is not necessary if one uses a dataset which already contains an ID column and does not whish to apply a buffer to it.
 
 #### INPUTS
 

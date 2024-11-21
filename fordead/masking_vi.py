@@ -471,7 +471,7 @@ def get_bands_and_formula(vi = "CRSWIR", formula = None, path_dict_vi = None,for
     return bands, formula
 
     
-def get_source_mask(band_paths, sentinel_source, extent = None):
+def get_source_mask(band_paths, sentinel_source: str, extent = None):
     """
     Imports source mask and converts it to binary. Keeps only 0 in THEIA mask, and only 4 and 5 in Scihub and PEPS mask.
 
@@ -480,7 +480,7 @@ def get_source_mask(band_paths, sentinel_source, extent = None):
     band_paths : dict
         Dictionnary where keys are band names, and values are their paths.
     sentinel_source : str
-        Sentinel source (THEIA, Scihub or PEPS).
+        Sentinel source (theia, scihub or peps).
     extent : list or 1D array, optional
         Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
 
@@ -490,12 +490,12 @@ def get_source_mask(band_paths, sentinel_source, extent = None):
         Binary array with value 1 when pixel is masked.
 
     """
-    
+    sentinel_source = sentinel_source.lower()
     
     source_mask = import_resampled_sen_stack(band_paths, ["Mask"], interpolation_order = 0, extent = extent)
-    if sentinel_source=="THEIA":
+    if sentinel_source=="theia":
         binary_mask = source_mask>0
-    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
+    elif sentinel_source=="scihub" or sentinel_source=="peps":
         binary_mask = ~source_mask.isin([4,5])
     return binary_mask
 

@@ -110,10 +110,11 @@ DEFAULT_GDAL_ENV = stackstac.rio_reader.LayeredEnv(
         # in different threads snappy.
     ),
     read=dict(
-        VSI_CACHE=False
+        VSI_CACHE=False,
         # ^ *don't* cache HTTP requests for actual data. We don't expect to re-request data,
         # so this would just blow out the HTTP cache that we rely on to make repeated `open`s fast
         # (see above)
+        # GDAL_CACHEMAX="500MB"
     ),
 
 )
@@ -230,7 +231,7 @@ def bbox_to_wgs(bbox, epsg):
 class ExtendPystacClasses:
     """Add capacities to_xarray and filter to pystac Catalog, Collection, ItemCollection"""
 
-    def to_xarray(self, xy_coords='center', gdal_env=DEFAULT_GDAL_ENV, **kwargs):
+    def to_xarray(self, xy_coords='center', **kwargs): # gdal_env=DEFAULT_GDAL_ENV
         """Returns a DASK xarray()
         
         This is a proxy to stackstac.stac
@@ -249,7 +250,7 @@ class ExtendPystacClasses:
         """
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
-            arr = stackstac.stack(self, **kwargs)
+            arr = stackstac.stack(self, xy_coords=xy_coords, **kwargs) # gdal_env=gdal_env,
         return arr
     
     def filter(self, asset_names=None, **kwargs):
@@ -323,6 +324,9 @@ class ExtendPystacClasses:
             
              In order to filter/select assets, use to_xarray(asset=...) or to_xarray().sel(band=...)
         """
+        # issue with proj:epsg that is converted sometimes to float, if 
+        # not all of them have it at the same level, e.g. some at item level,
+        # others at the asset level...
         res = ItemCollection(stac_static.search(self, **kwargs).item_collection())
         if asset_names is not None:
             for item in res.items:

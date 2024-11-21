@@ -481,7 +481,7 @@ class TileInfo:
 
         
         
-def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
+def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source: str):
     """
     Imports, computes and stores cloudiness for all dates
     
@@ -492,7 +492,7 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
     dict_path_bands : dict
         Dictionnary where keys are dates, values are another dictionnary where keys are bands and values are their paths (dict_path_bands["YYYY-MM-DD"]["Mask"] -> Path to the mask)
     sentinel_source : str
-        'THEIA', 'Scihub' or 'PEPS'
+        'theia', 'scihub' or 'peps'
 
     Returns
     -------
@@ -500,7 +500,6 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
         Dictionnary where keys are dates and values the cloudiness percentage
 
     """
-    
     path_cloudiness= Path(path_cloudiness)
     cloudiness = TileInfo(path_cloudiness.parent)
     if path_cloudiness.exists():
@@ -517,7 +516,7 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
     cloudiness.save_info(path_cloudiness)
     return cloudiness.perc_cloud
 
-def get_date_cloudiness_perc(date_paths, sentinel_source):
+def get_date_cloudiness_perc(date_paths, sentinel_source: str):
     """
     Computes cloudiness percentage of a Sentinel-2 date from the source mask (THEIA CLM or PEPS, scihub SCL)
     A 20m resolution band is necessary for THEIA data to determine swath cover. B11 is used but could be replaced with another 20m band.
@@ -528,8 +527,8 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     ----------
     date_paths : Dictionnary where keys are bands and values are their paths
         DESCRIPTION.
-    sentinel_source : TYPE
-        'THEIA', 'Scihub' or 'PEPS'
+    sentinel_source : str
+        'theia', 'scihub' or 'peps'
 
     Returns
     -------
@@ -538,14 +537,15 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
 
     """
     
+    sentinel_source = sentinel_source.lower()
 
-    if sentinel_source=="THEIA":
+    if sentinel_source=="theia":
         tile_mask_info = xr.Dataset({"mask": rioxarray.open_rasterio(date_paths["Mask"]),
                                      "swath_cover": rioxarray.open_rasterio(date_paths["B11"])})
         NbPixels = (tile_mask_info["swath_cover"]!=-10000).sum()
         NbCloudyPixels = (tile_mask_info["mask"]>0).sum()
 
-    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
+    elif sentinel_source=="scihub" or sentinel_source=="peps":
         cloud_mask = rioxarray.open_rasterio(date_paths["Mask"])
         NbPixels = (cloud_mask!=0).sum()
         NbCloudyPixels = (~cloud_mask.isin([4,5])).sum()

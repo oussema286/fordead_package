@@ -1,19 +1,25 @@
-# author(s) : Kenji Ose / Raphael Dutrieux
+# author(s) : Kenji Ose / Raphael Dutrieux / Florian de Boissieu
 
-import geopandas as gp
-import pandas as pd
-import numpy as np
-# from shapely.geometry import Polygon, Point
-from pyproj import Proj, transform
-import pystac_client
-import pystac
-import planetary_computer
-from pathlib import Path
-from fordead.stac.theia_collection import build_theia_collection, ItemCollection
 from datetime import datetime
+import geopandas as gp
+import json
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import planetary_computer
+
+import pystac
+import pystac_client
+import re
+from shapely.geometry import box, Polygon
+from shapely import to_geojson
+
+import dinamis_sdk 
+from fordead.stac.theia_collection import build_theia_collection, ItemCollection, bbox_to_wgs, get_rio_info
+from fordead.import_data import TileInfo
 import fordead.stac.stac_module as st
-from shapely.geometry import Polygon
-from pyproj import Transformer
+
+
 
 def get_vectorBbox(vector_path):
     """
@@ -42,31 +48,43 @@ def get_bbox(vector):
     bbox = list(vector.total_bounds)
     return bbox
 
+PLANETARY = dict(
+    url = "https://planetarycomputer.microsoft.com/api/stac/v1",
+    collection = "sentinel-2-l2a",
+    cloud_cover = "eo:cloud_cover",
+    mgrs_tile = "s2:mgrs_tile"
+)
 
-def getItemCollection(startdate, enddate, bbox, cloud_nb = 100):
+THEIASTAC = dict(
+    url = 'https://stacapi-cdos.apps.okd.crocc.meso.umontpellier.fr',
+    collection = "sentinel2-l2a-theia",
+    # collection = "sentinel2-l2a-sen2lasrc",
+    cloud_cover = "s2:cloud_percent",
+    mgrs_tile = "s2:tile_id"
+)
+
+def getItemCollection(start_date, end_date, bbox, cloud_nb = 100, source = PLANETARY):
     """
     get item collection from Microsoft Planetary Computer
 
-    - startdate: <string> start date yyyy-mm-dd
-    - enddate: <string> end date yyyy-mm-dd
+    - start_date: <string> start date yyyy-mm-dd
+    - end_date: <string> end date yyyy-mm-dd
     - bbox: <list> bounding box [lon_min, lat_min, lon_max, lat_max]
     - cloud_nb: <int> cloud percentage [default: 0]
 
     return pystac itemcollection object
     """
-    catalog = pystac_client.Client.open(
-    "https://planetarycomputer.microsoft.com/api/stac/v1",
-    )
-    time_range = f"{startdate}/{enddate}" #"2021-07-01/2021-12-01"
+    catalog = pystac_client.Client.open(source["url"])
+    time_range = f"{start_date}/{end_date}" #"2021-07-01/2021-12-01"
     bbox = bbox
     cloud_nb = cloud_nb
 
     # recherche avec filtre de type 'query'
     search = catalog.search(
-        collections=["sentinel-2-l2a"],
+        collections=source["collection"],
         bbox=bbox,
         datetime=time_range,
-        query={"eo:cloud_cover": {"lt": float(cloud_nb)}},
+        query={source["cloud_cover"]: {"lt": float(cloud_nb)}},
         sortby="datetime",
         # seems to solve the duplicates issue if less than 1000 items
         # see https://github.com/microsoft/PlanetaryComputer/issues/163
@@ -75,6 +93,19 @@ def getItemCollection(startdate, enddate, bbox, cloud_nb = 100):
 
     # itemsColl = search.pages()
     itemsColl = search.item_collection()
+    # Waiting for standardization of THEIASTAC "sentinel-2-l2a-theia" properties:
+    # until then, uniformize used properties for the following
+    if source["cloud_cover"] != PLANETARY["cloud_cover"]:
+        cloud_cover = source["cloud_cover"]
+        for item in itemsColl:
+            item.properties[PLANETARY["cloud_cover"]] = item.properties[cloud_cover]
+
+    if source["mgrs_tile"] != PLANETARY["mgrs_tile"]:
+        mgrs_tile = source["mgrs_tile"]
+        for item in itemsColl:
+            item.properties[PLANETARY["mgrs_tile"]] = re.sub(
+                "^T", "", item.properties[mgrs_tile])
+
     return ItemCollection(itemsColl)
 
 # Conversion de tous les items découverts par la recherche, 
@@ -216,7 +247,7 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
     corresp_keys = {'B01' : 'B1', 'B02' : 'B2', 'B03' : "B3", 'B04' : "B4", 'B05' : "B5", 
                     'B06' : "B6", 'B07' : "B7", 'B08' : "B8", 'B09' : "B9", 'SCL' : "Mask"}
     
-    collection = getItemCollection(start_date, end_date, obs_bbox, int(lim_perc_cloud*100))
+    collection = getItemCollection(start_date, end_date, obs_bbox, int(lim_perc_cloud*100), source=PLANETARY)
     # item_list = []
     for item in collection:
         # item.properties["cloud_cover"] = item.properties['eo:cloud_cover']
@@ -224,7 +255,8 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
         #Changing B01 to B1, up to B9, and SCL to Mask in item asset names
 
         for key_change in corresp_keys:
-            item.assets[corresp_keys[key_change]] = item.assets.pop(key_change)
+            if key_change in item.assets:
+                item.assets[corresp_keys[key_change]] = item.assets.pop(key_change)
             
     # for item in collection:
     #     print(item.properties["cloud_cover"])
@@ -237,6 +269,66 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
 
     if sign:
         collection = planetary_computer.sign_item_collection(collection)
+    return collection
+
+def get_harmonized_theiastac_collection(start_date, end_date, obs_bbox, lim_perc_cloud, tile=None, sign=False):
+    """
+    Get the planetary item collection with band names
+    and offset harmonized with THEIA format.
+
+    Parameters
+    ----------
+    start_date : str
+        Start of the period.
+    end_date : str
+        End of the period.
+    obs_bbox : list
+        bounding box [lon_min, lat_min, lon_max, lat_max]
+    lim_perc_cloud : float
+        Max cloud cover between 0 et 1.
+    tile : str, optional
+        The name of a single tile used to filter the collection. If None, all tiles are kept in the collection. The default is None.
+    sign : bool
+        Should the collection be signed.
+    Returns
+    -------
+    fordead.stac.stac_module.ItemCollection
+        The item collection.
+    
+    Notes
+    -----
+    The offset is harmonized with `harmonize_sen2cor_offset`.
+    """
+    
+    corresp_keys = {'B01' : 'B1', 'B02' : 'B2', 'B03' : "B3", 'B04' : "B4", 'B05' : "B5", 
+                    'B06' : "B6", 'B07' : "B7", 'B08' : "B8", 'B09' : "B9", 'CLM_R2' : "Mask"}
+    
+    collection = getItemCollection(start_date, end_date, obs_bbox, int(lim_perc_cloud*100), source=THEIASTAC)
+    # item_list = []
+    for item in collection:
+        # item.properties["cloud_cover"] = item.properties['eo:cloud_cover']
+        item.properties["tilename"] = "T" + item.properties['s2:mgrs_tile']
+        #Changing B01 to B1, up to B9, and SCL to Mask in item asset names
+
+        for key_change in corresp_keys:
+            if key_change in item.assets:
+                item.assets[corresp_keys[key_change]] = item.assets.pop(key_change)
+            
+    # for item in collection:
+    #     print(item.properties["cloud_cover"])
+    if tile is not None:
+        print("Extracting Sentinel-2 data from "+ tile + " collected from theiastac")
+        collection = collection.filter(filter=f"tilename = '{tile}'")
+
+        # issue: proj:epsg not all at the same level --> produces NaN in dataframe (inside stac_static) and thus converts to float
+        # should be removed when collection is homogeneous...
+        harmonize_epsg(collection, inplace=True)
+
+    # harmonize_sen2cor_offset(collection, bands=S2_THEIA_BANDS, inplace=True)
+    collection.drop_duplicates(inplace=True)
+
+    if sign:
+        collection = dinamis_sdk.sign_item_collection(collection)
     return collection
 
 def harmonize_sen2cor_offset(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_BANDS), inplace=False):
@@ -252,6 +344,39 @@ def harmonize_sen2cor_offset(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_B
     if not inplace:
         return collection
 
+def harmonize_epsg(collection, inplace=False):
+    # Harmonize epsg at the item level
+    # This is a patch for theiastac collection which has
+    # the 'proj:epsg' attribute at either at the item level
+    # or at the asset level or even no 'proj:epsg' but a 'proj:wkt2'
+    #
+    # 'collection' expects actually an ItemCollection
+    if not inplace:
+        collection = collection.copy()
+    for item in collection:
+        if "proj:epsg" in item.properties and not isinstance(item.properties["proj:epsg"], int):
+            if np.isnan(item.properties["proj:epsg"]):
+                # looking in assets for proj:epsg
+                epsg = set([asset.extra_fields["proj:epsg"] for asset in item.assets.values() if "proj:epsg" in asset.extra_fields])
+                if len(epsg) > 1:
+                    raise Exception("Multiple proj:epsg found in item nor assets: "+ item.id)
+                elif len(epsg) == 1:
+                    epsg = list(epsg)[0]
+                else:
+                    # looking in assets for proj:wkt2
+                    wkt2 = set([asset.extra_fields["proj:wkt2"] for asset in item.assets.values() if "proj:wkt2" in asset.extra_fields])
+                    if len(wkt2) > 1:
+                        raise Exception("Multiple proj:wkt2 found in item nor assets: "+ item.id)
+                    if len(wkt2) == 0:
+                        raise Exception("No proj:epsg or proj:wkt2 found in item nor assets: "+ item.id)
+                    from rasterio.crs import CRS
+                    epsg = CRS.from_wkt(list(wkt2)[0]).to_epsg()
+                item.properties["proj:epsg"] = int(epsg)
+            else:
+                item.properties["proj:epsg"] = int(item.properties["proj:epsg"])
+    if not inplace:
+        return collection
+
 def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile):
     # lim_cloud_cover = int(lim_perc_cloud*100)
     corresp_keys = {'CLM' : "Mask"}
@@ -259,47 +384,122 @@ def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date
     sentinel_source = Path(sentinel_source)
     sen_dir_path =  sentinel_source / tile
     
-    if sentinel_source.is_dir():
-        if sen_dir_path.is_dir():
-            print("Extracting Sentinel-2 data from " + tile + " stored locally")
-
-            collection = build_theia_collection(sen_dir_path)
-            
-            
-            for item in collection:
-                
-                #Adding cloud_cover to theia_collection 
-                if tile_cloudiness is not None:
-                    try:
-                        date_datetime = datetime.strptime(item.properties["datetime"], "%Y-%m-%dT%H:%M:%S.%fZ")
-                    except ValueError:
-                        date_datetime = datetime.strptime(item.properties["datetime"], "%Y-%m-%dT%H:%M:%SZ")
-                    try:
-                        acqu_cloudiness = tile_cloudiness[tile_cloudiness.Date == date_datetime.strftime("%Y-%m-%d")]["cloudiness"].values[0]
-                    except Exception as e:
-                        # traceback_str = traceback.format_exc()
-                        print(f"Error: {e}\nCloudiness does not seem to have been extracted for this tile")
-                    item.properties["cloud_cover"] = acqu_cloudiness
-                
-                #Changing 'CLM' to 'Mask' 
-                for key_change in corresp_keys:
-                    item.assets[corresp_keys[key_change]] = item.assets.pop(key_change) #Might be changed in the future
-
-            collection = collection.filter(datetime=f"{start_date}/{end_date}")
-            
-            if tile_cloudiness is not None : collection = collection.filter(filter = f'cloud_cover < {lim_perc_cloud}') 
-            
-            
-            if len(collection) == 0:
-                print("Collection is empty")
-            
-        else:
-            raise Exception("No directory found at " + str(sen_dir_path))
-    else:
+    if not sentinel_source.is_dir():
         raise Exception("Unrecognized sentinel_source")
+    
+    if not sen_dir_path.is_dir():
+        raise Exception("No directory found at " + str(sen_dir_path))
+
+    print("Extracting Sentinel-2 data from " + tile + " stored locally")
+
+    collection = build_theia_collection(sen_dir_path)
+    
+    
+    for item in collection:
+        
+        #Adding cloud_cover to theia_collection 
+        if tile_cloudiness is not None:
+            try:
+                date_datetime = datetime.strptime(item.properties["datetime"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            except ValueError:
+                date_datetime = datetime.strptime(item.properties["datetime"], "%Y-%m-%dT%H:%M:%SZ")
+            try:
+                acqu_cloudiness = tile_cloudiness[tile_cloudiness.Date == date_datetime.strftime("%Y-%m-%d")]["cloudiness"].values[0]
+            except Exception as e:
+                # traceback_str = traceback.format_exc()
+                print(f"Error: {e}\nCloudiness does not seem to have been extracted for this tile")
+            item.properties["cloud_cover"] = acqu_cloudiness
+        
+        #Changing 'CLM' to 'Mask' 
+        for key_change in corresp_keys:
+            item.assets[corresp_keys[key_change]] = item.assets.pop(key_change) #Might be changed in the future
+
+    collection = collection.filter(datetime=f"{start_date}/{end_date}")
+    
+    if tile_cloudiness is not None : collection = collection.filter(filter = f'cloud_cover < {lim_perc_cloud}') 
+    
+    
+    if len(collection) == 0:
+        print("Collection is empty")        
     
     return collection
     
+def get_tile_collection(tile, include_s2=False):
+    if not isinstance(tile, TileInfo) and Path(tile).is_dir():
+        tile = TileInfo(tile)
+    tile = tile.import_info()
+    # update to latest content of results directories...
+    tile.getdict_datepaths(key = "VegetationIndex", path_dir = tile.paths["VegetationIndexDir"])
+    tile.getdict_datepaths(key = "Masks", path_dir = tile.paths["MaskDir"])
+    tile.getdict_datepaths(key = "Anomalies", path_dir = tile.paths["AnomaliesDir"])
+    items = []
+    for date in tile.paths["VegetationIndex"]:
+        bbox = list(tile.raster_meta["extent"])
+        epsg =  tile.raster_meta["crs"].to_epsg()
+        geometry = json.loads(to_geojson(box(*bbox)))
+        shape = tile.raster_meta["shape"]
+        transform = list(tile.raster_meta["transform"])
+        
+        bbox_wgs, geom_wgs, centroid = bbox_to_wgs(bbox, epsg)
+        assets = {}
+        for key in ["VegetationIndex","Masks","Anomalies"]:
+            if date in tile.paths[key]:
+                href = str(tile.paths[key][date])
+                p = {
+                        "href": href,
+                        "type": pystac.MediaType.NETCDF if href.endswith(".nc") else pystac.MediaType.GEOTIFF,
+                        "roles": ["data"],
+                        "proj:epsg": epsg,
+                        "proj:bbox": bbox,
+                        "proj:geometry": geometry,
+                        "proj:shape": shape,
+                        "proj:transform": transform,
+                        "gsd": tile.raster_meta["transform"][0],
+                    }
+                if key == "VegetationIndex":
+                    p["raster:bands"] = [dict(offset=0, scale=0.001, nodata=-1, data_type="int16")]
+                else:
+                    p["raster:bands"] = [dict(offset=0, scale=1, nodata=0, data_type="int8")]
+                assets[key] = pystac.Asset.from_dict(p)
+        if include_s2:
+            key = "Sentinel"
+            if date in tile.paths[key]:
+                for band in tile.paths[key][date]:
+                    href = str(tile.paths[key][date][band])
+                    bbox1, media_type, gsd, meta = get_rio_info(href)
+                    
+                    if bbox != list(bbox1):
+                        raise Exception("Sentinel assets should have the same bbox")
+                    assets[band] = pystac.Asset.from_dict(
+                        {
+                            "href": href,
+                            "type": media_type,
+                            "roles": ["data"],
+                            "proj:epsg": epsg,
+                            "proj:bbox": bbox,
+                            "proj:geometry": geometry,
+                            "proj:shape": (meta["height"], meta["width"]),
+                            "proj:transform": list(meta["transform"]),
+                            "gsd": gsd,
+                        }
+                    )
+        item_info = {
+            "id": date,
+            "datetime": pd.to_datetime(date),
+            "geometry": geom_wgs,            
+            "bbox": bbox_wgs,
+            "properties": {"proj:epsg": epsg,},
+            "assets": assets,
+            "stac_extensions": [pystac.extensions.projection.SCHEMA_URI,
+                                pystac.extensions.raster.SCHEMA_URI],
+            }
+        item = pystac.Item(**item_info)
+        item.validate()
+        items.append(item)
+    
+    collection = ItemCollection(items)
+    return collection
+
 def get_polygons_from_sentinel_planetComp(item_collection, tile_selection = None, outputfile = None):
     """
     get image footprint with specified tile crs

@@ -12,8 +12,8 @@ import dask.array as da
 
 from fordead.import_data import TileInfo, import_stackedmaskedVI, import_stress_data, import_stacked_anomalies, import_coeff_model, import_binary_raster, import_first_detection_date_index, import_dieback_data, import_soil_data
 from fordead.model_vegetation_index import compute_HarmonicTerms
-
 from fordead.results_visualisation import select_and_plot_time_series
+
 import warnings
 warnings.filterwarnings("ignore", message='The specified chunks separate the stored chunks along dimension "x" starting at index 100. This could degrade performance. Instead, consider rechunking after loading.')
 warnings.filterwarnings("ignore", message="Converting non-nanosecond precision datetime values to nanosecond precision. This behavior can eventually be relaxed in xarray, as it is an artifact from pandas which is now beginning to support non-nanosecond precision values. This warning is caused by passing non-nanosecond np.datetime64 or np.timedelta64 values to the DataArray or Variable constructor; it can be silenced by converting the values to nanosecond precision ahead of time.")
