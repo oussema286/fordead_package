@@ -469,7 +469,10 @@ def extract_raster_values(
             # or get the data as dataframe and filter it afterwards? e.g. 20k points of 10 bands * 400 dates = 800M values = 3.2GB
             # crop the array before conversion for faster processing: 
             # removes graph optimisation time and saves a lot of memory
-            arr =  tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract, chunksize=chunksize, bounds = [cx[icx-1], cy[icy-1], cx[icx], cy[icy]], ).rename("value")
+            if isinstance(tile_coll, (ItemCollection, pystac.ItemCollection)):
+                arr =  tile_coll.to_xarray(xy_coords="center", assets=bands_to_extract, chunksize=chunksize, bounds = [cx[icx-1], cy[icy-1], cx[icx], cy[icy]], ).rename("value")
+            else:
+                arr = tile_coll
             res = extract_raster_values(arr, g1, bands_to_extract, extracted_reflectance, export_path, chunksize=chunksize, by_chunk=False, dropna=dropna, dtype=dtype)
             # res = extract_raster_values(tile_coll, g1, bands_to_extract, extracted_reflectance, export_path, by_chunk=False, chunksize=chunksize, dropna=dropna, dtype=dtype)
             print(f"elapsed time {round(time()-start, 2)}s")
@@ -495,7 +498,7 @@ def extract_raster_values(
     # arr = arr.rio.clip_box(*list(points_bbox), auto_expand_limit=100)
 
     # reduce memory usage by dropping unnecessary coordinates
-    arr_coords_to_drop = [k for k in list(arr.coords) if k not in list(arr.indexes)+["id"]]
+    arr_coords_to_drop = [k for k in list(arr.coords) if k not in set(list(arr.indexes)+["id", "band", "time"])]
     if extracted_reflectance is None or extracted_reflectance.empty:
         arr = arr.drop(arr_coords_to_drop)
         p = extract_points(arr, coords, method="nearest", tolerance=arr.rio.resolution()[0]/2)
