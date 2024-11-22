@@ -218,7 +218,7 @@ def extract_results(data_directory, points_file, output_dir=None,
     # IMPORTING ALL DATA
     points = gp.read_file(points_file)
     ts_col = get_tile_collection(tile)
-    ts = extract_raster_values(ts_col, points, bands_to_extract=None, chunksize=100, by_chunk=True, dropna=False, dtype=None)
+    ts = extract_raster_values(ts_col, points, bands_to_extract=None, chunksize=(1, -1, 100, 100), by_chunk=True, dropna=False, dtype=None)
     ts.rename(columns={"Anomalies": "anomaly", "VegetationIndex": "vi", "Masks": "masks"}, inplace=True)
     binary_keys = [k for k in ["anomaly", "masks"] if k in ts]
     if len(binary_keys) > 0:

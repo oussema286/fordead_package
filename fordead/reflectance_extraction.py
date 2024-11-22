@@ -453,6 +453,9 @@ def extract_raster_values(
                      str(arr.time.dt.date.values.max())]
         points["chunk_x"] = icx
         points["chunk_y"] = icy
+        # remove points outside bounding box
+        points = points.query("chunk_x != 0 and chunk_y != 0")
+        # sort points by chunk
         points.sort_values(by=["chunk_x", "chunk_y"], inplace=True)
         res_list = []
         gpoints = points.groupby(by=["chunk_x", "chunk_y"])
