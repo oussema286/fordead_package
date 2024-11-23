@@ -1,3 +1,7 @@
+# author: Florian de Boissieu
+# Prepare the dinamis sdk authentication for CI tests
+# TODO: remove when new version of dinamis-sdk is released (supporting env variables)
+
 import json
 import os
 from path import Path

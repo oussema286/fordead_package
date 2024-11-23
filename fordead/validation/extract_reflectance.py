@@ -160,13 +160,12 @@ def extract_reflectance(obs_path,
                     
                     if len(collection) == 0:
                         print(f"Observations are not within selected tile {tile}, use the module `obs_to_s2_grid` to preprocess the observations correctly.")
-                        unfinished = False
-                    
-                    extract_raster_values(
-                        collection, tile_obs, bands_to_extract, tile_already_extracted,
-                        export_path, by_chunk=by_chunk, chunksize=chunksize,
-                        dropna=True, dtype=int
-                        )
+                    else:
+                        extract_raster_values(
+                            collection, tile_obs, bands_to_extract, tile_already_extracted,
+                            export_path, by_chunk=by_chunk, chunksize=chunksize,
+                            dropna=True, dtype=int
+                            )
                     unfinished = False
                 except Exception as e:
                     # traceback_str = traceback.format_exc()
