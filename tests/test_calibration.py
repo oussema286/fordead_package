@@ -68,7 +68,7 @@ def test_obs(input_dir, output_dir):
 
 
 
-@pytest.mark.parametrize("sentinel_source", ["THEIA", "Planetary"]) # "theiastac", 
+@pytest.mark.parametrize("sentinel_source", ["theiastac", "THEIA", "Planetary"])
 def test_calibration(input_dir, output_dir, sentinel_source):
     
     print(f"Using {sentinel_source} data")

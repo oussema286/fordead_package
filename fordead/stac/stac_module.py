@@ -126,7 +126,23 @@ def get_s2_epsgXY(item_collection):
         # print(item.properties["eo:cloud_cover"])
         # Get properties from the item
         s2_mgrs_tile = "T" + item.properties.get('s2:mgrs_tile')
-        epsg = item.properties["proj:epsg"]
+        if "proj:epsg" in item.properties:
+            epsg = item.properties["proj:epsg"]
+        else:
+            epsg = set([asset.extra_fields["proj:epsg"] for asset in item.assets.values() if "proj:epsg" in asset.extra_fields])
+            if len(epsg) > 1:
+                raise Exception("Multiple proj:epsg found in item nor assets: "+ item.id)
+            elif len(epsg) == 1:
+                epsg = list(epsg)[0]
+            else:
+                # looking in assets for proj:wkt2
+                wkt2 = set([asset.extra_fields["proj:wkt2"] for asset in item.assets.values() if "proj:wkt2" in asset.extra_fields])
+                if len(wkt2) > 1:
+                    raise Exception("Multiple proj:wkt2 found in item nor assets: "+ item.id)
+                if len(wkt2) == 0:
+                    raise Exception("No proj:epsg or proj:wkt2 found in item nor assets: "+ item.id)
+                from rasterio.crs import CRS
+                epsg = CRS.from_wkt(list(wkt2)[0]).to_epsg()
         # print(epsg)
         # Extract the coordinates
         coordinates = item.geometry['coordinates'][0]

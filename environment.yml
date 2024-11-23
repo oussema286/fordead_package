@@ -44,5 +44,5 @@ dependencies:
     # keep it to 0.3.2 to avoid issue https://github.com/stac-utils/stac-geoparquet/issues/76
     - stac-geoparquet==0.3.2
     - git+https://github.com/jsignell/stac-static
-    - git+https://forgemia.inra.fr/cdos-pub/dinamis-sdk
+    - dinamis-sdk
     - git+https://gitlab.com/fordead/fordead_package
