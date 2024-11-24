@@ -472,10 +472,10 @@ def get_tile_collection(tile, include_s2=False):
                         "proj:transform": transform,
                         "gsd": tile.raster_meta["transform"][0],
                     }
-                if key == "VegetationIndex":
-                    p["raster:bands"] = [dict(offset=0, scale=0.001, nodata=-1, data_type="int16")]
-                else:
-                    p["raster:bands"] = [dict(offset=0, scale=1, nodata=0, data_type="int8")]
+                # if key == "VegetationIndex":
+                #     p["raster:bands"] = [dict(offset=0, scale=1, nodata=-1, data_type="int16")]
+                # else:
+                #     p["raster:bands"] = [dict(offset=0, scale=1, nodata=0, data_type="int8")]
                 assets[key] = pystac.Asset.from_dict(p)
         if include_s2:
             key = "Sentinel"
