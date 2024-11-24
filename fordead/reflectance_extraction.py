@@ -12,6 +12,8 @@ import sys
 import pystac
 from fordead.stac.theia_collection import ItemCollection
 import xarray as xr
+from shapely.geometry import box
+import geopandas as gpd
 
 # import rasterio.sample
 # =============================================================================
@@ -439,6 +441,15 @@ def extract_raster_values(
 
     if not points.crs.equals(arr.rio.crs):
         points = points.to_crs(arr.rio.crs)
+    
+    # keep only points inside array bounding box
+    bbox = gpd.GeoSeries(box(*arr.rio.bounds()), crs=arr.rio.crs)
+    # makes a copy of points by the way
+    points = points.loc[points.intersects(bbox)]
+    if len(points) == 0:
+        print("No points inside array bounding box.")
+        return
+
     points.index.rename("id_point", inplace=True)
 
     if by_chunk:
