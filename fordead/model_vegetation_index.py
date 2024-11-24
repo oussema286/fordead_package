@@ -10,7 +10,7 @@ import dask.array as da
 import datetime
 from scipy.linalg import lstsq
 from fordead.import_data import import_binary_raster, import_masked_vi
-
+import warnings
 
 def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
     """
@@ -35,7 +35,9 @@ def get_detection_dates(stack_masks,min_last_date_training,nb_min_date=10):
     
     min_date_index=int(sum(stack_masks.Time<min_last_date_training))-1
     
-    if min_date_index == stack_masks.Time.size-1 : min_date_index = min_date_index-1
+    if min_date_index == stack_masks.Time.size-1 :
+        warnings.warn(f"Changing min_last_date_training to {stack_masks.Time.values[min_date_index-1]} to have enough data for detection. Extend max_last_date_training to avoid that warning.")
+        min_date_index = min_date_index-1
     indexes = xr.DataArray(da.ones(stack_masks.shape,dtype=np.uint16, chunks=stack_masks.chunks), stack_masks.coords) * xr.DataArray(range(stack_masks.sizes["Time"]), coords={"Time" : stack_masks.Time},dims=["Time"])   
     cumsum=(~stack_masks).cumsum(dim="Time",dtype=np.uint16)
     detection_dates = ((indexes > min_date_index) & (cumsum > nb_min_date))
