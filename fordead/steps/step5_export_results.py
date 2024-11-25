@@ -256,7 +256,8 @@ def extract_results(data_directory, points, output_dir=None,
         raise ValueError("All points must be of type Point")
     
     if name_column not in points.columns:
-        print(f"Column {name_column} not found in points, using index instead.")
+        print(f"Column '{name_column}' not found in points. " \
+              f"Creating '{name_column}' with index values.")
         points = points.reset_index().rename(columns={"index": name_column})
     
     if points[name_column].duplicated().any():

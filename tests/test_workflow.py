@@ -87,6 +87,9 @@ def test_extract_results(output_dir: Path):
     assert (timeseries.Date[-1:] == "2019-09-20").all()
     assert (current_state.id == 0).all()
     assert (current_state.Date == "2019-09-20").all()
+    assert periods.shape[0] == 2
+    assert periods.start_date[0] == "2018-08-04"
+    assert periods.end_date[0] == "2018-09-08"
 
     points["id"]=0
     points_path = output_dir / "points.json"
