@@ -49,7 +49,6 @@ test-win10:
     - mamba env create -y -n fordead-gitlab-ci -f environment.yml
     - mamba install -y -n fordead-gitlab-ci pytest
     - conda run -n fordead-gitlab-ci --live-stream pip install -e .
-    - conda run -n fordead-gitlab-ci --live-stream python ci/prepare_dinamis_sdk.py
     - conda run -n fordead-gitlab-ci --live-stream pytest -s tests
   rules:
     - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
@@ -66,7 +65,6 @@ install-linux:
     - micromamba install -y -n base -c conda-forge pytest
     - pip install -e .
     - python -c "import fordead"
-    - python ci/prepare_dinamis_sdk.py
     - pytest -s tests
   only:
     - merge_requests
