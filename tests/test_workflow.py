@@ -59,7 +59,7 @@ def test_process_tiles(input_dir, output_dir):
     test_output_dir = (output_dir / "workflow_process_tiles").rmtree_p().mkdir()
     sentinel_dir = input_dir / "sentinel_data" / "dieback_detection_tutorial"
     forest_mask_source = input_dir / "vector" / "area_interest.shp"
-    process_tiles(test_output_dir, sentinel_dir, tiles=["study_area"], forest_mask_source=forest_mask_source)
+    process_tiles(test_output_dir, sentinel_dir, tiles=["study_area"], forest_mask_source=forest_mask_source, soil_detection=True)
 
     # check result files exist
     res_dir = test_output_dir / "study_area" / "Results"
@@ -73,12 +73,27 @@ def test_extract_results(output_dir: Path):
     x = [642385.] # index=122
     y = [5451865.] # index=219
     points = gpd.GeoDataFrame(geometry=gpd.points_from_xy(x, y, crs=32631))
+
+    # with input geoseries
+    timeseries, current_state, periods = extract_results(
+        data_directory = tile_dir, 
+        points = points,
+        name_column = "id",
+        chunks = 100)
+    
+    assert (timeseries.id==0).all()
+    assert set(timeseries.keys()) == set(["Date", "id", "vi", "diff_vi", "anomaly", "predicted_vi", "masks"])
+    assert timeseries.Date[0] == "2015-12-03"
+    assert (timeseries.Date[-1:] == "2019-09-20").all()
+    assert (current_state.id == 0).all()
+    assert (current_state.Date == "2019-09-20").all()
+
     points["id"]=0
     points_path = output_dir / "points.json"
     points.to_file(points_path)
     
     extract_results(data_directory = tile_dir, 
-                        points_file = points_path,
+                        points = points_path,
                         output_dir = export_dir,
                         name_column = "id",
                         chunks = 100)

@@ -10,8 +10,10 @@ from fordead.model_vegetation_index import prediction_vegetation_index
 import numpy as np
 import geopandas as gp
 import pandas as pd
+from path import Path
 import warnings
 import xarray as xr
+import re
 
 warnings.filterwarnings("ignore", message="`unary_union` returned None due to all-None GeoSeries. In future, `unary_union` will return 'GEOMETRYCOLLECTION EMPTY' instead.")
 
@@ -184,8 +186,8 @@ def export_results(
     else:
         print("Results already exported")
 
-def extract_results(data_directory, points_file, output_dir=None,
-                          name_column = "id", chunks = None):
+def extract_results(data_directory, points, output_dir=None,
+                    name_column = "id", chunks = 100):
     
     """
     Extract points of interest from the results computed at the MGRS-tile scale.
@@ -194,8 +196,10 @@ def extract_results(data_directory, points_file, output_dir=None,
     ----------
     data_directory : str
         Path of the directory containing results from the region of interest
-    points_file: str
-        Path to vector file containing points to be extracted.
+    points: str | geopandas.GeoDataFrame
+        Path to vector file containing points to be extracted or geodataframe containing points to be extracted
+    output_dir: str
+        Path of the directory where results should be exported. If None, results are returned.
     name_column: str
         Name of the column containing the name of the point, used to name the exported image. Not used if pixel is selected from x and y parameters
     chunks: int
@@ -203,22 +207,63 @@ def extract_results(data_directory, points_file, output_dir=None,
 
     Returns
     -------
-    None
+    None or Tuple[pandas.DataFrame]
+        If output_dir is None, returns the timeseries, current_state and periods dataframes
     
     Details
     -------
-    Extracted results are stored in output_dir:
-        - timeseries.csv: time series of vegetation index, anomaly, masks and predicted vegetation index
-        - current_state.csv: current state variables at the last date of analysis (dieback, soil and other timeless masks)
+    Extracted results:
+        - timeseries
+            - vi: vegetation index, 
+            - masks: the combination of all masks
+            - predicted_vi: predicted vegetation index
+            - diff_vi: difference between vegetation index
+            - anomaly: anomaly of vi
+
+        - current_state: current state variables at the last date of analysis (dieback, soil and other timeless masks)
+            - dieback_: the state of dieback detection variables; 
+              Note that dieback_first_date is the start date period, i.e. "healthy" if dieback_state=0 or "dieback" if dieback_state=1.
+            - soil_: the state of soil detection variables, same note as above
+            - forest_mask: the forest mask value
+            - first_detection_date: the starting date of detection of the pixel timeseries
+        
         - periods.csv: dieback and healthy period summary
+            - period: the period index
+            - cum_diff: cumulated difference between vegetation index and predicted vegetation index
+            - start_date: starting date of the "dieback" or "stress" period, i.e. the first date of a series of 3+ anmalies
+            - end_date: actually the starting date of the following healthy period, i.e. the first date of a series of 3+ non-anomalies
+            - start_date_index, end_date_index: date indexes of the start and end dates
+            - nb_dates: number of dates in the "dieback" or "stress" period,
+              starting at the first unconfirmed anomaly (i.e. usually 2 dates before the first confirmed anomaly),
+              and ending at the date before the first confirmed non-anomaly
+              This is why usually nb_dates = (end_date_index - start_date_index)+2
     """
     tile = TileInfo(data_directory)
     tile = tile.import_info()
     
     # IMPORTING ALL DATA
-    points = gp.read_file(points_file)
+
+    if isinstance(points, str):
+        points = gp.read_file(points)
+
+    if not isinstance(points, gp.GeoDataFrame):    
+        raise TypeError(
+            "points must be a path to a vector file or a " \
+            "geopandas GeoDataFrame of points"
+        )
+    
+    if (points.geometry.geom_type != "Point").any():
+        raise ValueError("All points must be of type Point")
+    
+    if name_column not in points.columns:
+        print(f"Column {name_column} not found in points, using index instead.")
+        points = points.reset_index().rename(columns={"index": name_column})
+    
+    if points[name_column].duplicated().any():
+        raise ValueError("Duplicated IDs found, points IDs must be unique. To use index as point IDs, set name_column='index'.")
+
     ts_col = get_tile_collection(tile)
-    ts = extract_raster_values(ts_col, points, bands_to_extract=None, chunksize=(1, -1, 100, 100), by_chunk=True, dropna=False, dtype=None)
+    ts = extract_raster_values(ts_col, points, bands_to_extract=None, chunksize=chunks, by_chunk=True, dropna=False, dtype=None)
     ts.rename(columns={"Anomalies": "anomaly", "VegetationIndex": "vi", "Masks": "masks"}, inplace=True)
     binary_keys = [k for k in ["anomaly", "masks"] if k in ts]
     if len(binary_keys) > 0:
@@ -231,17 +276,19 @@ def extract_results(data_directory, points_file, output_dir=None,
     pred.name = "value"
     pred["time"] = pd.to_datetime(pred.time)
     pred["band"] = "predicted_vi"
-    p = extract_raster_values(pred, points, bands_to_extract=None, chunksize=100, by_chunk=True, dropna=False, dtype=None)
+    p = extract_raster_values(pred, points, bands_to_extract=None, chunksize=chunks, by_chunk=True, dropna=False, dtype=None)
     ts = ts.merge(p, "left", on=["Date", "id"])
-    ts["diff_vi"] = ts["vi"] - ts["predicted_vi"]
+    ts["diff_vi"] = ts.loc[:, "vi"] - ts.loc[:, "predicted_vi"]
 
 
     dieback_data = import_dieback_data(tile.paths,chunks = chunks)
     static_data = dieback_data.rename({k: f"dieback_{k}" for k in list(dieback_data)})
-    forest_mask = import_binary_raster(tile.paths["forest_mask"],chunks = chunks)
+    if "forest_mask" in tile.paths:
+        forest_mask = import_binary_raster(tile.paths["forest_mask"],chunks = chunks)
+        static_data["forest_mask"] = forest_mask
     first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
     static_data["first_detection_date_index"] = first_detection_date_index
-    static_data["forest_mask"] = forest_mask
+    
     if tile.parameters["soil_detection"]:
         soil_data = import_soil_data(tile.paths,chunks = chunks)
         soil_data = soil_data.rename({k: f"soil_{k}" for k in list(soil_data)})
@@ -250,7 +297,14 @@ def extract_results(data_directory, points_file, output_dir=None,
     static_data = static_data.assign_coords(time=pred.time.values[-1])
     static_data = static_data.to_dataarray("band")
     static_data.name="value"
-    static_df = extract_raster_values(static_data, points, bands_to_extract=None, chunksize=100, by_chunk=False, dropna=False, dtype=None)
+    static_df = extract_raster_values(static_data, points, bands_to_extract=None, chunksize=chunks, by_chunk=False, dropna=False, dtype=None)
+
+    for k in static_df:
+        if k.endswith("_date") or k.endswith("_date_unconfirmed"):
+            static_df.rename(columns={k: f"{k}_index"}, inplace=True)
+            static_df[k] = tile.dates[static_df[f"{k}_index"]]
+        elif k.endswith("_date_index"):
+            static_df[re.sub("_index", "", k)] = tile.dates[static_df[k]]
 
     stress_df = None
     if tile.parameters["stress_index_mode"] is not None:
@@ -260,7 +314,15 @@ def extract_results(data_directory, points_file, output_dir=None,
             x = points.geometry.x[point_index]
             y = points.geometry.y[point_index]
             stress = stress_data.sel(x=x, y=y, method="nearest")
-            stress = stress.to_dataframe().drop(columns = ["spatial_ref", "band"])
+            stress_periods = stress[["cum_diff", "nb_dates"]].to_dataframe().drop(columns = ["spatial_ref", "band"])
+            start_dates = stress["date"].values[np.arange(0, len(stress["date"]), 2)]
+            end_dates = stress["date"].values[np.arange(1, len(stress["date"]), 2)]
+            stress_periods["start_date_index"] = start_dates
+            stress_periods["end_date_index"] = np.append(end_dates, 0)
+            stress_periods = stress_periods.query("start_date_index!=0")
+            stress_periods["start_date"] = tile.dates[stress_periods["start_date_index"]]
+            stress_periods["end_date"] = tile.dates[stress_periods["end_date_index"]]
+            stress = stress_periods
             if stress is not None:
                 stress[name_column] = points.iloc[point_index][name_column]
                 stress["id_pixel"] = point_index
