@@ -73,32 +73,32 @@ def test_extract_results(output_dir: Path):
     x = [642385.] # index=122
     y = [5451865.] # index=219
     points = gpd.GeoDataFrame(geometry=gpd.points_from_xy(x, y, crs=32631))
-
+    index_name ="id_point"
     # with input geoseries
     timeseries, current_state, periods = extract_results(
         data_directory = tile_dir, 
         points = points,
-        name_column = "id",
+        index_name = index_name,
         chunks = 100)
     
-    assert (timeseries.id==0).all()
-    assert set(timeseries.keys()) == set(["Date", "id", "vi", "diff_vi", "anomaly", "predicted_vi", "masks"])
+    assert (timeseries[index_name]==0).all()
+    assert set(timeseries.keys()) == set(["Date", index_name, "vi", "diff_vi", "anomaly", "predicted_vi", "masks"])
     assert timeseries.Date[0] == "2015-12-03"
     assert (timeseries.Date[-1:] == "2019-09-20").all()
-    assert (current_state.id == 0).all()
+    assert (current_state[index_name] == 0).all()
     assert (current_state.Date == "2019-09-20").all()
     assert periods.shape[0] == 2
     assert periods.start_date[0] == "2018-08-04"
     assert periods.end_date[0] == "2018-09-08"
 
-    points["id"]=0
+    points[index_name]=0
     points_path = output_dir / "points.json"
     points.to_file(points_path)
     
     extract_results(data_directory = tile_dir, 
                         points = points_path,
                         output_dir = export_dir,
-                        name_column = "id",
+                        index_name = index_name,
                         chunks = 100)
     assert (export_dir / "timeseries.csv").exists()
     assert (export_dir / "current_state.csv").exists()

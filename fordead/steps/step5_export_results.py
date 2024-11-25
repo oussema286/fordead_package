@@ -187,7 +187,7 @@ def export_results(
         print("Results already exported")
 
 def extract_results(data_directory, points, output_dir=None,
-                    name_column = "id", chunks = 100):
+                    index_name = "id_point", chunks = 100):
     
     """
     Extract points of interest from the results computed at the MGRS-tile scale.
@@ -200,8 +200,8 @@ def extract_results(data_directory, points, output_dir=None,
         Path to vector file containing points to be extracted or geodataframe containing points to be extracted
     output_dir: str
         Path of the directory where results should be exported. If None, results are returned.
-    name_column: str
-        Name of the column containing the name of the point, used to name the exported image. Not used if pixel is selected from x and y parameters
+    index_name: str
+        Name of the column containing the point ID. If it does not exist, it is added filling it with the index values of the points.
     chunks: int
         Chunk length to import data as dask arrays and save RAM, advised if computed area in data_directory is large
 
@@ -255,13 +255,13 @@ def extract_results(data_directory, points, output_dir=None,
     if (points.geometry.geom_type != "Point").any():
         raise ValueError("All points must be of type Point")
     
-    if name_column not in points.columns:
-        print(f"Column '{name_column}' not found in points. " \
-              f"Creating '{name_column}' with index values.")
-        points = points.reset_index().rename(columns={"index": name_column})
+    if index_name not in points.columns:
+        print(f"Column '{index_name}' not found in points. " \
+              f"Creating '{index_name}' with index values.")
+        points = points.reset_index().rename(columns={"index": index_name})
     
-    if points[name_column].duplicated().any():
-        raise ValueError("Duplicated IDs found, points IDs must be unique. To use index as point IDs, set name_column='index'.")
+    if points[index_name].duplicated().any():
+        raise ValueError(f"Duplicates found in column '{index_name}', points IDs must be unique: choose another name for 'index_name'.")
 
     ts_col = get_tile_collection(tile)
     ts = extract_raster_values(ts_col, points, bands_to_extract=None, chunksize=chunks, by_chunk=True, dropna=False, dtype=None)
@@ -278,7 +278,7 @@ def extract_results(data_directory, points, output_dir=None,
     pred["time"] = pd.to_datetime(pred.time)
     pred["band"] = "predicted_vi"
     p = extract_raster_values(pred, points, bands_to_extract=None, chunksize=chunks, by_chunk=True, dropna=False, dtype=None)
-    ts = ts.merge(p, "left", on=["Date", "id"])
+    ts = ts.merge(p, "left", on=["Date", index_name])
     ts["diff_vi"] = ts.loc[:, "vi"] - ts.loc[:, "predicted_vi"]
 
 
@@ -325,7 +325,7 @@ def extract_results(data_directory, points, output_dir=None,
             stress_periods["end_date"] = tile.dates[stress_periods["end_date_index"]]
             stress = stress_periods
             if stress is not None:
-                stress[name_column] = points.iloc[point_index][name_column]
+                stress[index_name] = points.iloc[point_index][index_name]
                 stress["id_pixel"] = point_index
                 stress_list.append(stress.reset_index(drop = False))
         if len(stress_list) > 0 :

@@ -14,6 +14,8 @@ from fordead.stac.theia_collection import ItemCollection
 import xarray as xr
 from shapely.geometry import box
 import geopandas as gpd
+import string
+import random
 
 # import rasterio.sample
 # =============================================================================
@@ -450,7 +452,6 @@ def extract_raster_values(
         print("No points inside array bounding box.")
         return
 
-    points.index.rename("id_point", inplace=True)
 
     if by_chunk:
         idx = np.append([0], np.cumsum(arr.chunksizes["x"]))
@@ -497,7 +498,10 @@ def extract_raster_values(
                 return pd.concat(res_list, ignore_index=True)
         return    
     
+    # choosing a random name for the index
+    point_index = "".join(random.sample(string.ascii_letters, 10))
 
+    points.index.rename(point_index, inplace=True)
     # To respect original implementation: extract only the points not already extracted.
     # It accelerates much the extraction in case of error on the STAC point side.
     coords = points.get_coordinates().join(points.drop(columns='geometry'))
@@ -563,7 +567,7 @@ def extract_raster_values(
     # it may have a problem if two images at the same time,
     # in that case `id` should be added to the index arg,
     # and a solution should be found to choose between these values
-    index = ["id_point", "time"]
+    index = [point_index, "time"]
     
     # Some duplicates may exist, example:
     # - S2B_MSIL2A_20240607T102559_N0510_R108_T31UGP_20240607T153938.SAFE
@@ -596,9 +600,9 @@ def extract_raster_values(
     # join extractions with points
     points = points.drop(columns='geometry').reset_index(drop=False)
     # reformat result
-    res = points.merge(extractions, on=["id_point"])
+    res = points.merge(extractions, on=[point_index])
     res.time = res.time.dt.strftime("%Y-%m-%d")
-    res = res.rename(columns={"time": "Date"}).drop(columns="id_point")
+    res = res.rename(columns={"time": "Date"}).drop(columns=point_index)
 
     if export_path is None:
         return res
