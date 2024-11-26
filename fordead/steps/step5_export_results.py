@@ -224,8 +224,6 @@ def extract_results(data_directory, points, output_dir=None,
             - dieback_: the state of dieback detection variables; 
               Note that dieback_first_date is the start date period, i.e. "healthy" if dieback_state=0 or "dieback" if dieback_state=1.
             - soil_: the state of soil detection variables, same note as above
-            - forest_mask: the forest mask value
-            - first_detection_date: the starting date of detection of the pixel timeseries
         
         - periods.csv: dieback and healthy period summary
             - period: the period index
@@ -237,6 +235,12 @@ def extract_results(data_directory, points, output_dir=None,
               starting at the first unconfirmed anomaly (i.e. usually 2 dates before the first confirmed anomaly),
               and ending at the date before the first confirmed non-anomaly
               This is why usually nb_dates = (end_date_index - start_date_index)+2
+        
+        - static: static data of the tile
+            - coeff_i: coefficients of the model
+            - forest_mask: the forest mask value
+            - first_detection_date: the starting date of detection of the pixel timeseries
+            - first_detection_date_index: the date index of first_detection_date
     """
     tile = TileInfo(data_directory)
     tile = tile.import_info()
@@ -283,29 +287,42 @@ def extract_results(data_directory, points, output_dir=None,
 
 
     dieback_data = import_dieback_data(tile.paths,chunks = chunks)
-    static_data = dieback_data.rename({k: f"dieback_{k}" for k in list(dieback_data)})
-    if "forest_mask" in tile.paths:
-        forest_mask = import_binary_raster(tile.paths["forest_mask"],chunks = chunks)
-        static_data["forest_mask"] = forest_mask
-    first_detection_date_index = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks)
-    static_data["first_detection_date_index"] = first_detection_date_index
-    
+    current_data = dieback_data.rename({k: f"dieback_{k}" for k in list(dieback_data)})
     if tile.parameters["soil_detection"]:
         soil_data = import_soil_data(tile.paths,chunks = chunks)
         soil_data = soil_data.rename({k: f"soil_{k}" for k in list(soil_data)})
-        static_data = xr.merge([static_data, soil_data], join='outer')
+        current_data = xr.merge([current_data, soil_data], join='outer')
     
+    current_data = current_data.assign_coords(time=pred.time.values[-1])
+    current_data = current_data.to_dataarray("band")
+    current_data.name="value"
+    current_state = extract_raster_values(current_data, points, bands_to_extract=None, chunksize=chunks, by_chunk=False, dropna=False, dtype=None)
+    
+    for k in current_state:
+        if k.endswith("_date") or k.endswith("_date_unconfirmed"):
+            current_state.rename(columns={k: f"{k}_index"}, inplace=True)
+            current_state[k] = tile.dates[current_state[f"{k}_index"]]
+        elif k.endswith("_date_index"):
+            current_state[re.sub("_index", "", k)] = tile.dates[current_state[k]]
+
+
+    static_data = import_first_detection_date_index(tile.paths["first_detection_date_index"],chunks = chunks).rename("first_detection_date_index").to_dataset()
+    if "forest_mask" in tile.paths:
+        forest_mask = import_binary_raster(tile.paths["forest_mask"],chunks = chunks)
+        static_data["forest_mask"] = forest_mask
+    coeff_model["coeff"] = [f"coeff_{i}" for i in coeff_model.coeff.values]
+    coeff_model = coeff_model.rename({"coeff": "band"}).to_dataset("band")
+    static_data = xr.merge([static_data, coeff_model], join='outer')
     static_data = static_data.assign_coords(time=pred.time.values[-1])
     static_data = static_data.to_dataarray("band")
     static_data.name="value"
     static_df = extract_raster_values(static_data, points, bands_to_extract=None, chunksize=chunks, by_chunk=False, dropna=False, dtype=None)
+    static_df = static_df.drop(columns = "Date")
+    static_df["first_detection_date_index"] = static_df["first_detection_date_index"].astype(int)
+    static_df["first_detection_date"] = tile.dates[static_df["first_detection_date_index"]]
 
-    for k in static_df:
-        if k.endswith("_date") or k.endswith("_date_unconfirmed"):
-            static_df.rename(columns={k: f"{k}_index"}, inplace=True)
-            static_df[k] = tile.dates[static_df[f"{k}_index"]]
-        elif k.endswith("_date_index"):
-            static_df[re.sub("_index", "", k)] = tile.dates[static_df[k]]
+    # static_data["first_detection_date_index"] = first_detection_date_index
+
 
     stress_df = None
     if tile.parameters["stress_index_mode"] is not None:
@@ -320,24 +337,26 @@ def extract_results(data_directory, points, output_dir=None,
             end_dates = stress["date"].values[np.arange(1, len(stress["date"]), 2)]
             stress_periods["start_date_index"] = start_dates
             stress_periods["end_date_index"] = np.append(end_dates, 0)
-            stress_periods = stress_periods.query("start_date_index!=0")
+            stress_periods = stress_periods.query("start_date_index!=0").copy()
             stress_periods["start_date"] = tile.dates[stress_periods["start_date_index"]]
             stress_periods["end_date"] = tile.dates[stress_periods["end_date_index"]]
             stress = stress_periods
             if stress is not None:
-                stress[index_name] = points.iloc[point_index][index_name]
+                stress.loc[:, index_name] = points.iloc[point_index].loc[index_name]
                 stress["id_pixel"] = point_index
                 stress_list.append(stress.reset_index(drop = False))
         if len(stress_list) > 0 :
             stress_df = pd.concat(stress_list, ignore_index=True)
 
     if output_dir is None:
-        return ts, static_df, stress_df
+        return ts, current_state, stress_df, static_df
     
     ts.to_csv(output_dir/"timeseries.csv", index = False, header = True)
-    static_df.to_csv(output_dir/"current_state.csv", index = False, header = True)
+    current_state.to_csv(output_dir/"current_state.csv", index = False, header = True)
     if stress_df is not None:
         stress_df.to_csv(output_dir/"periods.csv", index = False, header = True)
+    static_df.to_csv(output_dir/"static.csv", index = False, header = True)
+
 
 
 if __name__ == '__main__':

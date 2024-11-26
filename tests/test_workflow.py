@@ -75,7 +75,7 @@ def test_extract_results(output_dir: Path):
     points = gpd.GeoDataFrame(geometry=gpd.points_from_xy(x, y, crs=32631))
     index_name ="id_point"
     # with input geoseries
-    timeseries, current_state, periods = extract_results(
+    timeseries, current_state, periods, static = extract_results(
         data_directory = tile_dir, 
         points = points,
         index_name = index_name,
@@ -103,6 +103,7 @@ def test_extract_results(output_dir: Path):
     assert (export_dir / "timeseries.csv").exists()
     assert (export_dir / "current_state.csv").exists()
     assert (export_dir / "periods.csv").exists()
+    assert (export_dir / "static.csv").exists()
 
 def test_visualisation(output_dir):
     tile_dir = (output_dir / "workflow_process_tiles" / "study_area")

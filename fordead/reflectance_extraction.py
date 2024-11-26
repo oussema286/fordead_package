@@ -518,7 +518,7 @@ def extract_raster_values(
     # reduce memory usage by dropping unnecessary coordinates
     arr_coords_to_drop = [k for k in list(arr.coords) if k not in set(list(arr.indexes)+["id", "band", "time"])]
     if extracted_reflectance is None or extracted_reflectance.empty:
-        arr = arr.drop(arr_coords_to_drop)
+        arr = arr.drop_vars(arr_coords_to_drop)
         p = extract_points(arr, coords, method="nearest", tolerance=arr.rio.resolution()[0]/2)
     else:
         ### trick for splitted scenes, example:
