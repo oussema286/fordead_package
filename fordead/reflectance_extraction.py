@@ -14,8 +14,10 @@ from fordead.stac.theia_collection import ItemCollection
 import xarray as xr
 from shapely.geometry import box
 import geopandas as gpd
-import string
 import random
+import string
+from time import time
+
 
 # import rasterio.sample
 # =============================================================================
@@ -471,9 +473,8 @@ def extract_raster_values(
         points.sort_values(by=["chunk_x", "chunk_y"], inplace=True)
         res_list = []
         gpoints = points.groupby(by=["chunk_x", "chunk_y"])
-        print(f"Extracting {points.shape[0]} points in {len(gpoints)} xy chunks within date range {daterange}...")
+        print(f"Extracting {points.shape[0]} points in {len(gpoints)} xy chunks within date range {daterange} ({len(arr.time)} dates)...")
         for i, group in enumerate(gpoints):
-            from time import time
             start = time()
             icx, icy = group[0]
             g = group[1]
@@ -535,14 +536,15 @@ def extract_raster_values(
         arr["time"] = temp_id
         arr = arr.assign_coords(timens = ("time", temp_time.values))
         p_temp = extract_points(arr, coords, method="nearest", tolerance=arr.rio.resolution()[0]/2)
+        # choose a random name for id_time (to avoid collision with existing columns)
+        id_time = ''.join(random.sample(string.ascii_letters, 10))
+        if id_time in coords:
+            raise ValueError("Random name for time column already exists")
         # copy coords for each dates
-        # coords2 = coords.reset_index(drop=False).merge(pd.Series(arr.time.values, name="time"), how="cross")
-        if "id_time" in coords:
-            raise ValueError("'id_time' is reserved, please rename that column the 'points' dataframe.")
-        coords2 = coords.reset_index(drop=False).merge(temp_time.rename(dict(id="id_time")).to_dataframe()["id_time"].reset_index(drop=False), how="cross")
+        coords2 = coords.reset_index(drop=False).merge(temp_time.rename(dict(id=id_time)).to_dataframe()[id_time].reset_index(drop=False), how="cross")
         coords2["Date"] = coords2.time.dt.date.astype(str)
         # rename id
-        coords2.rename(columns={"id_time" : "time", "time" : "timens"}, inplace=True)
+        coords2.rename(columns={id_time : "time", "time" : "timens"}, inplace=True)
         # keep only the points and dates not in extracted_reflectance
         to_extract = coords2.merge(extracted_reflectance, on=extracted_reflectance.keys().tolist(), how="outer", indicator=True)
         to_extract = to_extract.query("_merge == 'left_only'").drop("_merge", axis=1)

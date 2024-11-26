@@ -356,9 +356,3 @@ def extract_results(data_directory, points, output_dir=None,
     if stress_df is not None:
         stress_df.to_csv(output_dir/"periods.csv", index = False, header = True)
     static_df.to_csv(output_dir/"static.csv", index = False, header = True)
-
-
-
-if __name__ == '__main__':
-    cli_export_results()
-    
