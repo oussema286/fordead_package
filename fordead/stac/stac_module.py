@@ -58,14 +58,13 @@ PLANETARY = dict(
 THEIASTAC = dict(
     url = 'https://stacapi-cdos.apps.okd.crocc.meso.umontpellier.fr',
     collection = "sentinel2-l2a-theia",
-    # collection = "sentinel2-l2a-sen2lasrc",
-    cloud_cover = "s2:cloud_percent",
-    mgrs_tile = "s2:tile_id"
+    cloud_cover = "eo:cloud_cover",
+    mgrs_tile = "s2:mgrs_tile"
 )
 
 def getItemCollection(start_date, end_date, bbox, cloud_nb = 100, source = PLANETARY):
     """
-    get item collection from Microsoft Planetary Computer
+    get item collection from Theia STAC or Microsoft Planetary Computer
 
     - start_date: <string> start date yyyy-mm-dd
     - end_date: <string> end date yyyy-mm-dd
