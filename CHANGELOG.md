@@ -1,3 +1,15 @@
+# v1.10.1
+## Add
+- theiastac provider for calibration/validation: extracts values from
+  collection sentinel-2-l2a-theia of https://stacapi-cdos.apps.okd.crocc.meso.umontpellier.fr
+
+## Change
+- change the output format of extract_results for better understanding
+  (dates corresponding date indexes, renamed and split files)
+
+## Fix
+- points out of the tile bbox in extract_raster_values
+
 # v1.10.0
 ## Add
 - function `step5_export_results.extract_results` to extract the results for points of interest
@@ -5,7 +17,7 @@
 
 ## Change
 - in `extract_raster_values`:
-  - switch the args order of inputs in  to reflect usual ergonomy of such a function
+  - switch the args order of inputs to reflect the usual signature of such a function
   - add possibility to input an xarray to `extract_raster_values`
   - add arguments with default values `chunksize=512` `dropna=True` and `dtype=int`
 - `sentinel_source` is now case insensitive e.g. 'Theia', 'THEIA' and 'theia' are accepted.
