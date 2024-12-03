@@ -9,6 +9,7 @@
 
 ## Fix
 - points out of the tile bbox in extract_raster_values
+- removed wrong scale factor for VegetationIndex in get_tile_collection
 
 # v1.10.0
 ## Add
