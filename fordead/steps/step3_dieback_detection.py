@@ -186,9 +186,3 @@ def dieback_detection(
     tile.save_info()
 
 
-
-if __name__ == '__main__':
-    # print(dictArgs)
-    # start_time = time.time()
-    cli_dieback_detection()
-    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))

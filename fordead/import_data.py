@@ -657,8 +657,8 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
             #                                        coords=stack_bands[0].coords)
             stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=interpolation_order), 
                                                    coords={"band" : [1], 
-                                                           "y" : np.linspace(stack_bands[band_index].isel(x=0,y=0).y+5, stack_bands[band_index].isel(x=0,y=stack_bands[band_index].sizes["y"]-1).y-5, num=stack_bands[band_index].sizes["y"]*2),
-                                                           "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x+5, num=stack_bands[band_index].sizes["x"]*2)},
+                                                           "y" : np.linspace(stack_bands[band_index].isel(x=0,y=0).y.values+5, stack_bands[band_index].isel(x=0,y=stack_bands[band_index].sizes["y"]-1).y.values-5, num=stack_bands[band_index].sizes["y"]*2),
+                                                           "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x.values-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x.values+5, num=stack_bands[band_index].sizes["x"]*2)},
                                                    dims=["band","y","x"]).rio.write_crs(crs)
         if extent is not None:
             stack_bands[band_index] = clip_xarray(stack_bands[band_index], extent)
