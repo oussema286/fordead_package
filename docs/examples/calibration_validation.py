@@ -53,10 +53,10 @@ args_to_test = {"threshold_anomaly" : [0.08,0.09,0.1,0.11,0.12,0.13,0.14,0.15,0.
                 "vi" : ["CRSWIR","NDVI"]}
 ########################################################
 
-if not fordead_data_dir.exists():
-    raise FileNotFoundError("`fordead_data` directory not found, please download the data with download_data.py or adapt `base_dir` path")
-
 if sentinel_source == "THEIA":
+    if not fordead_data_dir.exists():
+        raise FileNotFoundError("`fordead_data` directory not found, please download the data with download_data.py or adapt `base_dir` path")
+    
     sentinel_source = fordead_data_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
     cloudiness_path = calval_dir / "extracted_cloudiness.csv"
 else:
