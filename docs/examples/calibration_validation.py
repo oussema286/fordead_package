@@ -39,6 +39,7 @@ output_dir = base_dir / "outputs"
 
 sentinel_source = "THEIA"
 # sentinel_source = "Planetary"
+# sentinel_source = "theiastac"
 
 obs_path = fordead_data_dir / "vector/observations_tuto.shp"
 calval_dir = (output_dir / f"calval_{sentinel_source}").rmtree_p().makedirs_p()
