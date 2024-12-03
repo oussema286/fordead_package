@@ -35,6 +35,8 @@ output_dir = base_dir / "outputs"
 # Accepted values are:
 # - "THEIA" to use S2 THEIA data downloaded from https://gitlab.com/fordead/fordead_data
 # - "Planetary" to use S2 Planetary Computer (i.e. Sen2Cor processed data)
+# - "theiastac" to use S2 from CDS THEIA STAC catalog (i.e. remote THEIA data)
+
 sentinel_source = "THEIA"
 # sentinel_source = "Planetary"
 
