@@ -93,7 +93,7 @@ def test_extract_results(output_dir: Path):
 
     points[index_name]=0
     points_path = output_dir / "points.json"
-    points.to_file(points_path)
+    points.to_file(str(points_path))
     
     extract_results(data_directory = tile_dir, 
                         points = points_path,
@@ -112,7 +112,7 @@ def test_visualisation(output_dir):
     points = gpd.GeoDataFrame(geometry=gpd.points_from_xy(x, y, crs=32631))
     points["id"]=0
     points_path = output_dir / "points.json"
-    points.to_file(points_path)
+    points.to_file(str(points_path))
 
     vi_series_visualisation(data_directory = tile_dir, 
                         shape_path = points_path, 

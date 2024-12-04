@@ -26,7 +26,7 @@ def test_obs(input_dir, output_dir):
     points["area_name"] = wrong_tile
     points["epsg"] = 32631
     points["id_pixel"]=1
-    points.to_file(points_path)
+    points.to_file(str(points_path))
     extract_reflectance(
         obs_path = points_path,
         sentinel_source = sentinel_source, 
