@@ -10,7 +10,7 @@ import subprocess
 import geopandas as gpd
 
 def test_obs(input_dir, output_dir):
-    sentinel_source = "planetary"
+    sentinel_source = "theiastac"
     
     export_dir = (output_dir / f"test_obs_{sentinel_source}").rmtree_p().mkdir()
     reflectance_path = export_dir / "reflectance.csv"
@@ -35,8 +35,8 @@ def test_obs(input_dir, output_dir):
         export_path = reflectance_path,
         name_column = "id",
         tile_selection=wrong_tile,
-        start_date="2019-01-01",
-        end_date="2021-12-31")
+        start_date="2021-01-01",
+        end_date="2021-01-31")
     assert not reflectance_path.exists()
 
     
@@ -47,12 +47,12 @@ def test_obs(input_dir, output_dir):
         lim_perc_cloud = 1,
         export_path = reflectance_path,
         name_column = "id",
-        start_date="2019-01-01",
-        end_date="2021-12-31")
+        start_date="2021-01-01",
+        end_date="2021-01-31")
     assert not reflectance_path.exists()
 
     points["area_name"] = good_tile
-    points.to_file(points_path)
+    points.to_file(str(points_path))
 
     extract_reflectance(
         obs_path = points_path,
@@ -62,7 +62,7 @@ def test_obs(input_dir, output_dir):
         export_path = reflectance_path,
         name_column = "id",
         start_date="2021-01-01",
-        end_date="2021-12-31")
+        end_date="2021-01-31")
     assert reflectance_path.exists()
 
 

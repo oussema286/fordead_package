@@ -29,7 +29,7 @@ def write_raster(data_array, path, compress_vi):
         data_array.encoding["dtype"]="int16"
         data_array.encoding["scale_factor"]=0.001
         data_array.encoding["_FillValue"]=-1
-    if path.endswith(".nc"):
+    if str(path).endswith(".nc"):
         tiled = False
     else:
         tiled = True
