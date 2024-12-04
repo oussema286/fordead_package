@@ -37,9 +37,9 @@ output_dir = base_dir / "outputs"
 # - "Planetary" to use S2 Planetary Computer (i.e. Sen2Cor processed data)
 # - "theiastac" to use S2 from CDS THEIA STAC catalog (i.e. remote THEIA data)
 
-sentinel_source = "THEIA"
+# sentinel_source = "THEIA"
 # sentinel_source = "Planetary"
-# sentinel_source = "theiastac"
+sentinel_source = "theiastac"
 
 obs_path = fordead_data_dir / "vector/observations_tuto.shp"
 calval_dir = (output_dir / f"calval_{sentinel_source}").rmtree_p().makedirs_p()

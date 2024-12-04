@@ -1,18 +1,20 @@
 # v1.10.1
 ## Add
-- theiastac provider for calibration/validation: extracts values from
-  collection sentinel-2-l2a-theia of https://stacapi-cdos.apps.okd.crocc.meso.umontpellier.fr
+- new `theiastac` provider for calibration/validation: extract values from
+  remote STAC collection sentinel-2-l2a-theia of 
+  https://stacapi-cdos.apps.okd.crocc.meso.umontpellier.fr
+  to avoid downloading whole tiles. See docs/examples/calibration_validation.py
 
 ## Change
-- change the output format of extract_results for better understanding
+- change the output format of `extract_results` for better understanding
   (dates corresponding date indexes, renamed and split files)
-- dependency to EODAG >= 3 to solve https://github.com/CS-SI/eodag/issues/1123
-- remove constraint on numpy version (related to stackstac new release https://github.com/gjoseph92/stackstac/issues/250)
-- add constraint on python version < 3.12 due to vscode issue with debugpy: see https://github.com/microsoft/vscode-python-debugger/issues/498
+- dependency to `EODAG >= 3` to solve https://github.com/CS-SI/eodag/issues/1123
+- remove constraint on `numpy` version (related to stackstac new release https://github.com/gjoseph92/stackstac/issues/250)
+- add constraint `python < 3.12` due to vscode issue with debugpy: see https://github.com/microsoft/vscode-python-debugger/issues/498
 
 ## Fix
 - points out of the tile bbox in extract_raster_values
-- removed wrong scale factor for VegetationIndex in get_tile_collection
+- removed wrong scale factor for VegetationIndex in `get_tile_collection`
 
 # v1.10.0
 ## Add
