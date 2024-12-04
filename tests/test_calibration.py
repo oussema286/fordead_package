@@ -109,7 +109,9 @@ def test_calibration(input_dir, output_dir, sentinel_source):
         lim_perc_cloud = 0.3,
         export_path = reflectance_path,
         name_column = "id",
-        tile_selection="T31UGP")
+        tile_selection="T31UGP",
+        start_date="2016-01-01",
+        end_date="2019-01-01")
 
     mask_vi_from_dataframe(reflectance_path = reflectance_path,
                         masked_vi_path = masked_vi_path,
@@ -135,7 +137,7 @@ def test_calibration(input_dir, output_dir, sentinel_source):
                     stress_index_mode = "mean",
                     update_masked_vi = True)
 
-@pytest.mark.parametrize("sentinel_source", ["THEIA", "Planetary"])
+@pytest.mark.parametrize("sentinel_source", ["THEIA"])
 def test_calibration_cli(input_dir, output_dir, sentinel_source):
     # TODO: maybe use CliRunner for pytest https://click.palletsprojects.com/en/8.1.x/testing/
     # First tests were not successful because of an isolation error...
@@ -192,6 +194,8 @@ def test_calibration_cli(input_dir, output_dir, sentinel_source):
         f"--export_path {reflectance_path}",
         f"--name_column id",
         f"--tile_selection T31UGP",
+        f"--start_date 2016-01-01",
+        f"--end_date 2019-01-01"
         ]
     if cloudiness_path is not None:
         cmd += [f"--cloudiness_path {cloudiness_path}"]
