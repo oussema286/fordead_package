@@ -415,7 +415,12 @@ class TileInfo:
                     if self.parameters[parameter]!=parameters[parameter]: #If parameter was changed
                         self.parameters["Overwrite"]=True
                 else:#If unknown parameters
-                    self.parameters["Overwrite"]=True
+                    # For retro-compatibility of version 1.9.0:
+                    # First date was introduced in v1.9.0.
+                    # if start_date_train is the default, 
+                    # it is added without activating overwrite
+                    if not(parameter=="start_date_train" and parameters[parameter]=="2015-01-01"):
+                        self.parameters["Overwrite"]=True
             self.parameters.update(parameters)
             
     def add_path(self, key, path):
@@ -476,7 +481,7 @@ class TileInfo:
 
         
         
-def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
+def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source: str):
     """
     Imports, computes and stores cloudiness for all dates
     
@@ -487,7 +492,7 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
     dict_path_bands : dict
         Dictionnary where keys are dates, values are another dictionnary where keys are bands and values are their paths (dict_path_bands["YYYY-MM-DD"]["Mask"] -> Path to the mask)
     sentinel_source : str
-        'THEIA', 'Scihub' or 'PEPS'
+        'theia', 'scihub' or 'peps'
 
     Returns
     -------
@@ -495,7 +500,6 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
         Dictionnary where keys are dates and values the cloudiness percentage
 
     """
-    
     path_cloudiness= Path(path_cloudiness)
     cloudiness = TileInfo(path_cloudiness.parent)
     if path_cloudiness.exists():
@@ -512,7 +516,7 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source):
     cloudiness.save_info(path_cloudiness)
     return cloudiness.perc_cloud
 
-def get_date_cloudiness_perc(date_paths, sentinel_source):
+def get_date_cloudiness_perc(date_paths, sentinel_source: str):
     """
     Computes cloudiness percentage of a Sentinel-2 date from the source mask (THEIA CLM or PEPS, scihub SCL)
     A 20m resolution band is necessary for THEIA data to determine swath cover. B11 is used but could be replaced with another 20m band.
@@ -523,8 +527,8 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
     ----------
     date_paths : Dictionnary where keys are bands and values are their paths
         DESCRIPTION.
-    sentinel_source : TYPE
-        'THEIA', 'Scihub' or 'PEPS'
+    sentinel_source : str
+        'theia', 'scihub' or 'peps'
 
     Returns
     -------
@@ -533,14 +537,15 @@ def get_date_cloudiness_perc(date_paths, sentinel_source):
 
     """
     
+    sentinel_source = sentinel_source.lower()
 
-    if sentinel_source=="THEIA":
+    if sentinel_source=="theia":
         tile_mask_info = xr.Dataset({"mask": rioxarray.open_rasterio(date_paths["Mask"]),
                                      "swath_cover": rioxarray.open_rasterio(date_paths["B11"])})
         NbPixels = (tile_mask_info["swath_cover"]!=-10000).sum()
         NbCloudyPixels = (tile_mask_info["mask"]>0).sum()
 
-    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
+    elif sentinel_source=="scihub" or sentinel_source=="peps":
         cloud_mask = rioxarray.open_rasterio(date_paths["Mask"])
         NbPixels = (cloud_mask!=0).sum()
         NbCloudyPixels = (~cloud_mask.isin([4,5])).sum()
@@ -652,8 +657,8 @@ def import_resampled_sen_stack(band_paths, list_bands, interpolation_order = 0, 
             #                                        coords=stack_bands[0].coords)
             stack_bands[band_index] = xr.DataArray(ndimage.zoom(stack_bands[band_index],zoom=[1,2.0,2.0],order=interpolation_order), 
                                                    coords={"band" : [1], 
-                                                           "y" : np.linspace(stack_bands[band_index].isel(x=0,y=0).y+5, stack_bands[band_index].isel(x=0,y=stack_bands[band_index].sizes["y"]-1).y-5, num=stack_bands[band_index].sizes["y"]*2),
-                                                           "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x+5, num=stack_bands[band_index].sizes["x"]*2)},
+                                                           "y" : np.linspace(stack_bands[band_index].isel(x=0,y=0).y.values+5, stack_bands[band_index].isel(x=0,y=stack_bands[band_index].sizes["y"]-1).y.values-5, num=stack_bands[band_index].sizes["y"]*2),
+                                                           "x" : np.linspace(stack_bands[band_index].isel(x=0,y=0).x.values-5, stack_bands[band_index].isel(x=stack_bands[band_index].sizes["x"]-1,y=0).x.values+5, num=stack_bands[band_index].sizes["x"]*2)},
                                                    dims=["band","y","x"]).rio.write_crs(crs)
         if extent is not None:
             stack_bands[band_index] = clip_xarray(stack_bands[band_index], extent)
@@ -960,7 +965,13 @@ def initialize_stress_data(shape,coords, max_nb_stress_periods):
     Returns
     -------
     stress_data : xarray DataSet or dask DataSet
-        DataSet containing four DataArrays, "date" containing the date index of each pixel state change, "nb_periods" containing the total number of stress periods detected for each pixel, "cum_diff" containing for each stress period the sum of the difference between the vegetation index and its prediction, multiplied by the weight if stress_index_mode is "weighted_mean", and "nb_dates" containing the number of valid dates of each stress period.
+        DataSet containing four DataArrays, 
+        "date" containing the date index of each pixel state change, 
+        "nb_periods" containing the total number of stress periods detected for each pixel, 
+        "cum_diff" containing for each stress period the sum of
+        the difference between the vegetation index and its prediction, 
+        multiplied by the weight if stress_index_mode is "weighted_mean", 
+        and "nb_dates" containing the number of valid dates of each stress period.
         For all four arrays, all pixels are intitialized at zero.
     """
 

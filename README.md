@@ -1,8 +1,9 @@
 # fordead : a python package for vegetation anomalies detection from SENTINEL-2 images
 
-[Full Documention](https://fordead.gitlab.io/fordead_package)
+[__Full Documention__](https://fordead.gitlab.io/fordead_package)
 
-[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=pages&query=version&colorB=green)](https://gitlab.com/fordead/fordead_package)
+[![release](https://img.shields.io/gitlab/v/tag/23685905?label=version)](https://gitlab.com/fordead/fordead_package)
+[![pipeline](https://gitlab.com/fordead/fordead_package/badges/master/pipeline.svg)](https://gitlab.com/fordead/fordead_package/pipelines/master/latest)
 [![licence](https://img.shields.io/badge/Licence-GPL--3-blue.svg)](https://www.r-project.org/Licenses/GPL-3)
 [![python](https://img.shields.io/badge/Python-3-blue.svg)](https://www.python.org)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12802456.svg)](https://doi.org/10.5281/zenodo.12802456)

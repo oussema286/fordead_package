@@ -181,13 +181,8 @@ def dieback_detection(
             write_tif(stress_data["nb_dates"], first_detection_date_index.attrs,tile.paths["nb_dates_stress"],nodata=0)
             del stress_data
 
-        # print("Détection du déperissement")
+    # update tile info with new anomalies    
+    tile.getdict_datepaths("Anomalies",tile.paths["AnomaliesDir"]) # Get paths and dates to previously calculated anomalies
     tile.save_info()
 
 
-
-if __name__ == '__main__':
-    # print(dictArgs)
-    # start_time = time.time()
-    cli_dieback_detection()
-    # print("Temps d execution : %s secondes ---" % (time.time() - start_time))

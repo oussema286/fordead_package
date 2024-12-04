@@ -66,6 +66,9 @@ def train_model_from_dataframe(masked_vi_path,
     """
         
     masked_vi = pd.read_csv(masked_vi_path)
+    if masked_vi.shape[0] == 0:
+        raise ValueError("masked_vi is empty.")
+    
     if "bare_ground" in masked_vi.columns:
         masked_vi = masked_vi[~masked_vi["bare_ground"]]
 
@@ -75,6 +78,10 @@ def train_model_from_dataframe(masked_vi_path,
 
     masked_vi = masked_vi[masked_vi["Date"] <= masked_vi["last_training_date"]].reset_index()
     
+    if masked_vi.shape[0] == 0:
+        raise ValueError("masked_vi does not contain sufficient data for training. "
+                         "Please choose a different min_last_date_training, max_last_date_training or nb_min_date.")
+
     coeff_model = model_vi_dataframe(masked_vi, name_column)
     
     pixel_info = last_date_training.merge(coeff_model, on = ["area_name",name_column,"id_pixel"], how='outer')

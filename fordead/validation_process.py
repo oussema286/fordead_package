@@ -230,9 +230,9 @@ def filter_cloudy_acquisitions(reflect, cloudiness_path, lim_perc_cloud):
     return reflect
     
 def source_mask_dataframe(source_mask, sentinel_source):
-    if sentinel_source=="THEIA":
+    if sentinel_source in ["theia", "theiastac"]:
         source_mask = source_mask>0
-    elif sentinel_source=="Scihub" or sentinel_source=="PEPS":
+    elif sentinel_source in ["scihub", "peps", "Planetary"]:
         source_mask = ~source_mask.isin([4,5])
     return source_mask
         
@@ -262,7 +262,8 @@ def model(date_as_number, vi, id_pixel):
 
 def model_vi_dataframe(data_frame, name_column):
     
-    
+    if data_frame.shape[0] == 0:
+        raise ValueError("Cannot compute model, data_frame is empty")
     
     data_frame['Date'] = pd.to_datetime(data_frame['Date'])
     data_frame["date_as_number"] = (data_frame['Date'] - pd.to_datetime("2015-01-01")).dt.days

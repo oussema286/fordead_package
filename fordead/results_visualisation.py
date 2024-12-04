@@ -550,6 +550,8 @@ def select_and_plot_time_series(x,y, forest_mask, harmonic_terms, coeff_model, f
     if x < 0 or x >= tile.raster_meta["sizes"]["x"] or y < 0 or y >= tile.raster_meta["sizes"]["y"]:
         print("Pixel outside extent of the region of interest")
     else:
+        x = int(x)
+        y = int(y)
         xy_forest_mask = forest_mask.isel(x = x, y = y)
         if not(xy_forest_mask):
             print("Pixel outside forest mask")

@@ -1,6 +1,17 @@
-# Waiting for
-- `EODAG v3.0` that has a fix for THEIA requests, using EODAG dev branch until then
-- `stackstac` pull request to be merged: https://github.com/gjoseph92/stackstac/pull/251, contraining to `numpy < 2` until then
+# recent
+- [x] split current_state in {current_state and static or timeless} including
+  model coeffs
+- remove dependency to time in extract_raster_values
+- [x] fix issue with id_point
+- [x] chunks/chunksize in step5
+- warning for max nb points in extract_raster_values
+- add by_chunk in command lines (extract_reflectance, step5)
+- place all test and example data (fordead_data, outputs) in a data directory to
+  simplify `.gitignore` and cleaning
+
+# Wainting for
+- solution to issue https://github.com/microsoft/vscode-python-debugger/issues/498
+  to remove constraint on python version
 
 # Tester la construction de la collection sur un gros jeu de données (1000 images)
 

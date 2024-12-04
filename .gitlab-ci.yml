@@ -11,7 +11,6 @@
 
 stages:
   - test
-  - build
   - deploy
 
 variables:
@@ -58,7 +57,7 @@ test-win10:
 
 
 install-linux:
-  stage: build
+  stage: test
   image: mambaorg/micromamba
   variables:
     MAMBA_DOCKERFILE_ACTIVATE: 1
@@ -74,23 +73,25 @@ install-linux:
     - master
 
 #[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
-make-badge:
-  stage: deploy
-  image: python:latest
-  script:
-    - pip install setuptools-scm
-    - version=`python -m setuptools_scm --strip-dev`
-    - echo "{\"version\":\"$version\"}" > badges.json
-  artifacts:
-    paths:
-      - badges.json
-  only:
-    - master
-    - pages
+# make-badge:
+#   stage: deploy
+#   image: python:latest
+#   script:
+#     - pip install setuptools-scm
+#     - version=`python -m setuptools_scm --strip-dev`
+#     - echo "{\"version\":\"$version\"}" > badges.json
+#   artifacts:
+#     paths:
+#       - badges.json
+#   only:
+#     - master
+#     - pages
 
 pages:
   stage: deploy
   image: $CI_REGISTRY/fordead/fordead_package:latest
+  variables:
+    GIT_STRATEGY: clone
   script:
     - conda env list
     - pip install portray python-markdown-math mdx-breakless-lists mkdocs-click

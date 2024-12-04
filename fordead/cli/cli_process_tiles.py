@@ -30,9 +30,11 @@ from click_option_group import optgroup
 @click.option("-o", "--output_directory", required=True, type = click.Path(), help = "Output directory")
 @click.option('-t', '--tiles', multiple=True, required=True, default = ["study_area"], help="List of tiles to process : -t T31UGP -t T31UGQ -t study_area")
 @optgroup.group("Step 1: compute_masked_vegetationindex arguments")
+@optgroup.option("--start_date", type = str, default = "2015-01-01", help = "First date of processing, dates before this date will be ignored.")
 @optgroup.option("-c", "--lim_perc_cloud", type = float, default = 0.3, help = "Maximum cloudiness at the tile or zone scale, used to filter used SENTINEL dates")
 @optgroup.option("--vi", type = str, default = "CRSWIR", help = "Chosen vegetation index")
-@optgroup.option("--sentinel_source", type = click.Choice(["THEIA", "Scihub", "PEPS"]), default = "THEIA", help = "Source of Sentinel data: 'THEIA', 'Scihub' or 'PEPS'")
+@optgroup.option("--sentinel_source", type = click.Choice(["theia", "scihub", "peps"], case_sensitive=False),
+                 default = "theia", help = "Source of Sentinel data: 'theia', 'scihub' or 'peps'")
 @optgroup.option("--apply_source_mask", is_flag=True, default = False, help = "If activated, applies the mask from SENTINEL-data provider")
 @optgroup.option("--extent_shape_path", type = click.Path(), default = None, help = "Path of shapefile used as extent of detection")
 @optgroup.option("--soil_detection", is_flag=True, default = False, help = "If activated, detects bare ground")
@@ -75,9 +77,10 @@ def process_tiles(
         tiles=["study_area"], 
 
         # compute_masked_vegetationindex arguments
+        start_date="2015-01-01",
         lim_perc_cloud=0.3,
         vi="CRSWIR",
-        sentinel_source="THEIA",
+        sentinel_source="theia",
         apply_source_mask=False,
         extent_shape_path=None,
         soil_detection=False,
@@ -126,12 +129,14 @@ def process_tiles(
         List of tiles to process
 
     ### compute_masked_vegetationindex arguments ###
+    start_date : str
+        First date of processing, dates before this date will be ignored.
     lim_perc_cloud : float
         Maximum cloudiness at the tile or zone scale, used to filter SENTINEL scenes
     vi : str
         Chosen vegetation index
     sentinel_source : str
-        Source of Sentinel data: 'THEIA', 'Scihub' or 'PEPS'
+        Source of Sentinel data: 'theia', 'scihub' or 'peps'
     apply_source_mask : bool
         If True, applies the mask from SENTINEL-data provider
     extent_shape_path : str
@@ -251,6 +256,7 @@ def process_tiles(
         
         compute_masked_vegetationindex(input_directory = sentinel_directory / tile,
                                        data_directory = data_directory,
+                                       start_date=start_date,
                                        lim_perc_cloud = lim_perc_cloud,
                                        vi = vi,
                                        sentinel_source = sentinel_source,

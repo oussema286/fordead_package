@@ -7,8 +7,68 @@ from fordead.validation.mask_vi_from_dataframe import mask_vi_from_dataframe
 from fordead.validation.train_model_from_dataframe import train_model_from_dataframe
 from fordead.validation.dieback_detection_from_dataframe import dieback_detection_from_dataframe
 import subprocess
+import geopandas as gpd
 
-@pytest.mark.parametrize("sentinel_source", ["THEIA", "Planetary"])
+def test_obs(input_dir, output_dir):
+    sentinel_source = "planetary"
+    
+    export_dir = (output_dir / f"test_obs_{sentinel_source}").rmtree_p().mkdir()
+    reflectance_path = export_dir / "reflectance.csv"
+
+    x = [642385.] # index=122
+    y = [5451865.] # index=219
+    wrong_tile = "T31UGP"
+    good_tile = "T31UFQ"
+    points_path = output_dir / "points.json"
+
+    points = gpd.GeoDataFrame(geometry=gpd.points_from_xy(x, y, crs=32631))
+    points["id"]=0
+    points["area_name"] = wrong_tile
+    points["epsg"] = 32631
+    points["id_pixel"]=1
+    points.to_file(points_path)
+    extract_reflectance(
+        obs_path = points_path,
+        sentinel_source = sentinel_source, 
+        cloudiness_path = None,
+        lim_perc_cloud = 1,
+        export_path = reflectance_path,
+        name_column = "id",
+        tile_selection=wrong_tile,
+        start_date="2019-01-01",
+        end_date="2021-12-31")
+    assert not reflectance_path.exists()
+
+    
+    extract_reflectance(
+        obs_path = points_path,
+        sentinel_source = sentinel_source, 
+        cloudiness_path = None,
+        lim_perc_cloud = 1,
+        export_path = reflectance_path,
+        name_column = "id",
+        start_date="2019-01-01",
+        end_date="2021-12-31")
+    assert not reflectance_path.exists()
+
+    points["area_name"] = good_tile
+    points.to_file(points_path)
+
+    extract_reflectance(
+        obs_path = points_path,
+        sentinel_source = sentinel_source, 
+        cloudiness_path = None,
+        lim_perc_cloud = 1,
+        export_path = reflectance_path,
+        name_column = "id",
+        start_date="2021-01-01",
+        end_date="2021-12-31")
+    assert reflectance_path.exists()
+
+
+
+
+@pytest.mark.parametrize("sentinel_source", ["theiastac", "THEIA", "Planetary"])
 def test_calibration(input_dir, output_dir, sentinel_source):
     
     print(f"Using {sentinel_source} data")
@@ -85,7 +145,7 @@ def test_calibration_cli(input_dir, output_dir, sentinel_source):
     calval_dir = (output_dir / f"calval_{sentinel_source}_cli").rmtree_p().mkdir()
 
     source = sentinel_source
-    if sentinel_source == "THEIA":
+    if sentinel_source.lower() == "theia":
         sentinel_source = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
         cloudiness_path = calval_dir / "extracted_cloudiness.csv"
     else:
@@ -180,3 +240,4 @@ def test_calibration_cli(input_dir, output_dir, sentinel_source):
         f"--stress_index_mode mean",
         f"--update_masked_vi"]
     run_cmd(cmd)
+

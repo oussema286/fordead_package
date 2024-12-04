@@ -86,6 +86,7 @@ from shapely import to_geojson
 import warnings
 import stackstac
 from stac_static.search import to_geodataframe
+from stac_geoparquet import __version__ as sg_version
 
 # Adds GDAL_HTTP_MAX_RETRY and GDAL_HTTP_RETRY_DELAY to
 # stackstac.rio_reader.DEFAULT_GDAL_ENV
@@ -109,10 +110,11 @@ DEFAULT_GDAL_ENV = stackstac.rio_reader.LayeredEnv(
         # in different threads snappy.
     ),
     read=dict(
-        VSI_CACHE=False
+        VSI_CACHE=False,
         # ^ *don't* cache HTTP requests for actual data. We don't expect to re-request data,
         # so this would just blow out the HTTP cache that we rely on to make repeated `open`s fast
         # (see above)
+        # GDAL_CACHEMAX="500MB"
     ),
 
 )
@@ -229,7 +231,7 @@ def bbox_to_wgs(bbox, epsg):
 class ExtendPystacClasses:
     """Add capacities to_xarray and filter to pystac Catalog, Collection, ItemCollection"""
 
-    def to_xarray(self, xy_coords='center', gdal_env=DEFAULT_GDAL_ENV, **kwargs):
+    def to_xarray(self, xy_coords='center', **kwargs): # gdal_env=DEFAULT_GDAL_ENV
         """Returns a DASK xarray()
         
         This is a proxy to stackstac.stac
@@ -248,7 +250,7 @@ class ExtendPystacClasses:
         """
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
-            arr = stackstac.stack(self, **kwargs)
+            arr = stackstac.stack(self, xy_coords=xy_coords, **kwargs) # gdal_env=gdal_env,
         return arr
     
     def filter(self, asset_names=None, **kwargs):
@@ -322,6 +324,9 @@ class ExtendPystacClasses:
             
              In order to filter/select assets, use to_xarray(asset=...) or to_xarray().sel(band=...)
         """
+        # issue with proj:epsg that is converted sometimes to float, if 
+        # not all of them have it at the same level, e.g. some at item level,
+        # others at the asset level...
         res = ItemCollection(stac_static.search(self, **kwargs).item_collection())
         if asset_names is not None:
             for item in res.items:
@@ -330,7 +335,7 @@ class ExtendPystacClasses:
         return res
 
     def to_geodataframe(self, **kwargs):
-       return to_geodataframe(self)
+        return to_geodataframe(self)
 
     def drop_duplicates(self, inplace=False):
         """
@@ -363,12 +368,37 @@ class ExtendPystacClasses:
             return x
 
 class ItemCollection(pystac.ItemCollection, ExtendPystacClasses):
-    pass
+    
+    def __init__(self, items: Iterable[ItemLike], **kwargs):
+        super().__init__(items, **kwargs)
+        if sg_version > "0.3.2":
+            remove_uncommon_properties(self, inplace=True)
 
 class Catalog(pystac.Catalog, ExtendPystacClasses):
     pass
 #######################################
 
+####
+def remove_uncommon_properties(x: ItemCollection, inplace=False):
+    if not inplace:
+        collection = collection.copy()
+
+    keys = set(x.items[0].properties.keys())
+    udiff = []
+    for item in x.items:
+        keys = keys.intersection(item.properties.keys())
+        
+    for item in x.items:
+        diff = keys.symmetric_difference(item.properties.keys())
+        for k in diff:
+            item.properties.pop(k)
+            udiff.append(k)
+
+    if len(udiff) > 0:
+        print(f"Removed properties that were not common to all items:\n{set(udiff)}")
+
+    if not inplace:
+        return collection
 
 #### Collection specific fucntions and classes #####
 def parse_theia_name(x):

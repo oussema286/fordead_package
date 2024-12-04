@@ -6,20 +6,22 @@ dependencies:
   - click
   - click-option-group
   - dask
-  # - eodag # waiting for release, see 
+  - eodag >= 3
   - shapely >= 2.0.0
   - fiona
   - geopandas
   - git
   - matplotlib
-  - numpy < 2
-  - path
+  - numpy
+  - path < 17
   - pathlib
   - pip
   - planetary-computer
   - plotly
-  - python
+  # issue with pytest and vscode: https://github.com/microsoft/vscode-python-debugger/issues/498
+  - python < 3.12
   - pystac
+  - pytest
   - rasterio
   - rioxarray
   - scipy
@@ -31,12 +33,16 @@ dependencies:
   # additionnal dependencies for stac-static
   - pygeofilter
   - pyarrow != 15.0.2
+
+  # additionnal dependencies for dinamis-sdk
+  - appdirs
+  - qrcode
+  
   - pip:
     # ensure that stac-geoparquet v0.3.2+ (conda version is too old),
     # dependency of stac-static
-    - stac-geoparquet>=0.3.2
+    # keep it to 0.3.2 to avoid issue https://github.com/stac-utils/stac-geoparquet/issues/76
+    - stac-geoparquet==0.3.2
     - git+https://github.com/jsignell/stac-static
+    - dinamis-sdk
     - git+https://gitlab.com/fordead/fordead_package
-    - git+https://github.com/CS-SI/eodag.git@develop
-
-

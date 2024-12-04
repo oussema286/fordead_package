@@ -35,8 +35,11 @@ output_dir = base_dir / "outputs"
 # Accepted values are:
 # - "THEIA" to use S2 THEIA data downloaded from https://gitlab.com/fordead/fordead_data
 # - "Planetary" to use S2 Planetary Computer (i.e. Sen2Cor processed data)
-sentinel_source = "THEIA"
+# - "theiastac" to use S2 from CDS THEIA STAC catalog (i.e. remote THEIA data)
+
+# sentinel_source = "THEIA"
 # sentinel_source = "Planetary"
+sentinel_source = "theiastac"
 
 obs_path = fordead_data_dir / "vector/observations_tuto.shp"
 calval_dir = (output_dir / f"calval_{sentinel_source}").rmtree_p().makedirs_p()
@@ -50,10 +53,10 @@ args_to_test = {"threshold_anomaly" : [0.08,0.09,0.1,0.11,0.12,0.13,0.14,0.15,0.
                 "vi" : ["CRSWIR","NDVI"]}
 ########################################################
 
-if not fordead_data_dir.exists():
-    raise FileNotFoundError("`fordead_data` directory not found, please download the data with download_data.py or adapt `base_dir` path")
-
 if sentinel_source == "THEIA":
+    if not fordead_data_dir.exists():
+        raise FileNotFoundError("`fordead_data` directory not found, please download the data with download_data.py or adapt `base_dir` path")
+    
     sentinel_source = fordead_data_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
     cloudiness_path = calval_dir / "extracted_cloudiness.csv"
 else:

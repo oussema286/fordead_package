@@ -1,3 +1,67 @@
+# v1.10.1
+## Add
+- new `theiastac` provider for calibration/validation: extract values from
+  remote STAC collection sentinel-2-l2a-theia of 
+  https://stacapi-cdos.apps.okd.crocc.meso.umontpellier.fr
+  to avoid downloading whole tiles. See docs/examples/calibration_validation.py
+
+## Change
+- change the output format of `extract_results` for better understanding
+  (dates corresponding date indexes, renamed and split files)
+- dependency to `EODAG >= 3` to solve https://github.com/CS-SI/eodag/issues/1123
+- remove constraint on `numpy` version (related to stackstac new release https://github.com/gjoseph92/stackstac/issues/250)
+- add constraint `python < 3.12` due to vscode issue with debugpy: see https://github.com/microsoft/vscode-python-debugger/issues/498
+
+## Fix
+- points out of the tile bbox in extract_raster_values
+- removed wrong scale factor for VegetationIndex in `get_tile_collection`
+
+# v1.10.0
+## Add
+- function `step5_export_results.extract_results` to extract the results for points of interest
+- in validation module, provider `'theiastac'` to original `['theia', 'planetary']`
+
+## Change
+- in `extract_raster_values`:
+  - switch the args order of inputs to reflect the usual signature of such a function
+  - add possibility to input an xarray to `extract_raster_values`
+  - add arguments with default values `chunksize=512` `dropna=True` and `dtype=int`
+- `sentinel_source` is now case insensitive e.g. 'Theia', 'THEIA' and 'theia' are accepted.
+
+## Fix
+- slightly different results with same data in CalVal and production (issue #35) : 
+  sometimes the pixel next to the one focused was extracted by `extract_relflectance`
+  due to a shift of res/2 of the raster spatial coordinates.
+
+
+# v1.9.1
+## Add
+- args `chunsize` and `by_chunk` to `extract_raster_values`: 
+  processing by chunk to avoid loosing already downloaded when interrupted
+- tests for results_visualsation
+
+## Change
+- update dependency version to eodag >= 3
+- default chunsize in extract_raster_values: 512 (instead of 1024)
+
+## Fix
+- in extract_raster_values: possible duplicated {date, id_point, band}, usually due to splitted scenes --> averaging.
+- result_visualisation (int index requested for xr.DataArray.isel)
+
+# v1.9.0
+## Add
+- argument `start_date` to `process_tile` and `compute_masked_vegetationindex`. It defines the first date of processing.
+  __Warning:__ it is retrocompatible with 1.8 (without recomputation), if and only if start_date=="2015-01-01" (default value).
+  Otherwise, the time series is considered as different and the whole workflow (vegetation indices, masks, model, etc.) 
+  is recomputed overwriting the existing results.
+  
+# v1.8.8
+## Fix
+- `harmonize_sen2cor_offet` --> `harmonize_sen2cor_offset`
+- error message when data is insufficient for training in `train_model_from_dataframe`
+- path version in requirement (< 17)
+- issue with stac-geoparquet > 3.2 https://github.com/stac-utils/stac-geoparquet/issues/76
+
 # v1.8.7
 ## Change
 - example full_test_script.py replaced by dieback_detection.py and calibration_validation.py

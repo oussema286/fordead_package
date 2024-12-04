@@ -5,21 +5,23 @@ Created on Tue Dec 13 10:52:12 2022
 @author: rdutrieux
 """
 import time
+from datetime import timedelta
 import click
 import geopandas as gp
 import pandas as pd
 from pathlib import Path
+import rasterio as rio
 # from fordead.reflectance_extraction import get_reflectance_at_points
 from fordead.cli.utils import empty_to_none
 from fordead.reflectance_extraction import get_already_extracted, extract_raster_values
-from fordead.stac.stac_module import get_bbox, get_harmonized_planetary_collection, get_harmonized_theia_collection
-# import traceback
+from fordead.stac.stac_module import get_bbox, get_harmonized_planetary_collection, get_harmonized_theia_collection, get_harmonized_theiastac_collection
+import traceback
 
 import numpy as np
 
 @click.command(name='extract_reflectance')
 @click.option("--obs_path", type = str,default = None, help = "Path to a vector file containing observation points, must have an ID column corresponding to name_column parameter, an 'area_name' column with the name of the Sentinel-2 tile from which to extract reflectance, and a 'espg' column containing the espg integer corresponding to the CRS of the Sentinel-2 tile.", show_default=True)
-@click.option("--sentinel_source", type = str,default = None, help = "Can be either 'Planetary', in which case data is downloaded from Microsoft Planetary Computer stac catalogs, or the path of the directory containing Sentinel-2 data.", show_default=True)
+@click.option("--sentinel_source", type = str,default = None, help = "Can be either the path of the directory containing Sentinel-2 Theia data, or 'planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'theiastac' for 's2-theia' CDS Theia Montpellier S2 STAC collection.", show_default=True)
 @click.option("--export_path", type = str,default = None, help = "Path to write csv file with extracted reflectance", show_default=True)
 @click.option("--cloudiness_path", type = str, default = None, help = "Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/). Can be ignored if sentinel_source is 'Planetary'")
 @click.option("-n", "--lim_perc_cloud", type = float,default = 0.4, help = "Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Set parameter as -1 to not filter based on cloudiness", show_default=True)
@@ -50,6 +52,8 @@ def extract_reflectance(obs_path,
                         tile_selection = None,
                         start_date = "2015-01-01",
                         end_date = "2030-01-01",
+                        chunksize = None,
+                        by_chunk=True,
                         overwrite = False):
     """
     Extracts reflectance from Sentinel-2 data using a vector file containing points, exports the data to a csv file.
@@ -60,7 +64,7 @@ def extract_reflectance(obs_path,
     obs_path : str
         Path to a vector file containing observation points, must have an ID column corresponding to name_column parameter, an 'area_name' column with the name of the Sentinel-2 tile from which to extract reflectance, and a 'espg' column containing the espg integer corresponding to the CRS of the Sentinel-2 tile.
     sentinel_source : str
-        Can be either 'Planetary', in which case data is downloaded from Microsoft Planetary Computer stac catalogs, or the path of the directory containing Sentinel-2 data.
+        Can be either the path of the directory containing Sentinel-2 Theia data, or 'planetary' for 'sentinel-2-l2a' Microsoft Planetary Computer STAC collection, or 'theiastac' for 's2-theia' CDS Theia Montpellier S2 STAC collection.
     export_path : str
         Path to write csv file with extracted reflectance.
     cloudiness_path : str
@@ -77,13 +81,15 @@ def extract_reflectance(obs_path,
         First date of the period from which to extract reflectance
     end_date : str
         Last date of the period from which to extract reflectance
+    chunksize : int | tuple[int]
+        passed to stackstac.stack function. If None, the chunsize is
+        fixed to the internal geotiff block shape for local data,
+        or 512 for remote data (theiastac and planetary).
     overwrite : bool
         If True, overwrites the csv file if it already exists. The default is False.
     
     """
     
-    # if sentinel_source == 'Planetary':
-        
     
     export_path = Path(export_path)
     if export_path.exists():
@@ -94,8 +100,12 @@ def extract_reflectance(obs_path,
             print("Removing " + str(export_path))
             export_path.unlink()
     obs = gp.read_file(obs_path)
-    
-    if (sentinel_source != "Planetary") and (cloudiness_path is not None):
+
+    if sentinel_source.lower() in ["planetary", "theiastac"]:
+        sentinel_source = sentinel_source.lower()
+        cloudiness_path = None
+
+    if cloudiness_path is not None:
         cloudiness = pd.read_csv(cloudiness_path)
 
     if tile_selection is None:
@@ -106,36 +116,73 @@ def extract_reflectance(obs_path,
 
     extracted_reflectance = get_already_extracted(export_path, name_column, bands_to_extract)
 
+    start = time.time()
     for tile in tile_selection:
 
         tile_obs = obs[obs["area_name"] == tile]
         if len(tile_obs)==0:
             print("No observations in selected tile "+ tile)
         else:
-            
+            start_tile = time.time()
             tile_obs = tile_obs.to_crs(epsg = tile_obs.epsg.values[0])
             
             unfinished = True
+            by_chunk = True
+            
+            if chunksize is None:
+                chunksize = 512 # (1, -1, 512,512) not faster as network is already saturated
+            retries = 0
+            nretries = 10
             while unfinished:
                 try:                    
                     tile_already_extracted = None
                     if extracted_reflectance is not None:
                         tile_already_extracted = extracted_reflectance[extracted_reflectance["area_name"] == tile]
                     
-                    if sentinel_source == "Planetary":
+                    if sentinel_source == "planetary":
                         collection = get_harmonized_planetary_collection(
                             start_date, end_date, get_bbox(tile_obs),
                             lim_perc_cloud, tile, sign=True)
+                    elif sentinel_source == "theiastac":
+                        collection = get_harmonized_theiastac_collection(
+                            start_date, end_date, get_bbox(tile_obs),
+                            lim_perc_cloud, tile, sign=True)
                     else:
+                        # theia local data
                         tile_cloudiness = cloudiness[cloudiness["area_name"] == tile] if cloudiness_path is not None else None
                         collection = get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile)
-                    extract_raster_values(tile_obs, collection, bands_to_extract, tile_already_extracted, export_path)
+                        if chunksize is None:
+                            # get the file chunk size of local data
+                            with rio.open(collection[0].assets["B2"].href) as src: 
+                                chunksize = src.block_shapes[0]
+                            # get all bands in parallel
+                            chunksize = (1, -1, chunksize[0], chunksize[1])
+                    
+                    if len(collection) == 0:
+                        print(f"Observations are not within selected tile {tile}, use the module `obs_to_s2_grid` to preprocess the observations correctly.")
+                    else:
+                        extract_raster_values(
+                            collection, tile_obs, bands_to_extract, tile_already_extracted,
+                            export_path, by_chunk=by_chunk, chunksize=chunksize,
+                            dropna=True, dtype=int
+                            )
                     unfinished = False
                 except Exception as e:
                     # traceback_str = traceback.format_exc()
-                    print(f"Error: {e}")
+                    # print(f"Error: {e}")
+                    retries += 1
+                    print(traceback.format_exc())
                     # print(f"Error: {e}\nTraceback:\n{traceback_str}")
-                    print("Retrying...")
+                    if retries <= nretries:
+                        print(f"Retrying ({retries}/{nretries})...")
+                        extracted_reflectance = get_already_extracted(export_path, name_column, bands_to_extract)
+                    else:
+                        raise Exception(f"Failed after {retries} retries... there must be an issue here.")
+                    
+            end_tile = time.time()
+            print(f"Time for reflectance extraction in {tile}: {timedelta(seconds=end_tile-start_tile)}")
+    end = time.time()
+    print(f"Total time for reflectance extraction: {timedelta(seconds=end-start)}")
 
 
 if __name__ == '__main__':
@@ -164,7 +211,7 @@ if __name__ == '__main__':
         # # #Planetary
         extract_reflectance(
             obs_path = "D:/fordead/fordead_data/calval_output/preprocessed_obs_tuto.shp",
-            sentinel_source = "Planetary", 
+            sentinel_source = "planetary", 
             export_path = "D:/fordead/fordead_data/calval_output/test_extract_planetary.csv",
             name_column = "id",
             lim_perc_cloud = 0.4,
