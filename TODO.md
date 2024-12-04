@@ -1,10 +1,13 @@
 # recent
-- [x] split current_state in {current_state and static or timeless} including model coeffs
+- [x] split current_state in {current_state and static or timeless} including
+  model coeffs
 - remove dependency to time in extract_raster_values
 - [x] fix issue with id_point
 - [x] chunks/chunksize in step5
 - warning for max nb points in extract_raster_values
-- add by_chunk in command lines (extract_reflectance, step5) 
+- add by_chunk in command lines (extract_reflectance, step5)
+- place all test and example data (fordead_data, outputs) in a data directory to
+  simplify `.gitignore` and cleaning
 
 # Wainting for
 - solution to issue https://github.com/microsoft/vscode-python-debugger/issues/498
