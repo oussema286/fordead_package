@@ -6,6 +6,9 @@
 ## Change
 - change the output format of extract_results for better understanding
   (dates corresponding date indexes, renamed and split files)
+- dependency to EODAG >= 3 to solve https://github.com/CS-SI/eodag/issues/1123
+- remove constraint on numpy version (related to stackstac new release https://github.com/gjoseph92/stackstac/issues/250)
+- add constraint on python version < 3.12 due to vscode issue with debugpy: see https://github.com/microsoft/vscode-python-debugger/issues/498
 
 ## Fix
 - points out of the tile bbox in extract_raster_values
