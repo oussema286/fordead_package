@@ -18,8 +18,7 @@ dependencies:
   - pip
   - planetary-computer
   - plotly
-  # issue with pytest and vscode: https://github.com/microsoft/vscode-python-debugger/issues/498
-  - python < 3.12
+  - python
   - pystac
   - pytest
   - rasterio
