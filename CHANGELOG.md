@@ -10,6 +10,9 @@
   - remove args `retry` and `wait`, should not be necessary anymore
   - add download tests
 
+## Fix
+- issue #37: only one point extracted in extract_reflectance
+
 # v1.10.1
 ## Add
 - new `theiastac` provider for calibration/validation: extract values from
