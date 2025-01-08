@@ -450,7 +450,7 @@ def extract_raster_values(
     # see https://stackoverflow.com/questions/30405652/how-to-find-which-points-intersect-with-a-polygon-in-geopandas
     bbox = gpd.GeoSeries(box(*arr.rio.bounds()), crs=arr.rio.crs)
     # makes a copy of points by the way
-    points = points.loc[points.intersects(bbox.unary_union)]
+    points = points.loc[points.intersects(bbox.union_all())]
     if len(points) == 0:
         print("No points inside array bounding box.")
         return
