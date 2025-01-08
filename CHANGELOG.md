@@ -9,6 +9,10 @@
   - remove arg `empty_zip`: it was mandatory to track scene merges
   - remove args `retry` and `wait`, should not be necessary anymore
   - add download tests
+- dependency constraints:
+  - remove on python version
+  - path >=17
+  - eodag >= 3
 
 ## Fix
 - issue #37: only one point extracted in extract_reflectance
