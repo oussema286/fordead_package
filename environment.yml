@@ -14,7 +14,7 @@ dependencies:
   - libgdal
   - matplotlib
   - numpy
-  - path < 17
+  - path >= 17
   - pathlib
   - pip
   - planetary-computer
