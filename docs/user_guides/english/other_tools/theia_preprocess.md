@@ -1,4 +1,4 @@
-# Downloading and preprocessing Sentinel-2 data from THEIA
+# Downloading Sentinel-2 data
 
 Though this package is meant to be used with Sentinel-2 data from any provider, it has been mainly used and tested using MAJA data and it provides tools to easily download and preprocess the required data.
 

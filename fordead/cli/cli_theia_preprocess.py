@@ -78,7 +78,7 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
 
     Notes
     -----
-    See documentation of download user guide for GEODES authentication details.
+    See the downloading section in user guides for GEODES authentication details.
     """
     
     zipped_directory = Path(zipped_directory).expanduser().realpath().mkdir_p()
