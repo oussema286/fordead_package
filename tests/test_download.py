@@ -1,5 +1,15 @@
 
-from fordead.theia_preprocess import maja_download
+from fordead.theia_preprocess import maja_download, maja_search
+
+def test_maja_search():
+    tile = "T31TGM"
+    start_date = "2024-09-20"
+    end_date = "2024-09-26"
+
+    df = maja_search(tile, start_date, end_date)
+    assert df.shape[0] == 2
+
+    
 
 def test_download(output_dir):
     zip_dir = (output_dir / "download" / "zip").rmtree_p().makedirs_p()

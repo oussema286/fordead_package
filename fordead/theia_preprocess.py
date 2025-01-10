@@ -108,39 +108,53 @@ def maja_search(
     if level == 'LEVEL2A':
         product_type = 'S2_MSI_L2A_MAJA'
         provider = 'geodes'
-        tile_arg = {"spaceborne:tile":re.sub(r'^([0-9].*)', r'T\1', tile)}
+        # MGRS tile has multiple formats in geodes metadata
+        # - before 2024-09-25: TXXYYY
+        # - after 2024-09-25: XXYYY
+        # Thus both are searched
+        tile_arg = [{"spaceborne:tile": "T"+re.sub(r"^T", "", tile)},
+                    {"spaceborne:tile": re.sub(r"^T", "", tile)}]
     elif level == 'LEVEL3A':
-        product_type = 'S2_MSI_L3A_WASP'
-        provider = 'theia'
-        tile_arg = {"location":re.sub(r'^([0-9].*)', r'T\1', tile)}
+        raise NotImplementedError("LEVEL3A not yet implemented, ask developers if needed.")
+        # product_type = 'S2_MSI_L3A_WASP'
+        # provider = 'theia'
+        # tile_arg = [{"location":re.sub(r'^([0-9].*)', r'T\1', tile)}]
 
     if end_date is None:
         end_date = str((pd.to_datetime(start_date) + timedelta(days=1)).date())
 
     dag = EODataAccessGateway()
+    # patch for download issue mentioned in MR !12
+    # making more specific the jsonpath expression to avoid
+    # multiple downloadLink path leading to NotAvailable locations
+    dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.assets[?(@.roles[0] == "data" & @.type == "application/zip")].href'
+
     # dag._prune_providers_list()
 
     if search_timeout is not None:
         dag.providers_config[provider].search.timeout = search_timeout
 
     # search products
-    search_args = {
-        "productType":product_type,
-        "start":start_date,
-        "end":end_date,
-        "cloudCover":lim_perc_cloud,
-        "provider":provider
-    }
+    all_search_results = []
+    for t in tile_arg:
+        search_args = {
+            "productType":product_type,
+            "start":start_date,
+            "end":end_date,
+            "cloudCover":lim_perc_cloud,
+            "provider":provider
+        }
+        search_args.update(t)
+        search_results = dag.search_all(**search_args)
+            
+        # issue: cloudCover criterium not working with geodes
+        search_results = search_results.crunch(
+            FilterProperty(dict(cloudCover=lim_perc_cloud, operator="lt"))
+        )
 
-    search_args.update(tile_arg)
+        all_search_results.extend(search_results)
 
-
-    search_results = dag.search_all(**search_args)
-    
-    # issue: cloudCover criterium not working with geodes
-    search_results = search_results.crunch(
-        FilterProperty(dict(cloudCover=lim_perc_cloud, operator="lt"))
-    )
+    search_results = all_search_results
 
     df_remote = []
     for r in search_results:
