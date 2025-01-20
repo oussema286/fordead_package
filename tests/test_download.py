@@ -1,5 +1,5 @@
 
-from fordead.theia_preprocess import maja_download, maja_search
+from fordead.theia_preprocess import maja_download, maja_search, get_local_maja_files
 
 def test_maja_search():
     tile = "T31TGM"
@@ -85,6 +85,9 @@ def test_download(output_dir):
     
     assert len(zip_files) == 2
     assert sum([f.exists() for f in unzip_files])==1
+    # check if one of the files is considered as merged
+    df = get_local_maja_files(zip_dir=zip_dir, unzip_dir=unzip_dir)
+    assert len(df.merged_id.drop_duplicates()) == 1
 
     # nothing should be downloaded
     zip_files, unzip_files = maja_download(

@@ -65,12 +65,13 @@ def get_local_maja_files(zip_dir, unzip_dir=None):
         }) #.astype({"date": str, "id": str, "zip_file": str, "zip_empty": bool})
 
     df_unzip = pd.DataFrame({
+        "date": [retrieve_date_from_string(f) for f in unzip_files],
         "id": [re.sub(r'(.*)_[A-Z]_V[0-9]-[0-9]$', r'\1',f.stem) for f in unzip_files],
         "version": [re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files],
-        "unzip_file": unzip_files,
+        "unzip_file": [f for f in unzip_files if f.is_dir()],
     }) #.astype({"id": str, "version": str, "unzip_file": str})
 
-    df = df_zip.merge(df_unzip, how="outer", on="id", left_index=False, right_index=False)
+    df = df_zip.merge(df_unzip, how="outer", on=["date", "id"], left_index=False, right_index=False)
     # TODO: in next version remove list of zip_files to use only merged_scenes.json
     # to identify merged scenes. As a consequence, all duplictates without a merged_scenes.json
     # will be redownloaded. See also TODO in maja_search.

@@ -1,3 +1,5 @@
+# next version
+- [ ] theia_preprocess.maja_download : look at duplicated dates only on unzip.
 # recent
 - [x] split current_state in {current_state and static or timeless} including
   model coeffs
