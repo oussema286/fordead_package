@@ -19,7 +19,9 @@ dependencies:
   - pip
   - planetary-computer
   - plotly
-  - python
+  # for eodag >= 3 and platform Windows,
+  # see orjson dep. in eodag/setup.cfg
+  - python < 3.12
   - pystac
   - pytest
   - rasterio
@@ -38,7 +40,7 @@ dependencies:
   - appdirs
   - qrcode
   - pydantic
-  - pydantic-settings  
+  - pydantic-settings
   - pip:
     # ensure that stac-geoparquet v0.3.2+ (conda version is too old),
     # dependency of stac-static
