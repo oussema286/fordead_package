@@ -37,7 +37,8 @@ dependencies:
   # additionnal dependencies for dinamis-sdk
   - appdirs
   - qrcode
-  
+  - pydantic
+  - pydantic-settings  
   - pip:
     # ensure that stac-geoparquet v0.3.2+ (conda version is too old),
     # dependency of stac-static
