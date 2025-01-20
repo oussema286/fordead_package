@@ -68,7 +68,7 @@ def get_local_maja_files(zip_dir, unzip_dir=None):
         "date": [retrieve_date_from_string(f) for f in unzip_files],
         "id": [re.sub(r'(.*)_[A-Z]_V[0-9]-[0-9]$', r'\1',f.stem) for f in unzip_files],
         "version": [re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files],
-        "unzip_file": [f for f in unzip_files if f.is_dir()],
+        "unzip_file": [f if f.is_dir() else pd.NA for f in unzip_files],
     }) #.astype({"id": str, "version": str, "unzip_file": str})
 
     df = df_zip.merge(df_unzip, how="outer", on=["date", "id"], left_index=False, right_index=False)
