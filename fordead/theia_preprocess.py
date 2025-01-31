@@ -5,18 +5,19 @@ Created on Tue Feb 16 13:53:50 2021
 @author: Raphael Dutrieux
 @author: Florian de Boissieu
 """
-import json
-from path import Path
-from zipfile import ZipFile, BadZipfile
-import zipfile
-import tempfile
-import numpy as np
-import rasterio
-import re
 from datetime import timedelta
 from eodag import EODataAccessGateway
 from eodag.crunch import FilterProperty
+import json
+import numpy as np
 import pandas as pd
+from path import Path
+import rasterio
+import re
+import tempfile
+import time
+from zipfile import ZipFile, BadZipfile
+import zipfile
 
 from fordead.import_data import retrieve_date_from_string, TileInfo
 from fordead.stac.theia_collection import parse_theia_name
@@ -228,6 +229,8 @@ def maja_download(
         search_timeout: int = 10,
         upgrade: bool = True,
         dry_run: bool = True,
+        retry: int = 10,
+        wait: int = 5
 ):
     """
     Search, download, unzip and merge duplicates of Sentinel-2 L2A data processed with
@@ -263,6 +266,10 @@ def maja_download(
         If True, checks product version and upgrades if needed
     dry_run : bool, optional
         If True, do not download or unzip products
+    retry : int, optional
+        Number of times to retry a failed download
+    wait : int, optional
+        Number of minutes to wait between retries
 
     Returns
     -------
@@ -390,7 +397,22 @@ def maja_download(
                 if len(zip_file) > 0 and check_zip(zip_file[0]):
                     zip_file = zip_file[0]
                 else:
-                    tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
+                    done = False
+                    trials = 0
+                    while not done:
+                        try:
+                            tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
+                            done = True
+                        except Exception as e:
+                            print(e)
+                            print("Failed to download: ", r.id)
+                            if trials==retry:
+                                raise RuntimeError("\nRetry limit reached.\n")
+                            else:
+                                trials += 1
+                                print(f"\nRetries in {wait*trials} minutes {trials}/{retry} ...\n")
+                                time.sleep(wait*trials*60)
+                                
                     zip_file = Path(tmpzip_file)
                     if keep_zip:
                         zip_file = zip_file.move(zip_dir / zip_file.name)

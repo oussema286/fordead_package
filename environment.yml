@@ -23,7 +23,8 @@ dependencies:
   # see orjson dep. in eodag/setup.cfg
   - python < 3.12
   # see changes of pystac 1.12 in changelog
-  # due to changes in projection extension (proj:code instead of proj:epsg)
+  # due to changes in projection extension
+  # (proj:code instead of proj:epsg)
   - pystac < 1.12
   - pytest
   - rasterio
