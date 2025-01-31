@@ -21,25 +21,20 @@ import pandas as pd
 from fordead.import_data import retrieve_date_from_string, TileInfo
 from fordead.stac.theia_collection import parse_theia_name
 
-def get_local_maja_files(zip_dir, unzip_dir=None):
+def get_local_maja_files(unzip_dir):
     """
     List the local maja files (zip and unzip) and 
     some of there characteristics (version, empty zip, ...)
     
     Parameters
     ----------
-    zip_dir : str
-        Path of the directory with zipped theia data.
-    unzip_dir : str, optional
+    unzip_dir : str
         Path of the directory with unzipped theia data. The default is None.
 
     Returns
     -------
     pandas.DataFrame of the files
     """
-    # unzip_dir / "merged_files.json"
-    zip_dir = Path(zip_dir)
-    zip_files = zip_dir.glob("SENTINEL*.zip")
 
     if unzip_dir is not None:
         unzip_dir = Path(unzip_dir)
@@ -47,34 +42,26 @@ def get_local_maja_files(zip_dir, unzip_dir=None):
     else:
         unzip_files = []
 
+    merged_files = []
     for f in unzip_files:
         merged_file =  f/"merged_scenes.json"
         if merged_file.is_file():
-            with open(merged_file, "r") as f:
-                merged_list = json.load(f)
-            for v in merged_list.values():
-                if f in v:
-                    unzip_files.append(unzip_dir/f)
+            with open(merged_file, "r") as ff:
+                merged_list = json.load(ff)
+            for v in merged_list[str(f.name)]:
+                if f.name != v:
+                    merged_files.append(unzip_dir/v)
+    
+    unzip_files.extend(merged_files)
 
-    # parse theia name
-    df_zip = pd.DataFrame({
-        "date": [retrieve_date_from_string(f) for f in zip_files],
-        "id": [re.sub(r'(.*)_[A-Z]$', r'\1',f.stem) for f in zip_files],
-        "zip_file": zip_files,
-        "zip_empty": [f.size == 22 for f in zip_files]
-        }) #.astype({"date": str, "id": str, "zip_file": str, "zip_empty": bool})
-
-    df_unzip = pd.DataFrame({
+    df = pd.DataFrame({
         "date": [retrieve_date_from_string(f) for f in unzip_files],
         "id": [re.sub(r'(.*)_[A-Z]_V[0-9]-[0-9]$', r'\1',f.stem) for f in unzip_files],
         "version": [re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files],
         "unzip_file": [f if f.is_dir() else pd.NA for f in unzip_files],
     }) #.astype({"id": str, "version": str, "unzip_file": str})
 
-    df = df_zip.merge(df_unzip, how="outer", on=["date", "id"], left_index=False, right_index=False)
-    # TODO: in next version remove list of zip_files to use only merged_scenes.json
-    # to identify merged scenes. As a consequence, all duplictates without a merged_scenes.json
-    # will be redownloaded. See also TODO in maja_search.
+    # identify duplicates
     df["merged"] = df["date"].duplicated(keep=False)
     merged_id = df.loc[df["merged"] & df["unzip_file"].notna(), ["id", "date"]]
     merged_id.rename(columns={"id":"merged_id"}, inplace=True)
@@ -187,6 +174,10 @@ def maja_search(
             cloud_cover = r.properties["cloudCover"],
             product = r,
         )
+        # from copy import deepcopy
+        # rprops = deepcopy(r.properties)
+        # rprops.pop("id")
+        # props.update(rprops)
         df_remote.append(props)
     if len(df_remote) == 0:
         return pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]))
@@ -194,10 +185,10 @@ def maja_search(
 
     return df_remote
 
-def categorize_search(search_results, zip_dir, unzip_dir):
+def categorize_search(search_results, unzip_dir):
     # Merge the local file list with the remote search
     # and add column status specifying the action to take
-    df_local = get_local_maja_files(zip_dir=zip_dir, unzip_dir=unzip_dir)
+    df_local = get_local_maja_files(unzip_dir)
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
         
     df = df_local.merge(search_results, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
@@ -205,8 +196,7 @@ def categorize_search(search_results, zip_dir, unzip_dir):
     def categorize(x):
         if x["version_local"] == x["version_remote"]:
             return "up_to_date"
-        # TODO: in next version replace test on zip_file with test on merged, see previous TODO
-        elif pd.isnull(x["zip_file"]):
+        elif pd.isnull(x["unzip_file"]) and (not x["merged"] or pd.isnull(x["merged"])):
             return "download"
         elif not pd.isnull(x["version_local"]) and not pd.isnull(x["version_remote"]) and x["version_local"] != x["version_remote"]:
             return "upgrade"
@@ -230,7 +220,7 @@ def maja_download(
         end_date: str,
         zip_dir: str,
         unzip_dir: str,
-        empty_zip: bool = True,
+        keep_zip: bool = False,
         lim_perc_cloud: float = 100,
         level: str = 'LEVEL2A',
         bands: list = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"],
@@ -255,8 +245,8 @@ def maja_download(
         Directory where THEIA data is downloaded
     unzip_dir : str
         Directory where THEIA data is unzipped
-    empty_zip : bool
-        If True, empty zip file after unzipping to save storage
+    keep_zip : bool
+        If False, removes the zip file after extraction
     lim_perc_cloud : int
         Maximum cloud cover (%)
     level : str, optional (see notes)
@@ -336,7 +326,7 @@ def maja_download(
         level=level,
         search_timeout=search_timeout)
     
-    df = categorize_search(search, zip_dir, unzip_dir)
+    df = categorize_search(search, unzip_dir)
 
     # merged products set to upgrade by extension may not be part of search
     # because of cloud cover limit, thus they are added a-posteriori
@@ -358,7 +348,7 @@ def maja_download(
             print(f"Product added to search results: {message}")
             search = pd.concat([search, search_sup]).sort_values("date", ignore_index=True) # add to search
 
-        df = categorize_search(search, zip_dir, unzip_dir)
+        df = categorize_search(search, unzip_dir)
     
     # keep only search results
     df = df[df["product"].notna()]
@@ -368,17 +358,17 @@ def maja_download(
     else:
         df_download = df[df["status"].isin(["download", "badzip"])]
 
+    if len(df_download) == 0:
+        print("Already up-to-date: nothing to download.")
+        return [], []
+
     unzipped = df[df["status"]=="up-to-date"]
-    to_unzip = df[df["status"]=="unzip"]
     to_upgrade = df_download[df_download["status"]=="upgrade"]
     to_download = df_download[df_download["status"].isin(["download", "badzip"])]
     
     if len(unzipped):
         unzipped_str = '\n'.join(unzipped["id"])
         print(f"Products already unzipped:\n{unzipped_str}\n")
-    if len(to_unzip):    
-        to_unzip_str = '\n'.join(to_unzip["id"])
-        print(f"Products already downloaded to unzip ({len(to_unzip)}):\n{to_unzip_str}\n")
     if len(to_upgrade):
         to_upgrade_str = '\n'.join(to_upgrade.apply(lambda x: f"{x['id']} ({x['version_local']} -> {x['version_remote']})", axis=1))
         print(f"Products to upgrade ({len(to_upgrade)}):\n{to_upgrade_str}\n")
@@ -393,9 +383,18 @@ def maja_download(
         print("Dry run, nothing has been downloaded")
     else:
         for r in df_download.itertuples():
+            # 1. download the zip file if not already there
+            # 2. extract the zip file
             with tempfile.TemporaryDirectory(dir=zip_dir) as tmpdir:
-                tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
-                tmpzip_file = Path(tmpzip_file)
+                zip_file = zip_dir.glob(r.id + "*.zip")
+                if len(zip_file) > 0 and check_zip(zip_file[0]):
+                    zip_file = zip_file[0]
+                else:
+                    tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
+                    zip_file = Path(tmpzip_file)
+                    if keep_zip:
+                        zip_file = zip_file.move(zip_dir / zip_file.name)
+
                 # remove old unzip if already there
                 if pd.notna(r.unzip_file):
                     try:
@@ -404,24 +403,31 @@ def maja_download(
                     except Exception as e:
                         print("Failed to remove", r.unzip_file)
                         raise e
-                tmpunzip_file = s2_unzip(tmpzip_file, tmpdir, bands, correction_type)
-                if empty_zip:
-                    print("Replaces by empty zip: " + tmpzip_file.name)
-                    tmpzip_file.remove()
-                    zipObj = ZipFile(tmpzip_file, 'w')
-                    zipObj.close()
-                # overwrites if exists
-                zip_file = tmpzip_file.move(zip_dir / Path(tmpzip_file).name)
+                # extract zip file
+                tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
                 unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
 
-            downloaded.append(zip_file)
+            downloaded.append(unzip_file)
             unzipped.append(unzip_file)
         # TODO merge only the results of search
         merge_same_date(bands, unzip_dir, correction_type=correction_type)
     
     return downloaded, unzipped
 
+def check_zip(x):
+    """
+    Check if a zip file is empty or BadZipfile
 
+    Returns False if the zip file is empty or BadZipfile, True otherwise
+    """
+    if Path(x).size == 22:
+        return False
+    try:
+        ZipFile(x).namelist()
+    except BadZipfile:
+        return False
+
+    return True
 
 
 BAND_NAMES = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12',

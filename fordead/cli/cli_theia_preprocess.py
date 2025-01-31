@@ -21,12 +21,15 @@ from fordead.theia_preprocess import maja_download
 @click.option("-c", '--correction_type', type = click.Choice(['SRE', 'FRE', 'FRC'], case_sensitive=False),  help='Chosen correction type (SRE or FRE for LEVEL2A data, FRC for LEVEL3A)', default='FRE', show_default=True)
 @click.option("--search_timeout", type=int, default=10, help = "Search time out in seconds", show_default=True)
 @click.option("--upgrade", is_flag=True, help = "Upgrade product version", show_default=True)
-@click.option("--empty_zip", is_flag=True, help = "Empty zip files", show_default=True)
+@click.option("--keep_zip", is_flag=True, help = "Keep zip files", show_default=True)
 @click.option("--dry_run", is_flag=True, help = "Dry run, no data is downloaded or unzipped", show_default=True)
 def cli_theia_preprocess(**kwargs):
     """
-    Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold. Then this data is unzipped, keeping only chosen bands from Flat REflectance data, and zip files can be emptied as a way to save storage space.
-    Finally, if two Sentinel-2 directories come from the same acquisition date, they are merged by replacing no data pixels from one directory with pixels with data in the other, before removing the latter directory.
+    Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold.
+    Then this data is unzipped, keeping only chosen bands.
+    Finally, Sentinel-2 scenes with duplicated dates (i.e. scene splitted in pieces)
+    are merged by replacing the no data pixels of one scene with the data pixels of the other,
+    before removing the directories of the duplicates.
 
     \f
 
@@ -37,7 +40,7 @@ def cli_theia_preprocess(**kwargs):
 def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                      level = "LEVEL2A", start_date = "2015-06-23", end_date = None, lim_perc_cloud = 50,
                      bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], 
-                     correction_type = "FRE", search_timeout=10, upgrade = False, empty_zip = False, dry_run = True):
+                     correction_type = "FRE", search_timeout=10, upgrade = False, keep_zip = False, dry_run = True):
     """
     Download Sentinel-2 zip files from GEODES (LEVEL2A) or THEIA (LEVEL3A) portal, 
     extract band files and eventually merge tile+date duplicates.
@@ -73,8 +76,8 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
         Search timeout in seconds. The default is 10.
     upgrade : bool, optional
         Upgrade product version. The default is False.
-    empty_zip : bool, optional
-        Empty zip files. The default is False.
+    keep_zip : bool, optional
+        Keep zip files. The default is False.
     dry_run : bool, optional
         If True, no data is downloaded. The default is True.
     Returns
@@ -102,7 +105,7 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
             end_date=end_date,
             zip_dir=tile_zip_dir,
             unzip_dir=tile_unzip_dir,
-            empty_zip=empty_zip,
+            keep_zip=keep_zip,
             lim_perc_cloud=lim_perc_cloud,
             level=level,
             bands=bands,

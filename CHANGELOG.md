@@ -7,6 +7,8 @@
   - add arg `dry_run` in order to print actions without doing them
   - remove args `login` and `password`: not a good practice
   - remove args `retry` and `wait`, should not be necessary anymore
+  - replace arg `empty_zip` by `keep_zip`: zip files are now removed if `keep_zip=False`
+  - zip files are not watched anymore: merged files are idenfied if `merged_scenes.json` is present in the scene directory (issue #25)
   - add download tests
 - remove function `delete_empty_zip`
 - dependency constraints:
