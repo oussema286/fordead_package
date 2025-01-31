@@ -155,13 +155,15 @@ def maja_search(
             "productType":product_type,
             "start":start_date,
             "end":end_date,
-            "cloudCover":lim_perc_cloud,
+            # "cloudCover":lim_perc_cloud,
             "provider":provider
         }
         search_args.update(t)
         search_results = dag.search_all(**search_args)
             
         # issue: cloudCover criterium not working with geodes
+        # TODO: actually all date duplicates should be kept,
+        # to avoid merging differently dependending on cloudCover
         search_results = search_results.crunch(
             FilterProperty(dict(cloudCover=lim_perc_cloud, operator="lt"))
         )
@@ -265,7 +267,8 @@ def maja_download(
     bands : list, optional
         List of bands to download. Default is ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"]
     correction_type : str, optional
-        Correction type for radiometric correction. Default is "FRE".
+        Correction type for radiometric correction, can be "SRE" (Surface Reflectance) or "FRE" (Falt Reflectance) for
+        LEVEL2A . Default is "FRE".
     upgrade : bool, optional
         If True, checks product version and upgrades if needed
     dry_run : bool, optional
@@ -414,7 +417,7 @@ def maja_download(
             downloaded.append(zip_file)
             unzipped.append(unzip_file)
         # TODO merge only the results of search
-        merge_same_date(bands, unzip_dir)
+        merge_same_date(bands, unzip_dir, correction_type=correction_type)
     
     return downloaded, unzipped
 
@@ -569,7 +572,7 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
                     print("Bad zip file, removing file: {}".format(tile.paths["zipped"][date]))
                     Path(tile.paths["zipped"][date]).remove()
 
-def merge_same_date(bands,out_dir):
+def merge_same_date(bands, out_dir, correction_type):
     """
     Merges data from two theia directories if they share the same date of acquisition
 
@@ -585,6 +588,9 @@ def merge_same_date(bands,out_dir):
     None.
 
     """
+
+    if not all([b.startswith("B") or b.startswith("CLMR") for b in bands]):
+        raise NotImplementedError("Only bands Bxx and CLMR[1-2] are supported for merge.")
 
     out_dir = Path(out_dir).expand()
     SenPathGen = out_dir.glob("SEN*")
@@ -615,15 +621,19 @@ def merge_same_date(bands,out_dir):
                 tmpdir = Path(tempdir)
 
                 # mosaic bands of the same date
+                corr_band = theia_bands(correction_type)
                 for band in bands:
-                    if band == "CLMR2":
-                        PathBande=doublon /  "MASKS" / (doublon.name +"_CLM_R2.tif")
-                        na_value=0
-                    else:
-                        PathBande=doublon / (doublon.name +"_FRE_"+band+".tif")
-                        na_value=-10000
-                    print("Mosaic same date band : " + band)
+                    print("Mosaicing band : " + band)
                     for doublon in Doublons:
+                        if band.startswith("CLMR"):
+                            PathBande=doublon /  "MASKS" / (doublon.name + corr_band[band])
+                            na_value=0
+                        elif band.startswith("B"):
+                            PathBande=doublon / (doublon.name + corr_band[band])
+                            na_value=-10000
+                        else:
+                            raise NotImplementedError("Merge not implemented for band " + band)
+
                         with rasterio.open(PathBande) as RasterBand:
                             if doublon==Doublons[0]:
                                 MergedBand=RasterBand.read(1)
@@ -632,7 +642,7 @@ def merge_same_date(bands,out_dir):
                                 AddedBand=RasterBand.read(1)
                                 MergedBand[AddedBand!=na_value]=AddedBand[AddedBand!=na_value]
                     
-                    with rasterio.open(tmpdir /(Doublons[0].name +"_FRE_"+band+".tif"), 'w', **ProfileSave) as dst:
+                    with rasterio.open(tmpdir /(Doublons[0].name + corr_band[band]), 'w', **ProfileSave) as dst:
                         dst.write(MergedBand,indexes=1)
                 
                 # add a file that specifies the scene was merged with others
