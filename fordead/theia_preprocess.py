@@ -375,7 +375,7 @@ def maja_download(
     
     if len(unzipped):
         unzipped_str = '\n'.join(unzipped["id"])
-        print(f"Products already unzipped:\n{unzipped_str}\n")
+        print(f"Products up-to-date ({len(unzipped)}):\n{unzipped_str}\n")
     if len(to_upgrade):
         to_upgrade_str = '\n'.join(to_upgrade.apply(lambda x: f"{x['id']} ({x['version_local']} -> {x['version_remote']})", axis=1))
         print(f"Products to upgrade ({len(to_upgrade)}):\n{to_upgrade_str}\n")
@@ -684,3 +684,72 @@ def merge_same_date(bands, out_dir, correction_type):
                 # move merged scene to original directory
                 tmpdir.move(Doublons[0])
 
+def patch_merged_scenes(zip_dir, unzip_dir, dry_run=True):
+    """
+    Adds a merged_scenes.json file to theia directories
+    if a zip file exists at the same date but its unzip
+    directory is missing
+
+
+    Parameters
+    ----------
+    zip_dir : str
+        Directory where theia zip files are stored (e.g. "/home/fordead/data/Zipped/T31TGM")
+    unzip_dir : str
+        Directory where theia unzipped directories are stored (e.g. "/home/fordead/data/Unzipped/T31TGM")
+    dry_run : bool
+        If True, merged_scenes.json are not written
+
+    Returns
+    -------
+    List
+        List of edited files merged_scenes.json
+    """
+
+    unzip_dir = Path(unzip_dir)
+    unzip_files = unzip_dir.glob("SENTINEL*")
+
+    zip_dir = Path(zip_dir)
+    zip_files = zip_dir.glob("SENTINEL*.zip")
+
+    df_unzip = pd.DataFrame({
+        "date": [retrieve_date_from_string(f) for f in unzip_files],
+        "id": [re.sub(r'(.*)_[A-Z]_V[0-9]-[0-9]$', r'\1',f.stem) for f in unzip_files],
+        "version": [re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files],
+        "unzip_file": unzip_files,
+    })
+
+    df_zip = pd.DataFrame({
+        "date": [retrieve_date_from_string(f) for f in zip_files],
+        "id": [re.sub(r'(.*)_[A-Z]$', r'\1',f.stem) for f in zip_files],
+        "zip_file": zip_files,
+        })
+    
+    df = df_zip.merge(df_unzip, how="outer", on=["date", "id"], left_index=False, right_index=False)
+    
+    df["merged"] = df["date"].duplicated(keep=False)
+    merged_id = df.loc[df["merged"] & df["unzip_file"].notna()]
+    merged_id.rename(columns={"id":"merged_id"}, inplace=True)
+    df = df.merge(merged_id[["merged_id", "date"]], how="left", on="date")
+    merged_scenes_files = []
+    for r in merged_id.itertuples():
+        if not (r.unzip_file / "merged_scenes.json").exists():
+            merged_list = []
+            for id in df.loc[df["merged_id"] == r.merged_id].id.to_list():
+                filename = id + re.sub(r'.*(_[A-Z]_V[0-9]-[0-9])$', r'\1',r.unzip_file.stem)
+                merged_list.append(filename)
+
+            merged = {str(r.unzip_file) : [str(f) for f in merged_list]}
+            print("merged scenes: ", merged)
+            if dry_run:
+                print("WARNING: dry run, not writing merged_scenes.json in: ", r.unzip_file)
+            else:
+                print("writing merged_scenes.json in: ", r.unzip_file)
+                with open(r.unzip_file / "merged_scenes.json", "w") as f:
+                    json.dump(merged, f, indent=4)
+
+            merged_scenes_files.append(r.unzip_file / "merged_scenes.json")
+    
+    return merged_scenes_files
+
+            

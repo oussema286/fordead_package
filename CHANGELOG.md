@@ -9,6 +9,8 @@
   - replace arg `empty_zip` by `keep_zip`: zip files are now removed if `keep_zip=False`
   - zip files are not watched anymore: merged files are idenfied if `merged_scenes.json` is present in the scene directory (issue #25)
   - add download tests
+  - add function `patch_merged_scenes` in order to patch merged scenes with file `merged_scenes.json`,
+    see documentation for details
 - remove function `delete_empty_zip`
 - dependency constraints:
   - remove on python version
