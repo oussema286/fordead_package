@@ -11,6 +11,8 @@
   - add download tests
   - add function `patch_merged_scenes` in order to patch merged scenes with file `merged_scenes.json`,
     see documentation for details
+  - arg `wait` is now in minutes (instead of seconds) and cumulative with reries: 
+    5 min. for the 1st retry, 10 min. for the 2nd, 15 min. for the 3rd, ...
 - remove function `delete_empty_zip`
 - dependency constraints:
   - remove on python version
