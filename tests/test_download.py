@@ -81,6 +81,10 @@ def test_download(output_dir):
     # check if one of the files is considered as merged
     df = get_local_maja_files(unzip_dir)
     assert len(df.merged_id.drop_duplicates()) == 1
+    for f in unzip_files:
+        if f.exists():
+            assert (f / "MASKS").is_dir()
+            assert len((f / "MASKS").glob("*CLM_R*.tif"))==2
 
     # nothing should be downloaded
     zip_files, unzip_files = maja_download(
@@ -114,3 +118,11 @@ def test_download(output_dir):
     assert len(unzip_files) == 0
 
 
+def test_patch_merged_scenes():
+    from path import Path
+    from fordead.theia_preprocess import patch_merged_scenes
+    unzip_base_dir = Path("/media/boissieu/sshfs_fordead/Data/SENTINEL")
+    zip_base_dir = Path("/media/boissieu/sshfs_fordead/Data/SENTINEL/Zipped")
+    for unzip_dir in unzip_base_dir.glob("T*"):
+        zip_dir = zip_base_dir/unzip_dir.name
+        patch_merged_scenes(zip_dir, unzip_dir, dry_run=True)

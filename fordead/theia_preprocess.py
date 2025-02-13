@@ -652,37 +652,46 @@ def merge_same_date(bands, out_dir, correction_type):
                 corr_band = theia_bands(correction_type)
                 for band in bands:
                     print("Mosaicing band : " + band)
-                    for doublon in Doublons:
+                    for i, doublon in enumerate(Doublons):
                         if band.startswith("CLMR"):
-                            PathBande=doublon /  "MASKS" / (doublon.name + corr_band[band])
+                            filename = Path("MASKS") / (doublon.name + corr_band[band])
+                            band_path = doublon / filename
                             na_value=0
                         elif band.startswith("B"):
-                            PathBande=doublon / (doublon.name + corr_band[band])
+                            filename= doublon.name + corr_band[band]
+                            band_path = doublon / filename
                             na_value=-10000
                         else:
                             raise NotImplementedError("Merge not implemented for band " + band)
 
-                        with rasterio.open(PathBande) as RasterBand:
-                            if doublon==Doublons[0]:
-                                MergedBand=RasterBand.read(1)
-                                ProfileSave=RasterBand.profile
+                        if i==0:
+                            output_filename = filename
+                            output_dir = doublon
+                            tmp_path = tmpdir / output_filename
+                            tmp_path.parent.mkdir_p()
+
+                        
+                        with rasterio.open(band_path) as RasterBand:
+                            if i==0:
+                                merged_band=RasterBand.read(1)
+                                profile=RasterBand.profile
                             else:
-                                AddedBand=RasterBand.read(1)
-                                MergedBand[AddedBand!=na_value]=AddedBand[AddedBand!=na_value]
+                                added_band=RasterBand.read(1)
+                                merged_band[added_band!=na_value]=added_band[added_band!=na_value]
                     
-                    with rasterio.open(tmpdir /(Doublons[0].name + corr_band[band]), 'w', **ProfileSave) as dst:
-                        dst.write(MergedBand,indexes=1)
+                    with rasterio.open(tmp_path, 'w', **profile) as dst:
+                        dst.write(merged_band,indexes=1)
                 
                 # add a file that specifies the scene was merged with others
                 with open(tmpdir / merged_file_name, "w") as f:
-                    json.dump({Doublons[0].name:[d.name for d in Doublons]},f, indent=4)
+                    json.dump({output_dir.name:[d.name for d in Doublons]},f, indent=4)
                     
                 # remove merged scenes
                 for doublon in Doublons:
                     doublon.rmtree()
                 
                 # move merged scene to original directory
-                tmpdir.move(Doublons[0])
+                tmpdir.move(output_dir)
 
 def patch_merged_scenes(zip_dir, unzip_dir, dry_run=True):
     """
