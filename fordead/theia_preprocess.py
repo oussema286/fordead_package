@@ -636,14 +636,14 @@ def merge_same_date(bands, out_dir, correction_type):
     merged_file_name = "merged_scenes.json"
     for date in np.unique(np.array(SenDateList)):
         if np.sum(np.array(SenDateList)==date)>1:
-            print("Doublon détecté à la date : " + date)
+            print("Duplicates detected at date : " + date)
             Doublons=np.array(SenPathList)[np.array(SenDateList)==date]
             Doublons = [Path(f) for f in Doublons]
             Doublons.sort()
             # check if already merged
             for doublon in Doublons:
                 if (doublon / merged_file_name).exists():
-                    raise Exception("Doublon "+doublon.name+" already merged.")
+                    raise Exception("Duplicate "+doublon.name+" already merged.")
 
             with tempfile.TemporaryDirectory(dir=out_dir) as tempdir:
                 tmpdir = Path(tempdir)
