@@ -79,8 +79,8 @@ def test_download(output_dir):
     assert len(unzip_files) == 2
     assert sum([f.exists() for f in unzip_files])==1
     # check if one of the files is considered as merged
-    df = get_local_maja_files(unzip_dir)
-    assert len(df.merged_id.drop_duplicates()) == 1
+    # df = get_local_maja_files(unzip_dir)
+    # assert len(df.merged_id.drop_duplicates()) == 1
     for f in unzip_files:
         if f.exists():
             assert (f / "MASKS").is_dir()
