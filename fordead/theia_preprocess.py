@@ -112,9 +112,9 @@ def maja_search(
         # MGRS tile has multiple formats in geodes metadata
         # - before 2024-09-25: TXXYYY
         # - after 2024-09-25: XXYYY
-        # Thus both are searched
-        tile_arg = [{"spaceborne:tile": "T"+re.sub(r"^T", "", tile)},
-                    {"spaceborne:tile": re.sub(r"^T", "", tile)}]
+        # Using tileIdentifier with MGRS tile without T prefix finds both
+        # see https://github.com/CS-SI/eodag/pull/1581/files
+        tile_arg = {"tileIdentifier": re.sub(r"^T", "", tile)}
     elif level == 'LEVEL3A':
         raise NotImplementedError("LEVEL3A not yet implemented, ask developers if needed.")
         # product_type = 'S2_MSI_L3A_WASP'
@@ -136,53 +136,34 @@ def maja_search(
         dag.providers_config[provider].search.timeout = search_timeout
 
     # search products
-    all_search_results = []
-    for t in tile_arg:
-        search_args = {
-            "productType":product_type,
-            "start":start_date,
-            "end":end_date,
-            # "cloudCover":lim_perc_cloud,
-            "provider":provider
-        }
-        search_args.update(t)
-        search_results = dag.search_all(**search_args)
-            
-        # issue: cloudCover criterium not working with geodes
-        # TODO: actually all date duplicates should be kept,
-        # to avoid merging differently dependending on cloudCover
-        search_results = search_results.crunch(
-            FilterProperty(dict(cloudCover=lim_perc_cloud, operator="lt"))
-        )
-
-        all_search_results.extend(search_results)
-
-    search_results = all_search_results
+    search_args = {
+        "productType": product_type,
+        # "start":start_date, # not working
+        # "end":end_date, # not working
+        # "cloudCover":lim_perc_cloud, # not working
+        # "id": "SENTINEL2B_20241005-103807-924_L2A_T31TGM_C",
+        "provider": provider
+    }
+    search_args.update(tile_arg)
+    search_results = dag.search_all(**search_args)
 
     df_remote = []
     for r in search_results:
-        # fix to keep a short id
-        r.properties["id"] = r.properties["identifier"]
-        # fix to keep same zip name as theia
-        r.properties["title"] = r.properties["identifier"]
-        date = retrieve_date_from_string(r.properties["identifier"])
+        date = retrieve_date_from_string(r.properties["id"])
         props = dict(
             id = re.sub(r'(.*)_[A-Z]', r'\1',r.properties["id"]),
             date = date,
-            # version 4.0 converted to "4-0"
-            version = re.sub(r'\.', '-', str(r.properties["versionInfo"])),
+            # version 4.0 converted to "4-0" like other versions
+            version = re.sub(r'\.', '-', str(r.properties["productVersion"])),
             cloud_cover = r.properties["cloudCover"],
             product = r,
         )
-        # from copy import deepcopy
-        # rprops = deepcopy(r.properties)
-        # rprops.pop("id")
-        # props.update(rprops)
         df_remote.append(props)
     if len(df_remote) == 0:
         return pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]))
     df_remote = pd.DataFrame(df_remote)
-
+    # filtering
+    df_remote = df_remote.loc[(df_remote.cloud_cover < lim_perc_cloud) & (df_remote.date >= start_date) & (df_remote.date <= end_date)]
     return df_remote
 
 def categorize_search(search_results, unzip_dir):
