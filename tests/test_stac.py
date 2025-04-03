@@ -1,6 +1,7 @@
 import pytest
 
 from fordead.stac.stac_module import getItemCollection, get_harmonized_theia_collection, get_harmonized_planetary_collection, get_harmonized_theiastac_collection, PLANETARY, THEIASTAC
+from fordead.stac.theia_collection import MyTheiaImage
 import rioxarray as rxr
 
 @pytest.fixture(scope="module")
@@ -60,6 +61,30 @@ def test_get_harmonized_collection(input_dir, start_date, end_date, obs_bbox, cl
     assert "Mask" in col[0].assets
     gdf = col.to_geodataframe()
     assert set(gdf["tilename"].drop_duplicates().tolist()) == set(["T32ULU", "T31UGP"])
+
+# test if CLM_R1 and CLM_R2 present
+# only choose CLM_R2
+def test_two_clms(input_dir):
+    
+    s2_dir = input_dir / "sentinel_data" / "validation_tutorial" / "sentinel_data"
+
+    s2_scene  = s2_dir.glob("*/SENTINEL*")[0]
+
+    s2_mask = (s2_scene / "MASKS").glob("*CLM_R2.tif")[0]
+    import re
+    from path import Path
+    s2_mask_r1 = Path(re.sub("CLM_R2\.tif$", "CLM_R1.tif", s2_mask))
+    if not s2_mask_r1.exists():
+        s2_mask.copy(s2_mask_r1)
+
+    item = MyTheiaImage(s2_scene).create_item()
+
+    assert item.assets["CLM"].href.endswith("CLM_R2.tif")
+    s2_mask_r1.remove()
+
+    
+
+
 
 
 # def test_extract_reflectance(start_date, end_date, obs, cloud_cover):

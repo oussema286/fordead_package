@@ -381,7 +381,7 @@ class Catalog(pystac.Catalog, ExtendPystacClasses):
 ####
 def remove_uncommon_properties(x: ItemCollection, inplace=False):
     if not inplace:
-        collection = collection.copy()
+        x = x.copy()
 
     keys = set(x.items[0].properties.keys())
     udiff = []
@@ -398,7 +398,7 @@ def remove_uncommon_properties(x: ItemCollection, inplace=False):
         print(f"Removed properties that were not common to all items:\n{set(udiff)}")
 
     if not inplace:
-        return collection
+        return x
 
 #### Collection specific fucntions and classes #####
 def parse_theia_name(x):
@@ -602,8 +602,7 @@ class MyTheiaImage(object):
         if len(clm_masks) == 0:
             raise FileNotFoundError(f"File *CLM_Rx.tif not found in {self.image_dir}")
         if len(clm_masks) > 1:
-            raise ValueError(f"Multiple files *CLM_Rx.tif found in {self.image_dir}")
-        
+            clm_masks = (self.image_dir / "MASKS").glob("*CLM_R2.tif")        
         band_files.append(clm_masks[0])
         return band_files
 
