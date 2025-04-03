@@ -16,6 +16,7 @@ import rasterio
 import re
 import tempfile
 import time
+import warnings
 from zipfile import ZipFile, BadZipfile
 import zipfile
 
@@ -64,9 +65,7 @@ def get_local_maja_files(unzip_dir):
 
     # identify duplicates
     df["merged"] = df["date"].duplicated(keep=False)
-    merged_id = df.loc[df["merged"] & df["unzip_file"].notna(), ["id", "date"]]
-    merged_id.rename(columns={"id":"merged_id"}, inplace=True)
-    df = df.merge(merged_id, how="left", on="date")
+
 
     return df
 
@@ -113,9 +112,9 @@ def maja_search(
         # MGRS tile has multiple formats in geodes metadata
         # - before 2024-09-25: TXXYYY
         # - after 2024-09-25: XXYYY
-        # Thus both are searched
-        tile_arg = [{"spaceborne:tile": "T"+re.sub(r"^T", "", tile)},
-                    {"spaceborne:tile": re.sub(r"^T", "", tile)}]
+        # Using tileIdentifier with MGRS tile without T prefix finds both
+        # see https://github.com/CS-SI/eodag/pull/1581/files
+        tile_arg = {"tileIdentifier": re.sub(r"^T", "", tile)}
     elif level == 'LEVEL3A':
         raise NotImplementedError("LEVEL3A not yet implemented, ask developers if needed.")
         # product_type = 'S2_MSI_L3A_WASP'
@@ -137,53 +136,34 @@ def maja_search(
         dag.providers_config[provider].search.timeout = search_timeout
 
     # search products
-    all_search_results = []
-    for t in tile_arg:
-        search_args = {
-            "productType":product_type,
-            "start":start_date,
-            "end":end_date,
-            # "cloudCover":lim_perc_cloud,
-            "provider":provider
-        }
-        search_args.update(t)
-        search_results = dag.search_all(**search_args)
-            
-        # issue: cloudCover criterium not working with geodes
-        # TODO: actually all date duplicates should be kept,
-        # to avoid merging differently dependending on cloudCover
-        search_results = search_results.crunch(
-            FilterProperty(dict(cloudCover=lim_perc_cloud, operator="lt"))
-        )
-
-        all_search_results.extend(search_results)
-
-    search_results = all_search_results
+    search_args = {
+        "productType": product_type,
+        # "start":start_date, # not working
+        # "end":end_date, # not working
+        # "cloudCover":lim_perc_cloud, # not working
+        # "id": "SENTINEL2B_20241005-103807-924_L2A_T31TGM_C",
+        "provider": provider
+    }
+    search_args.update(tile_arg)
+    search_results = dag.search_all(**search_args)
 
     df_remote = []
     for r in search_results:
-        # fix to keep a short id
-        r.properties["id"] = r.properties["identifier"]
-        # fix to keep same zip name as theia
-        r.properties["title"] = r.properties["identifier"]
-        date = retrieve_date_from_string(r.properties["identifier"])
+        date = retrieve_date_from_string(r.properties["id"])
         props = dict(
             id = re.sub(r'(.*)_[A-Z]', r'\1',r.properties["id"]),
             date = date,
-            # version 4.0 converted to "4-0"
-            version = re.sub(r'\.', '-', str(r.properties["versionInfo"])),
+            # version 4.0 converted to "4-0" like other versions
+            version = re.sub(r'\.', '-', str(r.properties["productVersion"])),
             cloud_cover = r.properties["cloudCover"],
             product = r,
         )
-        # from copy import deepcopy
-        # rprops = deepcopy(r.properties)
-        # rprops.pop("id")
-        # props.update(rprops)
         df_remote.append(props)
     if len(df_remote) == 0:
         return pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]))
     df_remote = pd.DataFrame(df_remote)
-
+    # filtering
+    df_remote = df_remote.loc[(df_remote.cloud_cover < lim_perc_cloud) & (df_remote.date >= start_date) & (df_remote.date <= end_date)]
     return df_remote
 
 def categorize_search(search_results, unzip_dir):
@@ -263,7 +243,8 @@ def maja_download(
         Correction type for radiometric correction, can be "SRE" (Surface Reflectance) or "FRE" (Falt Reflectance) for
         LEVEL2A . Default is "FRE".
     upgrade : bool, optional
-        If True, checks product version and upgrades if needed
+        If True, checks product version and upgrades if needed. Default is True.
+        For False, see notes, as it may not behave as expected.
     dry_run : bool, optional
         If True, do not download or unzip products
     retry : int, optional
@@ -321,6 +302,26 @@ def maja_download(
 
     If there are special characters in your API key,
     make sure to add double quotes around it.
+
+    _Upgrade issue_
+
+    The argument `upgrade=False` is made so that the same product,
+    i.e. with the same product ID but a different version, is not upgraded.
+    However, the naming from MAJA may not keep the same product ID,
+    changing the acquisition time for an unknown reason. It makes
+    impossible to differentiate splits of a scene from same piece of scene with different
+    versions. An example is the scene `SENTINEL2A_20170619-103812-942_L2A_T31TGM`,
+    which has 3 archives:
+    - SENTINEL2A_20170619-103806-862_L2A_T31TGM_D_V1-4 : first piece of the scene
+    - SENTINEL2A_20170619-103021-460_L2A_T31TGM_D_V1-4 : second piece of the scene
+    - SENTINEL2A_20170619-103812-942_L2A_T31TGM_C_V4-0 : new version of the first piece of the scene
+
+    In that case, even with `upgrade=False`, the product `SENTINEL2A_20170619-103812-942_L2A_T31TGM_C_V4-0`
+    would be downloaded, unzipped and merged with the other pieces of the scene.
+
+    In order to keep reproducibility as much as possible in the long term,
+    it was chosen to mosaic the pieces of the same scene with the same date
+    starting by the latest version.
     """
 
     if level == "LEVEL3A" : correction_type = "FRC"
@@ -367,6 +368,8 @@ def maja_download(
 
     if len(df_download) == 0:
         print("Already up-to-date: nothing to download.")
+        if not dry_run:
+            merge_same_date(bands, df, correction_type=correction_type)
         return [], []
 
     unzipped = df[df["status"]=="up-to-date"]
@@ -428,11 +431,12 @@ def maja_download(
                 # extract zip file
                 tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
                 unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
+                df.loc[df.id==r.id, "unzip_file"] = unzip_file
 
             downloaded.append(unzip_file)
             unzipped.append(unzip_file)
         # TODO merge only the results of search
-        merge_same_date(bands, unzip_dir, correction_type=correction_type)
+        merge_same_date(bands, df, correction_type=correction_type)
     
     return downloaded, unzipped
 
@@ -600,7 +604,7 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
                     print("Bad zip file, removing file: {}".format(tile.paths["zipped"][date]))
                     Path(tile.paths["zipped"][date]).remove()
 
-def merge_same_date(bands, out_dir, correction_type):
+def merge_same_date(bands, df, correction_type):
     """
     Merges data from two theia directories if they share the same date of acquisition
 
@@ -608,90 +612,97 @@ def merge_same_date(bands, out_dir, correction_type):
     ----------
     bands : list of str
         List of bands to extracted (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, CLMR2).
-    out_dir : str
-        Directory where unzipped data containing theia data are stored.
+    df : pandas.DataFrame
+        Dataframe containing theia data, as returned by get_theia_data
+    correction_type : str
+        Chosen correction type (SRE or FRE for LEVEL2A data, FRC for LEVEL3A)
 
     Returns
     -------
     None.
 
     """
-
     if not all([b.startswith("B") or b.startswith("CLMR") for b in bands]):
         raise NotImplementedError("Only bands Bxx and CLMR[1-2] are supported for merge.")
+    
+    # check that is has been merged with the correct order
+    df = df.loc[df.duplicated("date", keep=False)]
+    df = df.sort_values(by="id").sort_values(by="version_remote", ascending=False).reset_index(drop=True)
+    for group in df.groupby(by="date"):
+        if group[1].unzip_file.isnull().iloc[0]:
+            warnings.warn("Duplicates not correctly merged at date : " + group[0]+"\n"+"\n".join(group[1].unzip_file.tolist()))
 
-    out_dir = Path(out_dir).expand()
-    SenPathGen = out_dir.glob("SEN*")
-    # SenPathList=glob(out_dir+"/SEN*")
-    SenDateList = [] #Création dictionnaire avec date : chemin du fichier
-    SenPathList = []
-    for SenPath in SenPathGen:
-        # SenDate = SenPath.split('_')[1].split('-')[0]
-        SenDate = retrieve_date_from_string(SenPath)
-        SenDateList+=[SenDate]
-        SenPathList += [SenPath]
-    # tile = TileInfo(out_dir)
-    # tile.getdict_datepaths("SENTINEL",tile.data_directory)
+    # subset duplicates not merged
+    df = df.loc[~df.unzip_file.isnull()]
+    df = df.loc[df.duplicated("date", keep=False)]
+    df = df.sort_values(by="id").sort_values(by="version_remote", ascending=False).reset_index(drop=True)
 
+    if len(df) == 0:
+        return
+    
     merged_file_name = "merged_scenes.json"
-    for date in np.unique(np.array(SenDateList)):
-        if np.sum(np.array(SenDateList)==date)>1:
-            print("Duplicates detected at date : " + date)
-            Doublons=np.array(SenPathList)[np.array(SenDateList)==date]
-            Doublons = [Path(f) for f in Doublons]
-            Doublons.sort()
-            # check if already merged
-            for doublon in Doublons:
-                if (doublon / merged_file_name).exists():
-                    raise Exception("Duplicate "+doublon.name+" already merged.")
 
-            with tempfile.TemporaryDirectory(dir=out_dir) as tempdir:
-                tmpdir = Path(tempdir)
+    for group in df.groupby(by="date"):
+        print("Duplicates detected at date : " + group[0])
+        duplicates = list(group[1].unzip_file.values)
+        print('\n'.join(duplicates))
 
-                # mosaic bands of the same date
-                corr_band = theia_bands(correction_type)
-                for band in bands:
-                    print("Mosaicing band : " + band)
-                    for i, doublon in enumerate(Doublons):
-                        if band.startswith("CLMR"):
-                            filename = Path("MASKS") / (doublon.name + corr_band[band])
-                            band_path = doublon / filename
-                            na_value=0
-                        elif band.startswith("B"):
-                            filename= doublon.name + corr_band[band]
-                            band_path = doublon / filename
-                            na_value=-10000
-                        else:
-                            raise NotImplementedError("Merge not implemented for band " + band)
+        out_dir = Path(duplicates[0]).parent
 
+        # check if already merged
+        for doublon in duplicates:
+            if (doublon / merged_file_name).exists():
+                raise Exception("Duplicate "+doublon.name+" already merged.")
+
+        # merge bands
+        with tempfile.TemporaryDirectory(dir=out_dir) as tempdir:
+            tmpdir = Path(tempdir)
+
+            # mosaic bands of the same date
+            corr_band = theia_bands(correction_type)
+            for band in bands:
+                print("Mosaicing band : " + band)
+                for i, doublon in enumerate(duplicates):
+                    if band.startswith("CLMR"):
+                        filename = Path("MASKS") / (doublon.name + corr_band[band])
+                        band_path = doublon / filename
+                        na_value=0
+                    elif band.startswith("B"):
+                        filename= doublon.name + corr_band[band]
+                        band_path = doublon / filename
+                        na_value=-10000
+                    else:
+                        raise NotImplementedError("Merge not implemented for band " + band)
+
+                    if i==0:
+                        output_filename = filename
+                        output_dir = doublon
+                        tmp_path = tmpdir / output_filename
+                        tmp_path.parent.mkdir_p()
+
+                    
+                    with rasterio.open(band_path) as RasterBand:
                         if i==0:
-                            output_filename = filename
-                            output_dir = doublon
-                            tmp_path = tmpdir / output_filename
-                            tmp_path.parent.mkdir_p()
+                            merged_band=RasterBand.read(1)
+                            profile=RasterBand.profile
+                        else:
+                            added_band=RasterBand.read(1)
+                            merged_band[added_band!=na_value]=added_band[added_band!=na_value]
+                
+                with rasterio.open(tmp_path, 'w', **profile) as dst:
+                    dst.write(merged_band,indexes=1)
+            
+            # add a file that specifies the scene was merged with others
+            with open(tmpdir / merged_file_name, "w") as f:
+                json.dump({output_dir.name:[d.name for d in duplicates]},f, indent=4)
+                
+            # remove merged scenes
+            for doublon in duplicates:
+                doublon.rmtree()
+            
+            # move merged scene to original directory
+            tmpdir.move(output_dir)
 
-                        
-                        with rasterio.open(band_path) as RasterBand:
-                            if i==0:
-                                merged_band=RasterBand.read(1)
-                                profile=RasterBand.profile
-                            else:
-                                added_band=RasterBand.read(1)
-                                merged_band[added_band!=na_value]=added_band[added_band!=na_value]
-                    
-                    with rasterio.open(tmp_path, 'w', **profile) as dst:
-                        dst.write(merged_band,indexes=1)
-                
-                # add a file that specifies the scene was merged with others
-                with open(tmpdir / merged_file_name, "w") as f:
-                    json.dump({output_dir.name:[d.name for d in Doublons]},f, indent=4)
-                    
-                # remove merged scenes
-                for doublon in Doublons:
-                    doublon.rmtree()
-                
-                # move merged scene to original directory
-                tmpdir.move(output_dir)
 
 def patch_merged_scenes(zip_dir, unzip_dir, dry_run=True):
     """

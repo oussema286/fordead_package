@@ -24,6 +24,22 @@ def test_download(output_dir):
     zip_dir = (output_dir / "download" / "zip").rmtree_p().makedirs_p()
     unzip_dir = (output_dir / "download" / "unzip").rmtree_p().makedirs_p()
 
+    # # duplicates not with same ID
+    # tile = "T32ULU"
+    # start_date = "2016-12-14"
+    # end_date = "2016-12-15"
+    # bands=["B2", "B3", "CLMR2", "CLMR1"]
+    # cloud_min = 100
+    # cloud_max = 100
+
+    # # 31TGM 2017-06-19 is "tri"plicate with cloud_cover [3, 4] (2 x v1-4 + v4-0)
+    # tile = "T31TGM"
+    # start_date = "2017-06-19"
+    # end_date = "2017-06-20"
+    # bands=["B2", "B3", "CLMR2", "CLMR1"]
+    # cloud_min = 100
+    # cloud_max = 100
+
     # 31TGM 2018-08-11 is duplicate with cloud_cover [41,52]
     # 31TGK 2020-05-22 is duplicate with cloud_cover [11,30]
     tile = "T31TGK"
@@ -32,11 +48,6 @@ def test_download(output_dir):
     bands=["B2", "B3", "CLMR2", "CLMR1"]
     cloud_min = 20
     cloud_max = 40
-
-    # # 31TGM 2017-06-19 is duplicate with cloud_cover [3, 4]
-    # tile = "T31TGM"
-    # start_date = "2017-06-19"
-    # end_date = "2017-06-20"
 
     # # T31TGK 2023-01-12 is small
     # tile="T31TGK",
@@ -53,7 +64,8 @@ def test_download(output_dir):
         lim_perc_cloud=cloud_min,
         level="LEVEL2A",
         bands=bands,
-        dry_run=False)
+        dry_run=False,
+        keep_zip=True)
     
     assert len(downloaded) == 1
 
@@ -79,8 +91,8 @@ def test_download(output_dir):
     assert len(unzip_files) == 2
     assert sum([f.exists() for f in unzip_files])==1
     # check if one of the files is considered as merged
-    df = get_local_maja_files(unzip_dir)
-    assert len(df.merged_id.drop_duplicates()) == 1
+    # df = get_local_maja_files(unzip_dir)
+    # assert len(df.merged_id.drop_duplicates()) == 1
     for f in unzip_files:
         if f.exists():
             assert (f / "MASKS").is_dir()

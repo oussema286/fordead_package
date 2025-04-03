@@ -17,7 +17,7 @@
 - dependency constraints:
   - remove on python version
   - path >=17
-  - eodag >= 3
+  - eodag > 3.2 for new geodes api
 
 ## Fix
 - issue #37: only one point extracted in extract_reflectance
