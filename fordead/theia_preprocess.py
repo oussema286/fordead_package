@@ -243,7 +243,8 @@ def maja_download(
         Correction type for radiometric correction, can be "SRE" (Surface Reflectance) or "FRE" (Falt Reflectance) for
         LEVEL2A . Default is "FRE".
     upgrade : bool, optional
-        If True, checks product version and upgrades if needed
+        If True, checks product version and upgrades if needed. Default is True.
+        For False, see notes, as it may not behave as expected.
     dry_run : bool, optional
         If True, do not download or unzip products
     retry : int, optional
@@ -301,6 +302,26 @@ def maja_download(
 
     If there are special characters in your API key,
     make sure to add double quotes around it.
+
+    _Upgrade issue_
+
+    The argument `upgrade=False` is made so that the same product,
+    i.e. with the same product ID but a different version, is not upgraded.
+    However, the naming from MAJA may not keep the same product ID,
+    changing the acquisition time for an unknown reason. It makes
+    impossible to differentiate splits of a scene from same piece of scene with different
+    versions. An example is the scene `SENTINEL2A_20170619-103812-942_L2A_T31TGM`,
+    which has 3 archives:
+    - SENTINEL2A_20170619-103806-862_L2A_T31TGM_D_V1-4 : first piece of the scene
+    - SENTINEL2A_20170619-103021-460_L2A_T31TGM_D_V1-4 : second piece of the scene
+    - SENTINEL2A_20170619-103812-942_L2A_T31TGM_C_V4-0 : new version of the first piece of the scene
+
+    In that case, even with `upgrade=False`, the product `SENTINEL2A_20170619-103812-942_L2A_T31TGM_C_V4-0`
+    would be downloaded, unzipped and merged with the other pieces of the scene.
+
+    In order to keep reproducibility as much as possible in the long term,
+    it was chosen to mosaic the pieces of the same scene with the same date
+    starting by the latest version.
     """
 
     if level == "LEVEL3A" : correction_type = "FRC"

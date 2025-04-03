@@ -32,7 +32,14 @@ def test_download(output_dir):
     # cloud_min = 100
     # cloud_max = 100
 
-    
+    # # 31TGM 2017-06-19 is "tri"plicate with cloud_cover [3, 4] (2 x v1-4 + v4-0)
+    # tile = "T31TGM"
+    # start_date = "2017-06-19"
+    # end_date = "2017-06-20"
+    # bands=["B2", "B3", "CLMR2", "CLMR1"]
+    # cloud_min = 100
+    # cloud_max = 100
+
     # 31TGM 2018-08-11 is duplicate with cloud_cover [41,52]
     # 31TGK 2020-05-22 is duplicate with cloud_cover [11,30]
     tile = "T31TGK"
@@ -41,11 +48,6 @@ def test_download(output_dir):
     bands=["B2", "B3", "CLMR2", "CLMR1"]
     cloud_min = 20
     cloud_max = 40
-
-    # # 31TGM 2017-06-19 is duplicate with cloud_cover [3, 4]
-    # tile = "T31TGM"
-    # start_date = "2017-06-19"
-    # end_date = "2017-06-20"
 
     # # T31TGK 2023-01-12 is small
     # tile="T31TGK",
