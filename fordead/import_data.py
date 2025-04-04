@@ -144,26 +144,31 @@ def get_band_paths(dict_sen_paths):
             path=str(path)
             if "B2" in path or "B02" in path:
                 DictSentinelPaths[date]["B2"]=Path(path)
-            if "B3" in path or "B03" in path:
+            elif "B3" in path or "B03" in path:
                 DictSentinelPaths[date]["B3"]=Path(path)
-            if "B4" in path or "B04" in path:
+            elif "B4" in path or "B04" in path:
                 DictSentinelPaths[date]["B4"]=Path(path)
-            if "B5" in path or "B05" in path:
+            elif "B5" in path or "B05" in path:
                 DictSentinelPaths[date]["B5"]=Path(path)
-            if "B6" in path or "B06" in path:
+            elif "B6" in path or "B06" in path:
                 DictSentinelPaths[date]["B6"]=Path(path)
-            if "B7" in path or "B07" in path:
+            elif "B7" in path or "B07" in path:
                 DictSentinelPaths[date]["B7"]=Path(path)
-            if ("B8" in path or "B08" in path) and not("B8A" in path):
+            elif ("B8" in path or "B08" in path) and not("B8A" in path):
                 DictSentinelPaths[date]["B8"]=Path(path)
-            if "B8A" in path:
+            elif "B8A" in path:
                 DictSentinelPaths[date]["B8A"]=Path(path)
-            if "B11" in path:
+            elif "B11" in path:
                 DictSentinelPaths[date]["B11"]=Path(path)
-            if "B12" in path:
+            elif "B12" in path:
                 DictSentinelPaths[date]["B12"]=Path(path)
                 
-            if "_CLM_" in path or "SCL" in path:
+            elif "_CLM_" in path:
+                lp = list(Path(path).parent.glob("*_CLM_R*.tif"))
+                if len(lp) == 2:
+                    path = list(Path(path).parent.glob("*_CLM_R2.tif"))[0]
+                DictSentinelPaths[date]["Mask"]=Path(path)
+            elif "SCL" in path:
                 DictSentinelPaths[date]["Mask"]=Path(path)
    
     return DictSentinelPaths

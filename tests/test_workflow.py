@@ -2,7 +2,7 @@ import geopandas as gpd
 from path import Path
 from tempfile import TemporaryDirectory
 import re
-from fordead.import_data import TileInfo
+from fordead.import_data import TileInfo, get_band_paths
 from fordead.steps.step1_compute_masked_vegetationindex import compute_masked_vegetationindex
 from fordead.steps.step2_train_model import train_model
 from fordead.steps.step3_dieback_detection import dieback_detection
@@ -10,6 +10,25 @@ from fordead.steps.step4_compute_forest_mask import compute_forest_mask
 from fordead.steps.step5_export_results import export_results, extract_results
 from fordead.cli.cli_process_tiles import process_tiles
 from fordead.visualisation.vi_series_visualisation import vi_series_visualisation
+
+# test if CLM_R1 and CLM_R2 present
+# get_band_paths should return CLM_R2 under Mask
+def test_get_band_paths(input_dir):
+    s2_dir = input_dir / "sentinel_data" / "dieback_detection_tutorial" / "study_area"
+
+    s2_scene  = s2_dir.glob("SENTINEL*")[0]
+
+    s2_mask = (s2_scene / "MASKS").glob("*CLM_R2.tif")[0]
+    s2_mask_r1 = Path(re.sub("CLM_R2\.tif$", "CLM_R1.tif", s2_mask))
+    if not s2_mask_r1.exists():
+        s2_mask.copy(s2_mask_r1)
+
+    dict_sen_paths = {"2016-01-01": s2_scene}
+    files = get_band_paths(dict_sen_paths)
+    assert str(files["2016-01-01"]["Mask"]) == str(s2_mask)
+   
+    s2_mask_r1.remove()
+
 
 # should generate a warning
 def test_warning_if_version_changed(input_dir, output_dir):
