@@ -3,7 +3,7 @@
 - download MAJA archives from GEODES instead of THEIA:
   - rename `theia_download` to `maja_download`: more appropriate
   - unzip and merge are now done inside `maja_download`, see new args
-  - add arg `upgrade` to check for MAJA version upgrade
+  - add arg `upgrade` to check for MAJA version upgrade, see issue #40 for details
   - add arg `dry_run` in order to print actions without doing them
   - remove args `login` and `password`: not a good practice
   - replace arg `empty_zip` by `keep_zip`: zip files are now removed if `keep_zip=False`
@@ -13,6 +13,7 @@
     see documentation for details
   - arg `wait` is now in minutes (instead of seconds) and cumulative with reries: 
     5 min. for the 1st retry, 10 min. for the 2nd, 15 min. for the 3rd, ...
+- when CLM_R1 and CLM_R2 files are present in a scene, CLM_R2 is chosen, see issue #41 for details
 - remove function `delete_empty_zip`
 - dependency constraints:
   - remove on python version
