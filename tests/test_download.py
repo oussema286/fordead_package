@@ -14,6 +14,13 @@ def test_maja_search():
     df = maja_search(tile, start_date, end_date)
     assert df.shape[0] == 2
 
+    # test cloud cover limit
+    start_date = "2024-09-20"
+    end_date = "2024-09-26"
+    df = maja_search(tile, start_date, end_date, lim_perc_cloud=50)
+    assert df.shape[0] == 1
+
+
     # test for search with empty results
     start_date = "2024-09-23"
     end_date = "2024-09-24"

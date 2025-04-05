@@ -138,10 +138,9 @@ def maja_search(
     # search products
     search_args = {
         "productType": product_type,
-        # "start":start_date, # not working
-        # "end":end_date, # not working
-        # "cloudCover":lim_perc_cloud, # not working
-        # "id": "SENTINEL2B_20241005-103807-924_L2A_T31TGM_C",
+        "start":start_date,
+        "end":end_date,
+        "cloudCover":lim_perc_cloud,
         "provider": provider
     }
     search_args.update(tile_arg)
@@ -162,8 +161,6 @@ def maja_search(
     if len(df_remote) == 0:
         return pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]))
     df_remote = pd.DataFrame(df_remote)
-    # filtering
-    df_remote = df_remote.loc[(df_remote.cloud_cover < lim_perc_cloud) & (df_remote.date >= start_date) & (df_remote.date <= end_date)]
     return df_remote
 
 def categorize_search(search_results, unzip_dir):

@@ -1,3 +1,8 @@
+# v1.11.1
+
+# Fix
+- issue #45: EODAG version to have datetime filtering in `maja_search`
+
 # v1.11.0
 ## Change
 - download MAJA archives from GEODES instead of THEIA:
