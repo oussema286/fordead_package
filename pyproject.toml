@@ -35,7 +35,7 @@ dependencies = [
   "click-option-group",
   "dask",
   "dinamis-sdk",
-  "eodag > 3.2",
+  "eodag >= 3.3.0",
   "geopandas",
   "matplotlib",
   "numpy",

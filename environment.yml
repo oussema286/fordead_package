@@ -7,7 +7,7 @@ dependencies:
   - click-option-group
   - dask
   # waiting for release
-  # - eodag >= 3
+  - eodag >= 3.3.0
   - shapely >= 2.0.0
   - fiona
   - geopandas
@@ -54,4 +54,4 @@ dependencies:
     - dinamis-sdk
     - git+https://gitlab.com/fordead/fordead_package
     # fix for new geodes api, waiting for release
-    - git+https://github.com/CS-SI/eodag@b785e7c15c8dc60efbe0f38ac4d6487d8917b1aa
+    # - git+https://github.com/CS-SI/eodag@87ade04922356eb78cf1798a8fb81bcea8057595

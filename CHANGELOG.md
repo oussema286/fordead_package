@@ -1,3 +1,9 @@
+# v1.11.1
+
+# Fix
+- EODAG v3.3.0+ to have datetime filtering in `maja_search` ([issue #45](https://gitlab.com/fordead/fordead_package/-/issues/45))
+- zip files is the same for some duplicates making keep_zip unsuable in that case ([issue #46](https://gitlab.com/fordead/fordead_package/-/issues/46))
+
 # v1.11.0
 ## Change
 - download MAJA archives from GEODES instead of THEIA:

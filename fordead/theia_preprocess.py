@@ -129,6 +129,7 @@ def maja_search(
     # making more specific the jsonpath expression to avoid
     # multiple downloadLink path leading to NotAvailable locations
     dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.assets[?(@.roles[0] == "data" & @.type == "application/zip")].href'
+    # dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.properties.endpoint_url'
 
     # dag._prune_providers_list()
 
@@ -138,10 +139,9 @@ def maja_search(
     # search products
     search_args = {
         "productType": product_type,
-        # "start":start_date, # not working
-        # "end":end_date, # not working
-        # "cloudCover":lim_perc_cloud, # not working
-        # "id": "SENTINEL2B_20241005-103807-924_L2A_T31TGM_C",
+        "start":start_date,
+        "end":end_date,
+        "cloudCover":lim_perc_cloud,
         "provider": provider
     }
     search_args.update(tile_arg)
@@ -162,8 +162,6 @@ def maja_search(
     if len(df_remote) == 0:
         return pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]))
     df_remote = pd.DataFrame(df_remote)
-    # filtering
-    df_remote = df_remote.loc[(df_remote.cloud_cover < lim_perc_cloud) & (df_remote.date >= start_date) & (df_remote.date <= end_date)]
     return df_remote
 
 def categorize_search(search_results, unzip_dir):
@@ -396,7 +394,7 @@ def maja_download(
             # 1. download the zip file if not already there
             # 2. extract the zip file
             with tempfile.TemporaryDirectory(dir=zip_dir) as tmpdir:
-                zip_file = zip_dir.glob(r.id + "*.zip")
+                zip_file = zip_dir.glob(r.product.properties["id"] + ".zip")
                 if len(zip_file) > 0 and check_zip(zip_file[0]):
                     zip_file = zip_file[0]
                 else:
