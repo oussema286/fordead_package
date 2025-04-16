@@ -129,6 +129,7 @@ def maja_search(
     # making more specific the jsonpath expression to avoid
     # multiple downloadLink path leading to NotAvailable locations
     dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.assets[?(@.roles[0] == "data" & @.type == "application/zip")].href'
+    # dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.properties.endpoint_url'
 
     # dag._prune_providers_list()
 
@@ -393,7 +394,7 @@ def maja_download(
             # 1. download the zip file if not already there
             # 2. extract the zip file
             with tempfile.TemporaryDirectory(dir=zip_dir) as tmpdir:
-                zip_file = zip_dir.glob(r.id + "*.zip")
+                zip_file = zip_dir.glob(r.product.properties["id"] + ".zip")
                 if len(zip_file) > 0 and check_zip(zip_file[0]):
                     zip_file = zip_file[0]
                 else:
