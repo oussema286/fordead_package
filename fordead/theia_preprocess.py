@@ -419,7 +419,7 @@ def maja_download(
                         zip_file = zip_file.move(zip_dir / zip_file.name)
 
                 # remove old unzip if already there
-                if pd.notna(r.unzip_file):
+                if pd.notna(r.unzip_file) and r.unzip_file.is_dir():
                     try:
                         print("Removing old unzip: ", r.unzip_file)
                         r.unzip_file.rmtree()
