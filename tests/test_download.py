@@ -32,6 +32,14 @@ def test_download(output_dir):
     zip_dir = (output_dir / "download" / "zip").rmtree_p().makedirs_p()
     unzip_dir = (output_dir / "download" / "unzip").rmtree_p().makedirs_p()
 
+    # # download issue for JBD, mail 2025-04-21
+    # tile = "T30TXN"
+    # start_date = "2019-01-16"
+    # end_date = "2019-01-17"
+    # bands=["B2", "B11", "CLMR2", "CLMR1"]
+    # cloud_min = 100
+    # cloud_max = 100
+
     # download issue: product with no asset
     # tile = "T31TGN"
     # start_date = "2025-01-13"
@@ -65,14 +73,14 @@ def test_download(output_dir):
     # cloud_min = 100
     # cloud_max = 100
 
-    # # 31TGM 2018-08-11 is duplicate with cloud_cover [41,52]
-    # # 31TGK 2020-05-22 is duplicate with cloud_cover [11,30]
+    # # 31TGM 2018-08-11 is duplicate with cloud_cover [41,52] --> became only one tile with cloud_cover 43
+    # # 31TGK 2020-05-22 is duplicate with cloud_cover [11,30] --> became two tiles with [11, 8]
     tile = "T31TGK"
     start_date = "2020-05-22"
     end_date = "2020-05-23"
     bands = ["B2", "B3", "CLMR2", "CLMR1"]
-    cloud_min = 20
-    cloud_max = 40
+    cloud_min = 10
+    cloud_max = 20
 
     # # T31TGK 2023-01-12 is small
     # tile="T31TGK",
@@ -91,6 +99,7 @@ def test_download(output_dir):
         bands=bands,
         dry_run=False,
         keep_zip=True,
+        search_timeout=1,
     )
 
     assert len(downloaded) == 1
