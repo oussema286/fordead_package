@@ -167,7 +167,6 @@ def maja_search(
 def categorize_search(search_results, unzip_dir):
     # Merge the local file list with the remote search
     # and add column status specifying the action to take
-    df_local = get_local_maja_files(unzip_dir)
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
         
     df = df_local.merge(search_results, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
@@ -332,29 +331,9 @@ def maja_download(
         level=level,
         search_timeout=search_timeout)
     
-    df = categorize_search(search, unzip_dir)
+    local = get_local_maja_files(unzip_dir)
 
-    # merged products set to upgrade by extension may not be part of search
-    # because of cloud cover limit, thus they are added a-posteriori
-    if any(df["status"].isin(["upgrade", "download"]) & df["product"].isnull()):
-        df_issue = df[df['status'].isin(["upgrade", "download"]) & df['product'].isnull()]
-        message = '\n'.join(df_issue['id'])
-        print("Products meant to be upgraded and merged but not included in the search results are added:"
-                           f"\n{message}")
-        for d in df_issue["date"]:
-            search_sup = maja_search(
-                tile=tile,
-                start_date=d,
-                end_date = str((pd.to_datetime(d) + timedelta(days=1)).date()),
-                lim_perc_cloud=100,
-                level=level,
-                search_timeout=search_timeout)
-            search_sup = search_sup[~search_sup["id"].isin(search["id"])]
-            message = '\n'.join(search_sup["id"])
-            print(f"Product added to search results: {message}")
-            search = pd.concat([search, search_sup]).sort_values("date", ignore_index=True) # add to search
-
-        df = categorize_search(search, unzip_dir)
+    df = categorize_search(remote, local)
     
     # keep only search results
     df = df[df["product"].notna()]
