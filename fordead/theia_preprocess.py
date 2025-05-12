@@ -162,6 +162,8 @@ def maja_search(
     if len(df_remote) == 0:
         return pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]))
     df_remote = pd.DataFrame(df_remote)
+    df_remote = df_remote.sort_values(by=["id", "version"], ignore_index=True, ascending=[True, False])
+    df_remote = df_remote.drop_duplicates(subset=["id"], keep="first", ignore_index=True)
     return df_remote
 
 def categorize_search(search_results, unzip_dir):
