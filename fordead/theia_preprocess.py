@@ -5,7 +5,7 @@ Created on Tue Feb 16 13:53:50 2021
 @author: Raphael Dutrieux
 @author: Florian de Boissieu
 """
-from datetime import timedelta
+from datetime import timedelta, datetime
 from eodag import EODataAccessGateway
 from eodag.crunch import FilterProperty
 import json
@@ -370,8 +370,13 @@ def maja_download(
 
     downloaded = []
     unzipped = []
+    cdate = datetime.now().date()
+    maja_download_file = unzip_dir/f"{cdate}_files_status.tsv"
+    print("Saving file table in: " + str(maja_download_file))
+    df = df[["date", "id", "version_local", "version_remote", "dup", "status", "cloud_cover", "unzip_file", "product"]]
+    df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
     if dry_run:
-        print("Dry run, nothing has been downloaded")
+        print("Dry run, nothing has been done")
     else:
         for r in df_download.itertuples():
             # 1. download the zip file if not already there
