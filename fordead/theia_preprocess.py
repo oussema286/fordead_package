@@ -63,6 +63,8 @@ def get_local_maja_files(unzip_dir):
         "unzip_file": [f if f.is_dir() else pd.NA for f in unzip_files],
     }) #.astype({"id": str, "version": str, "unzip_file": str})
 
+    df["merged"] = df["date"].duplicated(keep=False)
+    df = df.sort_values(by=["id", "version"], ignore_index=True, ascending=[True, False])
     return df
 
 def maja_search(
@@ -166,13 +168,12 @@ def categorize_search(remote, local):
     # Merge the local file list with the remote search
     # and add column status specifying the action to take
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
-    local["dup"] = local["date"].duplicated(keep=False)    
     df = local.merge(remote, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
 
     def categorize(x):
         if x["version_local"] == x["version_remote"]:
             return "up_to_date"
-        elif pd.isnull(x["unzip_file"]) and (not x["dup"] or pd.isnull(x["dup"])):
+        elif pd.isnull(x["unzip_file"]) and (not x["merged"] or pd.isnull(x["merged"])):
             # dup is used to check if local file already merged
             return "download"
         elif not pd.isnull(x["version_local"]) and not pd.isnull(x["version_remote"]) and x["version_local"] != x["version_remote"]:
@@ -373,7 +374,7 @@ def maja_download(
     cdate = datetime.now().date()
     maja_download_file = unzip_dir/f"{cdate}_files_status.tsv"
     print("Saving file table in: " + str(maja_download_file))
-    df = df[["date", "id", "version_local", "version_remote", "dup", "status", "cloud_cover", "unzip_file", "product"]]
+    df = df[["date", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
     df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
     if dry_run:
         print("Dry run, nothing has been done")
@@ -744,8 +745,8 @@ def patch_merged_scenes(zip_dir, unzip_dir, dry_run=True):
     
     df = df_zip.merge(df_unzip, how="outer", on=["date", "id"], left_index=False, right_index=False)
     
-    df["dup"] = df["date"].duplicated(keep=False)
-    merged_id = df.loc[df["dup"] & df["unzip_file"].notna()]
+    df["merged"] = df["date"].duplicated(keep=False)
+    merged_id = df.loc[df["merged"] & df["unzip_file"].notna()]
     merged_id.rename(columns={"id":"merged_id"}, inplace=True)
     df = df.merge(merged_id[["merged_id", "date"]], how="left", on="date")
     merged_scenes_files = []
