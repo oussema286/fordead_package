@@ -146,6 +146,15 @@ def test_download(output_dir):
     # bands=["B2", "B3", "CLMR2", "CLMR1"]
     # cloud_min = 100
     # cloud_max = 100
+    # "20160326-103406-538"
+    
+    # # duplicate with different ID and old version not downloadable anymore
+    # tile = "T31TGM"
+    # start_date = "2016-03-26"
+    # end_date = "2016-03-27"
+    # bands=["B2", "B3", "CLMR2", "CLMR1"]
+    # cloud_min = 100
+    # cloud_max = 100
 
     # # 31TGM 2017-06-19 is "tri"plicate with cloud_cover [3, 4] (2 x v1-4 + v4-0)
     # tile = "T31TGM"
@@ -169,7 +178,7 @@ def test_download(output_dir):
     # start_date="2023-01-12",
     # end_date="2023-01-13",
 
-    # should download duplicates
+    # should only download one
     downloaded, unzip_files = maja_download(
         tile=tile,
         start_date=start_date,
