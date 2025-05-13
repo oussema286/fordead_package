@@ -1,7 +1,17 @@
 # v1.11.2
 
-# Fix
+## Add
+- `maja_download`:
+  - status `not-in-search` when a local scene is not in the search result (either outdated or filtered by cloud cover)
+  - arg `rm_na` in order to remove local files with status `not-in-search`
+  - export `maja_download` results to file `{unzip_dir}/{date}_files_status.tsv`, usefull to analyse them in `dry_run` mode before really applying.
+
+## Fix
 - `maja_download` error when trying to remove a scene duplicate already merged (issue #48)
+- mutiple scenes with same tile and datetime on geodes (issue #49)
+
+## Change
+- `maja_download`: remove ability to keep splits of scenes with cloud cover over limit --> simplify understanding
 
 # v1.11.1
 
