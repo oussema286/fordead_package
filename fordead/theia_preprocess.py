@@ -166,14 +166,14 @@ def categorize_search(remote, local):
     # Merge the local file list with the remote search
     # and add column status specifying the action to take
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
-        
+    local["dup"] = local["date"].duplicated(keep=False)    
     df = local.merge(remote, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
-    df["dup"] = df["date"].duplicated(keep=False)
 
     def categorize(x):
         if x["version_local"] == x["version_remote"]:
             return "up_to_date"
         elif pd.isnull(x["unzip_file"]) and (not x["dup"] or pd.isnull(x["dup"])):
+            # dup is used to check if local file already merged
             return "download"
         elif not pd.isnull(x["version_local"]) and not pd.isnull(x["version_remote"]) and x["version_local"] != x["version_remote"]:
             return "upgrade"

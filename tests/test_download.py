@@ -18,6 +18,13 @@ def test_maja_search():
     assert df.shape[0] == 2
     assert df.date.unique().shape[0] == 2
 
+    # two splits of scene
+    start_date = "2024-08-29"
+    end_date = "2024-08-30"
+    df = maja_search(tile, start_date, end_date)
+    assert df.shape[0] == 2
+    assert df.date.unique().shape[0] == 1
+
     # two granules (same id, same date, diff. version)
     # the latest is kept
     tile = "T31UGQ"
@@ -165,13 +172,14 @@ def test_download(output_dir):
     # cloud_max = 100
 
     # # 31TGM 2018-08-11 is duplicate with cloud_cover [41,52] --> became only one tile with cloud_cover 43
-    # # 31TGK 2020-05-22 is duplicate with cloud_cover [11,30] --> became two tiles with [11, 8]
-    tile = "T31TGK"
-    start_date = "2020-05-22"
-    end_date = "2020-05-23"
+    # # 31TGK 2020-05-22 is duplicate with cloud_cover [11,30] --> became two tiles with [11, 8] --> became one tile
+    # # 31TGM 2024-08-29 is scene split with cc [0, 6] for v3-1
+    tile = "T31TGM"
+    start_date = "2024-08-29"
+    end_date = "2024-08-30"
     bands = ["B2", "B3", "CLMR2", "CLMR1"]
-    cloud_min = 10
-    cloud_max = 20
+    cloud_min = 5
+    cloud_max = 100
 
     # # T31TGK 2023-01-12 is small
     # tile="T31TGK",
