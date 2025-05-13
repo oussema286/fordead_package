@@ -63,10 +63,6 @@ def get_local_maja_files(unzip_dir):
         "unzip_file": [f if f.is_dir() else pd.NA for f in unzip_files],
     }) #.astype({"id": str, "version": str, "unzip_file": str})
 
-    # identify duplicates
-    df["merged"] = df["date"].duplicated(keep=False)
-
-
     return df
 
 def maja_search(
@@ -166,17 +162,18 @@ def maja_search(
     df_remote = df_remote.drop_duplicates(subset=["id"], keep="first", ignore_index=True)
     return df_remote
 
-def categorize_search(search_results, unzip_dir):
+def categorize_search(remote, local):
     # Merge the local file list with the remote search
     # and add column status specifying the action to take
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
         
-    df = df_local.merge(search_results, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
+    df = local.merge(remote, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
+    df["dup"] = df["date"].duplicated(keep=False)
 
     def categorize(x):
         if x["version_local"] == x["version_remote"]:
             return "up_to_date"
-        elif pd.isnull(x["unzip_file"]) and (not x["merged"] or pd.isnull(x["merged"])):
+        elif pd.isnull(x["unzip_file"]) and (not x["dup"] or pd.isnull(x["dup"])):
             return "download"
         elif not pd.isnull(x["version_local"]) and not pd.isnull(x["version_remote"]) and x["version_local"] != x["version_remote"]:
             return "upgrade"
@@ -191,6 +188,8 @@ def categorize_search(search_results, unzip_dir):
     # extend upgrade to duplicates if any
     df.loc[df.date.duplicated(keep=False), "status"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["status"].transform(lambda x: "upgrade" if (x=="upgrade").any() else x)
 
+    # remove old
+    df.loc[df["product"].isna(), "status"] = "not-in-search"
     return df
 
 
@@ -207,6 +206,7 @@ def maja_download(
         correction_type: str = "FRE",
         search_timeout: int = 10,
         upgrade: bool = True,
+        rm_na: bool = True,
         dry_run: bool = True,
         retry: int = 10,
         wait: int = 5
@@ -244,6 +244,9 @@ def maja_download(
     upgrade : bool, optional
         If True, checks product version and upgrades if needed. Default is True.
         For False, see notes, as it may not behave as expected.
+    na_rm : bool, optional
+        If True, removes scenes with status not-in-search,
+        i.e. outdated or filtered by cloud cover limit
     dry_run : bool, optional
         If True, do not download or unzip products
     retry : int, optional
@@ -325,7 +328,7 @@ def maja_download(
 
     if level == "LEVEL3A" : correction_type = "FRC"
 
-    search = maja_search(
+    remote = maja_search(
         tile=tile,
         start_date=start_date,
         end_date=end_date,
@@ -337,13 +340,11 @@ def maja_download(
 
     df = categorize_search(remote, local)
     
-    # keep only search results
-    df = df[df["product"].notna()]
 
     if upgrade:
-        df_download = df[df["status"].isin(["upgrade", "download", "badzip"])]
+        df_download = df[df["status"].isin(["upgrade", "download", "badzip"]) & ~df["product"].isna()]
     else:
-        df_download = df[df["status"].isin(["download", "badzip"])]
+        df_download = df[df["status"].isin(["download", "badzip"]) & ~df["product"].isna()]
 
     if len(df_download) == 0:
         print("Already up-to-date: nothing to download.")
@@ -364,7 +365,8 @@ def maja_download(
     if len(to_download):
         to_download_str = '\n'.join(to_download.apply(lambda x: f"{x['id']} ({x['version_remote']})", axis=1))
         print(f"Products to download ({len(to_download)}):\n{to_download_str}\n")
-
+    if rm_na:
+        df.loc[df.status == "not-in-search", "status"] = "remove"
 
     downloaded = []
     unzipped = []
@@ -415,6 +417,17 @@ def maja_download(
             downloaded.append(unzip_file)
             unzipped.append(unzip_file)
         # TODO merge only the results of search
+        # if rm_na:
+        #     print("removing not-in-search scenes")
+        
+        for r in df.loc[df["status"]=="remove"].itertuples():
+            if r.unzip_file.is_dir():
+                try:
+                    print("Removing unzip: ", r.unzip_file)
+                    r.unzip_file.rmtree()
+                except Exception as e:
+                    print("Failed to remove", r.unzip_file)
+                    raise e
         merge_same_date(bands, df, correction_type=correction_type)
     
     return downloaded, unzipped
@@ -606,7 +619,7 @@ def merge_same_date(bands, df, correction_type):
     
     # check that is has been merged with the correct order
     df = df.loc[df.duplicated("date", keep=False)]
-    df = df.sort_values(by="id").sort_values(by="version_remote", ascending=False).reset_index(drop=True)
+    df = df.sort_values(by=["id", "version_remote"], ascending=[True, False], ignore_index=True)
     for group in df.groupby(by="date"):
         if group[1].unzip_file.isnull().iloc[0]:
             warnings.warn("Duplicates not correctly merged at date : " + group[0]+"\n"+"\n".join(group[1].unzip_file.tolist()))
@@ -614,7 +627,7 @@ def merge_same_date(bands, df, correction_type):
     # subset duplicates not merged
     df = df.loc[~df.unzip_file.isnull()]
     df = df.loc[df.duplicated("date", keep=False)]
-    df = df.sort_values(by="id").sort_values(by="version_remote", ascending=False).reset_index(drop=True)
+    df = df.sort_values(by=["id", "version_remote"], ascending=[True, False], ignore_index=True)
 
     if len(df) == 0:
         return
@@ -726,8 +739,8 @@ def patch_merged_scenes(zip_dir, unzip_dir, dry_run=True):
     
     df = df_zip.merge(df_unzip, how="outer", on=["date", "id"], left_index=False, right_index=False)
     
-    df["merged"] = df["date"].duplicated(keep=False)
-    merged_id = df.loc[df["merged"] & df["unzip_file"].notna()]
+    df["dup"] = df["date"].duplicated(keep=False)
+    merged_id = df.loc[df["dup"] & df["unzip_file"].notna()]
     merged_id.rename(columns={"id":"merged_id"}, inplace=True)
     df = df.merge(merged_id[["merged_id", "date"]], how="left", on="date")
     merged_scenes_files = []
