@@ -2,8 +2,8 @@
 
 ## Add
 - `maja_download` & `theia_preprocess` (API & CLI):
-  - status `not-in-search` when a local scene is not in the search result (either outdated or filtered by cloud cover)
-  - arg `rm_na` in order to remove local files not available in search results
+  - status `remove` when a local scene is not in the search result (either outdated, filtered out by cloud cover) or older version duplicates with same id
+  - arg `rm` in order to delete local scene dirs with status `remove`
   - export `maja_download` results to file `{unzip_dir}/{date}_files_status.tsv`, usefull to analyse them in `dry_run` mode before really applying.
 
 ## Fix
@@ -11,7 +11,9 @@
 - mutiple scenes with same tile and datetime on geodes (issue #49)
 
 ## Change
-- `maja_download`: remove ability to keep splits of scenes with cloud cover over limit --> simplify understanding
+- `maja_download`:
+  - remove ability to keep splits of scenes with cloud cover over limit --> simplify understanding
+  - args `upgrade` default value to `False` in coherence with `theia_preprocess`
 
 # v1.11.1
 

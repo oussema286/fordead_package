@@ -21,7 +21,7 @@ from fordead.theia_preprocess import maja_download
 @click.option("-c", '--correction_type', type = click.Choice(['SRE', 'FRE', 'FRC'], case_sensitive=False),  help='Chosen correction type (SRE or FRE for LEVEL2A data, FRC for LEVEL3A)', default='FRE', show_default=True)
 @click.option("--search_timeout", type=int, default=10, help = "Search time out in seconds", show_default=True)
 @click.option("--upgrade", is_flag=True, help = "Upgrade product version", show_default=True)
-@click.option("--na_rm", is_flag=True, help = "Remove local scenes with nat available in search results, i.e. outdated or filtered by cloud cover limit. ", show_default=True)
+@click.option("--rm", is_flag=True, help = "Delete local scene dirs outdated, over cloud cover limit or older version duplicates.", show_default=True)
 @click.option("--keep_zip", is_flag=True, help = "Keep zip files", show_default=True)
 @click.option("--dry_run", is_flag=True, help = "Dry run, no data is downloaded or unzipped", show_default=True)
 @click.option("--retry", type=int, default=10, help = "Number of retries on download failure", show_default=True)
@@ -43,7 +43,7 @@ def cli_theia_preprocess(**kwargs):
 def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                      level = "LEVEL2A", start_date = "2015-06-23", end_date = None, lim_perc_cloud = 50,
                      bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], 
-                     correction_type = "FRE", search_timeout=10, upgrade = False, na_rm = False, keep_zip = False, 
+                     correction_type = "FRE", search_timeout=10, upgrade = False, rm = False, keep_zip = False, 
                      dry_run = True, retry = 10, wait = 5):
     """
     Download Sentinel-2 zip files from GEODES (LEVEL2A) or THEIA (LEVEL3A) portal, 
@@ -80,9 +80,10 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
         Search timeout in seconds. The default is 10.
     upgrade : bool, optional
         Upgrade product version. The default is False.
-    na_rm : bool, optional
-        If True, removes local scenes with nat available in
-        search results, i.e. outdated or filtered by cloud cover limit.
+    rm : bool, optional
+        If True, delete local scene dirs outdated, over cloud cover
+        limit or older version duplicates.
+        The default is False.
     keep_zip : bool, optional
         Keep zip files. The default is False.
     dry_run : bool, optional
@@ -124,7 +125,7 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
             correction_type=correction_type,
             search_timeout=search_timeout,
             upgrade=upgrade,
-            na_rm=na_rm,
+            rm=rm,
             dry_run=dry_run,
             retry=retry,
             wait=wait

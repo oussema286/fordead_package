@@ -1,7 +1,7 @@
 from path import Path
 from fordead.theia_preprocess import maja_download, maja_search, patch_merged_scenes, categorize_search
 import pandas as pd
-
+import re
 
 def test_maja_search():
     tile = "T31TGM"
@@ -48,6 +48,7 @@ def test_maja_search():
 
 
 def test_categorize_search():
+
     temp_local = pd.DataFrame(
         dict(
             id = ["test_id"],
@@ -87,11 +88,12 @@ def test_categorize_search():
     remote.version=["2-0"]
     remote.id = ["test_id_2"]
     df = categorize_search(remote, local)
-    assert df.status.tolist() == ["not-in-search", "download"]
+    assert df.status.tolist() == ["remove", "download"]
 
     ###################
     # two files on date
     ###################
+
     local = pd.concat([temp_local.copy(), temp_local.copy()])
     local.id=["test_id_1", "test_id_2"]
     local.merged=[True, True]
@@ -113,12 +115,31 @@ def test_categorize_search():
     df = categorize_search(remote, local)
     ref = pd.DataFrame(dict(
         id=["test_id_1", "test_id_2", "test_id_3"],
-        status = ["download", "not-in-search", "download"]
+        status = ["download", "remove", "download"]
         ))
     assert all(df[["id", "status"]] ==  ref)
 
+    # case of interupted merged:
+    # two locals with same id but two versions
+    # one remote with same id as local and one version
+    local = pd.concat([temp_local.copy(), temp_local.copy()])
+    local.id=["test_id_1", "test_id_1"]
+    local.version=["0-0", "1-0"]
+    remote = temp_remote.copy()
+    remote.id="test_id_1"
+    remote.version="1-0"
+    df = categorize_search(remote, local)
+    ref = pd.DataFrame(dict(
+        id=["test_id_1", "test_id_1"],
+        version_local=["1-0", "0-0"],
+        version_remote=["1-0", "1-0"],
+        status = ["upgrade", "remove"]
+        ))
+    assert all(df[["id", "version_local", "version_remote", "status"]] ==  ref)
+
+
 def test_download(output_dir):
-    zip_dir = (output_dir / "download" / "zip").rmtree_p().makedirs_p()
+    zip_dir = (output_dir / "download" / "zip")#.rmtree_p().makedirs_p()
     unzip_dir = (output_dir / "download" / "unzip").rmtree_p().makedirs_p()
 
     # # download issue for JBD, mail 2025-04-21
@@ -201,13 +222,52 @@ def test_download(output_dir):
         search_timeout=1,
     )
 
-    assert len(downloaded) == 1
+    assert len(unzip_files) == 1
 
-    # # simulate old version
-    # for f in unzip_files:
-    #     if f.exists():
-    #         new_file = re.sub("V[0-9]-[0-9]$", "V1-1", f)
-    #         f.move(new_file)
+    # simulate old version
+
+    new_scene = unzip_files[0]
+    fake_old_scene = Path(re.sub("V[0-9]-[0-9]$", "V0-0", new_scene))
+    fake_old_scene.mkdir()
+    
+    downloaded, unzip_files = maja_download(
+        tile=tile,
+        start_date=start_date,
+        end_date=end_date,
+        zip_dir=zip_dir,
+        unzip_dir=unzip_dir,
+        lim_perc_cloud=cloud_min,
+        level="LEVEL2A",
+        bands=bands,
+        dry_run=False,
+        keep_zip=True,
+        search_timeout=1,
+        rm=True
+    )
+
+    assert new_scene.exists()
+    assert not fake_old_scene.exists()
+
+    # case upgrade
+    new_scene.move(fake_old_scene)
+    downloaded, unzip_files = maja_download(
+        tile=tile,
+        start_date=start_date,
+        end_date=end_date,
+        zip_dir=zip_dir,
+        unzip_dir=unzip_dir,
+        lim_perc_cloud=cloud_min,
+        level="LEVEL2A",
+        bands=bands,
+        dry_run=False,
+        keep_zip=True,
+        search_timeout=1,
+        rm=True,
+        upgrade=True,
+
+    )
+    assert new_scene.exists()
+    assert not fake_old_scene.exists()
 
     # it should download duplicates (again)
     downloaded, unzip_files = maja_download(
@@ -219,6 +279,7 @@ def test_download(output_dir):
         lim_perc_cloud=cloud_max,
         level="LEVEL2A",
         bands=bands,
+        keep_zip=True,
         dry_run=False,
     )
 

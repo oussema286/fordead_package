@@ -161,6 +161,7 @@ def maja_search(
         return pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]))
     df_remote = pd.DataFrame(df_remote)
     df_remote = df_remote.sort_values(by=["id", "version"], ignore_index=True, ascending=[True, False])
+    # hypothesis that same id is corresponding to same product
     df_remote = df_remote.drop_duplicates(subset=["id"], keep="first", ignore_index=True)
     return df_remote
 
@@ -169,7 +170,7 @@ def categorize_search(remote, local):
     # and add column status specifying the action to take
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
     df = local.merge(remote, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
-
+    df = df.sort_values(by=["id", "version_remote", "version_local"], ignore_index=True, ascending=[True, False, False])
     def categorize(x):
         if x["version_local"] == x["version_remote"]:
             return "up_to_date"
@@ -190,7 +191,7 @@ def categorize_search(remote, local):
     df.loc[df.date.duplicated(keep=False), "status"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["status"].transform(lambda x: "upgrade" if (x=="upgrade").any() else x)
 
     # remove old
-    df.loc[df["product"].isna(), "status"] = "not-in-search"
+    df.loc[df["product"].isna() | df["id"].duplicated(), "status"] = "remove"
     return df
 
 
@@ -206,8 +207,8 @@ def maja_download(
         bands: list = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"],
         correction_type: str = "FRE",
         search_timeout: int = 10,
-        upgrade: bool = True,
-        rm_na: bool = True,
+        upgrade: bool = False,
+        rm: bool = False,
         dry_run: bool = True,
         retry: int = 10,
         wait: int = 5
@@ -243,11 +244,12 @@ def maja_download(
         Correction type for radiometric correction, can be "SRE" (Surface Reflectance) or "FRE" (Falt Reflectance) for
         LEVEL2A . Default is "FRE".
     upgrade : bool, optional
-        If True, checks product version and upgrades if needed. Default is True.
+        If True, checks product version and upgrades if needed. Default is False.
         For False, see notes, as it may not behave as expected.
-    na_rm : bool, optional
-        If True, removes scenes with status not-in-search,
-        i.e. outdated or filtered by cloud cover limit
+    rm : bool, optional
+        If True, delete local scene dirs outdated, over cloud cover
+        limit or older version duplicates.
+        Default is False.
     dry_run : bool, optional
         If True, do not download or unzip products
     retry : int, optional
@@ -341,43 +343,28 @@ def maja_download(
 
     df = categorize_search(remote, local)
     
-
     if upgrade:
         df_download = df[df["status"].isin(["upgrade", "download", "badzip"]) & ~df["product"].isna()]
     else:
         df_download = df[df["status"].isin(["download", "badzip"]) & ~df["product"].isna()]
 
-    if len(df_download) == 0:
+    if len(df_download) == 0 and len(df[df["status"]=="remove"]) == 0:
         print("Already up-to-date: nothing to download.")
         if not dry_run:
             merge_same_date(bands, df, correction_type=correction_type)
         return [], []
 
-    unzipped = df[df["status"]=="up-to-date"]
-    to_upgrade = df_download[df_download["status"]=="upgrade"]
-    to_download = df_download[df_download["status"].isin(["download", "badzip"])]
-    
-    if len(unzipped):
-        unzipped_str = '\n'.join(unzipped["id"])
-        print(f"Products up-to-date ({len(unzipped)}):\n{unzipped_str}\n")
-    if len(to_upgrade):
-        to_upgrade_str = '\n'.join(to_upgrade.apply(lambda x: f"{x['id']} ({x['version_local']} -> {x['version_remote']})", axis=1))
-        print(f"Products to upgrade ({len(to_upgrade)}):\n{to_upgrade_str}\n")
-    if len(to_download):
-        to_download_str = '\n'.join(to_download.apply(lambda x: f"{x['id']} ({x['version_remote']})", axis=1))
-        print(f"Products to download ({len(to_download)}):\n{to_download_str}\n")
-    if rm_na:
-        df.loc[df.status == "not-in-search", "status"] = "remove"
-
-    downloaded = []
-    unzipped = []
     cdate = datetime.now().date()
     maja_download_file = unzip_dir/f"{cdate}_files_status.tsv"
     print("Saving file table in: " + str(maja_download_file))
     df = df[["date", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
     df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
+
+    downloaded = []
+    unzipped = []
     if dry_run:
         print("Dry run, nothing has been done")
+        return downloaded, unzipped
     else:
         for r in df_download.itertuples():
             # 1. download the zip file if not already there
@@ -392,10 +379,12 @@ def maja_download(
                     while not done:
                         try:
                             tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
-                            done = True
+                            if check_zip(tmpzip_file):
+                                done = True
                         except Exception as e:
                             print(e)
                             print("Failed to download: ", r.id)
+                            print("Maybe quota is reached, check your profile at https://geodes-portal.cnes.fr.")
                             if trials==retry:
                                 raise RuntimeError("\nRetry limit reached.\n")
                             else:
@@ -422,10 +411,8 @@ def maja_download(
 
             downloaded.append(unzip_file)
             unzipped.append(unzip_file)
-        # TODO merge only the results of search
-        # if rm_na:
-        #     print("removing not-in-search scenes")
-        
+
+    if rm:
         for r in df.loc[df["status"]=="remove"].itertuples():
             if r.unzip_file.is_dir():
                 try:
@@ -434,7 +421,8 @@ def maja_download(
                 except Exception as e:
                     print("Failed to remove", r.unzip_file)
                     raise e
-        merge_same_date(bands, df, correction_type=correction_type)
+        df = df.loc[df["status"]!="remove"]
+    merge_same_date(bands, df, correction_type=correction_type)
     
     return downloaded, unzipped
 
