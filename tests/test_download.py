@@ -4,8 +4,33 @@ import pandas as pd
 import re
 
 def test_maja_search():
-    tile = "T31TGM"
 
+    # SENTINEL2A_20200325-103818-163_L2A_T31TGL (4-0)
+    # SENTINEL2A_20200325-103818-163_L2A_T31TGL (2-2)
+    tile = "T31TGL"
+    start_date = "2020-03-25"
+    end_date = "2020-03-26"
+    df = maja_search(tile, start_date, end_date)
+    assert df.shape[0] == 1
+    assert df.version[0] == "4-0"
+
+    # SENTINEL2A_20200407-104815-292_L2A_T31TGL (4-0)
+    # SENTINEL2A_20200407-104815-295_L2A_T31TGL (2-2)
+    start_date = "2020-04-07"
+    end_date = "2020-04-08"
+    df = maja_search(tile, start_date, end_date)
+    assert df.shape[0] == 1
+    assert df.version[0] == "4-0"
+
+    # SENTINEL2B_20200409-103818-465_L2A_T31TGL (4-0)
+    # SENTINEL2B_20200409-103818-464_L2A_T31TGL (2-2)
+    start_date = "2020-04-09"
+    end_date = "2020-04-10"
+    df = maja_search(tile, start_date, end_date)
+    assert df.shape[0] == 1
+    assert df.version[0] == "4-0"
+
+    tile = "T31TGM"
     start_date = "2024-09-26"
     end_date = "2024-10-30"
     df = maja_search(tile, start_date, end_date)
@@ -47,11 +72,8 @@ def test_maja_search():
     assert df.empty
 
 
-    tile = "T31TGL"
-    start_date = "2020-04-07"
-    end_date = "2020-04-08"
-    df = maja_search(tile, start_date, end_date)
-    assert df.shape[0] == 1
+
+
 
 def test_categorize_search():
 

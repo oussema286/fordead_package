@@ -181,7 +181,13 @@ def maja_search(
     df_remote["dup"] = df_remote["datetime"].duplicated(keep="first")
     if dt_version is not None:
         dt = timedelta(milliseconds=dt_version)
-        df_remote["dup"] = df_remote["dup"] | (df_remote["datetime"].diff().abs() < dt)
+        df_remote["dt"] = df_remote["datetime"].diff()
+        df_remote["datetime_dt"] = df_remote["datetime"]
+        dup = df_remote["dt"] < dt
+        df_remote.loc[dup, "datetime_dt"] = df_remote.loc[dup, "datetime"]-df_remote.loc[dup, "dt"]
+        df_remote = df_remote.sort_values(by=["datetime_dt", "version"], ignore_index=True, ascending=[True, False])
+        df_remote["dup"] = df_remote["datetime_dt"].duplicated(keep="first")
+        df_remote = df_remote.drop(columns=["dt", "datetime_dt"])
 
     df_remote = df_remote.loc[~df_remote["dup"]].reset_index(drop=True).drop(columns=["dup", "datetime"])
     return df_remote
