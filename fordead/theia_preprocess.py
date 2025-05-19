@@ -73,7 +73,8 @@ def maja_search(
         end_date: str = None,
         lim_perc_cloud: float = 100,
         level: str = 'LEVEL2A',
-        search_timeout: int = 10,):
+        search_timeout: int = 10,
+        dt_version: int = 10,):
     """
     Download Sentinel-2 L2A data processed with MAJA processing chain from
     GEODES (CNES) plateform.
@@ -93,6 +94,10 @@ def maja_search(
     search_timeout : int, optional
         Timeout in seconds for search of theia products. Default is 10.
         It updates the htttp request timeout for the search.
+    dt_version : int, optional
+        Possible delta time in milliseconds between two versions
+        of the same acquisition, see notes.
+        Default is 10.
 
     Returns
     -------
@@ -102,6 +107,14 @@ def maja_search(
     Notes
     -------
     See `maja_download()` for authentication details
+
+    The `dt_version` is here to identify which products are the same
+    acquisition with different versions, as CNES may modify the
+    the acquisition datetime between versions o fthe same product.
+    Ewample, with `dt_version=10` these two products are considered the same:
+    - SENTINEL2A_20200407-104815-292_L2A_T31TGL (4-0)
+    - SENTINEL2A_20200407-104815-295_L2A_T31TGL (2-2)
+
     """
 
     if level == 'LEVEL2A':
@@ -148,6 +161,8 @@ def maja_search(
     df_remote = []
     for r in search_results:
         date = retrieve_date_from_string(r.properties["id"])
+        datetime = re.sub(r'.*_([0-9]{8}-[0-9]{6}-[0-9]{3})_.*', r'\1', r.properties["id"])
+        datetime = pd.to_datetime(datetime, format='%Y%m%d-%H%M%S-%f')
         props = dict(
             id = re.sub(r'(.*)_[A-Z]', r'\1',r.properties["id"]),
             date = date,
@@ -155,14 +170,20 @@ def maja_search(
             version = re.sub(r'\.', '-', str(r.properties["productVersion"])),
             cloud_cover = r.properties["cloudCover"],
             product = r,
+            datetime = datetime,
         )
         df_remote.append(props)
     if len(df_remote) == 0:
         return pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]))
     df_remote = pd.DataFrame(df_remote)
-    df_remote = df_remote.sort_values(by=["id", "version"], ignore_index=True, ascending=[True, False])
+    df_remote = df_remote.sort_values(by=["datetime", "version"], ignore_index=True, ascending=[True, False])
     # hypothesis that same id is corresponding to same product
-    df_remote = df_remote.drop_duplicates(subset=["id"], keep="first", ignore_index=True)
+    df_remote["dup"] = df_remote["datetime"].duplicated(keep="first")
+    if dt_version is not None:
+        dt = timedelta(milliseconds=dt_version)
+        df_remote["dup"] = df_remote["dup"] | (df_remote["datetime"].diff().abs() < dt)
+
+    df_remote = df_remote.loc[~df_remote["dup"]].reset_index(drop=True).drop(columns=["dup", "datetime"])
     return df_remote
 
 def categorize_search(remote, local):
@@ -178,6 +199,8 @@ def categorize_search(remote, local):
             # dup is used to check if local file already merged
             return "download"
         elif not pd.isnull(x["version_local"]) and not pd.isnull(x["version_remote"]) and x["version_local"] != x["version_remote"]:
+            return "upgrade"
+        elif not pd.isnull(x["version_local"]) and pd.isnull(x["version_remote"]):
             return "upgrade"
         else:
             return "unknown"

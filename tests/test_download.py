@@ -47,35 +47,40 @@ def test_maja_search():
     assert df.empty
 
 
+    tile = "T31TGL"
+    start_date = "2020-04-07"
+    end_date = "2020-04-08"
+    df = maja_search(tile, start_date, end_date)
+    assert df.shape[0] == 1
+
 def test_categorize_search():
 
-    temp_local = pd.DataFrame(
-        dict(
-            id = ["test_id"],
-            date = ["2016-01-01"],
-            version = ["1-0"],
-            unzip_file = ["test_file"],
-            merged = [False],
-        )
-    )
+    def temp_local(
+            id="test_id",
+            date="2016-01-01",
+            version="1-0",
+            unzip_file="test_file",
+            merged=False):
+        args = locals().copy()
+        return pd.DataFrame([args])
     
-    temp_remote = pd.DataFrame(
-        dict(
-            id = ["test_id"],
-            date = ["2016-01-01"],
-            version = ["1-0"],
-            cloud_cover = ["10"],
-            product = ["test_product"],
-        )
-    )
+    def temp_remote(
+            id = "test_id",
+            date = "2016-01-01",
+            version = "1-0",
+            cloud_cover = "10",
+            product = "test_product",
+            ):
+        args = locals().copy()
+        return pd.DataFrame([args])
 
     ##################
     # one file on date
     ##################
 
     # same date, same id, same version
-    local = temp_local.copy() 
-    remote = temp_remote.copy()
+    local = temp_local()
+    remote = temp_remote()
     df = categorize_search(remote, local)
     assert df.status.unique().tolist() == ["up_to_date"]
 
@@ -94,11 +99,12 @@ def test_categorize_search():
     # two files on date
     ###################
 
-    local = pd.concat([temp_local.copy(), temp_local.copy()])
-    local.id=["test_id_1", "test_id_2"]
-    local.merged=[True, True]
-    remote = pd.concat([temp_remote.copy(), temp_remote.copy()])
-    remote.id=["test_id_1", "test_id_2"]
+    local = pd.concat([
+        temp_local("test_id_1", merged=True),
+        temp_local("test_id_2", merged=True),])
+    remote = pd.concat([
+        temp_remote("test_id_1"),
+        temp_remote("test_id_2"),])
 
     # local-remote: same date, same id, same version
     df = categorize_search(remote, local)
@@ -110,8 +116,10 @@ def test_categorize_search():
     assert df.status.unique().tolist() == ["upgrade"]
 
     # local-remote: same date, different id, different version
-    remote = pd.concat([temp_remote.copy(), temp_remote.copy()])
-    remote.id=["test_id_1", "test_id_3"]
+    remote = pd.concat([
+        temp_remote("test_id_1"),
+        temp_remote("test_id_3"),])
+    
     df = categorize_search(remote, local)
     ref = pd.DataFrame(dict(
         id=["test_id_1", "test_id_2", "test_id_3"],
@@ -122,12 +130,11 @@ def test_categorize_search():
     # case of interupted merged:
     # two locals with same id but two versions
     # one remote with same id as local and one version
-    local = pd.concat([temp_local.copy(), temp_local.copy()])
-    local.id=["test_id_1", "test_id_1"]
-    local.version=["0-0", "1-0"]
-    remote = temp_remote.copy()
-    remote.id="test_id_1"
-    remote.version="1-0"
+    local = pd.concat([
+        temp_local("test_id_1", version="0-0"),
+        temp_local("test_id_1", version="1-0"),])
+
+    remote = temp_remote(id="test_id_1", version="1-0")
     df = categorize_search(remote, local)
     ref = pd.DataFrame(dict(
         id=["test_id_1", "test_id_1"],
@@ -137,6 +144,22 @@ def test_categorize_search():
         ))
     assert all(df[["id", "version_local", "version_remote", "status"]] ==  ref)
 
+    # case of merged product but old version not available anymore
+    local = pd.concat([
+        temp_local("test_id_0", version="0-0", unzip_file=pd.NA, merged=True),
+        temp_local("test_id_1", version="1-0", unzip_file="test_file", merged=True),])
+    remote = temp_remote(id="test_id_1", version="1-0")
+    df = categorize_search(remote, local)
+    assert all(df.status == ["remove", "upgrade"])
+
+    local = pd.concat([
+        temp_local("test_id_0", version="0-0", unzip_file=pd.NA, merged=True),
+        temp_local("test_id_1", version="1-0", unzip_file="test_file", merged=True),])
+    remote = pd.concat([
+        temp_remote(id="test_id_1", version="1-0"),
+        temp_remote(id="test_id_0", version="0-0"),])
+    df = categorize_search(remote, local)
+    assert all(df.status == (["up_to_date"]*2))
 
 def test_download(output_dir):
     zip_dir = (output_dir / "download" / "zip")#.rmtree_p().makedirs_p()
