@@ -44,6 +44,8 @@ def test_maja_search():
     assert df.date.unique().shape[0] == 2
 
     # two splits of scene
+    # SENTINEL2B_20240829-104755-706_L2A_T31TGM (3-1)
+    # SENTINEL2B_20240829-104805-712_L2A_T31TGM (3-1)
     start_date = "2024-08-29"
     end_date = "2024-08-30"
     df = maja_search(tile, start_date, end_date)
@@ -52,6 +54,8 @@ def test_maja_search():
 
     # two granules (same id, same date, diff. version)
     # the latest is kept
+    # SENTINEL2B_20240918-104716-575_L2A_T31UGQ (4-0)
+    # SENTINEL2B_20240918-104716-575_L2A_T31UGQ (3-1)
     tile = "T31UGQ"
     start_date = "2024-09-18"
     end_date = "2024-09-19"
@@ -59,6 +63,7 @@ def test_maja_search():
     assert df.shape[0] == 1
 
     # test cloud cover limit
+    # SENTINEL2A_20240920-103808-282_L2A_T31TGM (3-1)
     tile = "T31TGM"
     start_date = "2024-09-20"
     end_date = "2024-09-26"
