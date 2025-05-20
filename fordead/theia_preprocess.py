@@ -23,7 +23,7 @@ import zipfile
 from fordead.import_data import retrieve_date_from_string, TileInfo
 from fordead.stac.theia_collection import parse_theia_name
 
-def get_local_maja_files(unzip_dir):
+def get_local_maja_files(unzip_dir, start_date=None, end_date=None):
     """
     List the local maja files (zip and unzip) and 
     some of there characteristics (version, empty zip, ...)
@@ -32,6 +32,10 @@ def get_local_maja_files(unzip_dir):
     ----------
     unzip_dir : str
         Path of the directory with unzipped theia data. The default is None.
+    start_date : str
+        Acquisitions before this date are ignored (format : "YYYY-MM-DD")
+    end_date : str
+        Acquisitions after this date are ignored (format : "YYYY-MM-DD")
 
     Returns
     -------
@@ -62,6 +66,11 @@ def get_local_maja_files(unzip_dir):
         "version": [re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files],
         "unzip_file": [f if f.is_dir() else pd.NA for f in unzip_files],
     }) #.astype({"id": str, "version": str, "unzip_file": str})
+
+    if start_date is not None:
+        df = df.loc[pd.to_datetime(df["date"]) >= pd.to_datetime(start_date)]
+    if end_date is not None:
+        df = df.loc[pd.to_datetime(df["date"]) <= pd.to_datetime(end_date)]
 
     df["merged"] = df["date"].duplicated(keep=False)
     df = df.sort_values(by=["id", "version"], ignore_index=True, ascending=[True, False])
@@ -368,7 +377,7 @@ def maja_download(
         level=level,
         search_timeout=search_timeout)
     
-    local = get_local_maja_files(unzip_dir)
+    local = get_local_maja_files(unzip_dir, start_date, end_date)
 
     df = categorize_search(remote, local)
     
