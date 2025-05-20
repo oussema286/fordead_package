@@ -670,7 +670,8 @@ def merge_same_date(bands, df, correction_type):
     if len(wrong_order_files) > 0:
         wrong_order_report = f.parent / "wrong_order_merged_list.log"
         warnings.warn(f"Some duplicates are already merged but not with the expected order. See {wrong_order_report}")
-        open(wrong_order_report, "w").write("\n".join(wrong_order_files))
+        with open(wrong_order_report, "w") as report:
+            report.write("\n".join(wrong_order_files))
 
     # subset duplicates not merged
     df = df.loc[~df.unzip_file.isnull()]
