@@ -791,7 +791,7 @@ def patch_merged_scenes(zip_dir, unzip_dir, dry_run=True):
     
     df["merged"] = df["date"].duplicated(keep=False)
     merged_id = df.loc[df["merged"] & df["unzip_file"].notna()]
-    merged_id.rename(columns={"id":"merged_id"}, inplace=True)
+    merged_id = merged_id.rename(columns={"id":"merged_id"})
     df = df.merge(merged_id[["merged_id", "date"]], how="left", on="date")
     merged_scenes_files = []
     for r in merged_id.itertuples():
