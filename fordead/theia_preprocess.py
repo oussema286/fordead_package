@@ -652,21 +652,25 @@ def merge_same_date(bands, df, correction_type):
     # check that is has been merged with the correct order
     df = df.loc[df.duplicated("date", keep=False)]
     df = df.sort_values(by=["version_remote", "id"], ascending=[False, True], ignore_index=True)
+    wrong_order_files = []
     for group in df.groupby(by="date"):
-        if group[1].unzip_file.isnull().iloc[0]:
-            # get the already merged order:
-            for f in group[1].unzip_file.dropna().values:
-                if (f / "merged_scenes.json").exists():
-                    with open(f / "merged_scenes.json", "r") as f:
-                        merged = json.load(f)
-                    break
-            # merged order
-            merged_list = [re.sub("_[A-Z]_V[0-9]-[0-9]$", "", f) for f in list(merged.values())[0]]
-            merged_order = ", ".join(merged_list)
-            # expected order
-            exp_order = ", ".join(group[1].id.tolist())
-            
-            warnings.warn("Duplicates already merged at date but not with the expected order : " + group[0]+"\nExpected:"+exp_order+"\nGot:     "+merged_order)
+        # get the already merged order:
+        # expected order
+        exp_order = ", ".join(group[1].id.tolist())
+        for f in group[1].unzip_file.dropna().values:
+            if (f / "merged_scenes.json").exists():
+                with open(f / "merged_scenes.json", "r") as f:
+                    merged = json.load(f)
+                # merged order
+                merged_list = [re.sub("_[A-Z]_V[0-9]-[0-9]$", "", f) for f in list(merged.values())[0]]
+                merged_order = ", ".join(merged_list)
+                if merged_order != exp_order:
+                    wrong_order_files.append(f)
+
+    if len(wrong_order_files) > 0:
+        wrong_order_report = f.parent / "wrong_order_merged_list.log"
+        warnings.warn(f"Some duplicates are already merged but not with the expected order. See {wrong_order_report}")
+        open(wrong_order_report, "w").write("\n".join(wrong_order_files))
 
     # subset duplicates not merged
     df = df.loc[~df.unzip_file.isnull()]
