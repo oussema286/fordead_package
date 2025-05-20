@@ -665,11 +665,12 @@ def merge_same_date(bands, df, correction_type):
                 merged_list = [re.sub("_[A-Z]_V[0-9]-[0-9]$", "", f) for f in list(merged.values())[0]]
                 merged_order = ", ".join(merged_list)
                 if merged_order != exp_order:
+                    warnings.warn(f"Duplicates already merged but not with the expected order.\nExpected: {exp_order}\nGot:     {merged_order}.")
                     wrong_order_files.append(f)
 
     if len(wrong_order_files) > 0:
         wrong_order_report = f.parent / "wrong_order_merged_list.log"
-        warnings.warn(f"Some duplicates are already merged but not with the expected order. See {wrong_order_report}")
+        warnings.warn(f"Some duplicates are already merged but not with the expected order. See {wrong_order_report} for the list of files to remove.")
         with open(wrong_order_report, "w") as report:
             report.write("\n".join(wrong_order_files))
 
