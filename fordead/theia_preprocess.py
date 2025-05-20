@@ -651,10 +651,22 @@ def merge_same_date(bands, df, correction_type):
     
     # check that is has been merged with the correct order
     df = df.loc[df.duplicated("date", keep=False)]
-    df = df.sort_values(by=["id", "version_remote"], ascending=[True, False], ignore_index=True)
+    df = df.sort_values(by=["version_remote", "id"], ascending=[False, True], ignore_index=True)
     for group in df.groupby(by="date"):
         if group[1].unzip_file.isnull().iloc[0]:
-            warnings.warn("Duplicates not correctly merged at date : " + group[0]+"\n"+"\n".join(group[1].unzip_file.tolist()))
+            # get the already merged order:
+            for f in group[1].unzip_file.dropna().values:
+                if (f / "merged_scenes.json").exists():
+                    with open(f / "merged_scenes.json", "r") as f:
+                        merged = json.load(f)
+                    break
+            # merged order
+            merged_list = [re.sub("_[A-Z]_V[0-9]-[0-9]$", "", f) for f in list(merged.values())[0]]
+            merged_order = ", ".join(merged_list)
+            # expected order
+            exp_order = ", ".join(group[1].id.tolist())
+            
+            warnings.warn("Duplicates already merged at date but not with the expected order : " + group[0]+"\nExpected:"+exp_order+"\nGot:     "+merged_order)
 
     # subset duplicates not merged
     df = df.loc[~df.unzip_file.isnull()]
@@ -783,7 +795,7 @@ def patch_merged_scenes(zip_dir, unzip_dir, dry_run=True):
                 filename = id + re.sub(r'.*(_[A-Z]_V[0-9]-[0-9])$', r'\1',r.unzip_file.stem)
                 merged_list.append(filename)
 
-            merged = {str(r.unzip_file) : [str(f) for f in merged_list]}
+            merged = {str(r.unzip_file.name) : [str(f) for f in merged_list]}
             print("merged scenes: ", merged)
             if dry_run:
                 print("WARNING: dry run, not writing merged_scenes.json in: ", r.unzip_file)
