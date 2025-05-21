@@ -422,9 +422,9 @@ def maja_download(
                         except Exception as e:
                             print(e)
                             print("Failed to download: ", r.id)
-                            if zip_file.removesuffix(".zip").is_dir():
-                                zip_file.removesuffix(".zip").rmtree()
-                            print("Maybe quota is reached, check your profile at https://geodes-portal.cnes.fr.")
+                            if Path(tmpzip_file).is_dir():
+                                Path(tmpzip_file).rmdir()
+                                print("Maybe quota is reached, check your profile at https://geodes-portal.cnes.fr.")
                             if trials==retry:
                                 raise RuntimeError("\nRetry limit reached.\n")
                             else:
