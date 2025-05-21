@@ -107,27 +107,36 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
     if end_date is None:
         end_date = date.today().strftime('%Y-%m-%d')
     
-    for tile in tiles:
-        print("\n Downloading THEIA data for tile " + tile + "\n")
-        tile_zip_dir = (zipped_directory / tile).mkdir_p()   
-        tile_unzip_dir = (unzipped_directory / tile).mkdir_p()
-                
-        maja_download(
-            tile=tile,
-            start_date=start_date,
-            end_date=end_date,
-            zip_dir=tile_zip_dir,
-            unzip_dir=tile_unzip_dir,
-            keep_zip=keep_zip,
-            lim_perc_cloud=lim_perc_cloud,
-            level=level,
-            bands=bands,
-            correction_type=correction_type,
-            search_timeout=search_timeout,
-            upgrade=upgrade,
-            rm=rm,
-            dry_run=dry_run,
-            retry=retry,
-            wait=wait
-        )
-
+    retry = True
+    count = -1
+    while retry:
+        retry = False
+        count += 1
+        if count > 0:
+            print("Some tiles were not fully downloaded, retrying...")
+        for tile in tiles:
+            print("\n Downloading THEIA data for tile " + tile + "\n")
+            tile_zip_dir = (zipped_directory / tile).mkdir_p()   
+            tile_unzip_dir = (unzipped_directory / tile).mkdir_p()
+            try:        
+                maja_download(
+                    tile=tile,
+                    start_date=start_date,
+                    end_date=end_date,
+                    zip_dir=tile_zip_dir,
+                    unzip_dir=tile_unzip_dir,
+                    keep_zip=keep_zip,
+                    lim_perc_cloud=lim_perc_cloud,
+                    level=level,
+                    bands=bands,
+                    correction_type=correction_type,
+                    search_timeout=search_timeout,
+                    upgrade=upgrade,
+                    rm=rm,
+                    dry_run=dry_run,
+                    retry=retry,
+                    wait=wait
+                )
+            except Exception as e:
+                retry=True
+                continue
