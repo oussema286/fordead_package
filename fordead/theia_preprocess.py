@@ -297,9 +297,8 @@ def maja_download(
 
     Returns
     -------
-    pandas.DataFrame
-        dataframe containing the local and remote files, versions
-        and their "status".
+    tuple
+        downloaded, unzipped
 
     Notes
     -------
@@ -397,14 +396,13 @@ def maja_download(
     maja_download_file = unzip_dir/f"{cdate}_{tile}_files_status.tsv"
     print("Saving file table in: " + str(maja_download_file))
     df = df[["date", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
-    df_csv = df.copy()
-    df_csv.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
+    df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
 
     downloaded = []
     unzipped = []
     if dry_run:
         print("Dry run, nothing has been done")
-        return df_csv
+        return downloaded, unzipped
     else:
         for r in df_download.itertuples():
             # 1. download the zip file if not already there
@@ -466,7 +464,7 @@ def maja_download(
         df = df.loc[df["status"]!="remove"]
     merge_same_date(bands, df, correction_type=correction_type)
     
-    return df_csv
+    return downloaded, unzipped
 
 def check_zip(x):
     """
