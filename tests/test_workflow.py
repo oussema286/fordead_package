@@ -19,7 +19,7 @@ def test_get_band_paths(input_dir):
     s2_scene  = s2_dir.glob("SENTINEL*")[0]
 
     s2_mask = (s2_scene / "MASKS").glob("*CLM_R2.tif")[0]
-    s2_mask_r1 = Path(re.sub("CLM_R2\.tif$", "CLM_R1.tif", s2_mask))
+    s2_mask_r1 = Path(re.sub(r"CLM_R2\.tif$", "CLM_R1.tif", s2_mask))
     if not s2_mask_r1.exists():
         s2_mask.copy(s2_mask_r1)
 
