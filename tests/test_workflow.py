@@ -81,6 +81,11 @@ def test_fordead_steps(input_dir, output_dir):
     data_directory = test_output_dir / "dieback_detection"
     start_date = "2016-01-01"
 
+    # test that it works even with a fake status file
+    fake_status_file = input_dir / "sentinel_data" / "dieback_detection_tutorial" / "study_area" / "2018-01-01_T31UFQ_files_status.tsv"
+    with open(fake_status_file, "w") as f:
+        f.write("test")
+
     compute_masked_vegetationindex(
         input_directory = input_dir / "sentinel_data" / "dieback_detection_tutorial" / "study_area", 
         data_directory = data_directory,
