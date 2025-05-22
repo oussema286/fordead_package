@@ -222,12 +222,13 @@ def categorize_search(remote, local):
         
     df["status"] = df.apply(lambda x : categorize(x), axis=1)
 
-    # extend merged
-    df.loc[df.date.duplicated(keep=False), "merged"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["merged"].transform(lambda x: x.any())
-    # extend download to local duplicates if any
-    df.loc[df.date.duplicated(keep=False) & df.merged, "status"] = df.loc[df.date.duplicated(keep=False) & df.merged].groupby(by="date")["status"].transform(lambda x: "download" if (x=="download").any() else x)
-    # extend upgrade to local duplicates if any
-    df.loc[df.date.duplicated(keep=False), "status"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["status"].transform(lambda x: "upgrade" if (x=="upgrade").any() else x)
+    if df.date.duplicated(keep=False).any():
+        # extend merged
+        df.loc[df.date.duplicated(keep=False), "merged"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["merged"].transform(lambda x: x.any())
+        # extend download to local duplicates if any already merged
+        df.loc[df.date.duplicated(keep=False) & df.merged, "status"] = df.loc[df.date.duplicated(keep=False) & df.merged].groupby(by="date")["status"].transform(lambda x: "download" if (x=="download").any() else x)
+        # extend upgrade to local duplicates if any
+        df.loc[df.date.duplicated(keep=False), "status"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["status"].transform(lambda x: "upgrade" if (x=="upgrade").any() else x)
 
     # remove old
     df.loc[df["product"].isna() | df["id"].duplicated(), "status"] = "remove"
@@ -382,6 +383,12 @@ def maja_download(
 
     df = categorize_search(remote, local)
     
+    cdate = datetime.now().date()
+    maja_download_file = unzip_dir/f"{cdate}_{tile}_files_status.tsv"
+    print("Saving file table in: " + str(maja_download_file))
+    df = df[["date", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
+    df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
+
     if upgrade:
         df_download = df[df["status"].isin(["upgrade", "download", "badzip"]) & ~df["product"].isna()]
     else:
@@ -392,13 +399,7 @@ def maja_download(
         if not dry_run:
             merge_same_date(bands, df, correction_type=correction_type)
         return [], []
-
-    cdate = datetime.now().date()
-    maja_download_file = unzip_dir/f"{cdate}_{tile}_files_status.tsv"
-    print("Saving file table in: " + str(maja_download_file))
-    df = df[["date", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
-    df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
-
+    
     downloaded = []
     unzipped = []
     if dry_run:
