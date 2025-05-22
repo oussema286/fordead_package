@@ -188,6 +188,26 @@ def test_categorize_search():
     df = categorize_search(remote, local)
     assert all(df.status == (["up_to_date"]*2))
 
+    # one local not merged, 2 in search --> do not redownload
+    local = pd.concat([
+        temp_local("test_id_1", merged=False),])
+    remote = pd.concat([
+        temp_remote("test_id_1"),
+        temp_remote("test_id_2"),])
+    df = categorize_search(remote, local)
+    assert all(df.status == ["up_to_date", "download"])
+
+    # two local merged, 3 in search -> re-download all
+    local = pd.concat([
+        temp_local("test_id_1", merged=True),
+        temp_local("test_id_2", merged=True),])
+    remote = pd.concat([
+        temp_remote("test_id_1"),
+        temp_remote("test_id_2"),
+        temp_remote("test_id_3"),])
+    df = categorize_search(remote, local)
+    assert df.status.unique().tolist() == ["download"]
+    
 def test_download(output_dir):
     zip_dir = (output_dir / "download" / "zip").rmtree_p().makedirs_p()
     unzip_dir = (output_dir / "download" / "unzip").rmtree_p().makedirs_p()
