@@ -365,7 +365,7 @@ class TileInfo:
         path_dir=Path(path_dir)
         dict_datepaths={}
         for path in path_dir.glob("*"):
-            if not bool(re.search(r"(\.xml|\.tsv|\.json)", str(path))): #To ignore temporary files
+            if not bool(re.search(r"(\.xml|\.tsv|\.json|\.log)", str(path))): #To ignore temporary files
                 formatted_date=retrieve_date_from_string(path.stem)
                 if formatted_date is not None: #To ignore files or directories with no dates which might be in the same directory
                     dict_datepaths[formatted_date] = path
