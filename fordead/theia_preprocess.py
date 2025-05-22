@@ -206,7 +206,7 @@ def categorize_search(remote, local):
     # and add column status specifying the action to take
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
     df = local.merge(remote, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
-    df = df.sort_values(by=["id", "version_remote", "version_local"], ignore_index=True, ascending=[True, False, False])
+    df = df.sort_values(by=["version_remote", "version_local", "id"], ignore_index=True, ascending=[False, False, True])
     def categorize(x):
         if x["version_local"] == x["version_remote"]:
             return "up_to_date"
