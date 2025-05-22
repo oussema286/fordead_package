@@ -222,11 +222,10 @@ def categorize_search(remote, local):
         
     df["status"] = df.apply(lambda x : categorize(x), axis=1)
 
-    # extend download to duplicates if any
-    df.loc[df.date.duplicated(keep=False), "status"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["status"].transform(lambda x: "download" if (x=="download").any() else x)
-
-    # extend upgrade to duplicates if any
-    df.loc[df.date.duplicated(keep=False), "status"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["status"].transform(lambda x: "upgrade" if (x=="upgrade").any() else x)
+    # extend download to local duplicates if any
+    df.loc[df.date.duplicated(keep=False) & df.merged, "status"] = df.loc[df.date.duplicated(keep=False) & df.merged].groupby(by="date")["status"].transform(lambda x: "download" if (x=="download").any() else x)
+    # extend upgrade to local duplicates if any
+    df.loc[df.date.duplicated(keep=False) & df.merged, "status"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["status"].transform(lambda x: "upgrade" if (x=="upgrade").any() else x)
 
     # remove old
     df.loc[df["product"].isna() | df["id"].duplicated(), "status"] = "remove"
