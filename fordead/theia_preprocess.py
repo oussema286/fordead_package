@@ -206,7 +206,8 @@ def categorize_search(remote, local):
     # and add column status specifying the action to take
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
     df = local.merge(remote, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
-    df = df.sort_values(by=["version_remote", "version_local", "id"], ignore_index=True, ascending=[False, False, True])
+    df.loc[:,"datetime"] = df["id"].apply(lambda x: pd.to_datetime(re.sub(r'.*_([0-9]{8}-[0-9]{6}-[0-9]{3})_.*', r'\1', x), format='%Y%m%d-%H%M%S-%f'))
+    df = df.sort_values(by=["version_remote", "version_local", "datetime"], ignore_index=True, ascending=[False, False, True])
     def categorize(x):
         if x["version_local"] == x["version_remote"]:
             return "up_to_date"
@@ -386,7 +387,7 @@ def maja_download(
     cdate = datetime.now().date()
     maja_download_file = unzip_dir/f"{cdate}_{tile}_files_status.tsv"
     print("Saving file table in: " + str(maja_download_file))
-    df = df[["date", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
+    df = df[["date", "datetime", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
     df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
 
     if upgrade:
@@ -655,7 +656,7 @@ def merge_same_date(bands, df, correction_type):
     
     # check that is has been merged with the correct order
     df = df.loc[df.duplicated("date", keep=False)]
-    df = df.sort_values(by=["version_remote", "id"], ascending=[False, True], ignore_index=True)
+    df = df.sort_values(by=["version_remote", "datetime"], ascending=[False, True], ignore_index=True)
     wrong_order_files = []
     for group in df.groupby(by="date"):
         # get the already merged order:
