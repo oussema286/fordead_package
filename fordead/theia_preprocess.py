@@ -19,6 +19,7 @@ import time
 import warnings
 from zipfile import ZipFile, BadZipfile
 import zipfile
+import traceback
 
 from fordead.import_data import retrieve_date_from_string, TileInfo
 from fordead.stac.theia_collection import parse_theia_name
@@ -422,8 +423,8 @@ def maja_download(
                             tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
                             if check_zip(tmpzip_file):
                                 done = True
-                        except Exception as e:
-                            print(e)
+                        except Exception:
+                            print(traceback.format_exc())
                             print("Failed to download: ", r.id)
                             if Path(tmpzip_file).is_dir():
                                 Path(tmpzip_file).rmdir()

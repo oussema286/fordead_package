@@ -2,7 +2,7 @@
 """
 Module with the theia preprocess function and a corresponding command line.
 """
-
+import traceback
 import click
 from path import Path
 from datetime import date
@@ -139,7 +139,9 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                     retry=retry,
                     wait=wait
                 )
-            except Exception as e:
-                print(e)
+                retry=False
+            except Exception:
+                print(traceback.format_exc())
+                print("Tile " + tile + " had a problem, will retry later...")
                 retry=True
                 continue
