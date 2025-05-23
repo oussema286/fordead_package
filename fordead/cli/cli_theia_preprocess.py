@@ -115,7 +115,7 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
         if count > 0:
             print("Some tiles were not fully downloaded, retrying in 5s...")
             time.sleep(5)
-
+        
         for tile in tiles:
             print("\n Downloading THEIA data for tile " + tile + "\n")
             tile_zip_dir = (zipped_directory / tile).mkdir_p()   
@@ -139,7 +139,6 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                     retry=retry,
                     wait=wait
                 )
-                retry=False
             except Exception:
                 print(traceback.format_exc())
                 print("Tile " + tile + " had a problem, will retry later...")
