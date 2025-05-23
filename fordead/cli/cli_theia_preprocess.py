@@ -46,7 +46,7 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                      level = "LEVEL2A", start_date = "2015-06-23", end_date = None, lim_perc_cloud = 50,
                      bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], 
                      correction_type = "FRE", search_timeout=10, upgrade = False, rm = False, keep_zip = False, 
-                     dry_run = True, retry = 10, wait = 5):
+                     dry_run = True, retry = 10, wait = 2):
     """
     Download Sentinel-2 zip files from GEODES (LEVEL2A) or THEIA (LEVEL3A) portal, 
     extract band files and eventually merge tile+date duplicates.
@@ -92,6 +92,8 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
         If True, no data is downloaded. The default is True.
     retry : int, optional
         Number of times to retry a failed download. The default is 10.
+        If retry is 0, the it will not retry and finalize with remove, merge of unzip files even on download failure.
+        If retry is -1, the it will retry forever (and could never reach dwonlaod finalization).
     wait : int, optional
         On a failed download, the script waits wait*trials minutes before retrying 
         until the maximum number of retries is reached. The default is 5.
@@ -110,13 +112,13 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
         if end_date is None:
             end_date = date.today().strftime('%Y-%m-%d')
         
-        retry = True
+        to_retry = True
         count = -1
-        while retry:
-            retry = False
+        retry_ref = retry
+        while to_retry:
+            to_retry = False
             count += 1
             if count > 0:
-                print("Some tiles were not fully downloaded, retrying in 5s...")
                 time.sleep(5)
             
             for tile in tiles:
@@ -142,8 +144,27 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                         retry=retry,
                         wait=wait
                     )
-                except Exception:
+                except Exception as e:
                     print(traceback.format_exc())
                     print("Tile " + tile + " had a problem, will retry later...")
-                    retry=True
-                    continue
+                    if retry == 0:
+                        raise e
+                    to_retry=True
+            
+            if to_retry:
+                if (retry == 1):
+                    raise RuntimeError(
+                        f"Reached retry limit {retry_ref}, stopping download trials.\n"
+                        "Set retry to 0 in order to finalize asis (remove, merge).\n"
+                        "Set retry to -1 in order to have infinite retry.\n")
+                elif retry == -1:
+                    print(f"Retrying until success...")
+                elif retry > 1:
+                    retry-=1
+                    print("Some tiles were not fully downloaded.")                    
+                    print(f"Retrying in {wait*(count+1)} minutes ({retry}/{retry_ref} trials left)...")
+                    time.sleep(wait+(count+1))
+
+                
+
+                        

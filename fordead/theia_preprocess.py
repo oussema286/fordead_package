@@ -8,6 +8,7 @@ Created on Tue Feb 16 13:53:50 2021
 from datetime import timedelta, datetime
 from eodag import EODataAccessGateway
 from eodag.crunch import FilterProperty
+from eodag.utils.exceptions import DownloadError
 import json
 import numpy as np
 import pandas as pd
@@ -297,7 +298,9 @@ def maja_download(
     dry_run : bool, optional
         If True, do not download or unzip products
     retry : int, optional
-        Number of times to retry a failed download
+        if retry == 0, finalize the job (remove and merge)
+        even if there is a download failure.
+        Otherwise, does not finalize if the download fails.
     wait : int, optional
         Number of minutes to wait between retries
 
@@ -373,7 +376,7 @@ def maja_download(
     starting by the latest version.
     """
     with warnings.catch_warnings():
-        warnings.filterwarnings("once", category=InsecureRequestWarning)
+        warnings.filterwarnings("ignore", category=InsecureRequestWarning)
         if level == "LEVEL3A" : correction_type = "FRC"
 
         remote = maja_search(
@@ -411,53 +414,71 @@ def maja_download(
             print("Dry run, nothing has been done")
             return downloaded, unzipped
         else:
+            failed_download = False
             for r in df_download.itertuples():
                 # 1. download the zip file if not already there
                 # 2. extract the zip file
-                with tempfile.TemporaryDirectory(dir=zip_dir) as tmpdir:
-                    zip_file = zip_dir.glob(r.product.properties["id"] + ".zip")
-                    if len(zip_file) > 0 and check_zip(zip_file[0]):
-                        zip_file = zip_file[0]
-                    else:
-                        done = False
-                        trials = 0
-                        while not done:
+                try:
+                    with tempfile.TemporaryDirectory(dir=zip_dir) as tmpdir:
+                        zip_file = zip_dir.glob(r.product.properties["id"] + ".zip")
+                        if len(zip_file) > 0 and check_zip(zip_file[0]):
+                            zip_file = zip_file[0]
+                        else:
+                            tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
+                            check_zip(tmpzip_file)
+                                        
+                            zip_file = Path(tmpzip_file)
+                            if keep_zip:
+                                zip_file = zip_file.move(zip_dir / zip_file.name)
+
+                        # remove old unzip if already there
+                        if pd.notna(r.unzip_file) and r.unzip_file.is_dir():
                             try:
-                                tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
-                                if check_zip(tmpzip_file):
-                                    done = True
-                            except Exception:
-                                print(traceback.format_exc())
-                                print("Failed to download: ", r.id)
-                                if Path(tmpzip_file).is_dir():
-                                    Path(tmpzip_file).rmdir()
-                                    print("Maybe quota is reached, check your profile at https://geodes-portal.cnes.fr.")
-                                if trials==retry:
-                                    raise RuntimeError("\nRetry limit reached.\n")
-                                else:
-                                    trials += 1
-                                    print(f"\nRetries in {wait*trials} minutes {trials}/{retry} ...\n")
-                                    time.sleep(wait*trials*60)
-                                    
-                        zip_file = Path(tmpzip_file)
-                        if keep_zip:
-                            zip_file = zip_file.move(zip_dir / zip_file.name)
+                                print("Removing old unzip: ", r.unzip_file)
+                                r.unzip_file.rmtree()
+                            except Exception as e:
+                                print("Failed to remove", r.unzip_file)
+                                raise e
+                        # extract zip file
+                        tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
+                        unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
+                        df.loc[df.id==r.id, "unzip_file"] = unzip_file
 
-                    # remove old unzip if already there
-                    if pd.notna(r.unzip_file) and r.unzip_file.is_dir():
-                        try:
-                            print("Removing old unzip: ", r.unzip_file)
-                            r.unzip_file.rmtree()
-                        except Exception as e:
-                            print("Failed to remove", r.unzip_file)
-                            raise e
-                    # extract zip file
-                    tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
-                    unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
-                    df.loc[df.id==r.id, "unzip_file"] = unzip_file
+                    downloaded.append(unzip_file)
+                    unzipped.append(unzip_file)
+                except DownloadError as e:
+                    failed_download = True
+                    print(e)
+                    print("Failed to download: ", r.id)
+                    continue
+                except IsADirectoryError as e:
+                    failed_download = True
+                    print(e)
+                    print("Failed to download: ", r.id)
+                    print("It seems that the GEODES download quota is reached, check your profile at https://geodes-portal.cnes.fr.")
+                    print(f"\nPausing for {wait} minutes before continuing...\n")
+                    time.sleep(wait*60)
+                    continue
+                except Exception as e:
+                    failed_download = True
+                    print(e)
+                    print("Failed to download: ", r.id)
+                    print(f"\nPausing for {wait} minutes before continuing...\n")
+                    time.sleep(wait*60)
+                    continue
 
-                downloaded.append(unzip_file)
-                unzipped.append(unzip_file)
+                    # if trials==retry:
+                    #     raise RuntimeError("\nRetry limit reached.\n")
+                    # else:
+                    #     trials += 1
+                    #     
+                    #     time.sleep(wait*trials*60)
+        if failed_download:
+            if retry == 0:
+                warnings.warn(f'Some scenes of {tile} failed to download. Continuing operations (remove, merge) to make collection usable asis.')
+            else:
+                raise DownloadError(f'Some scenes of {tile} failed to download')
+                
 
         if rm:
             for r in df.loc[df["status"]=="remove"].itertuples():
@@ -485,6 +506,8 @@ def check_zip(x):
         ZipFile(x).namelist()
     except BadZipfile:
         return False
+    except Exception as e:
+        raise e
 
     return True
 
