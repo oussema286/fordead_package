@@ -163,7 +163,7 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                     retry-=1
                     print("Some tiles were not fully downloaded.")                    
                     print(f"Retrying in {wait*(count+1)} minutes ({retry}/{retry_ref} trials left)...")
-                    time.sleep(wait+(count+1))
+                    time.sleep(wait+(count+1)*60)
 
                 
 
