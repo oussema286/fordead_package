@@ -208,7 +208,7 @@ def categorize_search(remote, local):
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
     df = local.merge(remote, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
     df.loc[:,"datetime"] = df["id"].apply(lambda x: pd.to_datetime(re.sub(r'.*_([0-9]{8}-[0-9]{6}-[0-9]{3})_.*', r'\1', x), format='%Y%m%d-%H%M%S-%f'))
-    df = df.sort_values(by=["version_remote", "datetime", "version_local"], ignore_index=True, ascending=[False, False, True])
+    df = df.sort_values(by=["version_remote", "datetime", "version_local"], ignore_index=True, ascending=[False, True, False])
     def categorize(x):
         if x["version_local"] == x["version_remote"]:
             return "up_to_date"
