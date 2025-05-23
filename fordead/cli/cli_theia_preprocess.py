@@ -8,6 +8,8 @@ from path import Path
 from datetime import date
 from fordead.theia_preprocess import maja_download
 import time
+from urllib3.exceptions import InsecureRequestWarning
+import warnings
 
 @click.command(name='theia_preprocess')
 @click.option("-i", "--zipped_directory", type = str, help = "Path of the directory with zipped theia data")
@@ -101,46 +103,47 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
     -----
     See the downloading section in user guides for GEODES authentication details.
     """
-    
-    zipped_directory = Path(zipped_directory).expanduser().realpath().mkdir_p()
-    unzipped_directory = Path(unzipped_directory).expanduser().realpath().mkdir_p()
-    if end_date is None:
-        end_date = date.today().strftime('%Y-%m-%d')
-    
-    retry = True
-    count = -1
-    while retry:
-        retry = False
-        count += 1
-        if count > 0:
-            print("Some tiles were not fully downloaded, retrying in 5s...")
-            time.sleep(5)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("once", category=InsecureRequestWarning)
+        zipped_directory = Path(zipped_directory).expanduser().realpath().mkdir_p()
+        unzipped_directory = Path(unzipped_directory).expanduser().realpath().mkdir_p()
+        if end_date is None:
+            end_date = date.today().strftime('%Y-%m-%d')
         
-        for tile in tiles:
-            print("\n Downloading THEIA data for tile " + tile + "\n")
-            tile_zip_dir = (zipped_directory / tile).mkdir_p()   
-            tile_unzip_dir = (unzipped_directory / tile).mkdir_p()
-            try:        
-                maja_download(
-                    tile=tile,
-                    start_date=start_date,
-                    end_date=end_date,
-                    zip_dir=tile_zip_dir,
-                    unzip_dir=tile_unzip_dir,
-                    keep_zip=keep_zip,
-                    lim_perc_cloud=lim_perc_cloud,
-                    level=level,
-                    bands=bands,
-                    correction_type=correction_type,
-                    search_timeout=search_timeout,
-                    upgrade=upgrade,
-                    rm=rm,
-                    dry_run=dry_run,
-                    retry=retry,
-                    wait=wait
-                )
-            except Exception:
-                print(traceback.format_exc())
-                print("Tile " + tile + " had a problem, will retry later...")
-                retry=True
-                continue
+        retry = True
+        count = -1
+        while retry:
+            retry = False
+            count += 1
+            if count > 0:
+                print("Some tiles were not fully downloaded, retrying in 5s...")
+                time.sleep(5)
+            
+            for tile in tiles:
+                print("\n Downloading THEIA data for tile " + tile + "\n")
+                tile_zip_dir = (zipped_directory / tile).mkdir_p()   
+                tile_unzip_dir = (unzipped_directory / tile).mkdir_p()
+                try:        
+                    maja_download(
+                        tile=tile,
+                        start_date=start_date,
+                        end_date=end_date,
+                        zip_dir=tile_zip_dir,
+                        unzip_dir=tile_unzip_dir,
+                        keep_zip=keep_zip,
+                        lim_perc_cloud=lim_perc_cloud,
+                        level=level,
+                        bands=bands,
+                        correction_type=correction_type,
+                        search_timeout=search_timeout,
+                        upgrade=upgrade,
+                        rm=rm,
+                        dry_run=dry_run,
+                        retry=retry,
+                        wait=wait
+                    )
+                except Exception:
+                    print(traceback.format_exc())
+                    print("Tile " + tile + " had a problem, will retry later...")
+                    retry=True
+                    continue

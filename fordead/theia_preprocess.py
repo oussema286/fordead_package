@@ -16,10 +16,12 @@ import rasterio
 import re
 import tempfile
 import time
+import traceback
+from urllib3.exceptions import InsecureRequestWarning
 import warnings
 from zipfile import ZipFile, BadZipfile
 import zipfile
-import traceback
+
 
 from fordead.import_data import retrieve_date_from_string, TileInfo
 from fordead.stac.theia_collection import parse_theia_name
@@ -370,103 +372,104 @@ def maja_download(
     it was chosen to mosaic the pieces of the same scene with the same date
     starting by the latest version.
     """
+    with warnings.catch_warnings():
+        warnings.filterwarnings("once", category=InsecureRequestWarning)
+        if level == "LEVEL3A" : correction_type = "FRC"
 
-    if level == "LEVEL3A" : correction_type = "FRC"
+        remote = maja_search(
+            tile=tile,
+            start_date=start_date,
+            end_date=end_date,
+            lim_perc_cloud=lim_perc_cloud,
+            level=level,
+            search_timeout=search_timeout)
+        
+        local = get_local_maja_files(unzip_dir, start_date, end_date)
 
-    remote = maja_search(
-        tile=tile,
-        start_date=start_date,
-        end_date=end_date,
-        lim_perc_cloud=lim_perc_cloud,
-        level=level,
-        search_timeout=search_timeout)
-    
-    local = get_local_maja_files(unzip_dir, start_date, end_date)
+        df = categorize_search(remote, local)
+        
+        cdate = datetime.now().date()
+        maja_download_file = unzip_dir/f"{cdate}_{tile}_files_status.tsv"
+        print("Saving file table in: " + str(maja_download_file))
+        df = df[["date", "datetime", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
+        df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
 
-    df = categorize_search(remote, local)
-    
-    cdate = datetime.now().date()
-    maja_download_file = unzip_dir/f"{cdate}_{tile}_files_status.tsv"
-    print("Saving file table in: " + str(maja_download_file))
-    df = df[["date", "datetime", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
-    df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
+        if upgrade:
+            df_download = df[df["status"].isin(["upgrade", "download", "badzip"]) & ~df["product"].isna()]
+        else:
+            df_download = df[df["status"].isin(["download", "badzip"]) & ~df["product"].isna()]
 
-    if upgrade:
-        df_download = df[df["status"].isin(["upgrade", "download", "badzip"]) & ~df["product"].isna()]
-    else:
-        df_download = df[df["status"].isin(["download", "badzip"]) & ~df["product"].isna()]
+        if len(df_download) == 0 and len(df[df["status"]=="remove"]) == 0:
+            print("Already up-to-date: nothing to download.")
+            if not dry_run:
+                merge_same_date(bands, df, correction_type=correction_type)
+            return [], []
+        
+        downloaded = []
+        unzipped = []
+        if dry_run:
+            print("Dry run, nothing has been done")
+            return downloaded, unzipped
+        else:
+            for r in df_download.itertuples():
+                # 1. download the zip file if not already there
+                # 2. extract the zip file
+                with tempfile.TemporaryDirectory(dir=zip_dir) as tmpdir:
+                    zip_file = zip_dir.glob(r.product.properties["id"] + ".zip")
+                    if len(zip_file) > 0 and check_zip(zip_file[0]):
+                        zip_file = zip_file[0]
+                    else:
+                        done = False
+                        trials = 0
+                        while not done:
+                            try:
+                                tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
+                                if check_zip(tmpzip_file):
+                                    done = True
+                            except Exception:
+                                print(traceback.format_exc())
+                                print("Failed to download: ", r.id)
+                                if Path(tmpzip_file).is_dir():
+                                    Path(tmpzip_file).rmdir()
+                                    print("Maybe quota is reached, check your profile at https://geodes-portal.cnes.fr.")
+                                if trials==retry:
+                                    raise RuntimeError("\nRetry limit reached.\n")
+                                else:
+                                    trials += 1
+                                    print(f"\nRetries in {wait*trials} minutes {trials}/{retry} ...\n")
+                                    time.sleep(wait*trials*60)
+                                    
+                        zip_file = Path(tmpzip_file)
+                        if keep_zip:
+                            zip_file = zip_file.move(zip_dir / zip_file.name)
 
-    if len(df_download) == 0 and len(df[df["status"]=="remove"]) == 0:
-        print("Already up-to-date: nothing to download.")
-        if not dry_run:
-            merge_same_date(bands, df, correction_type=correction_type)
-        return [], []
-    
-    downloaded = []
-    unzipped = []
-    if dry_run:
-        print("Dry run, nothing has been done")
-        return downloaded, unzipped
-    else:
-        for r in df_download.itertuples():
-            # 1. download the zip file if not already there
-            # 2. extract the zip file
-            with tempfile.TemporaryDirectory(dir=zip_dir) as tmpdir:
-                zip_file = zip_dir.glob(r.product.properties["id"] + ".zip")
-                if len(zip_file) > 0 and check_zip(zip_file[0]):
-                    zip_file = zip_file[0]
-                else:
-                    done = False
-                    trials = 0
-                    while not done:
+                    # remove old unzip if already there
+                    if pd.notna(r.unzip_file) and r.unzip_file.is_dir():
                         try:
-                            tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
-                            if check_zip(tmpzip_file):
-                                done = True
-                        except Exception:
-                            print(traceback.format_exc())
-                            print("Failed to download: ", r.id)
-                            if Path(tmpzip_file).is_dir():
-                                Path(tmpzip_file).rmdir()
-                                print("Maybe quota is reached, check your profile at https://geodes-portal.cnes.fr.")
-                            if trials==retry:
-                                raise RuntimeError("\nRetry limit reached.\n")
-                            else:
-                                trials += 1
-                                print(f"\nRetries in {wait*trials} minutes {trials}/{retry} ...\n")
-                                time.sleep(wait*trials*60)
-                                
-                    zip_file = Path(tmpzip_file)
-                    if keep_zip:
-                        zip_file = zip_file.move(zip_dir / zip_file.name)
+                            print("Removing old unzip: ", r.unzip_file)
+                            r.unzip_file.rmtree()
+                        except Exception as e:
+                            print("Failed to remove", r.unzip_file)
+                            raise e
+                    # extract zip file
+                    tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
+                    unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
+                    df.loc[df.id==r.id, "unzip_file"] = unzip_file
 
-                # remove old unzip if already there
-                if pd.notna(r.unzip_file) and r.unzip_file.is_dir():
+                downloaded.append(unzip_file)
+                unzipped.append(unzip_file)
+
+        if rm:
+            for r in df.loc[df["status"]=="remove"].itertuples():
+                if r.unzip_file.is_dir():
                     try:
-                        print("Removing old unzip: ", r.unzip_file)
+                        print("Removing unzip: ", r.unzip_file)
                         r.unzip_file.rmtree()
                     except Exception as e:
                         print("Failed to remove", r.unzip_file)
                         raise e
-                # extract zip file
-                tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
-                unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
-                df.loc[df.id==r.id, "unzip_file"] = unzip_file
-
-            downloaded.append(unzip_file)
-            unzipped.append(unzip_file)
-
-    if rm:
-        for r in df.loc[df["status"]=="remove"].itertuples():
-            if r.unzip_file.is_dir():
-                try:
-                    print("Removing unzip: ", r.unzip_file)
-                    r.unzip_file.rmtree()
-                except Exception as e:
-                    print("Failed to remove", r.unzip_file)
-                    raise e
-        df = df.loc[df["status"]!="remove"]
-    merge_same_date(bands, df, correction_type=correction_type)
+            df = df.loc[df["status"]!="remove"]
+        merge_same_date(bands, df, correction_type=correction_type)
     
     return downloaded, unzipped
 
