@@ -7,7 +7,7 @@ import click
 from path import Path
 from datetime import date
 from fordead.theia_preprocess import maja_download
-
+import time
 
 @click.command(name='theia_preprocess')
 @click.option("-i", "--zipped_directory", type = str, help = "Path of the directory with zipped theia data")
@@ -113,7 +113,9 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
         retry = False
         count += 1
         if count > 0:
-            print("Some tiles were not fully downloaded, retrying...")
+            print("Some tiles were not fully downloaded, retrying in 5s...")
+            time.sleep(5)
+
         for tile in tiles:
             print("\n Downloading THEIA data for tile " + tile + "\n")
             tile_zip_dir = (zipped_directory / tile).mkdir_p()   
@@ -138,5 +140,6 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                     wait=wait
                 )
             except Exception as e:
+                print(e)
                 retry=True
                 continue
