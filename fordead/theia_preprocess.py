@@ -682,8 +682,6 @@ def merge_same_date(bands, df, correction_type):
 
     # subset duplicates not merged
     df = df.loc[~df.unzip_file.isnull()]
-    df = df.loc[df.duplicated("date", keep=False)]
-    df = df.sort_values(by=["id", "version_remote"], ascending=[True, False], ignore_index=True)
 
     if len(df) == 0:
         return
