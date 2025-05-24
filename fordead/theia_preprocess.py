@@ -509,7 +509,7 @@ def maja_download(
                         df.loc[(df.id==r.id) & (df.status=="remove"), "status"] = "failed_remove"
                         print("Failed to remove", r.unzip_file)
                         raise e
-            df_to_merge = df.loc[df["status"]!="remove"]
+            df_to_merge = df.loc[df["status"].isin(["removed", "failed_remove"])]
         
         print("Update file table in: " + str(maja_download_file))
         df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
