@@ -395,6 +395,7 @@ def maja_download(
         maja_download_file = unzip_dir/f"{cdate}_{tile}_files_status.tsv"
         print("Saving file table in: " + str(maja_download_file))
         df = df[["date", "datetime", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
+        df["done"] = False
         df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
 
         if upgrade:
@@ -445,6 +446,7 @@ def maja_download(
                         tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
                         unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
                         df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "unzip_file"] = unzip_file
+                        df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "done"] = True
 
                     downloaded.append(unzip_file)
                     unzipped.append(unzip_file)
@@ -493,17 +495,22 @@ def maja_download(
                     "\n\t".join(failed_ids) + 
                     "\n###############\n")                
 
+        df_to_merge = df
         if rm:
             for r in df.loc[df["status"]=="remove"].itertuples():
                 if r.unzip_file.is_dir():
                     try:
                         print("Removing unzip: ", r.unzip_file)
                         r.unzip_file.rmtree()
+                        df.loc[(df.id==r.id) & (df.status=="remove"), "done"] = True
                     except Exception as e:
                         print("Failed to remove", r.unzip_file)
                         raise e
-            df = df.loc[df["status"]!="remove"]
-        merge_same_date(bands, df, correction_type=correction_type)
+            df_to_merge = df.loc[df["status"]!="remove"]
+        
+        print("Saving file table in: " + str(maja_download_file))
+        df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
+        merge_same_date(bands, df_to_merge, correction_type=correction_type)
     
     return downloaded, unzipped
 
