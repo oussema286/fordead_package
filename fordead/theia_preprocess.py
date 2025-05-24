@@ -410,6 +410,7 @@ def maja_download(
         
         downloaded = []
         unzipped = []
+        failed_ids = []
         if dry_run:
             print("Dry run, nothing has been done")
             return downloaded, unzipped
@@ -448,12 +449,14 @@ def maja_download(
                     unzipped.append(unzip_file)
                 except DownloadError as e:
                     failed_download = True
+                    failed_ids.append(r.id)
                     print(e)
                     print("Failed to download: ", r.id)
                     print("The link to zip file seems corrupted.")
                     continue
                 except IsADirectoryError:
                     failed_download = True
+                    failed_ids.append(r.id)
                     # print(e)
                     print("Failed to download: ", r.id)
                     print("It seems that the GEODES download quota is reached, check your profile at https://geodes-portal.cnes.fr.")
@@ -462,6 +465,7 @@ def maja_download(
                     continue
                 except Exception as e:
                     failed_download = True
+                    failed_ids.append(r.id)
                     print(e)
                     print("Failed to download: ", r.id)
                     continue
@@ -474,9 +478,13 @@ def maja_download(
                     #     time.sleep(wait*trials*60)
         if failed_download:
             if retry == 0:
-                warnings.warn(f'Some scenes of {tile} failed to download. Continuing operations (remove, merge) to make collection usable asis.')
+                warnings.warn(
+                    f"\nSome products of tile {tile} failed to download." +
+                    "\nFailure summary:\n\t" + "\n\t".join(failed_ids) +
+                    "\nContinuing operations (remove, merge) to make collection usable asis."
+                )
             else:
-                raise DownloadError(f'Some scenes of {tile} failed to download')
+                raise DownloadError(f'Some products of tile {tile} failed to download:\n\t'+"\n\t".join(failed_ids))
                 
 
         if rm:
