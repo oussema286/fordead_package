@@ -395,7 +395,6 @@ def maja_download(
         maja_download_file = unzip_dir/f"{cdate}_{tile}_files_status.tsv"
         print("Saving file table in: " + str(maja_download_file))
         df = df[["date", "datetime", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
-        df["done"] = False
         df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
 
         if upgrade:
@@ -446,13 +445,14 @@ def maja_download(
                         tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
                         unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
                         df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "unzip_file"] = unzip_file
-                        df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "done"] = True
+                        df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "status"] = "downloaded"
 
                     downloaded.append(unzip_file)
                     unzipped.append(unzip_file)
                 except DownloadError as e:
                     failed_download = True
                     failed_ids.append(r.id)
+                    df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "status"] = "failed_download"
                     print(e)
                     print("Failed to download: ", r.id)
                     print("The link to zip file seems corrupted.")
@@ -460,6 +460,7 @@ def maja_download(
                 except IsADirectoryError:
                     failed_download = True
                     failed_ids.append(r.id)
+                    df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "status"] = "failed_download"
                     # print(e)
                     print("Failed to download: ", r.id)
                     print("It seems that the GEODES download quota is reached, check your profile at https://geodes-portal.cnes.fr.")
@@ -469,6 +470,7 @@ def maja_download(
                 except Exception as e:
                     failed_download = True
                     failed_ids.append(r.id)
+                    df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "status"] = "failed_download"
                     print(e)
                     print("Failed to download: ", r.id)
                     continue
@@ -502,13 +504,14 @@ def maja_download(
                     try:
                         print("Removing unzip: ", r.unzip_file)
                         r.unzip_file.rmtree()
-                        df.loc[(df.id==r.id) & (df.status=="remove"), "done"] = True
+                        df.loc[(df.id==r.id) & (df.status=="remove"), "status"] = "removed"
                     except Exception as e:
+                        df.loc[(df.id==r.id) & (df.status=="remove"), "status"] = "failed_remove"
                         print("Failed to remove", r.unzip_file)
                         raise e
             df_to_merge = df.loc[df["status"]!="remove"]
         
-        print("Saving file table in: " + str(maja_download_file))
+        print("Update file table in: " + str(maja_download_file))
         df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
         merge_same_date(bands, df_to_merge, correction_type=correction_type)
     
