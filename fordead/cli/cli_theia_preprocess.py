@@ -158,11 +158,14 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                         "Set retry to -1 in order to have infinite retry.\n")
                 elif retry < 0:
                     print(f"Pausing {wait} minutes before retrying...")
+                    if wait > 0:
+                        time.sleep(wait*60)
                 elif retry > 0:
                     retry-=1
                     print("Some tiles were not fully downloaded.")                    
                     print(f"Retrying in {wait*(count+1)} minutes ({retry}/{retry_ref} trials left)...")
-                    time.sleep(wait+(count+1)*60)
+                    if wait > 0:
+                        time.sleep(wait+(count+1)*60)
 
                 
 

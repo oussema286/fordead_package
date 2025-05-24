@@ -479,13 +479,18 @@ def maja_download(
         if failed_download:
             if retry == 0:
                 warnings.warn(
+                    "\n###############" +
                     f"\nSome products of tile {tile} failed to download." +
                     "\nFailure summary:\n\t" + "\n\t".join(failed_ids) +
-                    "\nContinuing operations (remove, merge) to make collection usable asis."
+                    "\nContinuing operations (remove, merge) to make collection usable asis." +
+                    "\n###############\n"
                 )
             else:
-                raise DownloadError(f'Some products of tile {tile} failed to download:\n\t'+"\n\t".join(failed_ids))
-                
+                raise RuntimeError(
+                    "\n###############" + 
+                    f"\nSome products of tile {tile} failed to download:\n\t" + 
+                    "\n\t".join(failed_ids) + 
+                    "\n###############\n")                
 
         if rm:
             for r in df.loc[df["status"]=="remove"].itertuples():
