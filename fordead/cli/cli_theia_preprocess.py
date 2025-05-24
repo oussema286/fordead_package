@@ -152,14 +152,13 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                     to_retry=True
             
             if to_retry:
-                if (retry == 1):
+                if retry == 0:
                     raise RuntimeError(
-                        f"Reached retry limit {retry_ref}, stopping download trials.\n"
-                        "Set retry to 0 in order to finalize asis (remove, merge).\n"
+                        f"Reached retry limit {retry_ref}, exiting.\n"
                         "Set retry to -1 in order to have infinite retry.\n")
-                elif retry == -1:
-                    print(f"Retrying until success...")
-                elif retry > 1:
+                elif retry < 0:
+                    print(f"Pausing {wait} minutes before retrying...")
+                elif retry > 0:
                     retry-=1
                     print("Some tiles were not fully downloaded.")                    
                     print(f"Retrying in {wait*(count+1)} minutes ({retry}/{retry_ref} trials left)...")

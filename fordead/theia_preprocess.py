@@ -450,10 +450,11 @@ def maja_download(
                     failed_download = True
                     print(e)
                     print("Failed to download: ", r.id)
+                    print("The link to zip file seems corrupted.")
                     continue
-                except IsADirectoryError as e:
+                except IsADirectoryError:
                     failed_download = True
-                    print(e)
+                    # print(e)
                     print("Failed to download: ", r.id)
                     print("It seems that the GEODES download quota is reached, check your profile at https://geodes-portal.cnes.fr.")
                     print(f"\nPausing for {wait} minutes before continuing...\n")
@@ -463,8 +464,6 @@ def maja_download(
                     failed_download = True
                     print(e)
                     print("Failed to download: ", r.id)
-                    print(f"\nPausing for {wait} minutes before continuing...\n")
-                    time.sleep(wait*60)
                     continue
 
                     # if trials==retry:
