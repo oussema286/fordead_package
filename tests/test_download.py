@@ -216,7 +216,7 @@ def test_categorize_search():
 
     
 def test_download(output_dir):
-    zip_dir = (output_dir / "download" / "zip")#.rmtree_p().makedirs_p()
+    zip_dir = (output_dir / "download" / "zip").rmtree_p().makedirs_p()
     unzip_dir = (output_dir / "download" / "unzip").rmtree_p().makedirs_p()
 
     # # download issue for JBD, mail 2025-04-21
