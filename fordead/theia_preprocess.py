@@ -398,10 +398,11 @@ def maja_download(
         df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
 
         if upgrade:
-            df_download = df[df["status"].isin(["upgrade", "download", "badzip"]) & ~df["product"].isna()]
+            status_to_dl = ["upgrade", "download", "badzip"]
         else:
-            df_download = df[df["status"].isin(["download", "badzip"]) & ~df["product"].isna()]
-
+            status_to_dl = ["download", "badzip"]
+            
+        df_download = df[df["status"].isin(status_to_dl) & ~df["product"].isna()]
         if len(df_download) == 0 and len(df[df["status"]=="remove"]) == 0:
             print("Already up-to-date: nothing to download.")
             if not dry_run:
@@ -443,7 +444,7 @@ def maja_download(
                         # extract zip file
                         tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
                         unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
-                        df.loc[df.id==r.id, "unzip_file"] = unzip_file
+                        df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "unzip_file"] = unzip_file
 
                     downloaded.append(unzip_file)
                     unzipped.append(unzip_file)
