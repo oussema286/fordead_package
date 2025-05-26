@@ -64,12 +64,12 @@ def get_local_maja_files(unzip_dir, start_date=None, end_date=None):
     
     unzip_files.extend(merged_files)
 
-    df = pd.DataFrame({
-        "date": [retrieve_date_from_string(f) for f in unzip_files],
-        "id": [re.sub(r'(.*)_[A-Z]_V[0-9]-[0-9]$', r'\1',f.stem) for f in unzip_files],
-        "version": [re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files],
-        "unzip_file": [f if f.is_dir() else pd.NA for f in unzip_files],
-    }) #.astype({"id": str, "version": str, "unzip_file": str})
+    df = pd.DataFrame(dict(
+        date=[retrieve_date_from_string(f) for f in unzip_files],
+        id=[re.sub(r'(.*)_[A-Z]_V[0-9]-[0-9]$', r'\1',f.stem) for f in unzip_files],
+        version=[re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files],
+        unzip_file=[f if f.is_dir() else pd.NA for f in unzip_files],
+    ), dtype=object) #.astype({"id": str, "version": str, "unzip_file": str})
 
     if start_date is not None:
         df = df.loc[pd.to_datetime(df["date"]) >= pd.to_datetime(start_date)]
@@ -187,7 +187,9 @@ def maja_search(
         )
         df_remote.append(props)
     if len(df_remote) == 0:
-        return pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]))
+        return pd.DataFrame(
+            dict(id=[], date=[], version=[], cloud_cover=[], product=[]),
+            dtype=object).astype({"cloud_cover": float})
     df_remote = pd.DataFrame(df_remote)
     df_remote = df_remote.sort_values(by=["datetime", "version"], ignore_index=True, ascending=[True, False])
     # hypothesis that same id is corresponding to same product

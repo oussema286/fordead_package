@@ -122,6 +122,25 @@ def test_categorize_search():
     df = categorize_search(remote, local)
     assert df.status.tolist() == ["upgrade", "remove"]
 
+    # test if one table is empty
+    local = temp_local(DEFAULT_ID)
+    remote = pd.DataFrame(
+        dict(id=[], date=[], version=[], cloud_cover=[], product=[]),
+        dtype=object).astype({"cloud_cover": float})
+    df = categorize_search(remote, local)
+    df = categorize_search(remote, local.loc[[False]])
+
+    local = pd.DataFrame(
+        dict(id=[], date=[], version=[], unzip_file=[], merged=[]),
+        dtype=object)
+    remote = temp_remote(DEFAULT_ID)
+    df = categorize_search(remote, local)
+    df = categorize_search(remote.loc[[False]], local)
+
+    local = pd.DataFrame(dict(id=[], date=[], version=[], unzip_file=[], merged=[]), dtype=object)
+    remote = pd.DataFrame(dict(id=[], date=[], version=[], cloud_cover=[], product=[]), dtype=object)
+    df = categorize_search(remote, local)
+
     ###################
     # two files on date
     ###################
