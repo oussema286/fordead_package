@@ -1,11 +1,10 @@
 # v1.11.2
-
 ## Add
 - `maja_download` & `theia_preprocess` (API & CLI):
   - export `maja_download` results to file `{unzip_dir}/{date}_files_status.tsv`, useful to analyse them in `dry_run` mode before really applying.
   - status `remove` when a local scene is not in the search result (either outdated, filtered out by cloud cover) or older version duplicates with same id
   - arg `rm` in order to delete local scene dirs with status `remove`
-  - add status `failed_download` and `failed_remove` to identify if something went wrong
+  - status `failed_download` and `failed_remove` to identify if something went wrong
 
 ## Fix
 - `maja_download` error when trying to remove a scene duplicate already merged (issue #48)
@@ -19,7 +18,6 @@
   - move retry to `theia_preprocess` so that every product of every tile is tried before retry
 
 # v1.11.1
-
 # Fix
 - EODAG v3.3.0+ to have datetime filtering in `maja_search` (issue #45)
 - zip files is the same for some duplicates making keep_zip unsuable in that case (issue #46)
