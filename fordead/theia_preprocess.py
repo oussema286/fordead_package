@@ -303,6 +303,7 @@ def maja_download(
         if retry == 0, finalize the job (remove and merge)
         even if there is a download failure.
         Otherwise, does not finalize if the download fails.
+        This is to be used through theia_preprocess().
     wait : int, optional
         Number of minutes to wait between retries
 

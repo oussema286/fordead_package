@@ -36,6 +36,18 @@ def cli_theia_preprocess(**kwargs):
     are merged by replacing the no data pixels of one scene with the data pixels of the other,
     before removing the directories of the duplicates.
 
+    Before the operations a list of local and remote files is summarized in
+    "{tile}/{current date}_{tile}_file_status.tsv", giving the status of operations
+    to be done under the column "status"
+    The status is updated in after operations e.g. downloaded, failed_download, failed_remove.
+    
+    When running dry_run, nothing is done except generating the file .tsv.
+
+    The retry flag and the wait arguments allow retries in case of failure.
+    It is wrapped around the tiles loop such that every product of every tile is tried before
+    a new try. Thus, if the download of one product fails, the new trial is postponed to the
+    next retry.
+
     \f
 
     """
