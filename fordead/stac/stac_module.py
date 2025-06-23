@@ -14,7 +14,7 @@ import re
 from shapely.geometry import box, Polygon
 from shapely import to_geojson
 
-import dinamis_sdk 
+import teledetection 
 from fordead.stac.theia_collection import build_theia_collection, ItemCollection, bbox_to_wgs, get_rio_info
 from fordead.import_data import TileInfo
 import fordead.stac.stac_module as st
@@ -343,7 +343,7 @@ def get_harmonized_theiastac_collection(start_date, end_date, obs_bbox, lim_perc
     collection.drop_duplicates(inplace=True)
 
     if sign:
-        collection = dinamis_sdk.sign_item_collection(collection)
+        collection = teledetection.sign_item_collection(collection)
     return collection
 
 def harmonize_sen2cor_offset(collection, bands=set(S2_THEIA_BANDS + S2_SEN2COR_BANDS), inplace=False):
