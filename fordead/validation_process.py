@@ -191,9 +191,16 @@ def compute_and_apply_mask(data_frame, soil_detection, formula_mask, list_bands,
     return masked_dataframe, bare_ground
 
 def compute_user_mask_dataframe(data_frame, formula_mask, list_bands):
+    user_mask = compute_vegetation_index(data_frame, formula = formula_mask)
+    
+    missing_bands = [b for b in list_bands if b not in data_frame.columns]
+    if len(missing_bands) > 0:
+        warnings.warn(
+            "Skip missing bands for shaddow computation: " +
+            ", ".join(missing_bands))
+    list_bands = [b for b in list_bands if b in data_frame.columns]
     shadows = (data_frame[list_bands]==0).any(axis=1)
     outside_swath = data_frame[list_bands[0]]<0
-    user_mask = compute_vegetation_index(data_frame, formula = formula_mask)
     data_frame["mask"] = shadows | outside_swath | user_mask
     return data_frame
 
