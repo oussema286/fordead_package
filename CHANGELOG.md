@@ -1,3 +1,10 @@
+# v1.11.3
+## Fix
+- warning instead of error when bands missing for shaddow flag computation (i.e. band==0)
+
+## Change
+- dependency `dinamis-sdk` became `teledetection`
+  
 # v1.11.2
 ## Add
 - `maja_download` & `theia_preprocess` (API & CLI):
