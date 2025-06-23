@@ -56,7 +56,7 @@ PLANETARY = dict(
 )
 
 THEIASTAC = dict(
-    url = 'https://stacapi-cdos.apps.okd.crocc.meso.umontpellier.fr',
+    url = 'https://api.stac.teledetection.fr',
     collection = "sentinel2-l2a-theia",
     cloud_cover = "eo:cloud_cover",
     mgrs_tile = "s2:mgrs_tile"
