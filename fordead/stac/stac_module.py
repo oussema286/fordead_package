@@ -62,6 +62,17 @@ THEIASTAC = dict(
     mgrs_tile = "s2:mgrs_tile"
 )
 
+def _make_valid_bbox(bbox, buffer = 1e-6):
+    # if bbox is point or line convert
+    # it to square adding +/- 1e-6, i.e. ~1m at equator
+    if bbox[0] == bbox[2]:
+        bbox[0] -= buffer
+        bbox[2] += buffer
+    if bbox[1] == bbox[3]:
+        bbox[1] -= buffer
+        bbox[3] += buffer
+    return bbox
+
 def getItemCollection(start_date, end_date, bbox, cloud_nb = 100, source = PLANETARY):
     """
     get item collection from Theia STAC or Microsoft Planetary Computer
@@ -75,7 +86,7 @@ def getItemCollection(start_date, end_date, bbox, cloud_nb = 100, source = PLANE
     """
     catalog = pystac_client.Client.open(source["url"])
     time_range = f"{start_date}/{end_date}" #"2021-07-01/2021-12-01"
-    bbox = bbox
+    bbox = _make_valid_bbox(bbox)
     cloud_nb = cloud_nb
 
     # recherche avec filtre de type 'query'

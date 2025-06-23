@@ -1,6 +1,7 @@
 # v1.11.3
 ## Fix
 - warning instead of error when bands missing for shaddow flag computation (i.e. band==0)
+- getItemCollection for point or line, i.e. bbox[0]==bbox[2] or bbox[1]==bbox[3]: bbox extended with 1e-6
 
 ## Change
 - dependency `dinamis-sdk` became `teledetection`
