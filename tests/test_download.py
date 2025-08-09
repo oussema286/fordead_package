@@ -81,9 +81,6 @@ def test_maja_search(provider):
     assert df.empty
 
 
-
-
-
 def test_categorize_search():
     DEFAULT_ID = "SENTINEL2B_20160101-104755-706_L2A_T31TGM"
     def temp_local(
@@ -274,6 +271,26 @@ def test_download_geodes(output_dir):
 
     assert len(unzip_files) == 1
 
+def test_item_mtd_download(output_dir):
+    unzip_dir = (output_dir / "download" / "unzip").rmtree_p().makedirs_p()
+
+    tile = "T31TGL"
+    start_date = "2020-03-25"
+    end_date = "2020-03-26"
+    df = maja_search(tile, start_date, end_date, provider="mtd")
+    assert df.shape[0] == 1
+    assert df.version[0] == "4-0"
+
+    from fordead.theia_preprocess import ItemMTD
+    item = ItemMTD.from_dict(df.loc[0, "product"].to_dict())
+
+    bands = ["B6", "CLMR2", "CLMR1"]
+    item.download(output_dir=unzip_dir, bands=bands[:1])
+    assert len(list(unzip_dir.walkfiles())) == 1
+    item.download(output_dir=unzip_dir, bands=bands)
+    assert len(list(unzip_dir.walkfiles())) == 3
+
+
 
 def test_download_mtd(output_dir):
     zip_dir = (output_dir / "download" / "zip").rmtree_p().makedirs_p()
@@ -336,7 +353,7 @@ def test_download_mtd(output_dir):
     tile = "T31TGM"
     start_date = "2024-08-29"
     end_date = "2024-08-30"
-    bands = ["B2", "B3", "CLMR2", "CLMR1"]
+    bands = ["B6", "CLMR2", "CLMR1"]
     cloud_min = 7
     cloud_max = 100
 
@@ -352,7 +369,7 @@ def test_download_mtd(output_dir):
     tile = "T32UMV"
     start_date = "2025-05-13"
     end_date = "2025-05-14"
-    bands = ["B2", "B3", "CLMR2", "CLMR1"]
+    bands = ["B6", "CLMR2", "CLMR1"]
     cloud_min = 7
     cloud_max = 100
 
@@ -498,6 +515,8 @@ def test_download_mtd(output_dir):
     assert len(downloaded) == 0
     assert len(unzip_files) == 0
 
+    # will rm the first merged split but
+    # will not re-download the second split
     downloaded, unzip_files = maja_download(
         provider=provider,
         tile=tile,
@@ -514,6 +533,24 @@ def test_download_mtd(output_dir):
 
     assert len(downloaded) == 0
     assert len(unzip_files) == 0
+
+    # should re-download the second split
+    downloaded, unzip_files = maja_download(
+        provider=provider,
+        tile=tile,
+        start_date=start_date,
+        end_date=end_date,
+        zip_dir=zip_dir,
+        unzip_dir=unzip_dir,
+        lim_perc_cloud=cloud_min,
+        level="LEVEL2A",
+        bands=bands,
+        dry_run=False,
+        rm=True
+    )
+
+    assert len(downloaded) == 1
+    assert len(unzip_files) == 1
 
 
 def test_patch_merged_scenes():

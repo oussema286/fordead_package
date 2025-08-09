@@ -347,11 +347,11 @@ class ItemMTD(pystac.Item):
                     band_dir = (tmp_dir / "MASKS").mkdir_p()
                 href = self.assets[band].href
                 band_file = band_dir / Path(href).name
-                if (item_dir / band_file.relpathto(tmp_dir)).exists():
+                if (item_dir / band_file.relpath(tmp_dir)).exists():
                     continue
                 urlretrieve(sign_urls([href])[href], band_file)
 
-            tmp_dir.move(item_dir)
+            tmp_dir.merge_tree(item_dir)
         return item_dir
 
 

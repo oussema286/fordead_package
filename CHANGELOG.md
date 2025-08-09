@@ -21,10 +21,10 @@
 # v1.11.2
 ## Add
 - `maja_download` & `theia_preprocess` (API & CLI):
-  - export `maja_download` results to file `{unzip_dir}/{date}_files_status.tsv`, useful to analyse them in `dry_run` mode before really applying.
-  - status `remove` when a local scene is not in the search result (either outdated, filtered out by cloud cover) or older version duplicates with same id
-  - arg `rm` in order to delete local scene dirs with status `remove`
-  - status `failed_download` and `failed_remove` to identify if something went wrong
+- export `maja_download` results to file `{unzip_dir}/{date}_files_status.tsv`, useful to analyse them in `dry_run` mode before really applying.
+- status `remove` when a local scene is not in the search result (either outdated, filtered out by cloud cover) or older version duplicates with same id
+- arg `rm` in order to delete local scene dirs with status `remove`
+- status `failed_download` and `failed_remove` to identify if something went wrong
 
 ## Fix
 - `maja_download` error when trying to remove a scene duplicate already merged (issue #48)
