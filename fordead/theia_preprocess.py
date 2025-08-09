@@ -5,6 +5,7 @@ Created on Tue Feb 16 13:53:50 2021
 @author: Raphael Dutrieux
 @author: Florian de Boissieu
 """
+
 from datetime import timedelta, datetime
 from eodag import EODataAccessGateway
 from eodag.crunch import FilterProperty
@@ -15,23 +16,27 @@ import pandas as pd
 from path import Path
 import rasterio
 import re
+from teledetection import sign_urls
 import tempfile
 import time
 import traceback
+from urllib.request import urlretrieve
 from urllib3.exceptions import InsecureRequestWarning
 import warnings
 from zipfile import ZipFile, BadZipfile
 import zipfile
+import pystac
+from tqdm.auto import tqdm
 
 
 from fordead.import_data import retrieve_date_from_string, TileInfo
-from fordead.stac.theia_collection import parse_theia_name
+
 
 def get_local_maja_files(unzip_dir, start_date=None, end_date=None):
     """
-    List the local maja files (zip and unzip) and 
+    List the local maja files (zip and unzip) and
     some of there characteristics (version, empty zip, ...)
-    
+
     Parameters
     ----------
     unzip_dir : str
@@ -54,22 +59,29 @@ def get_local_maja_files(unzip_dir, start_date=None, end_date=None):
 
     merged_files = []
     for f in unzip_files:
-        merged_file =  f/"merged_scenes.json"
+        merged_file = f / "merged_scenes.json"
         if merged_file.is_file():
             with open(merged_file, "r") as ff:
                 merged_list = json.load(ff)
             for v in merged_list[str(f.name)]:
                 if f.name != v:
-                    merged_files.append(unzip_dir/v)
-    
+                    merged_files.append(unzip_dir / v)
+
     unzip_files.extend(merged_files)
 
-    df = pd.DataFrame(dict(
-        date=[retrieve_date_from_string(f) for f in unzip_files],
-        id=[re.sub(r'(.*)_[A-Z]_V[0-9]-[0-9]$', r'\1',f.stem) for f in unzip_files],
-        version=[re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files],
-        unzip_file=[f if f.is_dir() else pd.NA for f in unzip_files],
-    ), dtype=object) #.astype({"id": str, "version": str, "unzip_file": str})
+    df = pd.DataFrame(
+        dict(
+            date=[retrieve_date_from_string(f) for f in unzip_files],
+            id=[
+                re.sub(r"(.*)_[A-Z]_V[0-9]-[0-9]$", r"\1", f.stem) for f in unzip_files
+            ],
+            version=[
+                re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files
+            ],
+            unzip_file=[f if f.is_dir() else pd.NA for f in unzip_files],
+        ),
+        dtype=object,
+    )  # .astype({"id": str, "version": str, "unzip_file": str})
 
     if start_date is not None:
         df = df.loc[pd.to_datetime(df["date"]) >= pd.to_datetime(start_date)]
@@ -77,29 +89,80 @@ def get_local_maja_files(unzip_dir, start_date=None, end_date=None):
         df = df.loc[pd.to_datetime(df["date"]) <= pd.to_datetime(end_date)]
 
     df["merged"] = df["date"].duplicated(keep=False)
-    df = df.sort_values(by=["id", "version"], ignore_index=True, ascending=[True, False])
+    df = df.sort_values(
+        by=["id", "version"], ignore_index=True, ascending=[True, False]
+    )
     return df
 
+
 def maja_search(
-        tile: str,
-        start_date: str,
-        end_date: str = None,
-        lim_perc_cloud: float = 100,
-        level: str = 'LEVEL2A',
-        search_timeout: int = 10,
-        dt_version: int = 10,):
+    tile: str,
+    start_date: str,
+    end_date: str = None,
+    lim_perc_cloud: float = 100,
+    provider: str = "mtd",
+    **kwargs,
+):
     """
-    Download Sentinel-2 L2A data processed with MAJA processing chain from
-    GEODES (CNES) plateform.
+    Search Sentinel-2 L2A MAJA data.
+
+    tile : str
+        Name of the Sentinel-2 tile (format : "T31UFQ" or "31UFQ").
+    start_date : str
+        Acquisitions before this date are ignored (format : "YYYY-MM-DD")
+    end_date : str
+        Acquisitions after this date are ignored (format : "YYYY-MM-DD")
+    lim_perc_cloud : int
+        Maximum cloud cover (%)
+    provider : str, optional
+        "mtd" or "geodes"
+    kwargs: dict
+        keyword arguments passed to maja_search_mtd or maja_search_geodes
+
+    Returns
+    -------
+    pandas.DataFrame
+    """
+    if provider == "mtd":
+        return maja_search_mtd(
+            tile=tile,
+            start_date=start_date,
+            end_date=end_date,
+            lim_perc_cloud=lim_perc_cloud,
+            **kwargs,
+        )
+    elif provider == "geodes":
+        return maja_search_geodes(
+            tile=tile,
+            start_date=start_date,
+            end_date=end_date,
+            lim_perc_cloud=lim_perc_cloud,
+            **kwargs,
+        )
+    else:
+        raise ValueError(f"Unknown provider {provider}")
+
+
+def maja_search_geodes(
+    tile: str,
+    start_date: str,
+    end_date: str = None,
+    lim_perc_cloud: float = 100,
+    level: str = "LEVEL2A",
+    search_timeout: int = 10,
+    dt_version: int = 10,
+):
+    """
+    Search Sentinel-2 MAJA data on GEODES plateform (https://geodes-portal.cnes.fr).
 
     Parameters
     ----------
     tile : str
         Name of the Sentinel-2 tile (format : "T31UFQ").
     start_date : str
-        Acquisitions before this date are ignored (format : "YYYY-MM-DD") 
+        Acquisitions before this date are ignored (format : "YYYY-MM-DD")
     end_date : str
-        Acquisitions after this date are ignored (format : "YYYY-MM-DD") 
+        Acquisitions after this date are ignored (format : "YYYY-MM-DD")
     lim_perc_cloud : int
         Maximum cloud cover (%)
     level : str, optional (see notes)
@@ -107,6 +170,211 @@ def maja_search(
     search_timeout : int, optional
         Timeout in seconds for search of theia products. Default is 10.
         It updates the htttp request timeout for the search.
+    dt_version : int, optional
+        Possible delta time in milliseconds between two versions
+        of the same acquisition, see notes.
+        Default is 10.
+
+    Returns
+    -------
+    pandas.DataFrame
+
+    Notes
+    -------
+    See `maja_download()` for authentication details
+
+    The `dt_version` is here to identify which products are the same
+    acquisition with different versions, as CNES may modify the
+    the acquisition datetime between versions o fthe same product.
+    Example, with `dt_version=10` these two products are considered the same:
+    - SENTINEL2A_20200407-104815-292_L2A_T31TGL (4-0)
+    - SENTINEL2A_20200407-104815-295_L2A_T31TGL (2-2)
+
+    """
+
+    if level == "LEVEL2A":
+        product_type = "S2_MSI_L2A_MAJA"
+        provider = "geodes"
+        # MGRS tile has multiple formats in geodes metadata
+        # - before 2024-09-25: TXXYYY
+        # - after 2024-09-25: XXYYY
+        # Using tileIdentifier with MGRS tile without T prefix finds both
+        # see https://github.com/CS-SI/eodag/pull/1581/files
+        tile_arg = {"tileIdentifier": re.sub(r"^T", "", tile)}
+    elif level == "LEVEL3A":
+        raise NotImplementedError(
+            "LEVEL3A not yet implemented, ask developers if needed."
+        )
+        # product_type = 'S2_MSI_L3A_WASP'
+        # provider = 'theia'
+        # tile_arg = [{"location":re.sub(r'^([0-9].*)', r'T\1', tile)}]
+
+    if end_date is None:
+        end_date = str((pd.to_datetime(start_date) + timedelta(days=1)).date())
+
+    dag = EODataAccessGateway()
+    # patch for download issue mentioned in MR !12
+    # making more specific the jsonpath expression to avoid
+    # multiple downloadLink path leading to NotAvailable locations
+    dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = (
+        '$.assets[?(@.roles[0] == "data" & @.type == "application/zip")].href'
+    )
+    # dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.properties.endpoint_url'
+
+    # dag._prune_providers_list()
+
+    if search_timeout is not None:
+        dag.providers_config[provider].search.timeout = search_timeout
+
+    # search products
+    search_args = {
+        "productType": product_type,
+        "start": start_date,
+        "end": end_date,
+        "cloudCover": lim_perc_cloud,
+        "provider": provider,
+    }
+    search_args.update(tile_arg)
+    search_results = dag.search_all(**search_args)
+
+    df_remote = []
+    for r in search_results:
+        date = retrieve_date_from_string(r.properties["id"])
+        datetime = re.sub(
+            r".*_([0-9]{8}-[0-9]{6}-[0-9]{3})_.*", r"\1", r.properties["id"]
+        )
+        datetime = pd.to_datetime(datetime, format="%Y%m%d-%H%M%S-%f")
+        props = dict(
+            id=re.sub(r"(.*)_[A-Z]", r"\1", r.properties["id"]),
+            date=date,
+            # version 4.0 converted to "4-0" like other versions
+            version=re.sub(r"\.", "-", str(r.properties["productVersion"])),
+            cloud_cover=r.properties["cloudCover"],
+            product=r,
+            datetime=datetime,
+        )
+        df_remote.append(props)
+    if len(df_remote) == 0:
+        return pd.DataFrame(
+            dict(id=[], date=[], version=[], cloud_cover=[], product=[]), dtype=object
+        ).astype({"cloud_cover": float})
+    df_remote = pd.DataFrame(df_remote)
+    df_remote = df_remote.sort_values(
+        by=["datetime", "version"], ignore_index=True, ascending=[True, False]
+    )
+    # hypothesis that same id is corresponding to same product
+    df_remote["dup"] = df_remote["datetime"].duplicated(keep="first")
+    if dt_version is not None:
+        dt = timedelta(milliseconds=dt_version)
+        df_remote["dt"] = df_remote["datetime"].diff()
+        df_remote["datetime_dt"] = df_remote["datetime"]
+        dup = df_remote["dt"] < dt
+        df_remote.loc[dup, "datetime_dt"] = (
+            df_remote.loc[dup, "datetime"] - df_remote.loc[dup, "dt"]
+        )
+        df_remote = df_remote.sort_values(
+            by=["datetime_dt", "version"], ignore_index=True, ascending=[True, False]
+        )
+        df_remote["dup"] = df_remote["datetime_dt"].duplicated(keep="first")
+        df_remote = df_remote.drop(columns=["dt", "datetime_dt"])
+
+    df_remote = (
+        df_remote.loc[~df_remote["dup"]]
+        .reset_index(drop=True)
+        .drop(columns=["dup", "datetime"])
+    )
+    return df_remote
+
+
+def bands_to_mtd(bands):
+    new_bands = []
+    for b in bands:
+        b = re.sub(r"^B([1-9])$", "B0\\1", b)
+        b = re.sub(r"^CLMR([1-2])", "CLM_R\\1", b)
+        new_bands.append(b)
+    return new_bands
+
+
+# import urllib.request
+
+
+# class DownloadProgressBar(tqdm):
+#     def update_to(self, b=1, bsize=1, tsize=None):
+#         if tsize is not None:
+#             self.total = tsize
+#         self.update(b * bsize - self.n)
+
+
+# def download_url(url, output_path):
+#     with DownloadProgressBar(unit='B', unit_scale=True,
+#                              miniters=1) as t:
+#         urllib.request.urlretrieve(url, filename=output_path, reporthook=t.update_to)
+
+
+class ItemMTD(pystac.Item):
+    def download(
+        self,
+        output_dir,
+        bands=[
+            "B01",
+            "B02",
+            "B03",
+            "B04",
+            "B05",
+            "B06",
+            "B07",
+            "B08",
+            "B8A",
+            "B11",
+            "B12",
+            "CLM_R2",
+        ],
+    ):
+        bands = bands_to_mtd(bands)
+        item_dir = (
+            Path(output_dir) / self.id + "_V" + self.properties["processing:version"]
+        )
+
+        with tempfile.TemporaryDirectory(dir=output_dir) as temp_dir:
+            tmp_dir = Path(temp_dir)
+            # print("Downloading item " + self.id)
+            for band in bands:
+                if band not in self.assets:
+                    raise ValueError(f"Band {band} not found for item {id}")
+
+                band_dir = tmp_dir
+                if band.startswith("CLM"):
+                    band_dir = (tmp_dir / "MASKS").mkdir_p()
+                href = self.assets[band].href
+                band_file = band_dir / Path(href).name
+                if (item_dir / band_file.relpathto(tmp_dir)).exists():
+                    continue
+                urlretrieve(sign_urls([href])[href], band_file)
+
+            tmp_dir.move(item_dir)
+        return item_dir
+
+
+def maja_search_mtd(
+    tile: str,
+    start_date: str,
+    end_date: str = None,
+    lim_perc_cloud: float = 100,
+    dt_version: int = 10,
+):
+    """
+    Search Sentinel-2 L2A MAJA data on CDS MTD (https://www.stac.teledetection.fr).
+
+    Parameters
+    ----------
+    tile : str
+        Name of the Sentinel-2 tile (format : "T31UFQ").
+    start_date : str
+        Acquisitions before this date are ignored (format : "YYYY-MM-DD")
+    end_date : str
+        Acquisitions after this date are ignored (format : "YYYY-MM-DD")
+    lim_perc_cloud : int
+        Maximum cloud cover (%)
     dt_version : int, optional
         Possible delta time in milliseconds between two versions
         of the same acquisition, see notes.
@@ -123,75 +391,92 @@ def maja_search(
 
     The `dt_version` is here to identify which products are the same
     acquisition with different versions, as CNES may modify the
-    the acquisition datetime between versions o fthe same product.
-    Ewample, with `dt_version=10` these two products are considered the same:
+    the acquisition datetime between versions of the same product.
+    Example, with `dt_version=10` these two products are considered the same:
     - SENTINEL2A_20200407-104815-292_L2A_T31TGL (4-0)
     - SENTINEL2A_20200407-104815-295_L2A_T31TGL (2-2)
 
     """
 
-    if level == 'LEVEL2A':
-        product_type = 'S2_MSI_L2A_MAJA'
-        provider = 'geodes'
-        # MGRS tile has multiple formats in geodes metadata
-        # - before 2024-09-25: TXXYYY
-        # - after 2024-09-25: XXYYY
-        # Using tileIdentifier with MGRS tile without T prefix finds both
-        # see https://github.com/CS-SI/eodag/pull/1581/files
-        tile_arg = {"tileIdentifier": re.sub(r"^T", "", tile)}
-    elif level == 'LEVEL3A':
-        raise NotImplementedError("LEVEL3A not yet implemented, ask developers if needed.")
-        # product_type = 'S2_MSI_L3A_WASP'
-        # provider = 'theia'
-        # tile_arg = [{"location":re.sub(r'^([0-9].*)', r'T\1', tile)}]
+    # if level == 'LEVEL2A':
+    #     product_type = 'S2_MSI_L2A_MAJA'
+    #     provider = 'geodes'
+    #     # MGRS tile has multiple formats in geodes metadata
+    #     # - before 2024-09-25: TXXYYY
+    #     # - after 2024-09-25: XXYYY
+    #     # Using tileIdentifier with MGRS tile without T prefix finds both
+    #     # see https://github.com/CS-SI/eodag/pull/1581/files
+    #     tile_arg = {"tileIdentifier": re.sub(r"^T", "", tile)}
+    # elif level == 'LEVEL3A':
+    #     raise NotImplementedError("LEVEL3A not yet implemented, ask developers if needed.")
+    # product_type = 'S2_MSI_L3A_WASP'
+    # provider = 'theia'
+    # tile_arg = [{"location":re.sub(r'^([0-9].*)', r'T\1', tile)}]
+    from pystac_client import Client
 
     if end_date is None:
         end_date = str((pd.to_datetime(start_date) + timedelta(days=1)).date())
 
-    dag = EODataAccessGateway()
-    # patch for download issue mentioned in MR !12
-    # making more specific the jsonpath expression to avoid
-    # multiple downloadLink path leading to NotAvailable locations
-    dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.assets[?(@.roles[0] == "data" & @.type == "application/zip")].href'
-    # dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.properties.endpoint_url'
+    ctg = Client.open(url="https://api.stac.teledetection.fr")
+    search = ctg.search(
+        collections=["sentinel2-l2a-theia"],
+        datetime=f"{start_date}/{end_date}",
+        sortby="datetime",
+        limit=1000,
+        query={
+            "s2:mgrs_tile": {"eq": re.sub(r"^T", "", tile)},
+            "eo:cloud_cover": {"lt": float(lim_perc_cloud)},
+        },
+    )
 
-    # dag._prune_providers_list()
+    search_results = search.item_collection()
 
-    if search_timeout is not None:
-        dag.providers_config[provider].search.timeout = search_timeout
+    # dag = EODataAccessGateway()
+    # # patch for download issue mentioned in MR !12
+    # # making more specific the jsonpath expression to avoid
+    # # multiple downloadLink path leading to NotAvailable locations
+    # dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.assets[?(@.roles[0] == "data" & @.type == "application/zip")].href'
+    # # dag.providers_config["geodes"].search.metadata_mapping["downloadLink"] = '$.properties.endpoint_url'
 
-    # search products
-    search_args = {
-        "productType": product_type,
-        "start":start_date,
-        "end":end_date,
-        "cloudCover":lim_perc_cloud,
-        "provider": provider
-    }
-    search_args.update(tile_arg)
-    search_results = dag.search_all(**search_args)
+    # # dag._prune_providers_list()
+
+    # if search_timeout is not None:
+    #     dag.providers_config[provider].search.timeout = search_timeout
+
+    # # search products
+    # search_args = {
+    #     "productType": product_type,
+    #     "start":start_date,
+    #     "end":end_date,
+    #     "cloudCover":lim_perc_cloud,
+    #     "provider": provider
+    # }
+    # search_args.update(tile_arg)
+    # search_results = dag.search_all(**search_args)
 
     df_remote = []
     for r in search_results:
-        date = retrieve_date_from_string(r.properties["id"])
-        datetime = re.sub(r'.*_([0-9]{8}-[0-9]{6}-[0-9]{3})_.*', r'\1', r.properties["id"])
-        datetime = pd.to_datetime(datetime, format='%Y%m%d-%H%M%S-%f')
+        date = retrieve_date_from_string(r.id)
+        datetime = re.sub(r".*_([0-9]{8}-[0-9]{6}-[0-9]{3})_.*", r"\1", r.id)
+        datetime = pd.to_datetime(datetime, format="%Y%m%d-%H%M%S-%f")
         props = dict(
-            id = re.sub(r'(.*)_[A-Z]', r'\1',r.properties["id"]),
-            date = date,
+            id=re.sub(r"(.*)_[A-Z]", r"\1", r.id),
+            date=date,
             # version 4.0 converted to "4-0" like other versions
-            version = re.sub(r'\.', '-', str(r.properties["productVersion"])),
-            cloud_cover = r.properties["cloudCover"],
-            product = r,
-            datetime = datetime,
+            version=re.sub(r"\.", "-", str(r.properties["processing:version"])),
+            cloud_cover=r.properties["eo:cloud_cover"],
+            product=ItemMTD.from_dict(r.to_dict()),
+            datetime=datetime,
         )
         df_remote.append(props)
     if len(df_remote) == 0:
         return pd.DataFrame(
-            dict(id=[], date=[], version=[], cloud_cover=[], product=[]),
-            dtype=object).astype({"cloud_cover": float})
+            dict(id=[], date=[], version=[], cloud_cover=[], product=[]), dtype=object
+        ).astype({"cloud_cover": float})
     df_remote = pd.DataFrame(df_remote)
-    df_remote = df_remote.sort_values(by=["datetime", "version"], ignore_index=True, ascending=[True, False])
+    df_remote = df_remote.sort_values(
+        by=["datetime", "version"], ignore_index=True, ascending=[True, False]
+    )
     # hypothesis that same id is corresponding to same product
     df_remote["dup"] = df_remote["datetime"].duplicated(keep="first")
     if dt_version is not None:
@@ -199,66 +484,137 @@ def maja_search(
         df_remote["dt"] = df_remote["datetime"].diff()
         df_remote["datetime_dt"] = df_remote["datetime"]
         dup = df_remote["dt"] < dt
-        df_remote.loc[dup, "datetime_dt"] = df_remote.loc[dup, "datetime"]-df_remote.loc[dup, "dt"]
-        df_remote = df_remote.sort_values(by=["datetime_dt", "version"], ignore_index=True, ascending=[True, False])
+        df_remote.loc[dup, "datetime_dt"] = (
+            df_remote.loc[dup, "datetime"] - df_remote.loc[dup, "dt"]
+        )
+        df_remote = df_remote.sort_values(
+            by=["datetime_dt", "version"], ignore_index=True, ascending=[True, False]
+        )
         df_remote["dup"] = df_remote["datetime_dt"].duplicated(keep="first")
         df_remote = df_remote.drop(columns=["dt", "datetime_dt"])
 
-    df_remote = df_remote.loc[~df_remote["dup"]].reset_index(drop=True).drop(columns=["dup", "datetime"])
+    df_remote = (
+        df_remote.loc[~df_remote["dup"]]
+        .reset_index(drop=True)
+        .drop(columns=["dup", "datetime"])
+    )
     return df_remote
+
 
 def categorize_search(remote, local):
     # Merge the local file list with the remote search
     # and add column status specifying the action to take
     # df_columns = ['id', "date", 'zip_file', "zip_exists", 'unzip_file', "unzip_exists", "merged", "merged_id", "version"]
-    df = local.merge(remote, how="outer", on=["date","id"], suffixes=("_local", "_remote"))
-    df.loc[:,"datetime"] = df["id"].apply(lambda x: pd.to_datetime(re.sub(r'.*_([0-9]{8}-[0-9]{6}-[0-9]{3})_.*', r'\1', x), format='%Y%m%d-%H%M%S-%f'))
-    df = df.sort_values(by=["version_remote", "datetime", "version_local"], ignore_index=True, ascending=[False, True, False])
+    df = local.merge(
+        remote, how="outer", on=["date", "id"], suffixes=("_local", "_remote")
+    )
+    df.loc[:, "datetime"] = df["id"].apply(
+        lambda x: pd.to_datetime(
+            re.sub(r".*_([0-9]{8}-[0-9]{6}-[0-9]{3})_.*", r"\1", x),
+            format="%Y%m%d-%H%M%S-%f",
+        )
+    )
+    df = df.sort_values(
+        by=["version_remote", "datetime", "version_local"],
+        ignore_index=True,
+        ascending=[False, True, False],
+    )
+
     def categorize(x):
         if x["version_local"] == x["version_remote"]:
             return "up_to_date"
         elif pd.isnull(x["unzip_file"]) and (not x["merged"] or pd.isnull(x["merged"])):
             # dup is used to check if local file already merged
             return "download"
-        elif not pd.isnull(x["version_local"]) and not pd.isnull(x["version_remote"]) and x["version_local"] != x["version_remote"]:
+        elif (
+            not pd.isnull(x["version_local"])
+            and not pd.isnull(x["version_remote"])
+            and x["version_local"] != x["version_remote"]
+        ):
             return "upgrade"
         elif not pd.isnull(x["version_local"]) and pd.isnull(x["version_remote"]):
             return "upgrade"
         else:
             return "unknown"
-        
-    df["status"] = df.apply(lambda x : categorize(x), axis=1)
+
+    df["status"] = df.apply(lambda x: categorize(x), axis=1)
 
     if df.date.duplicated(keep=False).any():
         # extend merged
-        df.loc[df.date.duplicated(keep=False), "merged"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["merged"].transform(lambda x: x.any())
+        df.loc[df.date.duplicated(keep=False), "merged"] = (
+            df.loc[df.date.duplicated(keep=False)]
+            .groupby(by="date")["merged"]
+            .transform(lambda x: x.any())
+        )
         # extend download to local duplicates if any already merged
-        df.loc[df.date.duplicated(keep=False) & df.merged, "status"] = df.loc[df.date.duplicated(keep=False) & df.merged].groupby(by="date")["status"].transform(lambda x: "download" if (x=="download").any() else x)
+        df.loc[df.date.duplicated(keep=False) & df.merged, "status"] = (
+            df.loc[df.date.duplicated(keep=False) & df.merged]
+            .groupby(by="date")["status"]
+            .transform(lambda x: "download" if (x == "download").any() else x)
+        )
         # extend upgrade to local duplicates if any
-        df.loc[df.date.duplicated(keep=False), "status"] = df.loc[df.date.duplicated(keep=False)].groupby(by="date")["status"].transform(lambda x: "upgrade" if (x=="upgrade").any() else x)
+        df.loc[df.date.duplicated(keep=False), "status"] = (
+            df.loc[df.date.duplicated(keep=False)]
+            .groupby(by="date")["status"]
+            .transform(lambda x: "upgrade" if (x == "upgrade").any() else x)
+        )
 
     # remove old
     df.loc[df["product"].isna() | df["id"].duplicated(), "status"] = "remove"
     return df
 
 
-def maja_download(
-        tile: str,
-        start_date: str,
-        end_date: str,
-        zip_dir: str,
-        unzip_dir: str,
-        keep_zip: bool = False,
-        lim_perc_cloud: float = 100,
-        level: str = 'LEVEL2A',
-        bands: list = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"],
-        correction_type: str = "FRE",
-        search_timeout: int = 10,
-        upgrade: bool = False,
-        rm: bool = False,
-        dry_run: bool = True,
-        retry: int = 10,
-        wait: int = 5
+def maja_download(provider: str = "mtd", **kwargs):
+    """
+    Search, download, unzip and merge duplicates of Sentinel-2 L2A data processed with
+    MAJA processing chain from GEODES (CNES) plateform.
+
+    Parameters
+    ----------
+    provider : str
+        "mtd" or "geodes"
+    kwargs: dict
+        keyword arguments passed to maja_download_mtd or maja_download_geodes
+    Returns
+    -------
+    tuple
+        downloaded, unzipped
+    """
+
+    if provider == "mtd":
+        return maja_download_mtd(**kwargs)
+    elif provider == "geodes":
+        return maja_download_geodes(**kwargs)
+    else:
+        raise ValueError(f"Unknown provider {provider}")
+
+
+def maja_download_mtd(
+    tile: str,
+    start_date: str,
+    end_date: str,
+    unzip_dir: str,
+    lim_perc_cloud: float = 100,
+    bands: list = [
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B8A",
+        "B11",
+        "B12",
+        "CLMR2",
+    ],
+    correction_type: str = "FRE",
+    upgrade: bool = False,
+    rm: bool = False,
+    dry_run: bool = True,
+    retry: int = 10,
+    wait: int = 5,
+    **kwargs,
 ):
     """
     Search, download, unzip and merge duplicates of Sentinel-2 L2A data processed with
@@ -269,9 +625,270 @@ def maja_download(
     tile : str
         Name of the Sentinel-2 tile (format : "T31UFQ").
     start_date : str
-        Acquisitions before this date are ignored (format : "YYYY-MM-DD") 
+        Acquisitions before this date are ignored (format : "YYYY-MM-DD")
     end_date : str
-        Acquisitions after this date are ignored (format : "YYYY-MM-DD") 
+        Acquisitions after this date are ignored (format : "YYYY-MM-DD")
+    unzip_dir : str
+        Directory where THEIA data is unzipped
+    lim_perc_cloud : int
+        Maximum cloud cover (%)
+    bands : list, optional
+        List of bands to download. Default is ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"]
+    correction_type : str, optional
+        Correction type for radiometric correction, can be "SRE" (Surface Reflectance) or "FRE" (Falt Reflectance) for
+        LEVEL2A . Default is "FRE".
+    upgrade : bool, optional
+        If True, checks product version and upgrades if needed. Default is False.
+        For False, see notes, as it may not behave as expected.
+    rm : bool, optional
+        If True, delete local scene dirs outdated, over cloud cover
+        limit or older version duplicates.
+        Default is False.
+    dry_run : bool, optional
+        If True, do not download or unzip products
+    retry : int, optional
+        if retry == 0, finalize the job (remove and merge)
+        even if there is a download failure.
+        Otherwise, does not finalize if the download fails.
+        This is to be used through theia_preprocess().
+    wait : int, optional
+        Number of minutes to wait between retries
+    kwargs : dict, optional
+        unused arguments
+
+    Returns
+    -------
+    tuple
+        downloaded, unzipped
+
+    Notes
+    -------
+    CDS MTD is a plateform used to download Sentinel-2 data.
+    In order to have download access to that plateform, you will
+    need to create an API key or an access token. See
+    https://teledetection.readthedocs.io/en/latest/authentication/
+    for more details.
+
+    _Upgrade issue_
+
+    The argument `upgrade=False` is made so that the same product,
+    i.e. with the same product ID but a different version, is not upgraded.
+    However, the naming from MAJA may not keep the same product ID,
+    changing the acquisition time for an unknown reason. It makes
+    impossible to differentiate splits of a scene from same piece of scene with different
+    versions. An example is the scene `SENTINEL2A_20170619-103812-942_L2A_T31TGM`,
+    which has 3 archives:
+    - SENTINEL2A_20170619-103806-862_L2A_T31TGM_D_V1-4 : first piece of the scene
+    - SENTINEL2A_20170619-103021-460_L2A_T31TGM_D_V1-4 : second piece of the scene
+    - SENTINEL2A_20170619-103812-942_L2A_T31TGM_C_V4-0 : new version of the first piece of the scene
+
+    In that case, even with `upgrade=False`, the product `SENTINEL2A_20170619-103812-942_L2A_T31TGM_C_V4-0`
+    would be downloaded, unzipped and merged with the other pieces of the scene.
+
+    In order to keep reproducibility as much as possible in the long term,
+    it was chosen to mosaic the pieces of the same scene with the same date
+    starting by the latest version.
+    """
+
+    remote = maja_search_mtd(
+        tile=tile,
+        start_date=start_date,
+        end_date=end_date,
+        lim_perc_cloud=lim_perc_cloud,
+    )
+
+    local = get_local_maja_files(unzip_dir, start_date, end_date)
+
+    df = categorize_search(remote, local)
+
+    cdate = datetime.now().date()
+    maja_download_file = unzip_dir / f"{cdate}_{tile}_files_status.tsv"
+    print("Saving file table in: " + str(maja_download_file))
+    df = df[
+        [
+            "date",
+            "datetime",
+            "id",
+            "version_local",
+            "version_remote",
+            "merged",
+            "status",
+            "cloud_cover",
+            "unzip_file",
+            "product",
+        ]
+    ]
+    df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
+
+    if upgrade:
+        status_to_dl = ["upgrade", "download", "badzip"]
+    else:
+        status_to_dl = ["download", "badzip"]
+
+    df_download = df[df["status"].isin(status_to_dl) & ~df["product"].isna()]
+    if len(df_download) == 0 and len(df[df["status"] == "remove"]) == 0:
+        print("Already up-to-date: nothing to download.")
+        if not dry_run:
+            merge_same_date(bands, df, correction_type=correction_type)
+        return [], []
+
+    downloaded = []
+    unzipped = []
+    failed_ids = []
+    if dry_run:
+        print("Dry run, nothing has been done")
+        return downloaded, unzipped
+    else:
+        failed_download = False
+        for r in tqdm(
+            df_download.itertuples(), total=len(df_download), desc="Download items"
+        ):
+            # 1. download the zip file if not already there
+            # 2. extract the zip file
+            try:
+                # remove old unzip if already there
+                if pd.notna(r.unzip_file) and r.unzip_file.is_dir():
+                    try:
+                        print("Removing old unzip: ", r.unzip_file)
+                        r.unzip_file.rmtree()
+                    except Exception as e:
+                        print("Failed to remove", r.unzip_file)
+                        raise e
+                unzip_file = r.product.download(unzip_dir, bands)
+                df.loc[(df.id == r.id) & df.status.isin(status_to_dl), "unzip_file"] = (
+                    unzip_file
+                )
+                df.loc[(df.id == r.id) & df.status.isin(status_to_dl), "status"] = (
+                    "downloaded"
+                )
+
+                downloaded.append(unzip_file)
+                unzipped.append(unzip_file)
+            except DownloadError as e:
+                failed_download = True
+                failed_ids.append(r.id)
+                df.loc[(df.id == r.id) & df.status.isin(status_to_dl), "status"] = (
+                    "failed_download"
+                )
+                print(e)
+                print("Failed to download: ", r.id)
+                print("The link to zip file seems corrupted.")
+                continue
+            except IsADirectoryError:
+                failed_download = True
+                failed_ids.append(r.id)
+                df.loc[(df.id == r.id) & df.status.isin(status_to_dl), "status"] = (
+                    "failed_download"
+                )
+                # print(e)
+                print("Failed to download: ", r.id)
+                print(
+                    "It seems that the GEODES download quota is reached, check your profile at https://geodes-portal.cnes.fr."
+                )
+                print(f"\nPausing for {wait} minutes before continuing...\n")
+                time.sleep(wait * 60)
+                continue
+            except Exception as e:
+                failed_download = True
+                failed_ids.append(r.id)
+                df.loc[(df.id == r.id) & df.status.isin(status_to_dl), "status"] = (
+                    "failed_download"
+                )
+                print(e)
+                print("Failed to download: ", r.id)
+                continue
+
+                # if trials==retry:
+                #     raise RuntimeError("\nRetry limit reached.\n")
+                # else:
+                #     trials += 1
+                #
+                #     time.sleep(wait*trials*60)
+    if failed_download:
+        if retry == 0:
+            warnings.warn(
+                "\n###############"
+                + f"\nSome products of tile {tile} failed to download."
+                + "\nFailure summary:\n\t"
+                + "\n\t".join(failed_ids)
+                + "\nContinuing operations (remove, merge) to make collection usable asis."
+                + "\n###############\n"
+            )
+        else:
+            raise RuntimeError(
+                "\n###############"
+                + f"\nSome products of tile {tile} failed to download:\n\t"
+                + "\n\t".join(failed_ids)
+                + "\n###############\n"
+            )
+
+    df_to_merge = df
+    if rm:
+        for r in df.loc[df["status"] == "remove"].itertuples():
+            if r.unzip_file.is_dir():
+                try:
+                    print("Removing unzip: ", r.unzip_file)
+                    r.unzip_file.rmtree()
+                    df.loc[(df.id == r.id) & (df.status == "remove"), "status"] = (
+                        "removed"
+                    )
+                except Exception as e:
+                    df.loc[(df.id == r.id) & (df.status == "remove"), "status"] = (
+                        "failed_remove"
+                    )
+                    print("Failed to remove", r.unzip_file)
+                    raise e
+        df_to_merge = df.loc[~df["status"].isin(["removed", "failed_remove"])]
+
+    print("Update file table in: " + str(maja_download_file))
+    df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
+    merge_same_date(bands, df_to_merge, correction_type=correction_type)
+
+    return downloaded, unzipped
+
+
+def maja_download_geodes(
+    tile: str,
+    start_date: str,
+    end_date: str,
+    zip_dir: str,
+    unzip_dir: str,
+    keep_zip: bool = False,
+    lim_perc_cloud: float = 100,
+    level: str = "LEVEL2A",
+    bands: list = [
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B8A",
+        "B11",
+        "B12",
+        "CLMR2",
+    ],
+    correction_type: str = "FRE",
+    search_timeout: int = 10,
+    upgrade: bool = False,
+    rm: bool = False,
+    dry_run: bool = True,
+    retry: int = 10,
+    wait: int = 5,
+):
+    """
+    Search, download, unzip and merge duplicates of Sentinel-2 L2A data processed with
+    MAJA processing chain from GEODES (CNES) plateform.
+
+    Parameters
+    ----------
+    tile : str
+        Name of the Sentinel-2 tile (format : "T31UFQ").
+    start_date : str
+        Acquisitions before this date are ignored (format : "YYYY-MM-DD")
+    end_date : str
+        Acquisitions after this date are ignored (format : "YYYY-MM-DD")
     zip_dir : str
         Directory where THEIA data is downloaded
     unzip_dir : str
@@ -339,7 +956,7 @@ def maja_download(
     ```python
     from path import Path
     from eodag import EODataAccessGateway
-    
+
     # creates the default config file at first call
     EODataAccessGateway()
 
@@ -380,38 +997,53 @@ def maja_download(
     """
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-        if level == "LEVEL3A" : correction_type = "FRC"
+        if level == "LEVEL3A":
+            correction_type = "FRC"
 
-        remote = maja_search(
+        remote = maja_search_geodes(
             tile=tile,
             start_date=start_date,
             end_date=end_date,
             lim_perc_cloud=lim_perc_cloud,
             level=level,
-            search_timeout=search_timeout)
-        
+            search_timeout=search_timeout,
+        )
+
         local = get_local_maja_files(unzip_dir, start_date, end_date)
 
         df = categorize_search(remote, local)
-        
+
         cdate = datetime.now().date()
-        maja_download_file = unzip_dir/f"{cdate}_{tile}_files_status.tsv"
+        maja_download_file = unzip_dir / f"{cdate}_{tile}_files_status.tsv"
         print("Saving file table in: " + str(maja_download_file))
-        df = df[["date", "datetime", "id", "version_local", "version_remote", "merged", "status", "cloud_cover", "unzip_file", "product"]]
+        df = df[
+            [
+                "date",
+                "datetime",
+                "id",
+                "version_local",
+                "version_remote",
+                "merged",
+                "status",
+                "cloud_cover",
+                "unzip_file",
+                "product",
+            ]
+        ]
         df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
 
         if upgrade:
             status_to_dl = ["upgrade", "download", "badzip"]
         else:
             status_to_dl = ["download", "badzip"]
-            
+
         df_download = df[df["status"].isin(status_to_dl) & ~df["product"].isna()]
-        if len(df_download) == 0 and len(df[df["status"]=="remove"]) == 0:
+        if len(df_download) == 0 and len(df[df["status"] == "remove"]) == 0:
             print("Already up-to-date: nothing to download.")
             if not dry_run:
                 merge_same_date(bands, df, correction_type=correction_type)
             return [], []
-        
+
         downloaded = []
         unzipped = []
         failed_ids = []
@@ -429,9 +1061,11 @@ def maja_download(
                         if len(zip_file) > 0 and check_zip(zip_file[0]):
                             zip_file = zip_file[0]
                         else:
-                            tmpzip_file = r.product.download(output_dir=tmpdir, extract=False)
+                            tmpzip_file = r.product.download(
+                                output_dir=tmpdir, extract=False
+                            )
                             check_zip(tmpzip_file)
-                                        
+
                             zip_file = Path(tmpzip_file)
                             if keep_zip:
                                 zip_file = zip_file.move(zip_dir / zip_file.name)
@@ -445,17 +1079,27 @@ def maja_download(
                                 print("Failed to remove", r.unzip_file)
                                 raise e
                         # extract zip file
-                        tmpunzip_file = s2_unzip(zip_file, tmpdir, bands, correction_type)
-                        unzip_file = tmpunzip_file.move(unzip_dir / Path(tmpunzip_file).name)
-                        df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "unzip_file"] = unzip_file
-                        df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "status"] = "downloaded"
+                        tmpunzip_file = s2_unzip(
+                            zip_file, tmpdir, bands, correction_type
+                        )
+                        unzip_file = tmpunzip_file.move(
+                            unzip_dir / Path(tmpunzip_file).name
+                        )
+                        df.loc[
+                            (df.id == r.id) & df.status.isin(status_to_dl), "unzip_file"
+                        ] = unzip_file
+                        df.loc[
+                            (df.id == r.id) & df.status.isin(status_to_dl), "status"
+                        ] = "downloaded"
 
                     downloaded.append(unzip_file)
                     unzipped.append(unzip_file)
                 except DownloadError as e:
                     failed_download = True
                     failed_ids.append(r.id)
-                    df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "status"] = "failed_download"
+                    df.loc[(df.id == r.id) & df.status.isin(status_to_dl), "status"] = (
+                        "failed_download"
+                    )
                     print(e)
                     print("Failed to download: ", r.id)
                     print("The link to zip file seems corrupted.")
@@ -463,17 +1107,23 @@ def maja_download(
                 except IsADirectoryError:
                     failed_download = True
                     failed_ids.append(r.id)
-                    df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "status"] = "failed_download"
+                    df.loc[(df.id == r.id) & df.status.isin(status_to_dl), "status"] = (
+                        "failed_download"
+                    )
                     # print(e)
                     print("Failed to download: ", r.id)
-                    print("It seems that the GEODES download quota is reached, check your profile at https://geodes-portal.cnes.fr.")
+                    print(
+                        "It seems that the GEODES download quota is reached, check your profile at https://geodes-portal.cnes.fr."
+                    )
                     print(f"\nPausing for {wait} minutes before continuing...\n")
-                    time.sleep(wait*60)
+                    time.sleep(wait * 60)
                     continue
                 except Exception as e:
                     failed_download = True
                     failed_ids.append(r.id)
-                    df.loc[(df.id==r.id) & df.status.isin(status_to_dl), "status"] = "failed_download"
+                    df.loc[(df.id == r.id) & df.status.isin(status_to_dl), "status"] = (
+                        "failed_download"
+                    )
                     print(e)
                     print("Failed to download: ", r.id)
                     continue
@@ -482,43 +1132,50 @@ def maja_download(
                     #     raise RuntimeError("\nRetry limit reached.\n")
                     # else:
                     #     trials += 1
-                    #     
+                    #
                     #     time.sleep(wait*trials*60)
         if failed_download:
             if retry == 0:
                 warnings.warn(
-                    "\n###############" +
-                    f"\nSome products of tile {tile} failed to download." +
-                    "\nFailure summary:\n\t" + "\n\t".join(failed_ids) +
-                    "\nContinuing operations (remove, merge) to make collection usable asis." +
-                    "\n###############\n"
+                    "\n###############"
+                    + f"\nSome products of tile {tile} failed to download."
+                    + "\nFailure summary:\n\t"
+                    + "\n\t".join(failed_ids)
+                    + "\nContinuing operations (remove, merge) to make collection usable asis."
+                    + "\n###############\n"
                 )
             else:
                 raise RuntimeError(
-                    "\n###############" + 
-                    f"\nSome products of tile {tile} failed to download:\n\t" + 
-                    "\n\t".join(failed_ids) + 
-                    "\n###############\n")                
+                    "\n###############"
+                    + f"\nSome products of tile {tile} failed to download:\n\t"
+                    + "\n\t".join(failed_ids)
+                    + "\n###############\n"
+                )
 
         df_to_merge = df
         if rm:
-            for r in df.loc[df["status"]=="remove"].itertuples():
+            for r in df.loc[df["status"] == "remove"].itertuples():
                 if r.unzip_file.is_dir():
                     try:
                         print("Removing unzip: ", r.unzip_file)
                         r.unzip_file.rmtree()
-                        df.loc[(df.id==r.id) & (df.status=="remove"), "status"] = "removed"
+                        df.loc[(df.id == r.id) & (df.status == "remove"), "status"] = (
+                            "removed"
+                        )
                     except Exception as e:
-                        df.loc[(df.id==r.id) & (df.status=="remove"), "status"] = "failed_remove"
+                        df.loc[(df.id == r.id) & (df.status == "remove"), "status"] = (
+                            "failed_remove"
+                        )
                         print("Failed to remove", r.unzip_file)
                         raise e
-            df_to_merge = df.loc[df["status"].isin(["removed", "failed_remove"])]
-        
+            df_to_merge = df.loc[~df["status"].isin(["removed", "failed_remove"])]
+
         print("Update file table in: " + str(maja_download_file))
         df.to_csv(maja_download_file, index=False, header=True, sep="\t", na_rep="NA")
         merge_same_date(bands, df_to_merge, correction_type=correction_type)
-    
+
     return downloaded, unzipped
+
 
 def check_zip(x):
     """
@@ -538,16 +1195,61 @@ def check_zip(x):
     return True
 
 
-BAND_NAMES = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12',
-              'CLMR1', 'CLMR2', 'EDGR1', 'EDGR2', 'SATR1', 'SATR2',
-              "DTS1","DTS2","FLG1","FLG2","WGT1","WGT2"]
+BAND_NAMES = [
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
+    "B8A",
+    "B11",
+    "B12",
+    "CLMR1",
+    "CLMR2",
+    "EDGR1",
+    "EDGR2",
+    "SATR1",
+    "SATR2",
+    "DTS1",
+    "DTS2",
+    "FLG1",
+    "FLG2",
+    "WGT1",
+    "WGT2",
+]
 
-BAND_FILE_PATTERNS = dict(zip(BAND_NAMES,
-    ['B2.tif', 'B3.tif', 'B4.tif', 'B5.tif', 'B6.tif', 'B7.tif',
-     'B8.tif', 'B8A.tif', 'B11.tif', 'B12.tif', '_CLM_R1.tif', 
-     '_CLM_R2.tif', '_EDG_R1.tif', '_EDG_R2.tif', '_SAT_R1.tif',
-     '_SAT_R2.tif',"_DTS_R1.tif","_DTS_R2.tif","_FLG_R1.tif",
-     "_FLG_R2.tif","_WGT_R1.tif","_WGT_R2.tif"]))
+BAND_FILE_PATTERNS = dict(
+    zip(
+        BAND_NAMES,
+        [
+            "B2.tif",
+            "B3.tif",
+            "B4.tif",
+            "B5.tif",
+            "B6.tif",
+            "B7.tif",
+            "B8.tif",
+            "B8A.tif",
+            "B11.tif",
+            "B12.tif",
+            "_CLM_R1.tif",
+            "_CLM_R2.tif",
+            "_EDG_R1.tif",
+            "_EDG_R2.tif",
+            "_SAT_R1.tif",
+            "_SAT_R2.tif",
+            "_DTS_R1.tif",
+            "_DTS_R2.tif",
+            "_FLG_R1.tif",
+            "_FLG_R2.tif",
+            "_WGT_R1.tif",
+            "_WGT_R2.tif",
+        ],
+    )
+)
+
 
 def theia_bands(correction_type):
     """
@@ -563,7 +1265,10 @@ def theia_bands(correction_type):
     dict
         Theia band patterns for the specified correction type
     """
-    bands = {k:re.sub(r'^(B[0-9]+[A]*.tif)$', "_"+correction_type+'_\\1', v) for k, v in BAND_FILE_PATTERNS.items()}
+    bands = {
+        k: re.sub(r"^(B[0-9]+[A]*.tif)$", "_" + correction_type + "_\\1", v)
+        for k, v in BAND_FILE_PATTERNS.items()
+    }
     return bands
 
 
@@ -590,27 +1295,29 @@ def s2_unzip(s2zipfile, out_dir, bands, correction_type):
     s2zipfile = Path(s2zipfile).expand()
     out_dir = Path(out_dir).expand()
     corrBand = theia_bands(correction_type)
-  
-    
+
     try:
-        with ZipFile(s2zipfile, 'r') as zipObj:
-            root_dir, = zipfile.Path(zipObj).iterdir()
+        with ZipFile(s2zipfile, "r") as zipObj:
+            (root_dir,) = zipfile.Path(zipObj).iterdir()
             if (out_dir / root_dir.name).exists():
-                print(f'Files already extracted: {out_dir / root_dir.name}')
+                print(f"Files already extracted: {out_dir / root_dir.name}")
             else:
-                print(f'Extracting files from {s2zipfile} to {out_dir / root_dir.name}')
+                print(f"Extracting files from {s2zipfile} to {out_dir / root_dir.name}")
                 with tempfile.TemporaryDirectory(dir=out_dir) as tempdir:
                     tmpdir = Path(tempdir)
                     listOfFileNames = zipObj.namelist()
                     for fileName in listOfFileNames:
-                            for i in bands:
-                                if fileName.endswith(corrBand[i]): #Si le nom de fichier finit par ce qui correspond à la bande
-                                    zipObj.extract(fileName, tmpdir)
+                        for i in bands:
+                            if fileName.endswith(
+                                corrBand[i]
+                            ):  # Si le nom de fichier finit par ce qui correspond à la bande
+                                zipObj.extract(fileName, tmpdir)
                     (tmpdir / root_dir.name).move(out_dir)
-            return out_dir / root_dir.name    
+            return out_dir / root_dir.name
     except BadZipfile:
         print(f"Bad zip file, removing file: {s2zipfile}")
         s2zipfile.remove()
+
 
 def unzip_theia(bands, zip_dir, out_dir, empty_zip, correction_type):
     """
@@ -634,26 +1341,27 @@ def unzip_theia(bands, zip_dir, out_dir, empty_zip, correction_type):
     Returns
     -------
     None.
-    
+
 
     """
-    
+
     out_dir = Path(out_dir).expand()
     if isinstance(zip_dir, list):
         zipList = [Path(f).expand() for f in zip_dir]
     else:
         zip_dir = Path(zip_dir).expand()
-        zipList=zip_dir.glob("*.zip")
-    
+        zipList = zip_dir.glob("*.zip")
+
     out_dir.mkdir_p()
-    
+
     for zipfile in zipList:
         s2_unzip(zipfile, out_dir, bands, correction_type)
         if zipfile.exists() and (len(ZipFile(zipfile).namelist()) != 0) and empty_zip:
             print("Replaces by empty zip: " + zipfile)
             zipfile.remove()
-            zipObj = ZipFile(zipfile, 'w')
+            zipObj = ZipFile(zipfile, "w")
             zipObj.close()
+
 
 def delete_empty_zip(zipped_dir, unzipped_dir):
     """
@@ -674,17 +1382,27 @@ def delete_empty_zip(zipped_dir, unzipped_dir):
 
     tile = TileInfo(unzipped_dir)
     for i in range(2):
-        tile.getdict_datepaths("zipped",zipped_dir)
-        tile.getdict_datepaths("unzipped",unzipped_dir)
+        tile.getdict_datepaths("zipped", zipped_dir)
+        tile.getdict_datepaths("unzipped", unzipped_dir)
         for date in tile.paths["zipped"]:
-            if date not in tile.paths["unzipped"]: # this excludes duplicates of the same date but different scene ID, it is wanted...
+            if (
+                date not in tile.paths["unzipped"]
+            ):  # this excludes duplicates of the same date but different scene ID, it is wanted...
                 try:
-                    if (len(ZipFile(tile.paths["zipped"][date]).namelist()) == 0):
-                        print("Zip file is empty and unzipped directory not found : zip file removed " + str(tile.paths["zipped"][date]))
+                    if len(ZipFile(tile.paths["zipped"][date]).namelist()) == 0:
+                        print(
+                            "Zip file is empty and unzipped directory not found : zip file removed "
+                            + str(tile.paths["zipped"][date])
+                        )
                         Path(tile.paths["zipped"][date]).remove()
                 except BadZipfile:
-                    print("Bad zip file, removing file: {}".format(tile.paths["zipped"][date]))
+                    print(
+                        "Bad zip file, removing file: {}".format(
+                            tile.paths["zipped"][date]
+                        )
+                    )
                     Path(tile.paths["zipped"][date]).remove()
+
 
 def merge_same_date(bands, df, correction_type):
     """
@@ -705,11 +1423,19 @@ def merge_same_date(bands, df, correction_type):
 
     """
     if not all([b.startswith("B") or b.startswith("CLMR") for b in bands]):
-        raise NotImplementedError("Only bands Bxx and CLMR[1-2] are supported for merge.")
-    
+        raise NotImplementedError(
+            "Only bands Bxx and CLMR[1-2] are supported for merge."
+        )
+
     # check that is has been merged with the correct order
     df = df.loc[df.duplicated("date", keep=False)]
-    df = df.sort_values(by=["version_remote", "datetime"], ascending=[False, True], ignore_index=True)
+    df["version"] = df.loc[:, "version_remote"]
+    df.loc[df.version.isnull(), "version"] = df.loc[
+        df.version.isnull(), "version_local"
+    ]
+    df = df.sort_values(
+        by=["version", "datetime"], ascending=[False, True], ignore_index=True
+    )
     wrong_order_files = []
     for group in df.groupby(by="date"):
         # get the already merged order:
@@ -720,15 +1446,22 @@ def merge_same_date(bands, df, correction_type):
                 with open(file / "merged_scenes.json", "r") as f:
                     merged = json.load(f)
                 # merged order
-                merged_list = [re.sub("_[A-Z]_V[0-9]-[0-9]$", "", f) for f in list(merged.values())[0]]
+                merged_list = [
+                    re.sub("_[A-Z]_V[0-9]-[0-9]$", "", f)
+                    for f in list(merged.values())[0]
+                ]
                 merged_order = ", ".join(merged_list)
                 if merged_order != exp_order:
-                    warnings.warn(f"Duplicates already merged but not with the expected order.\nExpected: {exp_order}\nGot:     {merged_order}.")
+                    warnings.warn(
+                        f"Duplicates already merged but not with the expected order.\nExpected: {exp_order}\nGot:     {merged_order}."
+                    )
                     wrong_order_files.append(file)
 
     if len(wrong_order_files) > 0:
         wrong_order_report = wrong_order_files[0].parent / "wrong_order_merged_list.log"
-        warnings.warn(f"Some duplicates are already merged but not with the expected order. See {wrong_order_report} for the list of files to remove.")
+        warnings.warn(
+            f"Some duplicates are already merged but not with the expected order. See {wrong_order_report} for the list of files to remove."
+        )
         with open(wrong_order_report, "w") as report:
             report.write("\n".join(wrong_order_files))
 
@@ -738,20 +1471,20 @@ def merge_same_date(bands, df, correction_type):
 
     if len(df) == 0:
         return
-    
+
     merged_file_name = "merged_scenes.json"
 
     for group in df.groupby(by="date"):
         print("Duplicates detected at date : " + group[0])
         duplicates = list(group[1].unzip_file.values)
-        print('\n'.join(duplicates))
+        print("\n".join(duplicates))
 
         out_dir = Path(duplicates[0]).parent
 
         # check if already merged
         for doublon in duplicates:
             if (doublon / merged_file_name).exists():
-                raise Exception("Duplicate "+doublon.name+" already merged.")
+                raise Exception("Duplicate " + doublon.name + " already merged.")
 
         # merge bands
         with tempfile.TemporaryDirectory(dir=out_dir) as tempdir:
@@ -765,40 +1498,43 @@ def merge_same_date(bands, df, correction_type):
                     if band.startswith("CLMR"):
                         filename = Path("MASKS") / (doublon.name + corr_band[band])
                         band_path = doublon / filename
-                        na_value=0
+                        na_value = 0
                     elif band.startswith("B"):
-                        filename= doublon.name + corr_band[band]
+                        filename = doublon.name + corr_band[band]
                         band_path = doublon / filename
-                        na_value=-10000
+                        na_value = -10000
                     else:
-                        raise NotImplementedError("Merge not implemented for band " + band)
+                        raise NotImplementedError(
+                            "Merge not implemented for band " + band
+                        )
 
-                    if i==0:
+                    if i == 0:
                         output_filename = filename
                         output_dir = doublon
                         tmp_path = tmpdir / output_filename
                         tmp_path.parent.mkdir_p()
 
-                    
                     with rasterio.open(band_path) as RasterBand:
-                        if i==0:
-                            merged_band=RasterBand.read(1)
-                            profile=RasterBand.profile
+                        if i == 0:
+                            merged_band = RasterBand.read(1)
+                            profile = RasterBand.profile
                         else:
-                            added_band=RasterBand.read(1)
-                            merged_band[added_band!=na_value]=added_band[added_band!=na_value]
-                
-                with rasterio.open(tmp_path, 'w', **profile) as dst:
-                    dst.write(merged_band,indexes=1)
-            
+                            added_band = RasterBand.read(1)
+                            merged_band[added_band != na_value] = added_band[
+                                added_band != na_value
+                            ]
+
+                with rasterio.open(tmp_path, "w", **profile) as dst:
+                    dst.write(merged_band, indexes=1)
+
             # add a file that specifies the scene was merged with others
             with open(tmpdir / merged_file_name, "w") as f:
-                json.dump({output_dir.name:[d.name for d in duplicates]},f, indent=4)
-                
+                json.dump({output_dir.name: [d.name for d in duplicates]}, f, indent=4)
+
             # remove merged scenes
             for doublon in duplicates:
                 doublon.rmtree()
-            
+
             # move merged scene to original directory
             tmpdir.move(output_dir)
 
@@ -831,44 +1567,57 @@ def patch_merged_scenes(zip_dir, unzip_dir, dry_run=True):
     zip_dir = Path(zip_dir)
     zip_files = zip_dir.glob("SENTINEL*.zip")
 
-    df_unzip = pd.DataFrame({
-        "date": [retrieve_date_from_string(f) for f in unzip_files],
-        "id": [re.sub(r'(.*)_[A-Z]_V[0-9]-[0-9]$', r'\1',f.stem) for f in unzip_files],
-        "version": [re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files],
-        "unzip_file": unzip_files,
-    })
+    df_unzip = pd.DataFrame(
+        {
+            "date": [retrieve_date_from_string(f) for f in unzip_files],
+            "id": [
+                re.sub(r"(.*)_[A-Z]_V[0-9]-[0-9]$", r"\1", f.stem) for f in unzip_files
+            ],
+            "version": [
+                re.sub(r".*_V([0-9]-[0-9])$", r"\1", Path(f).stem) for f in unzip_files
+            ],
+            "unzip_file": unzip_files,
+        }
+    )
 
-    df_zip = pd.DataFrame({
-        "date": [retrieve_date_from_string(f) for f in zip_files],
-        "id": [re.sub(r'(.*)_[A-Z]$', r'\1',f.stem) for f in zip_files],
-        "zip_file": zip_files,
-        })
-    
-    df = df_zip.merge(df_unzip, how="outer", on=["date", "id"], left_index=False, right_index=False)
-    
+    df_zip = pd.DataFrame(
+        {
+            "date": [retrieve_date_from_string(f) for f in zip_files],
+            "id": [re.sub(r"(.*)_[A-Z]$", r"\1", f.stem) for f in zip_files],
+            "zip_file": zip_files,
+        }
+    )
+
+    df = df_zip.merge(
+        df_unzip, how="outer", on=["date", "id"], left_index=False, right_index=False
+    )
+
     df["merged"] = df["date"].duplicated(keep=False)
     merged_id = df.loc[df["merged"] & df["unzip_file"].notna()]
-    merged_id = merged_id.rename(columns={"id":"merged_id"})
+    merged_id = merged_id.rename(columns={"id": "merged_id"})
     df = df.merge(merged_id[["merged_id", "date"]], how="left", on="date")
     merged_scenes_files = []
     for r in merged_id.itertuples():
         if not (r.unzip_file / "merged_scenes.json").exists():
             merged_list = []
             for id in df.loc[df["merged_id"] == r.merged_id].id.to_list():
-                filename = id + re.sub(r'.*(_[A-Z]_V[0-9]-[0-9])$', r'\1',r.unzip_file.stem)
+                filename = id + re.sub(
+                    r".*(_[A-Z]_V[0-9]-[0-9])$", r"\1", r.unzip_file.stem
+                )
                 merged_list.append(filename)
 
-            merged = {str(r.unzip_file.name) : [str(f) for f in merged_list]}
+            merged = {str(r.unzip_file.name): [str(f) for f in merged_list]}
             print("merged scenes: ", merged)
             if dry_run:
-                print("WARNING: dry run, not writing merged_scenes.json in: ", r.unzip_file)
+                print(
+                    "WARNING: dry run, not writing merged_scenes.json in: ",
+                    r.unzip_file,
+                )
             else:
                 print("writing merged_scenes.json in: ", r.unzip_file)
                 with open(r.unzip_file / "merged_scenes.json", "w") as f:
                     json.dump(merged, f, indent=4)
 
             merged_scenes_files.append(r.unzip_file / "merged_scenes.json")
-    
-    return merged_scenes_files
 
-            
+    return merged_scenes_files

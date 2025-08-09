@@ -1,16 +1,17 @@
 from path import Path
+import pytest
 from fordead.theia_preprocess import maja_download, maja_search, patch_merged_scenes, categorize_search
 import pandas as pd
 import re
 
-def test_maja_search():
-
+@pytest.mark.parametrize("provider", ["mtd", "geodes"])
+def test_maja_search(provider):
     # SENTINEL2A_20200325-103818-163_L2A_T31TGL (4-0)
     # SENTINEL2A_20200325-103818-163_L2A_T31TGL (2-2)
     tile = "T31TGL"
     start_date = "2020-03-25"
     end_date = "2020-03-26"
-    df = maja_search(tile, start_date, end_date)
+    df = maja_search(tile, start_date, end_date, provider=provider)
     assert df.shape[0] == 1
     assert df.version[0] == "4-0"
 
@@ -18,7 +19,7 @@ def test_maja_search():
     # SENTINEL2A_20200407-104815-295_L2A_T31TGL (2-2)
     start_date = "2020-04-07"
     end_date = "2020-04-08"
-    df = maja_search(tile, start_date, end_date)
+    df = maja_search(tile, start_date, end_date, provider=provider)
     assert df.shape[0] == 1
     assert df.version[0] == "4-0"
 
@@ -26,30 +27,31 @@ def test_maja_search():
     # SENTINEL2B_20200409-103818-464_L2A_T31TGL (2-2)
     start_date = "2020-04-09"
     end_date = "2020-04-10"
-    df = maja_search(tile, start_date, end_date)
+    df = maja_search(tile, start_date, end_date, provider=provider)
     assert df.shape[0] == 1
     assert df.version[0] == "4-0"
 
     tile = "T31TGM"
     start_date = "2024-09-26"
     end_date = "2024-10-30"
-    df = maja_search(tile, start_date, end_date)
+    df = maja_search(tile, start_date, end_date, provider=provider)
     assert all(df.version == "4-0")
 
     # two granules (diff. id, diff. date, diff. version)
     start_date = "2024-09-20"
     end_date = "2024-09-26"
-    df = maja_search(tile, start_date, end_date)
+    df = maja_search(tile, start_date, end_date, provider=provider)
     assert df.shape[0] == 2
     assert df.date.unique().shape[0] == 2
 
     # two splits of scene
     # SENTINEL2B_20240829-104755-706_L2A_T31TGM (3-1)
     # SENTINEL2B_20240829-104805-712_L2A_T31TGM (3-1)
+    # became one split in v4-0...
     start_date = "2024-08-29"
     end_date = "2024-08-30"
-    df = maja_search(tile, start_date, end_date)
-    assert df.shape[0] == 2
+    df = maja_search(tile, start_date, end_date, provider=provider)
+    assert df.shape[0] == 1
     assert df.date.unique().shape[0] == 1
 
     # two granules (same id, same date, diff. version)
@@ -59,7 +61,7 @@ def test_maja_search():
     tile = "T31UGQ"
     start_date = "2024-09-18"
     end_date = "2024-09-19"
-    df = maja_search(tile, start_date, end_date)
+    df = maja_search(tile, start_date, end_date, provider=provider)
     assert df.shape[0] == 1
 
     # test cloud cover limit
@@ -67,13 +69,15 @@ def test_maja_search():
     tile = "T31TGM"
     start_date = "2024-09-20"
     end_date = "2024-09-26"
-    df = maja_search(tile, start_date, end_date, lim_perc_cloud=50)
+    df = maja_search(tile, start_date, end_date, lim_perc_cloud=100, provider=provider)
+    assert df.shape[0] == 2
+    df = maja_search(tile, start_date, end_date, lim_perc_cloud=50, provider=provider)
     assert df.shape[0] == 1
 
     # test for search with empty results
     start_date = "2024-09-23"
     end_date = "2024-09-24"
-    df = maja_search(tile, start_date, end_date)
+    df = maja_search(tile, start_date, end_date, provider=provider)
     assert df.empty
 
 
@@ -233,10 +237,48 @@ def test_categorize_search():
     df = categorize_search(remote, local)
     assert df.status.unique().tolist() == ["download"]
 
-    
-def test_download(output_dir):
+def test_download_geodes(output_dir):
     zip_dir = (output_dir / "download" / "zip").rmtree_p().makedirs_p()
     unzip_dir = (output_dir / "download" / "unzip").rmtree_p().makedirs_p()
+
+    # tile = "T31TGM"
+    # start_date = "2024-08-29"
+    # end_date = "2024-09-30"
+    # bands = ["B2", "B3", "CLMR2", "CLMR1"]
+    tile = "T32UMV"
+    start_date = "2025-05-13"
+    end_date = "2025-05-14"
+    bands = ["B2", "B3", "CLMR2", "CLMR1"]
+    cloud_min = 7
+
+    # # T31TGK 2023-01-12 is small
+    # tile="T31TGK",
+    # start_date="2023-01-12",
+    # end_date="2023-01-13",
+
+    # should only download one
+    downloaded, unzip_files = maja_download(
+        provider="geodes",
+        tile=tile,
+        start_date=start_date,
+        end_date=end_date,
+        zip_dir=zip_dir,
+        unzip_dir=unzip_dir,
+        lim_perc_cloud=cloud_min,
+        level="LEVEL2A",
+        bands=bands,
+        dry_run=False,
+        keep_zip=True,
+        search_timeout=1,
+    )
+
+    assert len(unzip_files) == 1
+
+
+def test_download_mtd(output_dir):
+    zip_dir = (output_dir / "download" / "zip").rmtree_p().makedirs_p()
+    unzip_dir = (output_dir / "download" / "unzip").rmtree_p().makedirs_p()
+    provider = "mtd"
 
     # # download issue for JBD, mail 2025-04-21
     # tile = "T30TXN"
@@ -295,16 +337,45 @@ def test_download(output_dir):
     start_date = "2024-08-29"
     end_date = "2024-08-30"
     bands = ["B2", "B3", "CLMR2", "CLMR1"]
-    cloud_min = 5
+    cloud_min = 7
     cloud_max = 100
+
+    # # Triplicates
+    # tile = "T32UMV"
+    # start_date = "2025-05-10"
+    # end_date = "2025-05-11"
+    # bands = ["B2", "B3", "CLMR2", "CLMR1"]
+    # cloud_min = 100
+    # cloud_max = 100
+
+    # Duplicates 2025-05-13 with cc [6, 18]
+    tile = "T32UMV"
+    start_date = "2025-05-13"
+    end_date = "2025-05-14"
+    bands = ["B2", "B3", "CLMR2", "CLMR1"]
+    cloud_min = 7
+    cloud_max = 100
+
+    # Duplicates 2025-05-30 with cc [31, 39]
+    # tile = "T32UMV"
+    # start_date = "2025-05-30"
+    # end_date = "2025-05-31"
+    # bands = ["B2", "B3", "CLMR2", "CLMR1"]
+    # cloud_min = 32
+    # cloud_max = 100
+
+    # Other dates
+    # tile = "T32UMV"
+    # start_date = "2025-06-22", "2025-06-19", "2025-06-12", "2025-05-30", "2025-05-13"F, "2025-05-10"F
 
     # # T31TGK 2023-01-12 is small
     # tile="T31TGK",
     # start_date="2023-01-12",
     # end_date="2023-01-13",
-
+    # maja_download = maja_download_mtd
     # should only download one
     downloaded, unzip_files = maja_download(
+        provider=provider,
         tile=tile,
         start_date=start_date,
         end_date=end_date,
@@ -327,6 +398,7 @@ def test_download(output_dir):
     fake_old_scene.mkdir()
     
     downloaded, unzip_files = maja_download(
+        provider=provider,
         tile=tile,
         start_date=start_date,
         end_date=end_date,
@@ -347,6 +419,7 @@ def test_download(output_dir):
     # case upgrade
     new_scene.move(fake_old_scene)
     downloaded, unzip_files = maja_download(
+        provider=provider,
         tile=tile,
         start_date=start_date,
         end_date=end_date,
@@ -367,6 +440,7 @@ def test_download(output_dir):
 
     # it should download duplicates (again)
     downloaded, unzip_files = maja_download(
+        provider=provider,
         tile=tile,
         start_date=start_date,
         end_date=end_date,
@@ -381,7 +455,7 @@ def test_download(output_dir):
 
     assert len(downloaded) == 1
     assert len(unzip_files) == 1
-    assert sum([f.exists() for f in unzip_files]) == 0
+    assert sum([f.exists() for f in unzip_files]) == 1
     # check if one of the files is considered as merged
     # df = get_local_maja_files(unzip_dir)
     # assert len(df.merged_id.drop_duplicates()) == 1
@@ -391,7 +465,8 @@ def test_download(output_dir):
             assert len((f / "MASKS").glob("*CLM_R*.tif")) == 2
 
     # nothing should be downloaded
-    zip_files, unzip_files = maja_download(
+    downloaded, unzip_files = maja_download(
+        provider=provider,
         tile=tile,
         start_date=start_date,
         end_date=end_date,
@@ -403,11 +478,12 @@ def test_download(output_dir):
         dry_run=False,
     )
 
-    assert len(zip_files) == 0
+    assert len(downloaded) == 0
     assert len(unzip_files) == 0
 
     # nothing should be downloaded
-    zip_files, unzip_files = maja_download(
+    downloaded, unzip_files = maja_download(
+        provider=provider,
         tile=tile,
         start_date=start_date,
         end_date=end_date,
@@ -419,7 +495,24 @@ def test_download(output_dir):
         dry_run=False,
     )
 
-    assert len(zip_files) == 0
+    assert len(downloaded) == 0
+    assert len(unzip_files) == 0
+
+    downloaded, unzip_files = maja_download(
+        provider=provider,
+        tile=tile,
+        start_date=start_date,
+        end_date=end_date,
+        zip_dir=zip_dir,
+        unzip_dir=unzip_dir,
+        lim_perc_cloud=cloud_min,
+        level="LEVEL2A",
+        bands=bands,
+        dry_run=False,
+        rm=True
+    )
+
+    assert len(downloaded) == 0
     assert len(unzip_files) == 0
 
 

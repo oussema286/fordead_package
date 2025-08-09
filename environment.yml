@@ -52,6 +52,6 @@ dependencies:
     - stac-geoparquet==0.3.2
     - git+https://github.com/jsignell/stac-static
     - teledetection
-    - git+https://gitlab.com/fordead/fordead_package
+    # - git+https://gitlab.com/fordead/fordead_package
     # fix for new geodes api, waiting for release
     # - git+https://github.com/CS-SI/eodag@87ade04922356eb78cf1798a8fb81bcea8057595

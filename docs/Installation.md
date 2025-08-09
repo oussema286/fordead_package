@@ -13,8 +13,9 @@ From the terminal (bash, cmd, powershell, ... dependending where conda/mamba was
 use the following commands to create a working environment :
 
 ```bash
-mamba env create -n fordead -f https://gitlab.com/fordead/fordead_package/-/raw/master/environment.yml
+mamba env create -n fordead -f https://gitlab.com/fordead/fordead_package/-/raw/v1.11.4/environment.yml
 conda activate fordead
+pip install https://gitlab.com/fordead/fordead_package@v1.11.4
 ```
 
 The conda environment can be deleted using the following command :

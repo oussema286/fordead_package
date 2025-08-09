@@ -1,3 +1,15 @@
+# v1.11.4
+## Add
+- CDS MTD as an alternative provider for S2 L2A MAJA data
+
+## Fix
+- wrong dataframe passed to merged when rm=True
+
+## Change
+- installation instruction: remove fordead from environment
+  that should be installed after conda env creation with
+  pip install, see installation user guide of that version.
+
 # v1.11.3
 ## Fix
 - warning instead of error when bands missing for shaddow flag computation (i.e. band==0)

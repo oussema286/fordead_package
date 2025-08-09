@@ -28,6 +28,7 @@ import warnings
 @click.option("--dry_run", is_flag=True, help = "Dry run, no data is downloaded or unzipped", show_default=True)
 @click.option("--retry", type=int, default=10, help = "Number of retries on download failure", show_default=True)
 @click.option("--wait", type=int, default=5, help = "On a failed download, the script waits wait*trials minutes before retrying until the maximum number of retries is reached.", show_default=True)
+@click.option("--provider", type = click.Choice(['mtd', 'geodes']), default='mtd', show_default=True, help="Provider of data to download")
 def cli_theia_preprocess(**kwargs):
     """
     Automatically downloads all Sentinel-2 data from THEIA between two dates under a cloudiness threshold.
@@ -58,7 +59,7 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                      level = "LEVEL2A", start_date = "2015-06-23", end_date = None, lim_perc_cloud = 50,
                      bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12", "CLMR2"], 
                      correction_type = "FRE", search_timeout=10, upgrade = False, rm = False, keep_zip = False, 
-                     dry_run = True, retry = 10, wait = 2):
+                     dry_run = True, retry = 10, wait = 2, provider = "mtd"):
     """
     Download Sentinel-2 zip files from GEODES (LEVEL2A) or THEIA (LEVEL3A) portal, 
     extract band files and eventually merge tile+date duplicates.
@@ -109,6 +110,9 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
     wait : int, optional
         On a failed download, the script waits wait*trials minutes before retrying 
         until the maximum number of retries is reached. The default is 5.
+    provider : str
+        MAJA data provider "mtd" or "geodes"
+
     Returns
     -------
     None.
@@ -154,7 +158,8 @@ def theia_preprocess(zipped_directory, unzipped_directory, tiles,
                         rm=rm,
                         dry_run=dry_run,
                         retry=retry,
-                        wait=wait
+                        wait=wait,
+                        provider=provider
                     )
                 except Exception as e:
                     print(traceback.format_exc())
