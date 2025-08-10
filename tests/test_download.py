@@ -515,8 +515,9 @@ def test_download_mtd(output_dir):
     assert len(downloaded) == 0
     assert len(unzip_files) == 0
 
-    # will rm the first merged split but
-    # will not re-download the second split
+    # will rm the first merged split, but
+    # will not re-download the second split although
+    # it would have with upgrade=True
     downloaded, unzip_files = maja_download(
         provider=provider,
         tile=tile,
