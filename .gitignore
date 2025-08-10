@@ -9,3 +9,5 @@ build
 .pytest_cache
 docs/examples
 *.zip
+site
+docs/API_Reference
