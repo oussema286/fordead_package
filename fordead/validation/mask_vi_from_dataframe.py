@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 14 12:48:06 2023
-
-@author: Raphaël Dutrieux
-"""
 
 from fordead import __version__
 import click

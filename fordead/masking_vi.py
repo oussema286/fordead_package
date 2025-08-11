@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Nov 20 17:29:17 2020
 
-@author: Raphael Dutrieux
-"""
 import warnings
 import xarray as xr
 import numpy as np

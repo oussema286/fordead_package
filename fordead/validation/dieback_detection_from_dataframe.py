@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Mar 22 13:01:07 2023
 
-@author: Raphael Dutrieux
-"""
 import pandas as pd
 import time
 from fordead.validation_process import add_diff_vi_to_vi, add_status_to_vi, fill_periods, detect_state_changes, detection_anomalies_dataframe, compute_stress_index, prediction_vegetation_index_dataframe

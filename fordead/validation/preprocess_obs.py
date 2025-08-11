@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Dec 13 10:52:12 2022
 
-@author: rdutrieux
-"""
 import time
 import click
 import geopandas as gp

@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Nov  6 17:32:26 2020
 
-@author: Raphael Dutrieux
-"""
 import rioxarray
 from numpy import uint8
 import pandas as pd

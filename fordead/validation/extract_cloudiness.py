@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Apr 19 16:57:21 2023
-
-@author: rdutrieux
-"""
 
 # import time
 import click

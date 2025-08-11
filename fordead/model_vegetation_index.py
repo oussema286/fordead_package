@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Nov  3 16:21:35 2020
 
-@author: Raphael Dutrieux
-"""
 import xarray as xr
 import numpy as np
 import dask.array as da

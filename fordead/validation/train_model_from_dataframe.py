@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 21 14:21:33 2023
 
-@author: rdutrieux
-"""
 import click
 import pandas as pd
 from fordead.validation_process import get_last_training_date_dataframe, model_vi_dataframe, update_training_period

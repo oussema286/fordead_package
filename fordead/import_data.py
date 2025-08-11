@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Nov  2 09:42:31 2020
-
-@author: Raphael Dutrieux
-"""
 
 import numpy as np
 import xarray as xr

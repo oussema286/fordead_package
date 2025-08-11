@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Apr 25 18:55:28 2023
-
-@author: Raphael Dutrieux
-"""
 
 import time
 import click

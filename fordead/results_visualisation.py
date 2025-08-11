@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Sep 18 13:37:02 2020
 
-@author: raphael.dutrieux
-"""
 import warnings
 import plotly.graph_objects as go
 import geopandas as gp

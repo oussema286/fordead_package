@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Feb 16 13:53:50 2021
-
-@author: Raphael Dutrieux
-@author: Florian de Boissieu
-"""
 
 from datetime import timedelta, datetime
 from eodag import EODataAccessGateway
