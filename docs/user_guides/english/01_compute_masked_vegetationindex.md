@@ -1,4 +1,4 @@
-# STEP 1 : Compute vegetation indices and masks for each SENTINEL-2 date
+## STEP 1 : Compute vegetation indices and masks for each SENTINEL-2 date
 
 #### INPUTS
 The input parameters are:
