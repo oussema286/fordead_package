@@ -90,24 +90,32 @@ install-linux:
 
 pages:
   stage: deploy
-  image: $CI_REGISTRY/fordead/fordead_package:latest
+  image: mambaorg/micromamba
   variables:
     GIT_STRATEGY: clone
+    MAMBA_DOCKERFILE_ACTIVATE: 1
+    PAGES_BRANCH: gl-pages
+    HTTPS_REMOTE: https://gitlab-ci-token:${ACCESS_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git
   script:
-    - conda env list
-    - pip install portray python-markdown-math mdx-breakless-lists mkdocs-click
-    - python -V  # Print out python version for debugging
+    - micromamba install -y -n base -f environment.yml
     - pip install -e .
-    - portray as_html -c pyproject_doc.toml
-    - mv site public
+    - pip install docs/requirements.txt
+    # generate API reference
+    - python docs/gen_ref_pages_standalone.py
+    # versioning documentation with mike
+    - git config user.name $GITLAB_USER_NAME
+    - git config user.email $GITLAB_USER_EMAIL 
+    - git fetch origin $PAGES_BRANCH && git checkout -b $PAGES_BRANCH origin/$PAGES_BRANCH || echo "Pages branch not deployed yet."
+    - git checkout $CI_COMMIT_SHA
+    - mike deploy --rebase --prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH -u $CI_COMMIT_TAG latest
+    - mike set-default --rebase --prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH latest
+    - git checkout $PAGES_BRANCH -- public/
 
   artifacts:
     paths:
      - public
-     - badges.json
-  only:
-   - master
-   - pages
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v?[0-9]+\.[0-9]+/
 
 zenodo:
   stage: deploy
