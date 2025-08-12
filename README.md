@@ -44,7 +44,7 @@ Healthy pixel | Attacked pixel
 
 The second one makes a "timelapse" on a small area for visualizing the results at each used Sentinel-2 date, with SENTINEL-2 natural color composites in background. A slider also allows you to navigate between the different dates.
 
-![gif_timelapse](docs/Tutorials/Dieback_Detection/Figures/gif_timelapse.gif "gif_timelapse")
+![gif_timelapse](docs/Tutorials/Dieback_Detection/Figures/gif_timelapse-optimized.gif "gif_timelapse")
 
 ## Installation
 

@@ -37,7 +37,7 @@ Pixel sain | Pixel atteint
 
 Le deuxième outil réalise un "timelapse" sur une petite zone pour visualiser l'évolution des résultats à chaque date SENTINEL-2 utilisée, avec en fond des compositions "couleurs naturelles" (RVB) SENTINEL-2. Un curseur permet en outre de naviguer entre les dates. 
 
-![gif_timelapse](docs/Tutorials/Dieback_Detection/Figures/gif_timelapse.gif "gif_timelapse")
+![gif_timelapse](docs/Tutorials/Dieback_Detection/Figures/gif_timelapse-optimized.gif "gif_timelapse")
 
 ## Installation
 
