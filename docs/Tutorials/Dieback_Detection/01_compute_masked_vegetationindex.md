@@ -92,8 +92,6 @@ This combination was derived empirically from a study case focusing on the detec
 In this context, bare ground detection was used to discriminate clear cuts, deciduous forests during leaf-off periods, as well as grey attack stage of bark beetles. 
 This **soil_detection** requires additional tests to better identify its applicability. 
 
-If **soil_detection** is set to False, any logical operation formula can be used in **formula_mask** (see [compute_vegetation_index](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#compute_vegetation_index)). 
+If **soil_detection** is set to False, any logical operation formula can be used in **formula_mask** (see [compute_vegetation_index](../../API_Reference/fordead/masking_vi.md#fordead.masking_vi.compute_vegetation_index)). 
 
-If **soil_detection** is set to True, then pre-defined masks are combined with bare ground detection as described in the [step guide](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/). 
-
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/00_Intro) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/02_train_model)
+If **soil_detection** is set to True, then pre-defined masks are combined with bare ground detection as described in the [step guide](../../user_guides/english/01_compute_masked_vegetationindex.md). 

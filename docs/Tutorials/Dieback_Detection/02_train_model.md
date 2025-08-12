@@ -13,7 +13,7 @@ The following figure illustrates a time series corresponding to the CR<sub>SWIR<
 
 ![vegetation_index_model](Figures/model_X642135_Y5452255.png "vegetation_index_model")
 
-This step is fully documented [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/).
+This step is fully documented [here](../../user_guides/english/02_train_model.md).
 
 ##### Running this step using a script
 
@@ -57,5 +57,3 @@ The outputs of this processing step are :
     - **coeff_model.tif** : a raster stack including 5 layers, one for each coefficient of the vegetation index model.
 - **TimelessMasks** : the binary raster **sufficient_coverage_mask.tif** is written. Valid pixels (sufficient number of acquisitions to adjust the harmonic model) are coded with a value of 1, invalid pixels are coded with 0.
 
-
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/01_compute_masked_vegetationindex) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/03_dieback_detection)

@@ -7,7 +7,7 @@ A slider allows navigation between the different acquisitions.
 
 This tool produces a timelapse as illustrated by the following animated gif :
 
-![gif_timelapse](Figures/gif_timelapse.gif "gif_timelapse")
+![gif_timelapse](Figures/gif_timelapse-optimized.gif "gif_timelapse")
 
 It can be made using coordinates in the projection system of the SENTINEL-2 data using **x** and **y** parameters, or using a shapefile containing one or several polygons or points using the **shape_path** and **name_column** parameters. 
 In this example, we will use coordinates.

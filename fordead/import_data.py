@@ -490,7 +490,7 @@ def get_cloudiness(path_cloudiness, dict_path_bands, sentinel_source: str):
     path_cloudiness : str
         Path where the TileInfo object storing cloudiness information for each date is saved and imported from.
     dict_path_bands : dict
-        Dictionnary where keys are dates, values are another dictionnary where keys are bands and values are their paths (dict_path_bands["YYYY-MM-DD"]["Mask"] -> Path to the mask)
+        Dictionnary where keys are dates, values are another dictionnary where keys are bands and values are their paths (`dict_path_bands["YYYY-MM-DD"]["Mask"]` -> Path to the mask)
     sentinel_source : str
         'theia', 'scihub' or 'peps'
 

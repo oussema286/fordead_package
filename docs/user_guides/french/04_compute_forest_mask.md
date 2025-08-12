@@ -70,39 +70,39 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Cette étape peut également être réalisée indépendamment du reste de la chaîne de traitement, en renseignant le paramètre **path_example_raster**, afin d'obtenir un masque forêt binaire. Sinon, le paramètre **path_example_raster** est automatiquement déterminé à partir des résultats des étapes précédentes afin que le masque forêt corresponde à la zone étudiée.
-> **_Fonctions utilisées :_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info), [add_parameters()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#add_parameters), [delete_dirs()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#delete_dirs)
+> **_Fonctions utilisées :_** [TileInfo()](docs/API_Reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](docs/API_Reference/fordead/import_data/#import_info), [add_parameters()](docs/API_Reference/fordead/import_data/#add_parameters), [delete_dirs()](docs/API_Reference/fordead/import_data/#delete_dirs)
 
 ### Depuis un vecteur
 - Import d'un vecteur, par exemple un shapefile contenant des polygones
 - Reprojection du vecteur dans le système de projection des données Sentinel-2
 - L'ensemble des polygones sont rasterisés en un raster binaire à la résolution, l'extent et le système de projection de la zone d'étude. Le raster prend la valeur 1 là où les pixels sont à l'intérieur des polygones.
-> **_Fonctions utilisées:_** [rasterize_vector()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#rasterize_vector)
+> **_Fonctions utilisées:_** [rasterize_vector()](docs/API_Reference/fordead/masking_vi/#rasterize_vector)
 
 ### A partir d'un raster binaire
 Cette option est donnée pour les utilisateurs voulant créer leur propre masque par d'autres moyens et l'utiliser dans la chaîne de traitement. Il sera ré-écrit dans le dossier data_directory.
  - Si forest_mask_source est un chemin vers un fichier existant, ce fichier est importé. Ce fichier doit être un raster binaire avec la valeur 1 là où sont les pixels d'intérêt.
  - Le fichier est découpé à l'extent de la zone d'étude, ou du fichier au chemin path_example_raster
- > **_Fonctions utilisées :_** [import_binary_raster()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_binary_raster), [clip_xarray()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#clip_xarray)
+ > **_Fonctions utilisées :_** [import_binary_raster()](docs/API_Reference/fordead/import_data/#import_binary_raster), [clip_xarray()](docs/API_Reference/fordead/import_data/#clip_xarray)
 
 
 ### A partir de la BDFORET de l'IGN
 - Importation de la BDFORET des départements intersectant la zone d'étude
 - Filtre à partir des types de peuplements séléctionnés
 - Rasterisation en un masque binaire
- > **_Fonctions utilisées :_** [rasterize_bdforet()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#rasterize_bdforet), [rasterize_polygons_binary()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#rasterize_polygons_binary), [bdforet_paths_in_zone()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#bdforet_paths_in_zone)
+ > **_Fonctions utilisées :_** [rasterize_bdforet()](docs/API_Reference/fordead/masking_vi/#rasterize_bdforet), [rasterize_polygons_binary()](docs/API_Reference/fordead/masking_vi/#rasterize_polygons_binary), [bdforet_paths_in_zone()](docs/API_Reference/fordead/masking_vi/#bdforet_paths_in_zone)
 
 ### A partir de carte OSO du CESBIO
  - Importation de la [carte oso](http://osr-cesbio.ups-tlse.fr/~oso/) et cropping à partir du raster au chemin **path_example_raster**
  - Filtre à partir de la liste **list_code_oso** pour obtenir un raster valant True sur les pixels dont la valeur dans la carte OSO est dans la liste **list_code_oso**
- > **_Fonctions utilisées :_** [clip_oso()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#clip_oso)
+ > **_Fonctions utilisées :_** [clip_oso()](docs/API_Reference/fordead/masking_vi/#clip_oso)
 
 
 ### Pas d'utilisation de masque
  Si il est choisi de ne pas utiliser de masque, le masque forêt crée est rempli entièrement avec la valeur True et correspond à la dimension, résolutione et système de projection du raster au chemin **path_example_raster**
- > **_Fonctions utilisées :_** [raster_full()](https://fordead.gitlab.io/fordead_package/reference/fordead/masking_vi/#raster_full)
+ > **_Fonctions utilisées :_** [raster_full()](docs/API_Reference/fordead/masking_vi/#raster_full)
 
 ### Ecriture des résultats
 Le masque forêt est écrit, et son chemin sauvegardé dans l'object TileInfo.
- > **_Fonctions utilisées :_** [write_tif()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#save_info)
+ > **_Fonctions utilisées :_** [write_tif()](docs/API_Reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](docs/API_Reference/fordead/import_data/#save_info)
 
 

@@ -53,24 +53,24 @@ See detailed documentation on the [site](https://fordead.gitlab.io/fordead_packa
 
 ### Importing information on previous processes and deleting obsolete results if they exist
 The information about the previous steps is imported (parameters, data paths, used dates...).
-> **_Functions used:_** [TileInfo()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#tileinfo), methods of the TileInfo class [import_info()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_info)
+> **_Functions used:_** [TileInfo()](docs/API_Reference/fordead/import_data/#tileinfo), methods of the TileInfo class [import_info()](docs/API_Reference/fordead/import_data/#import_info)
 
 ### Importing the results of the detection 
 The results of the previous steps are imported.
-> **_Functions used:_** [import_soil_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_soil_data), [import_dieback_data()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_dieback_data), [import_binary_raster()](https://fordead.gitlab.io/fordead_package/reference/fordead/import_data/#import_binary_raster)
+> **_Functions used:_** [import_soil_data()](docs/API_Reference/fordead/import_data/#import_soil_data), [import_dieback_data()](docs/API_Reference/fordead/import_data/#import_dieback_data), [import_binary_raster()](docs/API_Reference/fordead/import_data/#import_binary_raster)
 
 ### Determining the periods for aggregating the results
 The results will be aggregated according to the time period at which the first anomalies occur for both soil and dieback detection. These periods are determined from the frequency indicated by the parameter **frequency**, the start date **start_date** and the end date **end_date**. Periods before the first SENTINEL date used, or after the last one, if they exist, are ignored since they cannot correspond to any result.
-> **_Functions used:_** [get_bins()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_bins)
+> **_Functions used:_** [get_bins()](docs/API_Reference/fordead/writing_data/#get_bins)
 
 ### Conversion of first anomaly dates into number of days since 2015-01-01
 The dates of first anomalies, stored as indexes of the dates used, are converted into number of days since a reference day "2015-01-01" corresponding to the launch of the first SENTINEL-2 satellite. Thus these dates can be compared with the limits of the previously determined periods.
-> **_Functions used: _** [convert_dateindex_to_datenumber()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#convert_dateindex_to_datenumber)
+> **_Functions used: _** [convert_dateindex_to_datenumber()](docs/API_Reference/fordead/writing_data/#convert_dateindex_to_datenumber)
 
 ### If exported in several files:
 - For each period, the algorithm checks if the pixel has a first anomaly before the end of the period. We thus obtain the information for each pixel "Healthy", or "Dieback" if **export_soil** is False, or "Healthy", "Dieback", "Cut", "Sanitary cut" otherwise. 
 - This information is vectorized using only the area of interest (within the forest mask and with enough valid dates to model the vegetation index). Healthy pixels are also ignored.
-> **_Functions used:_** [get_state_at_date()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_state_at_date)
+> **_Functions used:_** [get_state_at_date()](docs/API_Reference/fordead/writing_data/#get_state_at_date)
 - This vector is written for each of the periods using the period end date as the file name.
 
 ### If exported to a single file:
@@ -80,7 +80,7 @@ The dates of first anomalies, stored as indexes of the dates used, are converted
 - The periodic results are intersected by union with the vector thus obtained. The polygons detected as confirmed anomalies without a confidence class can only come from the bare ground detection if it is activated, so these polygons take the "Bare ground" class.
 - The resulting vector is written in a single vector file where polygons contain the period when the first anomaly was detected, and possibly the confidence class.
 - If computed, the continuous confidence index array is also written to a raster file.
-> **_Functions used:_** [get_periodic_results_as_shapefile()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#get_periodic_results_as_shapefile), [union_confidence_class()](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#union_confidence_class), [vectorizing_confidence_class](https://fordead.gitlab.io/fordead_package/reference/fordead/writing_data/#vectorizing_confidence_class)
+> **_Functions used:_** [get_periodic_results_as_shapefile()](docs/API_Reference/fordead/writing_data/#get_periodic_results_as_shapefile), [union_confidence_class()](docs/API_Reference/fordead/writing_data/#union_confidence_class), [vectorizing_confidence_class](docs/API_Reference/fordead/writing_data/#vectorizing_confidence_class)
 
 
 If **export_soil** is True, the same operation is performed using the bare soil detection results and the results are written to a second vector file.

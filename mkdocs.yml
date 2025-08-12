@@ -3,7 +3,8 @@
 
 theme:
   palette:
-    primary: custom
+    primary: "blue grey"
+    accent: "pink"
   # logo: logo.png
   # favicon: logo.png
   name: "material"
@@ -25,6 +26,8 @@ plugins:
 # - mkdocs-versioning:
 #     version: 0.3.0
 - search
+- autorefs:
+    resolve_closest: true
 # use docs/gen_ref_pages_standalone.py to generate reference pages
 # and be compatible with mkdocs-static-i18n
 # - gen-files:
@@ -46,7 +49,6 @@ plugins:
 #     nav_file: SUMMARY.md
 # - section-index # systamtically makes an index at the begining of each section
 # - mermaid2
-- autorefs
 - i18n:
     docs_structure: suffix
     languages:
@@ -96,6 +98,7 @@ repo_name: fordead
 repo_url: https://gitlab.com/fordead/fordead_package
 extra_css:
   - 'css/style.css'
+extra_javascript: ['https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML']
 # edit_uri: '-/edit/master/'
 # site_url: http://localhost:8000/public
 site_url: https://fordead.gitlab.io/fordead_package

@@ -26,7 +26,8 @@ def get_stack_rgb(tile, extent, bands = ["B4","B3","B2"], dates = None):
     Parameters
     ----------
     tile : TileInfo object
-        TileInfo objects with paths attribute which is a dictionnary containing file paths to SENTINEL (tile.paths["Sentinel"][YYYY-MM-DD] returns a dictionnary where keys are band names and values are the paths to the files)
+        TileInfo objects with paths attribute which is a dictionnary containing file paths to SENTINEL
+        (`tile.paths["Sentinel"][YYYY-MM-DD]` returns a dictionnary where keys are band names and values are the paths to the files)
     extent : list or 1D array, optional
         Extent used for cropping [xmin,ymin, xmax,ymax]. If None, there is no cropping. The default is None.
     bands : list, optional

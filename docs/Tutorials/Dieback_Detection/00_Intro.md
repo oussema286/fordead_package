@@ -5,7 +5,7 @@ _fordead_ is a python package initially developed to detect anomalies in seasona
 
 ## Requirements
 ### Package installation 
-If the package is not already installed, follow the [installation instruction guide](https://fordead.gitlab.io/fordead_package/docs/Installation/). 
+If the package is not already installed, follow the [installation instruction guide](../../Installation.md). 
 If already installed, launch the command prompt and activate the environment with the command `conda activate <environment name>`
 
 ### Download the tutorial dataset
@@ -25,7 +25,7 @@ _fordead_ can also process data obtained from other providers ([ESA-Copernicus](
 
 Once _fordead_ is installed, a minimum of 1 Go of free disk space is recommended.
 
-[NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/01_compute_masked_vegetationindex)
+[NEXT PAGE](./01_compute_masked_vegetationindex.md)
 
 
 
