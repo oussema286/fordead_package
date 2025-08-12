@@ -111,9 +111,11 @@ pages:
     - git config user.email fordead-ci@gitlab.com
     # - git fetch origin $PAGES_BRANCH && git checkout -b $PAGES_BRANCH origin/$PAGES_BRANCH || echo "Pages branch not deployed yet."
     # - git checkout $CI_COMMIT_SHA
-    - mike deploy --deploy-prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH -u $CI_COMMIT_TAG latest
+    - export PAGES_VERSION="${CI_COMMIT_TAG:-dev}"
+    - echo $PAGES_VERSION
+    - mike deploy --deploy-prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH -u $PAGES_VERSION latest
     - mike set-default --deploy-prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH latest
-    - git clone HTTPS_REMOTE pages
+    - git clone $HTTPS_REMOTE pages
   artifacts:
     paths:
      - pages/public
