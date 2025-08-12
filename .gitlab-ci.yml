@@ -117,7 +117,6 @@ pages:
     - mike deploy -r $HTTPS_REMOTE -p -b $PAGES_BRANCH -u $PAGES_VERSION latest
     - mike set-default -r $HTTPS_REMOTE -p -b $PAGES_BRANCH latest
     - git checkout $PAGES_BRANCH -- public
-    - rm -r public/.git
   artifacts:
     paths:
      - public
