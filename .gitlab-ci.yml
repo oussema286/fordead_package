@@ -97,9 +97,10 @@ pages:
     PAGES_BRANCH: gl-pages
     HTTPS_REMOTE: https://gitlab-ci-token:${PAGES_TOKEN}@${CI_SERVER_HOST}/fordead/fordead_pages.git
   script:
+    - micromamba install -y -n base -f environment.yml
+    - git branch
     - git config user.name fordead-ci
     - git config user.email fordead-ci@gitlab.com
-    - micromamba install -y -n base -f environment.yml
     - pip install -e .
     - pip install -r docs/requirements.txt
     # generate API reference
