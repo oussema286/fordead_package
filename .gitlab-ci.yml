@@ -97,6 +97,7 @@ pages:
     PAGES_BRANCH: gl-pages
     HTTPS_REMOTE: https://gitlab-ci-token:${PAGES_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}
   script:
+    - echo $GITLAB_USER_NAME
     - micromamba install -y -n base -f environment.yml
     - pip install -e .
     - pip install -r docs/requirements.txt
