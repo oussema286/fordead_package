@@ -1,0 +1,11 @@
+mkdocstrings
+mkdocstrings[crystal,python]
+mkdocs-click
+mkdocs-material
+mkdocs-gen-files
+mkdocs-section-index
+mkdocs-literate-nav
+mkdocs-mermaid2-plugin
+mkdocs-static-i18n
+mkdocs-autorefs
+mdx-breakless-lists
