@@ -113,12 +113,13 @@ pages:
     # - git checkout $CI_COMMIT_SHA
     - export PAGES_VERSION="${CI_COMMIT_TAG:-dev}"
     - echo $PAGES_VERSION
-    - mike deploy --deploy-prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH -u $PAGES_VERSION latest
-    - mike set-default --deploy-prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH latest
-    - git clone $HTTPS_REMOTE pages
+    - mike deploy -r $HTTPS_REMOTE -p -b $PAGES_BRANCH -u $PAGES_VERSION latest
+    - mike set-default -r $HTTPS_REMOTE -p -b $PAGES_BRANCH latest
+    - git clone $HTTPS_REMOTE public
+    - rm -r public/.git
   artifacts:
     paths:
-     - pages/public
+     - public
   # rules:
   #   - if: $CI_COMMIT_TAG =~ /^v?[0-9]+\.[0-9]+/
 
