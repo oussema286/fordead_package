@@ -20,7 +20,7 @@ theme:
 plugins:
 - mike:
     version_selector: true
-    # deploy_prefix: public
+    deploy_prefix: public
     css_dir: css
 # - mkdocs-versioning:
 #     version: 0.3.0
