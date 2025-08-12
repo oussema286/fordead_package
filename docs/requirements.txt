@@ -9,3 +9,4 @@ mkdocs-mermaid2-plugin
 mkdocs-static-i18n
 mkdocs-autorefs
 mdx-breakless-lists
+mike
