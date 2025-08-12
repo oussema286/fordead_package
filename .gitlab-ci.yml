@@ -99,7 +99,7 @@ pages:
   script:
     - micromamba install -y -n base -f environment.yml
     - pip install -e .
-    - pip install docs/requirements.txt
+    - pip install -r docs/requirements.txt
     # generate API reference
     - python docs/gen_ref_pages_standalone.py
     # Make indexes pages from REAMDE
