@@ -97,6 +97,8 @@ pages:
     PAGES_BRANCH: gl-pages
     HTTPS_REMOTE: https://gitlab-ci-token:${PAGES_TOKEN}@${CI_SERVER_HOST}/fordead/fordead_pages.git
   script:
+    - git config user.name fordead-ci
+    - git config user.email fordead-ci@gitlab.com
     - micromamba install -y -n base -f environment.yml
     - pip install -e .
     - pip install -r docs/requirements.txt
@@ -107,8 +109,7 @@ pages:
     - 'sed -e "s:](docs/:](:g" -e "2,12d" -e "1 i ---\ntitle: Overview\n---" README.md > docs/index.md'
     - 'sed -e "s:](docs/:](:g" -e "1 i ---\ntitle: Accueil\n---" README_fr.md > docs/index.fr.md'
     # versioning documentation with mike
-    - git config user.name fordead-ci
-    - git config user.email fordead-ci@gitlab.com
+
     # - git fetch origin $PAGES_BRANCH && git checkout -b $PAGES_BRANCH origin/$PAGES_BRANCH || echo "Pages branch not deployed yet."
     # - git checkout $CI_COMMIT_SHA
     - mike deploy --rebase --prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH -u $CI_COMMIT_TAG latest
