@@ -103,8 +103,9 @@ pages:
     # generate API reference
     - python docs/gen_ref_pages_standalone.py
     # Make indexes pages from REAMDE
-    - sed -e "s:](docs/:](:g" README.md | sed -e "2,12d" | sed -e "1 i ---\ntitle: Overview\n---" > docs/index.md
-    - sed -e "s:](docs/:](:g" README_fr.md | sed -e '1 i ---\ntitle: Accueil\n---' > docs/index.fr.md
+    # - sed -e "s:](docs/:](:g" README.md | sed -e "2,12d" | sed -e "1 i ---\ntitle: Overview\n---" > docs/index.md
+    - 'sed -e "s:](docs/:](:g" -e "2,12d" -e "1 i ---\ntitle: Overview\n---" README.md > docs/index.md'
+    - 'sed -e "s:](docs/:](:g" -e "1 i ---\ntitle: Accueil\n---" README_fr.md > docs/index.fr.md'
     # versioning documentation with mike
     - git config user.name $GITLAB_USER_NAME
     - git config user.email $GITLAB_USER_EMAIL 
@@ -113,7 +114,6 @@ pages:
     - mike deploy --rebase --prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH -u $CI_COMMIT_TAG latest
     - mike set-default --rebase --prefix public -r $HTTPS_REMOTE -p -b $PAGES_BRANCH latest
     - git checkout $PAGES_BRANCH -- public/
-
   artifacts:
     paths:
      - public
