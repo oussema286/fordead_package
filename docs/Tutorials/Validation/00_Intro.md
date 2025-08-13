@@ -62,5 +62,4 @@ In addition to the ID column, these polygons also include optional information, 
 
 Once _fordead_ is installed, a minimum of 1 Go of free disk space is recommended to run this tutorial.
 
-[NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/01_preprocessing_observations)
 

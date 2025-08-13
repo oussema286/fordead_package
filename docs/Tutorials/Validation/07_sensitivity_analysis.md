@@ -40,7 +40,7 @@ sensitivity_analysis(testing_directory = sensitivity_dir,
 -----
 Results are output in the *testing_directory*.
 
-For each test, a directory is created whose name is the ID of the test. Inside each of those directories, are the ouputs of FORDEAD as seen in the [previous page](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_apply_fordead).   
+For each test, a directory is created whose name is the ID of the test. Inside each of those directories, are the ouputs of FORDEAD as seen in the [previous page](./03_apply_fordead.md).   
 
 A "test_info.csv" file is also written, where each test_id is associated with the value of all parameters used in the iteration : 
 

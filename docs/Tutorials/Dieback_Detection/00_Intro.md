@@ -28,7 +28,6 @@ _fordead_ can also process data obtained from other providers ([ESA-Copernicus](
 
 Once _fordead_ is installed, a minimum of 1 Go of free disk space is recommended.
 
-[NEXT PAGE](./01_compute_masked_vegetationindex.md)
 
 
 

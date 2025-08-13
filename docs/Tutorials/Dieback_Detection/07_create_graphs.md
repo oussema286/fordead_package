@@ -52,4 +52,3 @@ The y axis limits are set using **ymin** and **ymax** parameters.
 
 > **_NOTE :_** The **chunks** parameter is not necessary in this case, since the process is applied on limited surfaces. However, it is needed to reduce computation time in large datasets.
 
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/06_create_timelapse) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/08_updating_detection)

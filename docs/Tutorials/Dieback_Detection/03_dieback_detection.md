@@ -66,4 +66,3 @@ The outputs of this step are :
 - **DataAnomalies** folder, including a raster file for each date **Anomalies_YYYY-MM-DD.tif** for which value is 1 where anomalies are detected.
 
 
-[PREVIOUS PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/02_train_model) [NEXT PAGE](https://fordead.gitlab.io/fordead_package/docs/Tutorial/04_compute_forest_mask)
