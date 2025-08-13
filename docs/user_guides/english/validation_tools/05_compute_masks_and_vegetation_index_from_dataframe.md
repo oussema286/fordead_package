@@ -1,7 +1,8 @@
 
 Computes the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.
 Filters out data by applying the fordead mask (if soil_detection is True) or a user mask defined by the user. 
-(optional) Filters out acquisition by applying a limit on the percentage of cloud cover as calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/)
+(optional) Filters out acquisition by applying a limit on the percentage of cloud cover as calculated by the function
+[extract_cloudiness][fordead.validation.extract_cloudiness.extract_cloudiness].
 Writes the results in a csv file, as well as the first date of the training period for each pixel and, if soil_detection is True, the first date of detected bare ground.
 
 ----------
@@ -11,7 +12,7 @@ Writes the results in a csv file, as well as the first date of the training peri
 - masked_vi_path str : Path used to write the csv containing the vegetation index for each pixel of each observation, for each valid Sentinel-2 acquisition.
 - periods_path *str* : Path used to write the csv containing the first date of the training periods for each pixel and, if soil_detection is True, the first date of detected bare ground.
 - name_column *str* : Name of the ID column. The default is 'id'.
-- cloudiness_path : *str* (optional) : Path of a csv with the columns 'area_name','Date' and 'cloudiness' used to filter acquisitions, can be calculated by the [extract_cloudiness function](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Validation/03_extract_cloudiness/) Not used if None.
+- cloudiness_path : *str* (optional) : Path of a csv with the columns 'area_name','Date' and 'cloudiness' used to filter acquisitions, can be calculated by the function [extract_cloudiness][fordead.validation.extract_cloudiness.extract_cloudiness] Not used if None.
 - vi : str (optional) : Chosen vegetation index. If using a custom one or one unavailable in this package, it can be added using the path_dict_vi parameter. The default is "CRSWIR".
 - lim_perc_cloud : *float* (optional): The maximum percentage of clouds of the whole area. If the cloudiness percentage of the SENTINEL acquisition, calculated from the provider's classification, is higher than this threshold, the acquisition is filtered out. Only used if cloudiness_path is not None. The default is 0.45.
 - soil_detection : bool  (optional) : If True, bare ground is detected and used as mask, but the process might not be adapted to other situations than THEIA data on France's coniferous forests. If False, mask from formula_mask is applied. The default is True.
