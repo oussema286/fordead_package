@@ -1,3 +1,5 @@
+# Installation
+
 ## Conda install (recommended)
 
 Conda install is recommended as it will include all necessary dependencies (especially GDAL).
