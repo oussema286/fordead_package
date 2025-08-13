@@ -45,7 +45,7 @@ extract_reflectance(obs_path = <obs_path>, export_path = <export_path>, name_col
 fordead extract_reflectance [OPTIONS]
 ```
 
-See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-extract_reflectance)
+See detailed documentation on the [site](../../../cli.md#fordead-extract_reflectance)
 
 ## How does it work ?
 

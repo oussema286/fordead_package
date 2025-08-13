@@ -44,7 +44,7 @@ obs_to_s2_grid(obs_path = <obs_path>, export_path = <export_path>, name_column =
 fordead obs_to_s2_grid [OPTIONS]
 ```
 
-See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-obs_to_s2_grid)
+See detailed documentation on the [site](../../../cli.md#fordead-obs_to_s2_grid)
 
 ## How it works
 

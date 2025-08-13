@@ -22,7 +22,7 @@ If none of those parameters are used, the program will prompt the user in a loop
 
 In this example, we used a shapefile provided in the fordead_data repository. 
 
-Comprehensive documentation can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/Results_visualisation/#create-graphs-showing-the-evolution-of-the-time-series).
+Comprehensive documentation can be found [here](../../user_guides/english/Results_visualisation.md#create-graphs-showing-the-evolution-of-the-time-series).
 
 ##### Running this step using a script
 

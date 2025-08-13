@@ -44,7 +44,7 @@ compute_masked_vegetationindex(input_directory = <input_directory>, data_directo
 fordead masked_vi [OPTIONS]
 ```
 
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-masked_vi)
+Voir documentation détaillée sur le [site](../../cli.md#fordead-masked_vi)
 
 ## Détail du fonctionnement
 

@@ -64,7 +64,7 @@ create_timelapse(data_directory = <data_directory>, x = <x>, y = <y>, buffer = 1
 ```bash
 fordead timelapse [OPTIONS]
 ```
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-timelapse)
+Voir documentation détaillée sur le [site](../../cli.md#fordead-timelapse)
 
 ***
 
@@ -114,7 +114,7 @@ vi_series_visualisation(data_directory = <data_directory>, ymin = 0, ymax = 2, c
 ```bash
 fordead graph_series [OPTIONS]
 ```
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-graph_series)
+Voir documentation détaillée sur le [site](../../cli.md#fordead-graph_series)
 
 #### EXEMPLE
 ![anomaly_detection_X642135_Y5452255](Diagrams/anomaly_detection_X642135_Y5452255.png "anomaly_detection_X642135_Y5452255")

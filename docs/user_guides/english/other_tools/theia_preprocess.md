@@ -81,4 +81,4 @@ Once one of these lines is run with `dry_run=True`, check files "{unzipped_direc
 This file gives an idea of what is going to happen when `dry_run=False`.
 
 
-See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-theia_preprocess)
+See detailed documentation on the [site](../../../cli.md#fordead-theia_preprocess)

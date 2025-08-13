@@ -43,4 +43,4 @@ This step can also be ran from the command prompt.
 ```bash
 fordead extract_cloudiness [OPTIONS]
 ```
-See detailed documentation for the command line prompt [here](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-extract_cloudiness)
+See detailed documentation for the command line prompt [here](../../../cli.md#fordead-extract_cloudiness)

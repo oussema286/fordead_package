@@ -62,7 +62,7 @@ compute_forest_mask(data_directory)
 fordead forest_mask [OPTIONS]
 ```
 
-See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-forest_mask)
+See detailed documentation on the [site](../../cli.md#fordead-forest_mask)
 
 ## How it works
 

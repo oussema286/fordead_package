@@ -44,7 +44,7 @@ dieback_detection(data_directory = <data_directory>)
 ```bash
 fordead dieback_detection [OPTIONS]
 ```
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-dieback_detection)
+Voir documentation détaillée sur le [site](../../cli.md#fordead-dieback_detection)
 
 ## Détail du fonctionnement
 

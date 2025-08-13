@@ -35,7 +35,7 @@ preprocess_obs(obs_path = <obs_path>, export_path = <export_path>, name_column =
 fordead preprocess_obs [OPTIONS]
 ```
 
-See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-preprocess_obs)
+See detailed documentation on the [site](../../../cli.md#fordead-preprocess_obs)
 
 ## How it works
 

@@ -42,7 +42,7 @@ dieback_detection(data_directory = <data_directory>)
 ```bash
 fordead dieback_detection [OPTIONS]
 ```
-See detailed documentation on the [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-dieback_detection)
+See detailed documentation on the [site](../../cli.md#fordead-dieback_detection)
 
 ## How it works
 

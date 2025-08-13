@@ -47,7 +47,7 @@ export_results(
 fordead export_results [OPTIONS]
 ```
 
-Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_package/docs/cli/#fordead-export_results)
+Voir documentation détaillée sur le [site](../../cli.md#fordead-export_results)
 
 ## Détail du fonctionnement
 
