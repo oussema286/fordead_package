@@ -1,4 +1,7 @@
- <div align="center"> Detection of FORest DEgradation And Dieback with the package _fordead_ </div>
+---
+title: Introduction
+---
+# <div align="center"> Detection of FORest DEgradation And Dieback with the package _fordead_ </div>
 
 This tutorial introduces the main functionalities of the package _fordead_  (FORest Degradation And Dieback). 
 _fordead_ is a python package initially developed to detect anomalies in seasonality induced by bark beetle outbreaks on spruce forests from Sentinel-2 time series.

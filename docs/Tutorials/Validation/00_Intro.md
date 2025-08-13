@@ -1,3 +1,7 @@
+---
+title: Introduction
+---
+
 # <div align="center"> Validation of the detections from observations </div>
 
 This tutorial illustrates how to use the calibration / validation module (CALVAL) in order to apply _fordead_ on a set of geolocated spatial entities defined in a vector layer. 
