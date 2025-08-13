@@ -61,7 +61,7 @@ The coefficients of the vegetation index prediction model are imported, as well 
 #### Import of the calculated vegetation index and the mask
 > **_Functions used:_** [import_masked_vi()][fordead.import_data.import_masked_vi]
 
-### (OPTIONAL - if **correct_vi** is True in [previous model calculation step](https://fordead.gitlab.io/fordead_package/docs/user_guides/03_train_model/) Correction of the vegetation index using the median vegetation index of the unmasked pixels of interest across the entire area
+### (OPTIONAL - if **correct_vi** is True in [previous model calculation step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/) Correction of the vegetation index using the median vegetation index of the unmasked pixels of interest across the entire area
 - Masking of the pixels not belonging to the area of interest, or masked
 - Calculation of the median vegetation index on the remaining pixels of the whole area
 - Calculation of a correction term, by difference between the calculated median and the prediction of the model calculated during the previous step from the median calculated for all the dates
