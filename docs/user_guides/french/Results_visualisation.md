@@ -31,7 +31,7 @@ Le slider permet de se déplacer temporellement de date SENTINEL en date SENTINE
 L'image correspond aux bandes RGB des données SENTINEL
 Les résultats apparaissent sous forme de polygones :
 - Le déperissement détecté apparait en blanc, ou du blanc au rouge selon la classe de confiance si **show_confidence_class** vaut True.
-Si la détection inclu la détection de sol nu (see [01_compute_masked_vegetationindex](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/01_compute_masked_vegetation_index/)) :
+Si la détection inclu la détection de sol nu (see [01_compute_masked_vegetationindex](01_compute_masked_vegetation_index.md)) :
 - Polygones noirs : sol nu
 - Polygones bleus : zones détectées comme coupe sanitaire (zones détectées comme sol-nu après avoir été détectées comme dépérissantes)
 

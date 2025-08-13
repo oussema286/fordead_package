@@ -11,7 +11,7 @@ The input parameters are :
 - **sentinel_source** :  Can be either 'Planetary', in which case data is downloaded from Microsoft Planetary Computer stac catalogs, or the path of the directory containing Sentinel-2 data.
 - **export_path** : The path to write csv file with extracted reflectance.
 - **name_column** *(optional)* : The name of the ID column. The default is "id".
-- **cloudiness_path** *(optional)* : Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](./03_extract_cloudiness/). Can be ignored if sentinel_source is 'Planetary'
+- **cloudiness_path** *(optional)* : Path of a csv with the columns 'area_name','Date' and 'cloudiness', can be calculated by the [extract_cloudiness function](03_extract_cloudiness.md). Can be ignored if sentinel_source is 'Planetary'
 - **lim_perc_cloud**  *(optional)* : Maximum cloudiness at the tile scale, used to filter used SENTINEL dates. Between 0 and 1.
 - **bands_to_extract** *(optional)* : List of bands to extract (ex : ["B1","B8A","Mask"]) The "Mask" band corresponds to "CLM" for THEIA data, and "SCL" for Planetary.
 - **tile_selection** *(optional)* : List of tiles from which to extract reflectance (ex : ["T31UFQ", "T31UGQ"]). If None, all tiles are extracted.
