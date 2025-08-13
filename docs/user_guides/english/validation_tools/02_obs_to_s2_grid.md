@@ -61,30 +61,30 @@ The vector file at **obs_path** is imported using the geopandas package.
 	- The extent of Sentinel-2 tiles are extracted from the full collection and converted to a GeoDataFrame 
 - Each GeoDataFrame is given the attributes *area_name* and *epsg*, corresponding to the name of the directory containing the tile data, and the epsg of the tile.
 - All GeoDataFrames are concatenated
- > **_Function used:_** [get_polygons_from_sentinel_dirs()](docs/API_Reference/fordead/reflectance_extraction/#get_polygons_from_sentinel_dirs)
+ > **_Function used:_** [get_polygons_from_sentinel_dirs()][fordead.reflectance_extraction.get_polygons_from_sentinel_dirs]
 #### If sentinel_source is "Planetary"
 - An item collection is retrieved from Microsoft Planetary Computer
 - The tile corners are extracted from the item collection geometries and converted to a GeoDataFrame with the attributes *area_name* and *epsg*.
- > **_Functions used:_** [get_harmonized_planetary_collection()](docs/API_Reference/fordead/stac/stac_module/#get_harmonized_planetary_collection), [get_polygons_from_sentinel_planetComp()](docs/API_Reference/fordead/reflectance_extraction/#get_polygons_from_sentinel_planetComp)
+ > **_Functions used:_** [get_harmonized_planetary_collection()][fordead.stac.stac_module.get_harmonized_planetary_collection], [get_polygons_from_sentinel_planetComp()][fordead.stac.stac_module.get_polygons_from_sentinel_planetComp]
 
 ### If vector file at **obs_path** contains points :
  - Observation points are intersected with the Sentinel-2 tiles extent vector, transferring the attributes *area_name* and *epsg*
  - An *id_pixel* column is added and filled with 0 so the resulting vector can be used in the [export_reflectance](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/04_extract_reflectance/) function.
  - Points outside of available Sentinel-2 tiles are detected and their IDs are printed.
- > **_Function used:_** [get_sen_intersection_points()](docs/API_Reference/fordead/reflectance_extraction/#get_sen_intersection_points)
+ > **_Function used:_** [process_points()][fordead.reflectance_extraction.process_points]
 
 ### If vector file at **obs_path** contains polygons :
 
 #### Matching observation polygons with Sentinel-2 tiles
 - Observation polygons are overlaid with the Sentinel-2 tiles extent vector, transferring the 'area_name' and 'epsg' columns corresponding to the name of the tile, and the projection system respectively
 - Observation polygons which are not contained in a Sentinel-2 tile are removed, their IDs are printed to the console.
-> **_Function used:_** [get_sen_intersection()](docs/API_Reference/fordead/reflectance_extraction/#get_sen_intersection)
+> **_Function used:_** [get_sen_obs_intersection()][fordead.reflectance_extraction.get_sen_obs_intersection]
 
 #### Generating points for pixels inside the polygons
 - For each polygon, points are generated in a grid corresponding to the centroids of Sentinel-2 pixels inside the polygon.
 - They are given the attributes
 - Polygons with no pixels centroids inside of them have their IDs printed to the console.
- > **_Function used:_** [polygons_to_grid_points()](docs/API_Reference/fordead/reflectance_extraction/#polygons_to_grid_points)
+ > **_Function used:_** [polygons_to_grid_points()][fordead.reflectance_extraction.polygons_to_grid_points]
  
 ###  Exporting the resulting the vector file
 The resulting points are exported to **export_path**.

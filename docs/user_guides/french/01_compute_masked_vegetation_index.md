@@ -10,7 +10,7 @@ Les paramètres en entrée sont :
 - **sentinel_source** : Source des données parmi 'THEIA' et 'Scihub' et 'PEPS'
 - **apply_source_mask** : Si True, le masque du fournisseur est également utilisé pour masquer les données
 - **soil_detection** : Si True, le sol nu est détecté et utilisé comme masque, mais le processus peut ne pas être adapté à des situations autre qu'en utilisant les données THEIA sur des forêts résineuses de France métropolitaine. Si False, le masque de formula_mask est appliqué.
-- **formula_mask** : formule dont le résultat est binaire, format décrit [ici](docs/API_Reference/fordead/masking_vi/#compute_vegetation_index). N'est utilisé que si soil_detection vaut False.
+- **formula_mask** : formule dont le résultat est binaire, format décrit [ici][fordead.masking_vi.compute_vegetation_index]. N'est utilisé que si soil_detection vaut False.
 - **vi** : Indice de végétation utilisé, peut être un des indices prévus dans le package (CRSWIR, NDVI, NDWI), ou n'importe quel indice spectral déterminé par l'utilisateur à partir du paramètre path_dict_vi
 - **ignored_period** : Période de l'année dont les dates Sentinel sont ignorées (liste de deux dates au format "MM-DD" (ex : ["11-01","05-01"]).
 - **extent_shape_path** : Chemin d'un shapefile contenant un polygone utilisé pour restreindre les calculs à une zone. Si non renseigné, le calcul est appliqué à l'ensemble de la tuile
@@ -52,21 +52,21 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des résultats précédents, suppression des résultats obsolètes 
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Ainsi, à moins que les paramètres aient été modifiés, uniquement les calculs suivants sont uniquement réalisés sur les nouvelles dates SENTINEL.
-> **_Fonctions utilisées :_** [TileInfo()](docs/API_Reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](docs/API_Reference/fordead/import_data/#import_info), [add_parameters()](docs/API_Reference/fordead/import_data/#add_parameters), [delete_dirs()](docs/API_Reference/fordead/import_data/#delete_dirs)
+> **_Fonctions utilisées :_** [TileInfo()][fordead.import_data.TileInfo], méthodes de la classe TileInfo [import_info()][fordead.import_data.TileInfo.import_info], [add_parameters()][fordead.import_data.TileInfo.add_parameters], [delete_dirs()][fordead.import_data.TileInfo.delete_dirs]
 
 ### Filtre des dates trop ennuagées
 L'ennuagement de chaque date SENTINEL est calculé à partir du masque fournisseur.
-> **_Fonctions utilisées :_** [get_cloudiness()](docs/API_Reference/fordead/import_data/#get_cloudiness), [get_date_cloudiness_perc()](docs/API_Reference/fordead/import_data/#get_date_cloudiness_perc)
+> **_Fonctions utilisées :_** [get_cloudiness()][fordead.import_data.get_cloudiness], [get_date_cloudiness_perc()][fordead.import_data.get_date_cloudiness_perc]
 
 On utilise ensuite uniquement les nouvelles dates dans le dossier **input_directory** dont l'ennuagement est inférieur à **lim_perc_cloud**.
 
 ### Import et ré-échantillonage des données SENTINEL
  - Les bandes d'intérêts de ces dates sont importées et ré-échantillonnées à 10m 
-> **_Fonctions utilisées :_** [import_resampled_sen_stack()](docs/API_Reference/fordead/import_data/#import_resampled_sen_stack)
+> **_Fonctions utilisées :_** [import_resampled_sen_stack()][fordead.import_data.import_resampled_sen_stack]
 
 ### Calcul de l'indice de végétation
-L'indice de végétation choisi est calculé à partir des indices et formules déjà prévues dans le package, ou ajoutées à partir d'un fichier texte au chemin indiqué par le paramètre **path_dict_vi** (voir [get_dict_vi](docs/API_Reference/fordead/masking_vi/#get_dict_vi).
- > **_Fonctions utilisées :_** [compute_vegetation_index()](docs/API_Reference/fordead/masking_vi/#compute_vegetation_index)
+L'indice de végétation choisi est calculé à partir des indices et formules déjà prévues dans le package, ou ajoutées à partir d'un fichier texte au chemin indiqué par le paramètre **path_dict_vi** (voir [get_dict_vi][fordead.masking_vi.get_dict_vi].
+ > **_Fonctions utilisées :_** [compute_vegetation_index()][fordead.masking_vi.compute_vegetation_index]
 Les valeurs invalides (division par zero...) sont mises à 0.
 
 ### Création du masque 
@@ -79,26 +79,26 @@ Les masques suivants sont calculés :
 - Les données invalides dans l'indice de végétation sont également masquées
 
 - Si **apply_source_mask** vaut True, le masque fournisseur est également appliqué.
- > **_Fonctions utilisées :_** [get_source_mask()](docs/API_Reference/fordead/masking_vi/#get_source_mask)
+ > **_Fonctions utilisées :_** [get_source_mask()][fordead.masking_vi.get_source_mask]
  
 Le reste du processus est différent selon le mode de calcul de masque choisi, soit soil_detection vaut True, auquel cas le masque inclu une détection du sol nu qui peut ne pas être adaptée selon les situations et la source de données Sentinel-2.
 #### Si soil_detection vaut True
 Le masque pour chaque date est complété selon trois étapes :
- > **_Fonctions utilisées :_** [compute_masks()](docs/API_Reference/fordead/masking_vi/#compute_masks)
+ > **_Fonctions utilisées :_** [compute_masks()][fordead.masking_vi.compute_masks]
 
 ##### Création de pré-masques
 Détection d'anomalies de sol : (B11 > 1250) ET (B2 < 600) ET ((B3 + B4) > 800)
 Invalides : aggregation des ombres, hors fauchée et nuages très marqués (B2 >= 600)
- > **_Fonctions utilisées :_** [get_pre_masks()](docs/API_Reference/fordead/masking_vi/#get_pre_masks)
+ > **_Fonctions utilisées :_** [get_pre_masks()][fordead.masking_vi.get_pre_masks]
 
 ##### Détection du sol nu
 Trois dates consécutives avec anomalies de sol (soil_anomaly vaut True) sans compter dates invalides (invalid vaut True)
- > **_Fonctions utilisées :_** [detect_soil()](docs/API_Reference/fordead/masking_vi/#detect_soil)
+ > **_Fonctions utilisées :_** [detect_soil()][fordead.masking_vi.detect_soil]
 
 ##### Détection des nuages
 Pour détecter les nuages, on prend l'ensemble des nuages bien marqués (B2 > 700)
 On ajoute les voiles nuages plus fins $`\frac{B3}{B8A+B4+B3} >0.15`$ ET $`B2 >400`$ en retirant les pixels détectés comme sol nu ou anomalie de sol avec lesquels il peut y avoir confusion. Puis on opére une dilation de trois pixels pour récupérer les bords des nuages.
- > **_Fonctions utilisées :_** [detect_clouds()](docs/API_Reference/fordead/masking_vi/#detect_clouds)
+ > **_Fonctions utilisées :_** [detect_clouds()][fordead.masking_vi.detect_clouds]
 
 ##### Aggrégation des masques
 Aggrégation des ombres, des nuages, des pixels hors de la fauchée, du sol nu, des anomalies de sol nu.
@@ -106,8 +106,8 @@ Aggrégation des ombres, des nuages, des pixels hors de la fauchée, du sol nu, 
 #### Si soil_detection vaut False
 Le masque défini par l'utilisateur par le paramètre **formula_mask** est alors ajouté aux masques par défaut. 
 Cette formule doit être une opération logique impliquant les bandes Sentinel-2 (ex : `"B2 > 600"`). Elle peut également prendre en compte des opérateurs logiques OU (`|`), ET (`&`) et NON (`~`) (ex : `"(B2 > 600) & (B11 > 1000) | ~(B3 <= 500)"`)
- > **_Fonctions utilisées :_** [compute_user_mask()](docs/API_Reference/fordead/masking_vi/#compute_user_mask), [compute_vegetation_index()](docs/API_Reference/fordead/masking_vi/#compute_vegetation_index)
+ > **_Fonctions utilisées :_** [compute_user_mask()][fordead.masking_vi.compute_user_mask], [compute_vegetation_index()][fordead.masking_vi.compute_vegetation_index]
 
 ### Ecriture des résultats
 Les indices de végétations, masques et données de détection du sol sont écrits. L'ensemble des paramètres, chemins des données et dates utilisées sont aussi sauvegardés.
- > **_Fonctions utilisées :_** [write_tif()](docs/API_Reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](docs/API_Reference/fordead/import_data/#save_info)
+ > **_Fonctions utilisées :_** [write_tif()][fordead.writing_data.write_tif], méthode TileInfo [save_info()][fordead.import_data.TileInfo.save_info]

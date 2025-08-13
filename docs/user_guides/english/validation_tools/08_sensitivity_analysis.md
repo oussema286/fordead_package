@@ -3,7 +3,7 @@ Allows the testing of many parameter combinations, running three detection steps
 
 A 'test_info.csv' is written in 'testing_directory', where each test_id is associated with the value of all parameters used in the iteration.
 
-![sensitivity_analysis](Figures/sensitivity_analysis.png "sensitivity_analysis")
+![sensitivity_analysis](../../../Tutorials/Validation/Figures/sensitivity_analysis.png "sensitivity_analysis")
 
 ----------
 ## INPUT PARAMETERS
@@ -11,7 +11,7 @@ A 'test_info.csv' is written in 'testing_directory', where each test_id is assoc
 
 - testing_directory : *str* : Directory where the results will be exported.
 - reflectance_path : *str* : Path of the csv file with extracted reflectance.
-- args_to_test : *dict or str* : Either a dict where each key is any argument to functions mask_vi_from_dataframe, train_model_from_dataframe or dieback_detection_from_dataframe, and the values are list of values to test. All combinations will be tested.If a str is given, it is interpreted as the path to a text file where each line begins parameter name, then each value is separated with a space. See an example [here](https://gitlab.com/fordead/fordead_package/-/blob/master/docs/examples/ex_dict_vi.txt)
+- args_to_test : *dict or str* : Either a dict where each key is any argument to functions mask_vi_from_dataframe, train_model_from_dataframe or dieback_detection_from_dataframe, and the values are list of values to test. All combinations will be tested.If a str is given, it is interpreted as the path to a text file where each line begins parameter name, then each value is separated with a space. See an example [here](../../../examples/ex_dict_vi.txt)
 - cloudiness_path : *str*, optional : Path of a csv with the columns 'area_name','Date' and 'cloudiness' used to filter acquisitions, can be calculated by the [extract_cloudiness function](../03_dieback_detection.md). Not used if None.
 - update_masked_vi : *bool*, optional : If True, updates the csv containing the vegetation for each acquisition with the columns 'period_id', 'state', 'predicted_vi', 'diff_vi' and 'anomaly'. Doesn't apply if 'overwrite = True'. The default is False.
 - name_column : *str*, optional : The default is "id".
@@ -68,4 +68,4 @@ This step can also be ran from the command prompt.
 ```bash
 fordead sensitivity_analysis [OPTIONS]
 ```
-See detailed documentation for the command line prompt [here](../../../../cli/#fordead-sensitivity_analysis)
+See detailed documentation for the command line [here][fordead-sensitivity_analysis]

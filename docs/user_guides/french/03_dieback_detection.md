@@ -52,40 +52,40 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, l'ensemble des résultats à partir de cette étape sont supprimés. Ainsi, à moins que les paramètres aient été modifiés ou que ce soit la première fois que ce traitement est réalisé, la détection du dépérissement est mise à jour uniquement avec les nouvelles dates SENTINEL.
-> **_Fonctions utilisées :_** [TileInfo()](docs/API_Reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](docs/API_Reference/fordead/import_data/#import_info), [add_parameters()](docs/API_Reference/fordead/import_data/#add_parameters), [delete_dirs()](docs/API_Reference/fordead/import_data/#delete_dirs)
+> **_Fonctions utilisées :_** [TileInfo()][fordead.import_data.TileInfo], méthodes de la classe TileInfo [import_info()][fordead.import_data.TileInfo.import_info], [add_parameters()][fordead.import_data.TileInfo.add_parameters], [delete_dirs()][fordead.import_data.TileInfo.delete_dirs]
 
 ### Imports des résultats des étapes précédentes
 Les coefficients du modèle de prédiction de l'indice de végétation sont importés, ainsi que l'array contenant l'index de la première date utilisée pour la détection. Les arrays contenant les informations liées à la détection de déperissement (État des pixels, nombre d'anomalies successives, index de la date de première anomalie) sont initialisés si l'étape est utilisée pour la première fois, ou importés si il s'agit d'une mise à jour de la détection.
-> **_Fonctions utilisées :_** [import_coeff_model()](docs/API_Reference/fordead/import_data/#import_coeff_model), [import_first_detection_date_index()](docs/API_Reference/fordead/import_data/#import_first_detection_date_index), [initialize_dieback_data()](docs/API_Reference/fordead/import_data/#initialize_dieback_data), [import_dieback_data()](docs/API_Reference/fordead/import_data/#import_dieback_data)
+> **_Fonctions utilisées :_** [import_coeff_model()][fordead.import_data.import_coeff_model], [import_first_detection_date_index()][fordead.import_data.import_first_detection_date_index], [initialize_dieback_data()][fordead.import_data.initialize_dieback_data], [import_dieback_data()][fordead.import_data.import_dieback_data]
 
 ### Pour chaque date non déjà utilisée pour la détection du dépérissement :
 
 #### Imports de l'indice de végétation calculé et du masque
-> **_Fonctions utilisées :_** [import_masked_vi()](docs/API_Reference/fordead/import_data/#import_masked_vi)
+> **_Fonctions utilisées :_** [import_masked_vi()][fordead.import_data.import_masked_vi]
 
 ### (OPTIONNEL - si **correct_vi** vaut True lors de [l'étape précédente de calcul du modèle](https://fordead.gitlab.io/fordead_package/docs/user_guides/03_train_model/) Correction de l'indice de végétation à partir de l'indice de végétation médian des pixels d'intérêts non masqués à l'échelle de la zone complète
 - Masquage des pixels n'appartenant pas à la zone d'intérêt, ou masqués
 - Calcul de la médiane de l'indice de végétation de l'ensemble de la zone
 - Calcul d'un terme de correction, par différence entre la médiane calculée et la prédiction du modèle calculé lors de l'étape précédente à partir de la médiane calculée pour l'ensemble des dates
 - Application du terme de correction en l'ajoutant à la valeur de l'indice de végétation de l'ensemble des pixels
-> **_Fonctions utilisées :_** [correct_vi_date()](docs/API_Reference/fordead/model_vegetation_index/#correct_vi_date)
+> **_Fonctions utilisées :_** [correct_vi_date()][fordead.model_vegetation_index.correct_vi_date]
 
 #### Prédiction de l'indice de végétation à la date donnée.
 L'indice de végétation est prédit à partir des coefficients du modèle.
-> **_Fonctions utilisées :_** [prediction_vegetation_index()](docs/API_Reference/fordead/dieback_detection/#prediction_vegetation_index)
+> **_Fonctions utilisées :_** [prediction_vegetation_index()][fordead.model_vegetation_index.prediction_vegetation_index]
 
 #### Détection d'anomalies
 Les anomalies sont détectées en comparant l'indice de végétation avec sa prédiction. Sachant si l'indice de végétation est supposé augmenter ou diminuer en cas de déperissement, les anomalies sont détectées là où la différence entre l'indice et sa prédiction est superieure à **threshold_anomaly** dans la direction du changement attendu en cas de déperissement.
-> **_Fonctions utilisées :_** [detection_anomalies()](docs/API_Reference/fordead/dieback_detection/#detection_anomalies)
+> **_Fonctions utilisées :_** [detection_anomalies()][fordead.dieback_detection.detection_anomalies]
 
 #### Détection du dépérissement
 Les anomalies successives sont comptées, à partir de trois anomalies successives, le pixel est considéré dépérissant. Si le pixel est considéré dépérissant, les dates successives sans anomalies sont comptées et à partir de trois dates sans anomalies, le pixel n'est plus considéré dépérissant.
-> **_Fonctions utilisées :_** [detection_dieback()](docs/API_Reference/fordead/dieback_detection/#detection_dieback)
+> **_Fonctions utilisées :_** [detection_dieback()][fordead.dieback_detection.detection_dieback]
 
 #### Sauvegarde des informations sur les périodes de stress (OPTIONNEL, si stress_index_mode est renseigné)
 Les rasters contenant les informations sur les périodes de stress sont mis à jour, le nombre de périodes de stress est mis à jour lorsque les pixels reviennent à la normale. Lorsque les changements d'état sont confirmés, la première date d'anomalie ou de retour à la normale est sauvegardée. Pour chaque date, le nombre de dates dans les périodes de stress est mis à jour si le pixel n'est pas masqué et en période de stress.
 La différence entre l'indice de végétation et sa prédiction est ajoutée au raster cum_diff_stress, après avoir été multipliée par le numéro de la date si stress_index_mode est "weighted_mean".
-**_Fonctions utilisées:_** [save_stress()](docs/API_Reference/fordead/dieback_detection/#save_stress)
+**_Fonctions utilisées:_** [save_stress()][fordead.dieback_detection.save_stress]
 
 ### Création d'un masque pour les pixels subissant un nombre trop élevé de périodes de stress
 Le nombre de périodes de stress pour chaque pixel est comparé au paramètre **max_nb_stress_periods**, ce qui donne le masque too_many_stress_periods_mask.
@@ -97,5 +97,5 @@ Si stress_index_mode est "weighted_mean", le raster stress index est le raster c
 
  ### Ecriture des résultats
 Les informations liées à la détection du dépérissement et les périodes de stress sont écrites. L'ensemble des paramètres, chemins des données et dates utilisées sont aussi sauvegardés.
- > **_Fonctions utilisées :_** [write_tif()](docs/API_Reference/fordead/writing_data/#write_tif), méthode TileInfo [save_info()](docs/API_Reference/fordead/import_data/#save_info)
+ > **_Fonctions utilisées :_** [write_tif()][fordead.writing_data.write_tif], méthode TileInfo [save_info()][fordead.import_data.TileInfo.save_info]
 

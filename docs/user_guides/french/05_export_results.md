@@ -55,24 +55,24 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Les informations relatives aux traitements précédents sont importés (paramètres, chemins des données, dates utilisées...) afin de pouvoir importer l'ensemble des résultats.
-> **_Fonctions utilisées :_** [TileInfo()](docs/API_Reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](docs/API_Reference/fordead/import_data/#import_info)
+> **_Fonctions utilisées :_** [TileInfo()][fordead.import_data.TileInfo], méthodes de la classe TileInfo [import_info()][fordead.import_data.TileInfo.import_info]
 
 ### Import des résultats de la détection 
 Les résultats des étapes précedentes sont importées.
-> **_Fonctions utilisées :_** [import_soil_data()](docs/API_Reference/fordead/import_data/#import_soil_data), [import_dieback_data()](docs/API_Reference/fordead/import_data/#import_dieback_data), [import_binary_raster()](docs/API_Reference/fordead/import_data/#import_binary_raster)
+> **_Fonctions utilisées :_** [import_soil_data()][fordead.import_data.import_soil_data], [import_dieback_data()][fordead.import_data.import_dieback_data], [import_binary_raster()][fordead.import_data.import_binary_raster]
 
 ### Détermination des périodes pour aggréger les résultats
 Les résultats seront donné par aggrégation selon la période à laquelle surviennent les premières anomalies à la fois pour la détection de sol et de déperissement. Ces périodes sont déterminées à partir de la fréquence indiquée par le paramètre **frequency**, la date de début **start_date** et la date de fin **end_date**. Les périodes avant la première date SENTINEL utilisée, ou après la dernière, si elles existent, sont retirées puisqu'elles ne peuvent correspondre à aucun résultat.
-> **_Fonctions utilisées :_** [get_bins()](docs/API_Reference/fordead/writing_data/#get_bins)
+> **_Fonctions utilisées :_** [get_bins()][fordead.writing_data.get_bins]
 
 ### Conversion des dates de premières anomalies en nombre de jours depuis 2015-01-01
 Les dates de premières anomalies, stockées sous forme d'index parmi les dates utilisées, sont converties en nombre de jours depuis un jour de référence "2015-01-01" correspondant au lancement du premier satellite SENTINEL-2. Ainsi ces dates peuvent être comparées avec les limites des périodes déterminées précedemment.
-> **_Fonctions utilisées :_** [convert_dateindex_to_datenumber()](docs/API_Reference/fordead/writing_data/#convert_dateindex_to_datenumber)
+> **_Fonctions utilisées :_** [convert_dateindex_to_datenumber()][fordead.writing_data.convert_dateindex_to_datenumber]
 
 ### Si export en plusieurs fichiers :
 - Pour chaque période, il est vérifié si le pixel a sa première anomalie avant la fin de la période. On obtient ainsi l'information pour chaque pixel "Sain", ou "Atteint" si **export_soil** vaut False, ou "Sain", "Atteint", "Coupe", Coupe sanitaire" sinon. 
 - Cette information est vectorisée en utilisant uniquement la zone étudiée (au sein du masque forêt et disposant d'assez de dates valides pour modéliser l'indice de végétation). Les pixels sains sont également ignorés.
-> **_Fonctions utilisées :_** [get_state_at_date()](docs/API_Reference/fordead/writing_data/#get_state_at_date)
+> **_Fonctions utilisées :_** [get_state_at_date()][fordead.writing_data.get_state_at_date]
 - Ce vecteur est écrit pour chacune des périodes en utilisant comme nom de fichier la date limite de la fin de la période.
 
 ## Si export en un seul fichier :
@@ -82,7 +82,7 @@ Les dates de premières anomalies, stockées sous forme d'index parmi les dates 
 - Les résultats périodiques sont intersectés par union avec le vecteur ainsi obtenu. Les polygones détectés comme anomalies confirmées sans classe de confiance ne peuvent provenir que de la détection de sol nu si celle-ci est activée, ces polygones prennent donc la classe "Sol nu".
 - Le vecteur résultant est écrit dans un fichier vectoriel unique où les polygones contiennent la période à laquelle la première anomalie a été détectée, et éventuellement la classe de confiance.
 - S'il est calculé, l'indice de confiance est également écrit dans un fichier raster.
-> **_Fonctions utilisées :_** [get_periodic_results_as_shapefile()](docs/API_Reference/fordead/writing_data/#get_periodic_results_as_shapefile), [union_confidence_class()](docs/API_Reference/fordead/writing_data/#union_confidence_class), [vectorizing_confidence_class](docs/API_Reference/fordead/writing_data/#vectorizing_confidence_class)
+> **_Fonctions utilisées :_** [get_periodic_results_as_shapefile()][fordead.writing_data.get_periodic_results_as_shapefile], [union_confidence_class()][fordead.writing_data.union_confidence_class], [vectorizing_confidence_class][fordead.writing_data.vectorizing_confidence_class]
 
 Si **export_soil** vaut True, la même opération est réalisée en utilisant les résultats de la détection de sol nu et les résultats sont écrits dans un second fichier vectoriel.
 

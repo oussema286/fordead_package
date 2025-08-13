@@ -44,4 +44,4 @@ For each test, a directory is created whose name is the ID of the test. Inside e
 
 A "test_info.csv" file is also written, where each test_id is associated with the value of all parameters used in the iteration : 
 
-![test_info](test_info.jpg "test_info")
+![test_info](Figures/test_info.jpg "test_info")

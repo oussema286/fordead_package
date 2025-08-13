@@ -43,10 +43,10 @@ Voir documentation détaillée sur le [site](https://fordead.gitlab.io/fordead_p
 
 ### Imports des informations sur les traitements précédents et suppression des résultats obsolètes si existants
 Avant tout, si la chaîne de traitement a déjà été utilisée sur la zone, les informations relatives à ces calculs sont importés (paramètres, chemins des données, dates utilisées...). Si les paramètres utilisés ont été modifiés, les résultats des calculs antérieurs sont supprimés et recalculés avec les nouveaux paramètres. Il est possible de commencer le traitement à cette étape si des indices de végétations et masques ont déjà été calculés pour chaque date.
-> **_Fonctions utilisées :_** [TileInfo()](docs/API_Reference/fordead/import_data/#tileinfo), méthodes de la classe TileInfo [import_info()](docs/API_Reference/fordead/import_data/#import_info), [add_parameters()](docs/API_Reference/fordead/import_data/#add_parameters), [delete_dirs()](docs/API_Reference/fordead/import_data/#delete_dirs)
+> **_Fonctions utilisées :_** [TileInfo()][fordead.import_data.TileInfo], méthodes de la classe TileInfo [import_info()][fordead.import_data.TileInfo.import_info], [add_parameters()][fordead.import_data.TileInfo.add_parameters], [delete_dirs()][fordead.import_data.TileInfo.delete_dirs]
 
 ### Import de l'ensemble des données d'indices de végétation et masques jusqu'à **min_last_date_training**
-> **_Fonctions utilisées :_** [import_stackedmaskedVI()](docs/API_Reference/fordead/import_data/#import_stackedmaskedvi)
+> **_Fonctions utilisées :_** [import_stackedmaskedVI()][fordead.import_data.import_stackedmaskedVI]
 
 ### (OPTIONNEL - si **correct_vi** vaut True) Correction de l'indice de végétation à partir de l'indice de végétation médian des pixels d'intérêts non masqués à l'échelle de la zone complète
 - Masquage des pixels n'appartenant pas à la zone d'intérêt, ou masqués
@@ -54,11 +54,11 @@ Avant tout, si la chaîne de traitement a déjà été utilisée sur la zone, le
 - Ajustement d'un modèle harmonique sur ces médianes, ce modèle doit donc rendre compte du comportement normal de l'indice de végétation sur l'ensemble des peuplements d'intérêt de la zone.
 - Calcul d'un terme de correction pour chaque date, par différence entre la prédiction du modèle à la date donnée et la médiane calculée correspondante
 - Application des termes de corrections de chaque date en l'ajoutant à la valeur de l'indice de végétation de l'ensemble des pixels de la date.
-> **_Fonctions utilisées :_** [model_vi_correction()](docs/API_Reference/fordead/model_vegetation_index/#model_vi_correction)
+> **_Fonctions utilisées :_** [model_vi_correction()][fordead.model_vegetation_index.model_vi_correction]
 
 ### Détermination des dates utilisées pour l'apprentissage
 La date de début de détection peut être différent entre chaque pixels. Pour chaque pixel, l'apprentissage du modèle doit se faire sur au moins **nb_min_date** dates, et au moins sur l'ensemble des dates antérieures à **min_last_date_training**. Si il n'y a pas au moins **nb_min_date** à la date **max_last_date_training**, le pixel est abandonné. Cela permet de commencer la détection au plus tôt si cela est possible, tout en conservant un maximum de pixels en permettant un début de détection plus tardif sur les zones avec moins de dates valides.
-> **_Fonctions utilisées :_** [get_detection_dates()](docs/API_Reference/fordead/model_vegetation_index/#get_detection_dates)
+> **_Fonctions utilisées :_** [get_detection_dates()][fordead.model_vegetation_index.get_detection_dates]
 
 ### Modélisation du comportement de l'indice de végétation
 Pour chaque pixel, un modèle est ajusté sur les dates d'apprentissage. Le modèle utilisé est le suivant :
@@ -66,8 +66,8 @@ Pour chaque pixel, un modèle est ajusté sur les dates d'apprentissage. Le mod�
 a1 + b1\sin{\frac{2\pi t}{T}} + b2\cos{\frac{2\pi t}{T}} + b3\sin{\frac{4\pi t}{T}} + b4\cos{\frac{4\pi t}{T}}
 ```
 Cette étape consiste à déterminer les coefficients a1, b1, b2, b3 et b4 pour chaque pixel.
-> **_Fonctions utilisées :_** [model_vi()](docs/API_Reference/fordead/model_vegetation_index/#model_vi)
+> **_Fonctions utilisées :_** [model_vi()][fordead.model_vegetation_index.model_vi]
 
  ### Ecriture des résultats
 Les coefficients du modèle, l'index de la première date utilisée pour la détection et le masque des pixels valides car ayant suffisamment de dates SENTINEL pour le calcul du modèle sont écrits sous forme de rasters.
- > **_Fonctions utilisées :_** [write_tif()](docs/API_Reference/fordead/writing_data/#write_tif)
+ > **_Fonctions utilisées :_** [write_tif()][fordead.writing_data.write_tif]

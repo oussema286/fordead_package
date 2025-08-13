@@ -43,7 +43,7 @@ Then activate the virtual environment containing all dependencies, and install t
 conda activate fordead
 ```
 
-You can now use all of fordead's [command line functions](../cli/) or run python scripts using fordead functions from there.
+You can now use all of fordead's [command line functions][cli-reference] or run python scripts using fordead functions from there.
 
 When you are done, you can stop the container using `docker stop fordead`.
 If you wish to work using this container again, it is already created and already has fordead installed, and you can simply use :

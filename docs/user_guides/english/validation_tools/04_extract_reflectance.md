@@ -55,14 +55,14 @@ The vector file at **obs_path** is imported using the geopandas package.
 ### Importing already extracted data if it exists
 - If a file already exists at **export_path**, it is imported.
 - If changes in last extraction's number of observations are detected, a message is printed to the console and the user is asked if they want to continue. This can prevent issues in case the user uses the wrong **obs_path** or **export_path** by mistake.
-> **_Function used:_** [get_already_extracted()](docs/API_Reference/fordead/reflectance_extraction/#get_already_extracted)
+> **_Function used:_** [get_already_extracted()][fordead.reflectance_extraction.get_already_extracted]
 
 ### Extracting reflectance from Sentinel-2 data
 - For each Sentinel-2 tile (*area_name*) in observation points
 	- An item collection is created either from Microsoft Planetary Computer, or from local THEIA data depending on **sentinel_source**.
 	-  For each Sentinel-2 acquisition and for each band in **bands_to_extract** list
 		 Reflectance is extracted if it was not already done
-> **_Function used:_** [extract_raster_values()](docs/API_Reference/fordead/reflectance_extraction/#extract_raster_values), [get_harmonized_planetary_collection()](docs/API_Reference/fordead/stac/stac_module/#get_harmonized_planetary_collection), [get_harmonized_theia_collection()](docs/API_Reference/fordead/stac/stac_module/#get_harmonized_theia_collection)
+> **_Function used:_** [extract_raster_values()][fordead.reflectance_extraction.extract_raster_values], [get_harmonized_planetary_collection()][fordead.stac.stac_module.get_harmonized_planetary_collection], [get_harmonized_theia_collection()][fordead.stac.stac_module.get_harmonized_theia_collection]
 
 ### Exporting extracted reflectance
 Extracted reflectance is written at **export_path**. 
