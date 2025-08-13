@@ -299,8 +299,7 @@ def get_harmonized_planetary_collection(start_date, end_date, obs_bbox, lim_perc
 
 def get_harmonized_theiastac_collection(start_date, end_date, obs_bbox, lim_perc_cloud, tile=None, sign=False):
     """
-    Get the planetary item collection with band names
-    and offset harmonized with THEIA format.
+    Get the sentinel2-l2a-theia item collection from CDS THEIA MTD.
 
     Parameters
     ----------
@@ -313,7 +312,8 @@ def get_harmonized_theiastac_collection(start_date, end_date, obs_bbox, lim_perc
     lim_perc_cloud : float
         Max cloud cover between 0 et 1.
     tile : str, optional
-        The name of a single tile used to filter the collection. If None, all tiles are kept in the collection. The default is None.
+        The name of a single tile used to filter the collection.
+        If None, all tiles are kept in the collection. The default is None.
     sign : bool
         Should the collection be signed.
     Returns
@@ -404,6 +404,28 @@ def harmonize_epsg(collection, inplace=False):
         return collection
 
 def get_harmonized_theia_collection(sentinel_source, tile_cloudiness, start_date, end_date, lim_perc_cloud, tile):
+    """
+    Build the S2 L2A item collection from the local Sentinel-2 directory.
+
+    Parameters
+    ----------
+    sentinel_source : str
+        Path to the directory containing Sentinel-2 Theia data.
+    tile_cloudiness : dict
+        tile_cloudiness dictionary from TileInfo with the cloud cover of each image
+    start_date : str
+        Acquisitions before this date are ignored (format : "YYYY-MM-DD")
+    end_date : str
+        Acquisitions after this date are ignored (format : "YYYY-MM-DD")
+    lim_perc_cloud : int
+        Maximum cloud cover (%)
+    tile : str
+        Name of the Sentinel-2 tile (format : "T31UFQ" or "31UFQ").
+
+    Returns
+    -------
+    ItemCollection
+    """
     # lim_cloud_cover = int(lim_perc_cloud*100)
     corresp_keys = {'CLM' : "Mask"}
     
