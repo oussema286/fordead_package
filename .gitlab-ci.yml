@@ -71,7 +71,7 @@ install-linux:
     - merge_requests
     - dev
     - master
-    # - v1
+    - v1
 
 #[![version](https://img.shields.io/badge/dynamic/json.svg?label=version&url=https://gitlab.com/fordead/fordead_package/-/jobs/artifacts/master/raw/badges.json?job=badges&query=version&colorB=blue)](https://gitlab.com/fordead/fordead_package)
 # make-badge:
@@ -121,8 +121,8 @@ pages:
   artifacts:
     paths:
      - public
-  # rules:
-  #   - if: $CI_COMMIT_TAG =~ /^v?[0-9]+\.[0-9]+/
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v?[0-9]+\.[0-9]+/
 
 zenodo:
   stage: deploy

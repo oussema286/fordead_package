@@ -1,6 +1,7 @@
 # v1.11.4
 ## Add
 - CDS MTD as an alternative provider for S2 L2A MAJA data
+- documentation versioning
 
 ## Fix
 - wrong dataframe passed to merged when rm=True
