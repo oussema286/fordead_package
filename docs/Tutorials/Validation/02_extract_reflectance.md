@@ -29,7 +29,7 @@ extract_reflectance(
 
 ```
 
-See complete user guides [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/03_extract_cloudiness) and [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/04_extract_reflectance)
+See complete user guides [here](../../user_guides/english/validation_tools/03_extract_cloudiness.md) and [here](../../user_guides/english/validation_tools/04_extract_reflectance.md)
 
 ### Using Planetary Computer
 
@@ -52,7 +52,7 @@ extract_reflectance(
 
 ```
 
-See complete user guide [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/04_extract_reflectance)
+See complete user guide [here](../../user_guides/english/validation_tools/04_extract_reflectance.md)
 ## Output
 
 The csv written in **export_path** includes the following attributes corresponding to the different pixels : 

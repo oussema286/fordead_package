@@ -15,18 +15,18 @@ Here is the CALVAL module workflow diagram :
 ![workflow_calval](Figures/workflow_calval.png "workflow_calval")
 ## Requirements
 ### Package installation 
-Follow the [installation instruction guide](https://fordead.gitlab.io/fordead_package/docs/Installation/) if relevant. 
+Follow the [installation instruction guide](../../Installation.md) if relevant. 
 Then launch the command prompt and activate the environment with the command `conda activate <environment name>`
 
 ### Downloading the tutorial dataset
 
 This tutorial requires :
 - a vector file including points or polygons with an ID column 
-- a directory containing raster data following the same structure as described in the [main tutorial](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/01_compute_masked_vegetationindex/)
+- a directory containing raster data following the same structure as described in the [main tutorial](../Dieback_Detection/01_compute_masked_vegetationindex.md)
 
 Sentinel-2 acquisitions and spectral bands are then parsed from each subdirectory in order to extract the spectral information corresponding to the points or polygons defined in the vector file for the whole time series.
 
-A reduced dataset is available from the [fordead_data repository](https://gitlab.com/fordead/fordead_data), if you have not already downloaded it for the [dieback detection tutorial](https://fordead.gitlab.io/fordead_package/docs/Tutorials/Dieback_Detection/00_Intro/).
+A reduced dataset is available from the [fordead_data repository](https://gitlab.com/fordead/fordead_data), if you have not already downloaded it for the [dieback detection tutorial](../Dieback_Detection/00_Intro.md).
 The Sentinel-2 data used in this tutorial correspond to the folder ~/sentinel_data/validation_tutorial.
 
 In this tutorial, we used data provided by [THEIA](https://www.theia-land.fr/), but data from other providers ([ESA-Copernicus](https://scihub.copernicus.eu/), [CNES-PEPS](https://peps.cnes.fr/rocket/#/home)) can also be used.

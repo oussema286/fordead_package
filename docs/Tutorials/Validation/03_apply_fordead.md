@@ -44,9 +44,9 @@ dieback_detection_from_dataframe(
 ```
 
 The complete user guides can be found here :
--  [mask_vi_from_dataframe](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/05_compute_masks_and_vegetation_index_from_dataframe)
-- [train_model_from_dataframe](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/06_training_model_from_dataframe)
-- [dieback_detection_from_dataframe](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/07_dieback_detection_from_dataframe)
+-  [mask_vi_from_dataframe](../../user_guides/english/validation_tools/05_compute_masks_and_vegetation_index_from_dataframe.md)
+- [train_model_from_dataframe](../../user_guides/english/validation_tools/06_training_model_from_dataframe.md)
+- [dieback_detection_from_dataframe](../../user_guides/english/validation_tools/07_dieback_detection_from_dataframe.md)
 
 -----
 ### OUTPUT
@@ -69,7 +69,7 @@ There are three resulting files:
 ![masked_vi_updated](Figures/masked_vi_updated.jpg "masked_vi_updated")
 
 
-- In the *periods_path* csv, information at the period level for each pixel. See details [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/07_dieback_detection_from_dataframe).
+- In the *periods_path* csv, information at the period level for each pixel. See details [here](../../user_guides/english/validation_tools/07_dieback_detection_from_dataframe.md).
 
 ![periods_final](Figures/periods_final.jpg "periods_final")
 

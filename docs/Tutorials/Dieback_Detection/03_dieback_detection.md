@@ -25,7 +25,7 @@ This stress index is meant to describe the intensity of detected anomalies in th
 
 ![graph_ind_conf](Figures/graph_ind_conf.jpg "graph_ind_conf")
 
-Comprehensive documentation can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/).
+Comprehensive documentation can be found [here](../../user_guides/english/03_dieback_detection.md).
 
 ##### Running this step using a script
 

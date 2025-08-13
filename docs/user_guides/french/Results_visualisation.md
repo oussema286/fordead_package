@@ -15,7 +15,7 @@ Les paramètres en entrée sont :
 - **vector_display_path** : Optionnel, chemin d'un vecteur à afficher dans le timelapse, peut contenir des points, des lignes et des polygones.
 - **hover_column_list** : String ou liste de strings correspondant aux colonnes du fichier **vector_display_path**, dont les informations seront affichées en plaçant la souris sur ses objects. A utiliser seulement si **vector_display_path** est utilisé
 - **max_date** : Exclut du timelapse l'ensemble des dates Sentinel-2 après cette date (format : "AAAA-MM-JJ"). Par défaut, le timelapse utilise l'ensemble des dates Sentinel-2 disponibles.
-- **show_confidence_class** : Si True, le dépérissement détecté est indiqué avec la classe de confiance, indicative de l'état du pixel à la dernière date utilisée, telle que vectorisé à l'étape [05_export_results](https://fordead.gitlab.io/fordead_package/docs/user_guides/french/05_export_results/)
+- **show_confidence_class** : Si True, le dépérissement détecté est indiqué avec la classe de confiance, indicative de l'état du pixel à la dernière date utilisée, telle que vectorisé à l'étape [05_export_results](05_export_results.md)
 - **zip_results** : Si True, les fichiers html contenant les timelapses sont transférés dans un fichier zip compressé.
 
 Les paramètres indispensables sont **data_directory** ainsi que **shape_path** ou **x** et **y**.

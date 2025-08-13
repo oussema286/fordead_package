@@ -15,7 +15,7 @@ The input parameters are :
 - **vector_display_path** : Optionnal, path of a vector to display in the timelapse, can contain points, lines and polygons.
 - **hover_column_list** : String or list strings corresponding to columns in the **vector_display_path** file, whose information to display when hovering mouse over its objects. To use only if **vector_display_path** is used
 - **max_date** : Exclude from the timelapse all Sentinel-2 dates after this date (format : "YYYY-MM-DD"). By default, the timelapse uses all available Sentinel-2 dates.
-- **show_confidence_class** : If True, detected dieback is shown with the confidence class, indicative of the pixel's state at the last date used, as vectorized in the step [05_export_results](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/05_export_results/)
+- **show_confidence_class** : If True, detected dieback is shown with the confidence class, indicative of the pixel's state at the last date used, as vectorized in the step [05_export_results](05_export_results.md)
 - **zip_results**: If True, the html files containing the timelapses are transferred in a compressed zip file.
 
 Required parameters are **data_directory** and either **shape_path** or **x** and **y**.
@@ -31,14 +31,14 @@ The slider allows you to move temporally from SENTINEL date to SENTINEL date
 The image corresponds to the RGB bands of the SENTINEL data
 The results appear as polygons :
 - Detected dieback appears in white, or from white to red depending on the confidence class if **show_confidence_class** is True.
-If the detection includes bare ground detection (see [01_compute_masked_vegetationindex](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/)) :
+If the detection includes bare ground detection (see [01_compute_masked_vegetationindex](01_compute_masked_vegetationindex.md)) :
 - Black polygons: bare ground
 - Blue polygons: areas detected as bare ground after being detected as dieback
 - Grey polygons as "Permanently masked pixels", which regroup three cases :
 
-- Pixels outside of the forest mask used (set in the [compute_forest_mask step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/))
-- Pixels invalid because they do not have enough valid acquisitions to compute a vegetation index model in [train_model step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/02_train_model/)
-- Pixels having endured too many stress periods as computed in the [dieback_detection step](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/03_dieback_detection/).
+- Pixels outside of the forest mask used (set in the [compute_forest_mask step](04_compute_forest_mask.md))
+- Pixels invalid because they do not have enough valid acquisitions to compute a vegetation index model in [train_model step](02_train_model.md)
+- Pixels having endured too many stress periods as computed in the [dieback_detection step](03_dieback_detection.md).
 
 A legend is included, and clicking on a legend item toggles its visibility, double clicking makes it the sole visible item on the graph.
 

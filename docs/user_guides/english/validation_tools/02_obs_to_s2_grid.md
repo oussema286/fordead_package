@@ -1,7 +1,7 @@
 ## Matching with available Sentinel-2 data
 
 This step aims at matching observation data with either available Sentinel-2 tiles or Sentinel-2 infered from Microsoft Planetary Computer item collections.
-The resulting vector can be used to extract the matching Sentinel-2 data using the [extraction function](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/04_extract_reflectance/).
+The resulting vector can be used to extract the matching Sentinel-2 data using the [extraction function](04_extract_reflectance.md).
 If polygons are used, they are converted to grid points located at the centroid of 10m Sentinel-2 pixels.
 
 If points or polygons intersect several Sentinel-2 tiles, the resulting points are duplicated for each of them.
@@ -69,7 +69,7 @@ The vector file at **obs_path** is imported using the geopandas package.
 
 ### If vector file at **obs_path** contains points :
  - Observation points are intersected with the Sentinel-2 tiles extent vector, transferring the attributes *area_name* and *epsg*
- - An *id_pixel* column is added and filled with 0 so the resulting vector can be used in the [export_reflectance](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/validation_tools/04_extract_reflectance/) function.
+ - An *id_pixel* column is added and filled with 0 so the resulting vector can be used in the [export_reflectance](04_extract_reflectance.md) function.
  - Points outside of available Sentinel-2 tiles are detected and their IDs are printed.
  > **_Function used:_** [process_points()][fordead.reflectance_extraction.process_points]
 

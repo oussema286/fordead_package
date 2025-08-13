@@ -11,7 +11,7 @@ Specific options allow taking advantage of land cover or forest spatial database
 
 Here, we used a shapefile identifying forested areas in the example dataset, which was rasterized as a binary raster.
 
-Comprehensive documentation can be found [here](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/04_compute_forest_mask/).
+Comprehensive documentation can be found [here](../../user_guides/english/04_compute_forest_mask.md).
 
 Study area with area of interest             |  Resulting mask
 :-------------------------:|:-------------------------:

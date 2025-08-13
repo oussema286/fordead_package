@@ -45,7 +45,7 @@ compute_masked_vegetationindex(input_directory = input_directory,
                                apply_source_mask = True)
 ```
 
-The input variables and output products written on the disk when running `compute_masked_vegetationindex` are described in [the function's user guide](https://fordead.gitlab.io/fordead_package/docs/user_guides/english/01_compute_masked_vegetationindex/).
+The input variables and output products written on the disk when running `compute_masked_vegetationindex` are described in [the function's user guide](../../user_guides/english/01_compute_masked_vegetationindex.md).
 
 ##### In command line
 
