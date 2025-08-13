@@ -106,6 +106,7 @@ pages:
     # - sed -e "s:](docs/:](:g" README.md | sed -e "2,12d" | sed -e "1 i ---\ntitle: Overview\n---" > docs/index.md
     - 'sed -e "s:](docs/:](:g" -e "2,12d" -e "1 i ---\ntitle: Overview\n---" README.md > docs/index.md'
     - 'sed -e "s:](docs/:](:g" -e "1 i ---\ntitle: Accueil\n---" README_fr.md > docs/index.fr.md'
+    - python docs/convert_links.py
     # versioning documentation with mike
     - git config user.name "${GITLAB_USER_NAME}"
     - git config user.email "${GITLAB_USER_EMAIL}"
