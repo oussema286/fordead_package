@@ -1,0 +1,18 @@
+{
+  "description": "Perturbations créées en Île-de-France pour le pipeline Sentinel-2",
+  "zone": "Île-de-France",
+  "bounds": [
+    2.6,
+    48.3,
+    2.8,
+    48.5
+  ],
+  "total_disturbances": 500,
+  "wind_count": 365,
+  "beetle_count": 135,
+  "wind_proportion": 0.73,
+  "beetle_proportion": 0.27,
+  "source": "Créées pour correspondre à la zone Sentinel-2",
+  "based_on_real_data": true,
+  "original_data_size": 27659
+}

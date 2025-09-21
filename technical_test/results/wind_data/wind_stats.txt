@@ -1,0 +1,6 @@
+=== STATISTIQUES DES DONNÉES DE VENT ===
+Total analysé: 27659
+Classifié comme vent: 19963
+Classifié comme scolyte: 7696
+Vitesse de vent maximale: 25.00 m/s
+Vitesse de vent moyenne: 14.97 m/s

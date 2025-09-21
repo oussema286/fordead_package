@@ -1,0 +1,94 @@
+# Configuration pour le Technical Test
+# Early Bark Beetle Detection with Sentinel Data
+
+# Paramètres généraux
+project_name: "bark_beetle_detection"
+version: "1.0.0"
+log_level: "INFO"
+
+# Paramètres de la région d'intérêt
+roi:
+  # Format: GeoJSON ou GeoPackage
+  file_path: "technical_test/data/roi_test.geojson"
+  # Ou définir directement les coordonnées
+  bbox: [2.6, 48.3, 2.8, 48.5]  # [min_lon, min_lat, max_lon, max_lat] - Île-de-France
+  crs: "EPSG:4326"
+
+# Paramètres temporels
+date_range:
+  start_date: "2018-01-01"
+  end_date: "2020-12-31"
+  # Période d'entraînement pour le modèle harmonique
+  training_end: "2018-06-01"
+
+# Paramètres Sentinel-2
+sentinel2:
+  # Bandes essentielles pour la détection de scolytes
+  bands: ["B04", "B08", "B11", "B12"]  # Rouge, NIR, SWIR1, SWIR2
+  # Bandes supplémentaires optionnelles
+  additional_bands: ["B02", "B03", "B05", "B06", "B07", "B8A"]  # Bleu, Vert, Red Edge
+  cloud_coverage: 0.4
+  resolution: 10
+  source: "THEIA"
+
+# Paramètres fordead
+fordead:
+  vi: "CRSWIR"  # Indice de végétation
+  threshold_anomaly: 0.16
+  threshold_dieback: 0.2
+  stress_index_mode: "weighted_mean"
+  nb_min_date: 10
+  cloud_threshold: 0.4
+  vi_threshold: 0.1
+  training_period: "2018-01-01,2018-06-01"
+  forest_threshold: 0.3
+
+# Paramètres d'analyse du vent
+wind_analysis:
+  wind_threshold: 12.0  # Seuil de vent fort (m/s)
+  confidence_threshold: 0.7  # Seuil de confiance minimum
+  era5_scale: 25000  # Résolution ERA5 (mètres)
+  strong_wind_threshold: 10.0  # Seuil de vent fort pour les événements
+
+# Paramètres ruptures
+ruptures:
+  model: "rbf"  # Modèle de détection de changements
+  penalty: 2
+  min_size: 5
+
+# Paramètres ERA5
+era5:
+  # Variables météorologiques
+  variables: ["wind_speed_10m", "wind_direction_10m"]
+  # Seuil de vent pour différencier vent/scolytes
+  wind_threshold: 15.0  # m/s
+
+# Paramètres d'analyse du vent
+wind_analysis:
+  # Seuil de confiance pour la classification
+  confidence_threshold: 0.3
+  # Seuil de vent pour différencier vent/scolytes
+  wind_threshold: 12.0
+  # Seuil de vent fort
+  strong_wind_threshold: 15.0
+  # Échelle ERA5
+  era5_scale: 1000
+
+# Paramètres d'évaluation
+evaluation:
+  # Données de référence
+  disturbance_map_url: "projects/ee-albaviana/assets/disturbance_agent_v211"
+  # Métriques à calculer
+  metrics: ["precision", "recall", "f1", "lead_time"]
+  # Buffer autour des événements de référence
+  buffer_distance: 100  # mètres
+
+# Chemins de sortie
+output:
+  base_path: "technical_test/results"
+  detections: "technical_test/results/detections"
+  evaluations: "technical_test/results/evaluations"
+  visualizations: "technical_test/results/visualizations"
+  classifications: "technical_test/results/classifications"
+  wind_data: "technical_test/results/wind_data"
+  disturbances: "technical_test/results/disturbances"

@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Ile_de_France_Test_Area",
+        "description": "Zone de test pour la détection des scolytes en Île-de-France"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [2.6, 48.3],
+          [2.8, 48.3],
+          [2.8, 48.5],
+          [2.6, 48.5],
+          [2.6, 48.3]
+        ]]
+      }
+    }
+  ]
+}

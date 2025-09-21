@@ -1,0 +1,5 @@
+=== STATISTIQUES DES PERTURBATIONS ===
+Total des événements: 27659
+Événements de vent: 24812
+Événements de scolytes: 2847
+Événements inconnus: 0

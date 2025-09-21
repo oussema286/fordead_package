@@ -1,0 +1,8 @@
+=== MÉTRIQUES DE CLASSIFICATION ===
+Précision globale: 0.814
+Rappel global: 0.682
+F1-score: 0.737
+Précision vent: 0.896
+Précision scolyte: 0.099
+Délai de détection moyen: 13.8 jours
+Classifications haute confiance: 2269
