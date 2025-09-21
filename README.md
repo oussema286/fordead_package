@@ -37,17 +37,13 @@ conda create -n fordead python=3.8
 conda activate fordead
 ```
 
-3. **Installer les dépendances**
-```bash
-pip install -r requirements_technical_test.txt
-```
 
-4. **Configurer Google Earth Engine**
+3. **Configurer Google Earth Engine**
 ```bash
 earthengine authenticate
 ```
 
-5. **Configurer les credentials Copernicus** (optionnel)
+4. **Configurer les credentials Copernicus** (optionnel)
 ```bash
 # Éditer technical_test/configs/copernicus_credentials.txt
 # Ajouter vos credentials Copernicus
