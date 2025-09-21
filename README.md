@@ -93,16 +93,17 @@ detection:
 ## 📊 **ARCHITECTURE DU PIPELINE**
 
 ### **Composants Principaux**
-fordead_package/
-├── 📁 technical_test/                    # Module principal du Technical Challenge
-│   ├── __init__.py
-│   ├── data_ingestion_gee.py            # 🔍 Ingestion Sentinel-2 via GEE
-│   ├── change_detection.py              # 🎯 Détection de changements avec ruptures
-│   ├── era5_wind_analysis.py            # 🌪️ Analyse des données de vent ERA5
-│   ├── advanced_classification.py       # 🔬 Classification Wind vs Bark Beetle
-│   ├── fordead_wrapper_real.py          # 🌲 Intégration avec le package fordead
-│   ├── disturbance_map_integration.py   # 🗺️ Intégration cartes de perturbation
-│   ├── evaluation.py                    # 📊 Métriques de performance
+
+**fordead_package/**
+- **📁 technical_test/** - Module principal du Technical Challenge
+  - `__init__.py`
+  - `data_ingestion_gee.py` - 🔍 Ingestion Sentinel-2 via GEE
+  - `change_detection.py` - 🎯 Détection de changements avec ruptures
+  - `era5_wind_analysis.py` - 🌪️ Analyse des données de vent ERA5
+  - `advanced_classification.py` - 🔬 Classification Wind vs Bark Beetle
+  - `fordead_wrapper_real.py` - 🌲 Intégration avec le package fordead
+  - `disturbance_map_integration.py` - 🗺️ Intégration cartes de perturbation
+  - `evaluation.py` - 📊 Métriques de performance
 
 1. **🔍 Ingestion Sentinel-2** (`data_ingestion_gee.py`)
    - Téléchargement via Google Earth Engine (PhiDown non utilisé à cause de problèmes d'API)
@@ -204,30 +205,28 @@ Après éxecution de la pipelin principale avec:  python run_pipeline_real_gee.p
 
 ## 📁 **STRUCTURE DES RÉSULTATS**
 
-```
-technical_test/results/
-├── data/                   # Données Sentinel-2 téléchargées
-│   └── sentinel2_gee/     # 75 acquisitions Sentinel-2
-│       ├── SENTINEL2_20180101/
-│       ├── SENTINEL2_20180111/
-│       └── ... (75 acquisitions total)
-├── detections/              # Cartes de détection
-│   ├── ruptures_*.tif      # Cartes de probabilité
-│   └── ruptures_analysis.json
-├── classifications/         # Résultats de classification
-│   ├── wind_beetle_classifications.csv
-│   └── classification_metrics.txt
-├── wind_data/              # Données ERA5
-│   ├── era5_wind_data.csv
-│   └── wind_stats.txt
-├── disturbances/           # Données de référence
-│   ├── disturbance_events.geojson
-│   └── disturbance_stats.txt
-├── timelapse/              # Animations
-│   ├── final_timelapse_ile_de_france.gif
-└── summary_plots/          # Graphiques
-    └── summary_metrics.png
-```
+**technical_test/results/**
+- **data/** - Données Sentinel-2 téléchargées
+  - **sentinel2_gee/** - 75 acquisitions Sentinel-2
+    - SENTINEL2_20180101/
+    - SENTINEL2_20180111/
+    - ... (75 acquisitions total)
+- **detections/** - Cartes de détection
+  - ruptures_*.tif - Cartes de probabilité
+  - ruptures_analysis.json
+- **classifications/** - Résultats de classification
+  - wind_beetle_classifications.csv
+  - classification_metrics.txt
+- **wind_data/** - Données ERA5
+  - era5_wind_data.csv
+  - wind_stats.txt
+- **disturbances/** - Données de référence
+  - disturbance_events.geojson
+  - disturbance_stats.txt
+- **timelapse/** - Animations
+  - final_timelapse_ile_de_france.gif
+- **summary_plots/** - Graphiques
+  - summary_metrics.png
 
 ---
 
