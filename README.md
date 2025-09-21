@@ -27,7 +27,7 @@ Ce projet implémente un **pipeline complet de détection précoce des scolytes*
 
 1. **Cloner le repository**
 ```bash
-git clone <repository-url>
+git clone wget https://gitlab.com/fordead/fordead_data/-/archive/main/fordead_data-main.zip
 cd fordead_package
 ```
 
