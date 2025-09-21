@@ -247,7 +247,7 @@ Après éxecution de la pipelin principale avec:  python run_pipeline_real_gee.p
 2. **Période d'Analyse** : 2018-2020 seulement
 3. **ROI Unique** : Fontainebleau uniquement
 4. **PhiDown Non Utilisé** : Problèmes d'authentification et d'API, remplacé par Google Earth Engine
-5. **Visualisations Limitées** : Contraintes de temps, les visualisations nécessitent des optimisations (ex:timelapse/final_timelapse_ile_de_france.gif)
+5. **Visualisations Limitées** : Contraintes de temps, les visualisations nécessitent des optimisations (ex:timelapse/final_timelapse_ile_de_france.gif )
 6. **Notebook Non Développé** : Contraintes de temps, toutes les étapes sont claires dans `run_pipeline_real_gee.py` 
 
 ### **Améliorations Futures**
