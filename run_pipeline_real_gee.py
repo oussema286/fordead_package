@@ -86,15 +86,29 @@ def run_pipeline_real_gee():
         print(f"  ✅ Données traitées: {sentinel_data.dims}")
         print(f"    - Variables: {list(sentinel_data.data_vars)}")
         
-        # 6. Détection de changements avec ruptures
-        print("\n🔍 ÉTAPE 6 : Détection de changements avec ruptures")
+        # 6. Intégration avec fordead (détection de dépérissement)
+        print("\n🌲 ÉTAPE 6 : Détection de dépérissement avec fordead")
+        from technical_test.fordead_wrapper_real import FordeadWrapperReal
+        fordead_wrapper = FordeadWrapperReal(config)
+        
+        # Exécuter le pipeline fordead pour détecter les zones de dépérissement
+        fordead_results = fordead_wrapper.run_fordead_pipeline(sentinel_data)
+        print(f"  ✅ Fordead terminé: {len(fordead_results)} résultats")
+        
+        # Extraire les pixels de dépérissement détectés
+        dieback_pixels = fordead_results.get('dieback_pixels', [])
+        print(f"    - Pixels de dépérissement détectés: {len(dieback_pixels)}")
+        
+        # 7. Détection de changements avec ruptures (affinage temporel)
+        print("\n🔍 ÉTAPE 7 : Détection de changements avec ruptures")
         from technical_test.change_detection import RupturesDetector
         detector = RupturesDetector(config)
         
-        # Détecter les changements sur l'indice CRSWIR
+        # Détecter les changements sur l'indice CRSWIR (affinage temporel des pixels fordead)
         vi_data = sentinel_data['crswir']
         change_results = detector.detect_changes(vi_data)
         print(f"  ✅ Détection terminée: {len(change_results['change_points'])} changements détectés")
+        print(f"    - Affinage temporel des pixels détectés par fordead")
         
         # Sauvegarder les masques de détection
         from pathlib import Path
@@ -103,8 +117,8 @@ def run_pipeline_real_gee():
         detector.save_results(change_results, detections_dir)
         print(f"  ✅ Masques sauvegardés dans: {detections_dir}")
         
-        # 7. Chargement des données de perturbation de référence
-        print("\n🗺️ ÉTAPE 7 : Chargement des données de perturbation de référence")
+        # 8. Chargement des données de perturbation de référence
+        print("\n🗺️ ÉTAPE 8 : Chargement des données de perturbation de référence")
         from technical_test.disturbance_map_integration import DisturbanceMapIntegrator
         from technical_test.era5_wind_analysis import ERA5WindAnalyzer
         from technical_test.advanced_classification import AdvancedWindBeetleClassifier
@@ -130,13 +144,13 @@ def run_pipeline_real_gee():
         print(f"  ✅ Données de perturbation chargées: {disturbance_data['total_events']} événements")
         
         # Extraire les données de vent ERA5
-        print("\n🌪️ ÉTAPE 8 : Extraction des données de vent ERA5")
+        print("\n🌪️ ÉTAPE 9 : Extraction des données de vent ERA5")
         wind_analyzer = ERA5WindAnalyzer(config)
         wind_data = wind_analyzer.extract_wind_data(disturbance_data['disturbances'], roi_geometry)
         print(f"  ✅ Données de vent extraites: {wind_data['total_analyzed']} analyses")
         
         # Classification avancée
-        print("\n🔬 ÉTAPE 9 : Classification avancée Wind vs Bark Beetle")
+        print("\n🔬 ÉTAPE 10 : Classification avancée Wind vs Bark Beetle")
         classifier = AdvancedWindBeetleClassifier(config)
         classification_results = classifier.classify_disturbances(
             disturbance_data['disturbances'], 
@@ -156,17 +170,8 @@ def run_pipeline_real_gee():
         classifications = [c['classified_type'] for c in classification_results['classifications']]
         print(f"  ✅ Classifications simulées: {len(classifications)}")
         
-        # 10. Intégration avec fordead
-        print("\n🌲 ÉTAPE 10 : Intégration avec fordead")
-        from technical_test.fordead_wrapper_real import FordeadWrapperReal
-        fordead_wrapper = FordeadWrapperReal(config)
-        
-        # Exécuter le vrai pipeline fordead
-        fordead_results = fordead_wrapper.run_fordead_pipeline(sentinel_data)
-        print(f"  ✅ Fordead terminé: {len(fordead_results)} résultats")
-        
-        # 9. Évaluation des performances
-        print("\n📊 ÉTAPE 9 : Évaluation des performances")
+        # 11. Évaluation des performances
+        print("\n📊 ÉTAPE 11 : Évaluation des performances")
         from technical_test.evaluation import DisturbanceEvaluator
         evaluator = DisturbanceEvaluator(config)
         
@@ -192,6 +197,8 @@ def run_pipeline_real_gee():
         print(f"  - Acquisitions Sentinel-2: {len(acquisitions)}")
         print(f"  - Changements détectés: {len(change_results['change_points'])}")
         print(f"  - Classifications: {len(classifications)}")
+        print(f"  - Pixels fordead détectés: {len(dieback_pixels)}")
+        print(f"  - Changements ruptures: {len(change_results['change_points'])}")
         print(f"  - Résultats fordead: {len(fordead_results)}")
         print(f"  - Métriques d'évaluation: {len(evaluation_results)}")
         
