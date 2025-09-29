@@ -106,30 +106,32 @@ detection:
    - Calcul des indices de végétation (NDVI, CRSWIR)
    - Nettoyage et masquage des nuages
 
-2. **🎯 Détection de Changements** (`change_detection.py`)
-   - Algorithme Ruptures pour détection précise
+2. **🌲 Détection de Dépérissement Fordead** (`fordead_wrapper_real.py`)
+   - Wrapper pour le package fordead local
+   - Détection des zones de dépérissement forestier
+   - Exécution des étapes 1-5 du package fordead
+   - Identification des pixels de dépérissement
+
+3. **🎯 Affinage Temporel avec Ruptures** (`change_detection.py`)
+   - Algorithme Ruptures pour affinage temporel précis
+   - Application sur les pixels détectés par fordead
    - Identification des points de changement temporels
    - Génération de cartes de probabilité
-
-3. **🌪️ Analyse ERA5** (`era5_wind_analysis.py`)
-   - Extraction des données de vent
-   - Calcul de la vitesse du vent à partir des composantes u/v
-   - Classification vent vs scolytes
 
 4. **🗺️ Intégration Cartes de Perturbation** (`disturbance_map_integration.py`)
    - Chargement de la European Forest Disturbance Map
    - Extraction des événements de perturbation
    - Géolocalisation des événements
 
-5. **🔬 Classification Avancée** (`advanced_classification.py`)
+5. **🌪️ Analyse ERA5** (`era5_wind_analysis.py`)
+   - Extraction des données de vent
+   - Calcul de la vitesse du vent à partir des composantes u/v
+   - Classification vent vs scolytes
+
+6. **🔬 Classification Avancée** (`advanced_classification.py`)
    - Heuristique Wind vs Bark Beetle
    - Calcul des métriques de performance
-   - Génération des rapports
-
-6. **🌲 Intégration Fordead** (`fordead_wrapper_real.py`)
-   - Wrapper pour le package fordead local
-   - Conversion des données au format requis
-   - Exécution des étapes  du package fordead step1-step5 
+   - Génération des rapports 
 
 ---
 
