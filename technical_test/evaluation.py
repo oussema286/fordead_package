@@ -456,11 +456,172 @@ class DisturbanceEvaluator:
         plt.savefig(output_dir / 'performance_metrics.png', dpi=300, bbox_inches='tight')
         plt.close()
         
-        # 4. Sauvegarder les métriques en JSON
+        # 4. Courbe ROC
+        self._generate_roc_curve(detection_gdf, output_dir)
+        
+        # 5. Courbe PR (Precision-Recall)
+        self._generate_pr_curve(detection_gdf, output_dir)
+        
+        # 6. Distribution des délais de détection
+        self._generate_lead_time_distribution(detection_gdf, output_dir)
+        
+        # 7. Sauvegarder les métriques en JSON
         with open(output_dir / 'evaluation_metrics.json', 'w') as f:
             json.dump(metrics, f, indent=2, default=str)
         
         self.logger.info(f"Graphiques sauvegardés dans: {output_dir}")
+    
+    def _generate_roc_curve(self, detection_gdf: gpd.GeoDataFrame, output_dir: Path):
+        """
+        Générer la courbe ROC
+        
+        Args:
+            detection_gdf: GeoDataFrame des détections
+            output_dir: Répertoire de sortie
+        """
+        if len(detection_gdf) == 0:
+            return
+        
+        # Matcher les détections avec les données de référence
+        matches = self._match_detections_with_reference(detection_gdf)
+        
+        if len(matches) == 0:
+            return
+        
+        # Préparer les données pour ROC
+        y_true = []
+        y_scores = []
+        
+        for _, detection in detection_gdf.iterrows():
+            # Vérifier si cette détection correspond à un événement de référence
+            is_match = any(m['detection_id'] == detection['detection_id'] for m in matches)
+            y_true.append(1 if is_match else 0)
+            y_scores.append(detection['confidence'])
+        
+        if len(set(y_true)) < 2:  # Besoin d'au moins 2 classes
+            return
+        
+        # Calculer la courbe ROC
+        fpr, tpr, _ = roc_curve(y_true, y_scores)
+        auc_score = roc_auc_score(y_true, y_scores)
+        
+        # Créer le graphique
+        plt.figure(figsize=(10, 8))
+        plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {auc_score:.3f})')
+        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label='Random classifier')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.legend(loc="lower right")
+        plt.grid(True, alpha=0.3)
+        plt.savefig(output_dir / 'roc_curve.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        self.logger.info(f"Courbe ROC générée: AUC = {auc_score:.3f}")
+    
+    def _generate_pr_curve(self, detection_gdf: gpd.GeoDataFrame, output_dir: Path):
+        """
+        Générer la courbe Precision-Recall
+        
+        Args:
+            detection_gdf: GeoDataFrame des détections
+            output_dir: Répertoire de sortie
+        """
+        if len(detection_gdf) == 0:
+            return
+        
+        # Matcher les détections avec les données de référence
+        matches = self._match_detections_with_reference(detection_gdf)
+        
+        if len(matches) == 0:
+            return
+        
+        # Préparer les données pour PR
+        y_true = []
+        y_scores = []
+        
+        for _, detection in detection_gdf.iterrows():
+            # Vérifier si cette détection correspond à un événement de référence
+            is_match = any(m['detection_id'] == detection['detection_id'] for m in matches)
+            y_true.append(1 if is_match else 0)
+            y_scores.append(detection['confidence'])
+        
+        if sum(y_true) == 0:  # Besoin d'au moins un vrai positif
+            return
+        
+        # Calculer la courbe PR
+        precision, recall, _ = precision_recall_curve(y_true, y_scores)
+        avg_precision = np.trapz(precision, recall)
+        
+        # Créer le graphique
+        plt.figure(figsize=(10, 8))
+        plt.plot(recall, precision, color='darkorange', lw=2, label=f'PR curve (AP = {avg_precision:.3f})')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.title('Precision-Recall Curve')
+        plt.legend(loc="lower left")
+        plt.grid(True, alpha=0.3)
+        plt.savefig(output_dir / 'pr_curve.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        self.logger.info(f"Courbe PR générée: AP = {avg_precision:.3f}")
+    
+    def _generate_lead_time_distribution(self, detection_gdf: gpd.GeoDataFrame, output_dir: Path):
+        """
+        Générer la distribution des délais de détection
+        
+        Args:
+            detection_gdf: GeoDataFrame des détections
+            output_dir: Répertoire de sortie
+        """
+        if len(detection_gdf) == 0:
+            return
+        
+        # Calculer les délais de détection
+        lead_times = []
+        
+        for _, detection in detection_gdf.iterrows():
+            detection_date = pd.to_datetime(detection['date'])
+            
+            # Trouver l'événement de référence correspondant
+            detection_geom = detection.geometry
+            buffer_geom = detection_geom.buffer(self.buffer_distance / 111000)
+            
+            intersecting = self.reference_data[self.reference_data.geometry.intersects(buffer_geom)]
+            
+            if len(intersecting) > 0:
+                # Prendre le plus proche
+                distances = intersecting.geometry.distance(detection_geom)
+                closest_idx = distances.idxmin()
+                closest_event = self.reference_data.loc[closest_idx]
+                
+                reference_date = pd.to_datetime(closest_event['date'])
+                lead_time = (detection_date - reference_date).days
+                lead_times.append(lead_time)
+        
+        if not lead_times:
+            return
+        
+        # Créer le graphique
+        plt.figure(figsize=(12, 8))
+        plt.hist(lead_times, bins=20, alpha=0.7, edgecolor='black', color='skyblue')
+        plt.axvline(np.mean(lead_times), color='red', linestyle='--', linewidth=2, 
+                   label=f'Mean: {np.mean(lead_times):.1f} days')
+        plt.axvline(np.median(lead_times), color='orange', linestyle='--', linewidth=2,
+                   label=f'Median: {np.median(lead_times):.1f} days')
+        plt.xlabel('Lead Time (days)')
+        plt.ylabel('Number of Detections')
+        plt.title('Distribution of Detection Lead Times')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.savefig(output_dir / 'lead_time_distribution.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        self.logger.info(f"Distribution des délais générée: {len(lead_times)} délais calculés")
     
     def _empty_metrics(self) -> Dict[str, Any]:
         """Retourner des métriques vides"""
